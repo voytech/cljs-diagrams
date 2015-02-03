@@ -1,7 +1,6 @@
 # photo-books
 
-A Hoplon project designed to...well, that part is up to you.
-
+A sample clojure/clojure-scrip/hoplon appliaction for creating photo calendars, photo books and similar things
 ## Dependencies
 
 - java 1.7+

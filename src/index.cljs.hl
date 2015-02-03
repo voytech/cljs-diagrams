@@ -1,0 +1,15 @@
+(page "index.html"
+  (:require
+    [tailrecursion.hoplon.reload :refer [reload-all]]
+    [templates.library-view :refer [library-view]]))
+
+(reload-all 1000)
+
+(html
+  (head
+   (link :href "css/main.inc.css" :rel "stylesheet" ))
+  (body
+     (div :id "container"
+          (div :id "library" (library-view) )
+          (div :id "workspace")
+          (div :id "config"))))

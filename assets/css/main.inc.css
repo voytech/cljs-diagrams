@@ -1,0 +1,47 @@
+body {
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: blue;
+}
+
+#container{
+  height:700px;
+  width:100%;
+}
+
+
+#library, #config, #workspace{
+  border-width:2px;
+  border-color:black;
+  border-style:solid;
+  height:100%;
+}
+
+#library{
+  left:0;
+  float:left;
+  width:30%;
+}
+
+.image-loader{
+  border-style:dashed;
+  border-width:1px;
+  height:100px;
+  border-color:gray;
+}
+
+#config{
+  margin-left:5px;
+  float:left;
+  right:0;
+  width:15%;
+}
+
+#workspace{
+  margin-left:5px;
+  float:left;
+  width:50%
+}

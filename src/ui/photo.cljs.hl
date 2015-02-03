@@ -1,0 +1,48 @@
+(ns ui.photo)
+
+(defn dragover [event]
+  (.log js/window.console event)
+  (.stopPropagation event)
+  (.preventDefault event)
+)
+
+(declare select-files!)
+
+(defn drop! [event,handle]
+  (.stopPropagation event)
+  (.preventDefault event)
+  (select-files! event handle)
+)
+
+(defn select-files! [event,callback]
+  (let [files (.-files (.-target event))]
+      (let [file (aget files 0)]
+        (let [reader (js/FileReader.)]
+          (set! (.-onload reader) #(callback {:name (.-name file)
+                                              :type (.-type file)
+                                              :content (.-result (.-target %))}))
+          (.readAsDataURL reader file)
+        )
+      )))
+
+(defelem photo-loader [{:keys [class callback ]}]
+   (div :class class
+        :id "drop-area"
+        :drop #(drop! % handle)
+        :on-dragover dragover
+        (input :id "drop"
+               :type "file"
+               :name "files[]"
+               :change #(select-files! % callback) )))
+
+
+(defelem photo-list [{:keys [list]}]
+ ;; (def photo-lib-cnt (cell= (count @list)))
+  (div
+   (div :class "hdiv" (text "Photo library has ~{photo-lib-cnt}"))
+    (div
+     (loop-tpl :bindings [{:keys [name content]} list]
+      (div (img :id name :width 200 :height 200 :src content))))))
+
+(defelem photo-view
+  [])

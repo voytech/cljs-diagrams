@@ -1,0 +1,14 @@
+(ns templates.library-view
+  (:require [ui.photo :as photo ]))
+(def photo-lib (cell (list)))
+(def photo-lib-in (cell= photo-lib))
+(def photo-lib-cnt (cell= (count photo-lib)))
+
+(defelem library-view []
+  (div
+   (photo/photo-loader :class "image-loader"
+                       :callback #(swap! photo-lib conj {:name (:name %),
+                                                         :type (:type %),
+                                                         :content (:content %)}))
+   (photo/photo-list  :list (cell= photo-lib))
+   ))

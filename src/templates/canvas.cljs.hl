@@ -1,0 +1,5 @@
+(ns templates.canvas)
+
+(defelem workspace []
+  (div :class "workspace")
+)

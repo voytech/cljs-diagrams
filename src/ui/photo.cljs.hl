@@ -6,6 +6,8 @@
   (.preventDefault event)
 )
 
+(declare photo-view)
+
 (declare select-files!)
 
 (defn drop! [event,handle]
@@ -26,23 +28,23 @@
       )))
 
 (defelem photo-loader [{:keys [class callback ]}]
-   (div :class class
-        :id "drop-area"
-        :drop #(drop! % handle)
-        :on-dragover dragover
-        (input :id "drop"
-               :type "file"
-               :name "files[]"
-               :change #(select-files! % callback) )))
-
+  (div :class class
+       :id "drop-area"
+       :drop #(drop! % callback)
+       :on-dragover dragover
+       (div :class "file-load-wrapper"
+            (input :id "fileload"
+                   :type "file"
+                   :name "files[]"
+                   :class "filestyle"
+                   :change #(select-files! % callback) ))))
 
 (defelem photo-list [{:keys [list]}]
- ;; (def photo-lib-cnt (cell= (count @list)))
+  (div)
   (div
-   (div :class "hdiv" (text "Photo library has ~{photo-lib-cnt}"))
-    (div
-     (loop-tpl :bindings [{:keys [name content]} list]
-      (div (img :id name :width 200 :height 200 :src content))))))
+   (loop-tpl :bindings [{:keys [name content]} list]
+             (photo-view :name name :content content))))
 
-(defelem photo-view
-  [])
+(defelem photo-view [{:keys [name content]}]
+ (div
+  (img :class "img-rounded" :id name :src content)))

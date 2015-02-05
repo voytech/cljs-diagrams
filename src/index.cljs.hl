@@ -1,15 +1,20 @@
 (page "index.html"
   (:require
     [tailrecursion.hoplon.reload :refer [reload-all]]
-    [templates.library-view :refer [library-view]]))
+    [templates.library-view :refer [library-view]]
+    [templates.canvas :refer [workspace]]
+    ))
 
 (reload-all 1000)
-
 (html
   (head
-   (link :href "css/main.inc.css" :rel "stylesheet" ))
+   (link :href "css/bootstrap.inc.css" :rel "stylesheet" )
+   (link :href "css/main.inc.css" :rel "stylesheet" )
+   (script :src "js/bootstrap-filestyle.inc.js")
+   (script :src "js/init.inc.js"))
   (body
+     ;; (.filestyle (js/jQuery ":file"))
      (div :id "container"
           (div :id "library" (library-view) )
-          (div :id "workspace")
+          (div :id "workspace" (workspace))
           (div :id "config"))))

@@ -4,7 +4,7 @@
 
 (defn init-workspace [id]
     (dom/console-log (str "Initializing canvas with id:" id))
-    (def canvass (js/fabric.Canvas. "workspace-1")))
+    (def canvass (js/fabric.Canvas. id)))
 
 (defn resolve-drop "Should resolve drop events for following scenarios:
                     1. The drag source is from the library component (image is dragged)
@@ -29,9 +29,10 @@
 (dom/wait-on-element "workspace-1" #(init-workspace %))
 
 (defelem workspace []
-  (canvas :id "workspace-1"
-          :class "workspace"
-          :drop resolve-drop
-          :dragover #(.preventDefault %)
-          )
+  (div :id "canvas-container"
+       :class "workspace"
+       :drop resolve-drop
+       :dragover #(.preventDefault %)
+       (canvas :id "workspace-1"
+               :class "workspace"))
 )

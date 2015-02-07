@@ -6,6 +6,10 @@
     ))
 
 (reload-all 1000)
+
+;; (let [sel (js/jQuery ":file")]
+;;   (.filestyle sel :input false))
+
 (html
   (head
    (link :href "css/bootstrap.inc.css" :rel "stylesheet" )
@@ -13,7 +17,6 @@
    (script :src "js/bootstrap-filestyle.inc.js")
    (script :src "js/init.inc.js"))
   (body
-     ;; (.filestyle (js/jQuery ":file"))
      (div :id "container"
           (div :id "library" (library-view) )
           (div :id "workspace" (workspace))

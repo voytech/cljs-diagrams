@@ -47,4 +47,8 @@
 
 (defelem photo-view [{:keys [name content]}]
  (div
-  (img :class "img-rounded" :id name :src content)))
+  (img :class "img-rounded"
+       :id name
+       :src content
+       :draggable "true"
+       :dragstart #(.setData (.-dataTransfer (.-originalEvent %)) "photoid" name))))

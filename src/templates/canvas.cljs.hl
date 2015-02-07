@@ -1,5 +1,24 @@
 (ns templates.canvas)
 
+(defn init-fabric []
+    (def canvass (js/fabric.Canvas. "workspace-1")))
+
+(defn resolve-drop [event]
+  (.log js/window.console event)
+   (.preventDefault event)
+   (let [photoid (.getData (.-dataTransfer (.-originalEvent event)) "photoid")]
+       (let [photodom (.getElementById js/document photoid)]
+             (let [fbphoto (js/fabric.Image. photodom)]
+                 (.add canvas fbphoto)))
+)
+)
+
+(defn render [])
+
 (defelem workspace []
-  (div :class "workspace")
+  (canvas :id "workspace-1"
+          :class "workspace"
+          :drop resolve-drop
+          :dragover #(.preventDefault %)
+          )
 )

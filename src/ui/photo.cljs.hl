@@ -1,4 +1,6 @@
-(ns ui.photo)
+(ns ui.photo
+  (:require [utils.dom.dnd-utils :as dnd]
+            [utils.dom.dom-utils :as dom]))
 
 (defn dragover [event]
   (.log js/window.console event)
@@ -51,4 +53,4 @@
        :id name
        :src content
        :draggable "true"
-       :dragstart #(.setData (.-dataTransfer (.-originalEvent %)) "photoid" name))))
+       :dragstart #(dnd/set-dnd-data % "img-id" name))))

@@ -1,19 +1,32 @@
-(ns templates.canvas)
+(ns templates.canvas
+  (:require [utils.dom.dnd-utils :as dnd]
+            [utils.dom.dom-utils :as dom]))
 
-(defn init-fabric []
+(defn init-workspace [id]
+    (dom/console-log (str "Initializing canvas with id:" id))
     (def canvass (js/fabric.Canvas. "workspace-1")))
 
-(defn resolve-drop [event]
-  (.log js/window.console event)
+(defn resolve-drop "Should resolve drop events for following scenarios:
+                    1. The drag source is from the library component (image is dragged)
+                    2. The drag source comes from desktop (Use FileApi to load image)"
+   [event]
    (.preventDefault event)
-   (let [photoid (.getData (.-dataTransfer (.-originalEvent event)) "photoid")]
-       (let [photodom (.getElementById js/document photoid)]
-             (let [fbphoto (js/fabric.Image. photodom)]
-                 (.add canvas fbphoto)))
-)
+   (let [photo-dom (dom/by-id "camera_dark.png")]
+        (dom/console-log photo-dom)
+        (dom/console-log canvass)
+        (let [photo-node (js/fabric.Image. photo-dom (js-obj "left" 100
+                                                             "top"  100
+                                                             "angle" 0
+                                                             "opacity" 0.5))]
+            (dom/console-log photo-node)
+            (.add canvass photo-node))
+            (.fromURL js/fabric.Image "/imgs/audio_enabled.png" #(.add canvass %))
+        )
 )
 
 (defn render [])
+
+(dom/wait-on-element "workspace-1" #(init-workspace %))
 
 (defelem workspace []
   (canvas :id "workspace-1"

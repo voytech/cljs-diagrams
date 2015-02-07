@@ -5,7 +5,7 @@
     [templates.canvas :refer [workspace]]
     ))
 
-(reload-all 1000)
+(reload-all 2000)
 
 ;; (let [sel (js/jQuery ":file")]
 ;;   (.filestyle sel :input false))
@@ -18,6 +18,6 @@
    (script :src "js/init.inc.js"))
   (body
      (div :id "container"
-          (div :id "library" (library-view) )
+          (div :id "library" (library-view))
           (div :id "workspace" (workspace))
           (div :id "config"))))

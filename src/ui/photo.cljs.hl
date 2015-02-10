@@ -12,22 +12,25 @@
 
 (declare select-files!)
 
+(defn load-file [file callback]
+  (let [reader (js/FileReader.)]
+     (set! (.-onload reader) #(callback {:name (.-name file)
+                                         :type (.-type file)
+                                         :content (.-result (.-target %))}))
+     (.readAsDataURL reader file))
+)
+
 (defn drop! [event,handle]
   (.stopPropagation event)
   (.preventDefault event)
-  (select-files! event handle)
+  (dnd/data-transfer event)
 )
 
 (defn select-files! [event,callback]
   (let [files (.-files (.-target event))]
       (let [file (aget files 0)]
-        (let [reader (js/FileReader.)]
-          (set! (.-onload reader) #(callback {:name (.-name file)
-                                              :type (.-type file)
-                                              :content (.-result (.-target %))}))
-          (.readAsDataURL reader file)
-        )
-      )))
+        (load-file file callback)
+    )))
 
 (defelem photo-loader [{:keys [class callback ]}]
   (div :class class
@@ -53,4 +56,4 @@
        :id name
        :src content
        :draggable "true"
-       :dragstart #(dnd/set-dnd-data % "img-id" name))))
+       :dragstart #(dnd/set-dnd-data % "imgid" @name "move"))))

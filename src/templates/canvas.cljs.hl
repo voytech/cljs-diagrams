@@ -1,38 +1,25 @@
 (ns templates.canvas
   (:require [utils.dom.dnd-utils :as dnd]
-            [utils.dom.dom-utils :as dom]))
+            [utils.dom.dom-utils :as dom]
+            [core.canvas-interface :as canvas-sheet]))
 
-(defn init-workspace [id]
-    (dom/console-log (str "Initializing canvas with id:" id))
-    (def canvass (js/fabric.Canvas. id)))
+
 
 (defn resolve-drop "Should resolve drop events for following scenarios:
                     1. The drag source is from the library component (image is dragged)
                     2. The drag source comes from desktop (Use FileApi to load image)"
    [event]
    (.preventDefault event)
-   (let [photo-dom (dom/by-id "camera_dark.png")]
-        (dom/console-log photo-dom)
-        (dom/console-log canvass)
-        (let [photo-node (js/fabric.Image. photo-dom (js-obj "left" 100
-                                                             "top"  100
-                                                             "angle" 0
-                                                             "opacity" 0.5))]
-            (dom/console-log photo-node)
-            (.add canvass photo-node))
-            (.fromURL js/fabric.Image "/imgs/audio_enabled.png" #(.add canvass %))
-        )
+   ((comp canvas-sheet/add dnd/dispatch-drop-event) event)
 )
 
-(defn render [])
-
-(dom/wait-on-element "workspace-1" #(init-workspace %))
+(canvas-sheet/initialize "workspace-1")
 
 (defelem workspace []
-  (div :id "canvas-container"
-       :class "workspace"
+  (div :id "canvas-wrapper"
+       :class "workspace-div"
        :drop resolve-drop
        :dragover #(.preventDefault %)
        (canvas :id "workspace-1"
-               :class "workspace"))
+               :class "canvas"))
 )

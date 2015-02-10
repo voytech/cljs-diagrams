@@ -1,8 +1,8 @@
 (page "index.html"
   (:require
     [tailrecursion.hoplon.reload :refer [reload-all]]
-    [templates.library-view :refer [library-view]]
-    [templates.canvas :refer [workspace]]
+    [ui.views.library-view :refer [library-view]]
+    [ui.views.canvas :refer [workspace]]
     ))
 
 (reload-all 2000)

@@ -1,0 +1,12 @@
+(ns ui.views.library-view
+  (:require [ui.components.photo :as photo ]))
+(def photo-lib (cell (list)))
+
+(defelem library-view []
+  (div
+   (photo/photo-loader :class "image-loader"
+                       :callback #(swap! photo-lib conj {:name (:name %),
+                                                         :type (:type %),
+                                                         :content (:content %)}))
+   (photo/photo-list  :list photo-lib)
+   ))

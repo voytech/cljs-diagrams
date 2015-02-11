@@ -11,7 +11,7 @@
                       :interval 50
                       :snap-attract 5}))
 
-(defn make-snap-grid [{:keys [interval snap-attract visible]}]
+(defn update-snap-grid [{:keys [interval snap-attract visible]}]
   (reset! snap-grid {:interval inteval
                      :snap-attract snap-attract
                      :visible visible})
@@ -20,15 +20,19 @@
     (loop [x 0 y 0]
       (if (= (.getWidth @canvas-sheet) x)
         (dom/console-log x)
-        (let [line1 (js/fabric.Line. #js [(js/fabric.Point. 0 y)
-                                          (js/fabric.Point. (.getWidth @canvas-sheet) y)
-                                          (js/fabric.Point. 0 y)
-                                          (js/fabric.Point. (.getWidth @canvas-sheet) y)])]
-          (dom/console-log (js/fabric.Point. 0 y))
-          (dom/console-log (js/fabric.Point. (.getWidth @canvas-sheet) y ))
-          (dom/console-log line1)
+        (let [line1 (js/fabric.Rect. (js-obj "left" 0
+                                             "top" y
+                                             "width" (.getWidth @canvas-sheet)
+                                             "height" 1
+                                             "opacity" 0.1)),
+              line2 (js/fabric.Rect. (js-obj "left" x
+                                             "top" 0
+                                             "width" 1
+                                             "height" (.getHeight @canvas-sheet)
+                                             "opacity" 0.1))]
           (swap! canvas-sheet js-conj line1)
-          (recur (+ 50 x) (+ 50 y))))))
+          (swap! canvas-sheet js-conj line2)
+          (recur (+ interval x) (+ interval y))))))
 )
 
 (defn initialize [domid]
@@ -37,9 +41,9 @@
                                  (reset! canvas-sheet (js/fabric.Canvas. id ))
                                  (.setDimensions @canvas-sheet (js-obj "width" 600 "height" 600)
                                                                (js-obj "cssOnly" true))
-                                 (make-snap-grid {:interval 50
-                                                  :snap-attract 5
-                                                  :visible true}))))
+                                 (update-snap-grid {:interval 50
+                                                    :snap-attract 5
+                                                    :visible true}))))
 
 
 

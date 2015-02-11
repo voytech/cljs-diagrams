@@ -32,7 +32,7 @@ h1 {
   margin-top:10px;
   margin-left:5px;
   margin-right:5px;
-  height:100px;
+  margin-bottom:5px;
   border-color:gray;
 }
 
@@ -82,12 +82,34 @@ h1 {
   position:absolute;
   left:0;
   right:0;
-  font-size:50px;
+  font-size:10px;
 }
 
 .file-load-wraper{
+  margin : 2px 2px 2px 2px;
   overflow:hidden;
   position:relative;
   width:100px;
   height:50px;
+}
+
+.thumbs-container{
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.photo-thumbnail{
+  border-color:lightgray;
+  border-width:1px;
+  border-style:solid;
+  display:block;
+  margin: 2px 2px 2px 2px;
+  float:left;
+  max-width:150px;
+  max-height:150px;
+  width:150px;
+  overflow:hidden;
+  background-color:lightgray;
+}
+.photo{
 }

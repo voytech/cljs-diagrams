@@ -7,9 +7,6 @@
 
 (reload-all 2000)
 
-;; (let [sel (js/jQuery ":file")]
-;;   (.filestyle sel :input false))
-
 (html
   (head
    (link :href "css/bootstrap.inc.css" :rel "stylesheet" )

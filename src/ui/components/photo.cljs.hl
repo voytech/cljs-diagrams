@@ -46,13 +46,13 @@
 
 (defelem photo-list [{:keys [list]}]
   (div)
-  (div
+  (div :class "thumbs-container"
    (loop-tpl :bindings [{:keys [name content]} list]
              (photo-view :name name :content content))))
 
 (defelem photo-view [{:keys [name content]}]
- (div
-  (img :class "img-rounded"
+ (div :class "photo-thumbnail"
+  (img :class "photo"
        :id name
        :src content
        :draggable "true"

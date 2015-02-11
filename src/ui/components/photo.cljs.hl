@@ -9,7 +9,6 @@
 )
 
 (declare photo-view)
-
 (declare select-files!)
 
 (defn load-file [file callback]

@@ -1,9 +1,9 @@
 (page "index.html"
   (:require
     [tailrecursion.hoplon.reload :refer [reload-all]]
-    [ui.views.library-view :refer [library-view]]
+    [ui.views.toolkit-view :refer [library-view]]
     [ui.views.canvas :refer [workspace]]
-    ))
+    [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
 (reload-all 2000)
 
@@ -15,6 +15,9 @@
    (script :src "js/init.inc.js"))
   (body
      (div :id "container"
-          (div :id "library" (library-view))
+          (div :id "library" (tabs
+                                 (tab :name "Photos" (library-view))
+                                 (tab :name "Templates" (div (text "dsa")))
+                                 (tab :name "Clip-Arts")))
           (div :id "workspace" (workspace))
-          (div :id "config"))))
+          (div :id "slides"))))

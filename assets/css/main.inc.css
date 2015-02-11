@@ -36,18 +36,17 @@ h1 {
   border-color:gray;
 }
 
-#config{
-  margin-left:5px;
-  float:left;
+#slides{
+  clear:right;
   right:0;
-  width:15%;
+  width:100%;
 }
 
 #workspace{
   margin-left:5px;
   border-spacing:dashed;
   float:left;
-  width:50%
+  width:65%
 }
 
 .workspace{

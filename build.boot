@@ -7,7 +7,8 @@
   :version      "0.1.0-SNAPSHOT"
   :dependencies '[[tailrecursion/boot.task   "2.2.4"]
                   [tailrecursion/hoplon      "5.10.24"]
-                  [io.hoplon.vendor/jquery   "2.1.1-0"]]
+                  [io.hoplon.vendor/jquery   "2.1.1-0"]
+                  [io.hoplon/twitter.bootstrap "0.2.0"]]
   :out-path     "resources/public"
   :src-paths    #{"src"})
 

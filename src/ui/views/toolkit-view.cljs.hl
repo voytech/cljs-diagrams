@@ -1,5 +1,7 @@
-(ns ui.views.library-view
-  (:require [ui.components.photo :as photo ]))
+(ns ui.views.toolkit-view
+  (:require [ui.components.photo :as photo ]
+           ))
+
 (def photo-lib (cell (list)))
 
 (defelem library-view []
@@ -10,3 +12,7 @@
                                                          :content (:content %)}))
    (photo/photo-list  :list photo-lib)
    ))
+
+(defelem templates-view [])
+
+(defelem clip-arts [])

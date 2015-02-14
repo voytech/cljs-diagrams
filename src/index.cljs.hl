@@ -3,6 +3,7 @@
     [tailrecursion.hoplon.reload :refer [reload-all]]
     [ui.views.toolkit-view :refer [library-view]]
     [ui.views.canvas :refer [workspace]]
+    [ui.components.settings :refer [settings]]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
 (reload-all 2000)
@@ -17,7 +18,9 @@
      (div :id "container"
           (div :id "library" (tabs
                                  (tab :name "Photos" (library-view))
-                                 (tab :name "Templates" (div (text "dsa")))
-                                 (tab :name "Clip-Arts")))
+                                 (tab :name "Templates" (div (text "Tempaltes here!")))
+                                 (tab :name "Clip-Arts" (div (text "Clip-Arts here!")))
+                                 (tab :name "Settings" (settings ))))
+
           (div :id "workspace" (workspace))
           (div :id "slides"))))

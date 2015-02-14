@@ -1,0 +1,62 @@
+(ns ui.components.settings
+  (:require [core.canvas-interface :as interface]
+            [core.settings :as settings]))
+
+(defn is-snapping [key] (key (:snapping @settings/settings)))
+
+(defn neg-snapping [key] (not (is-snapping key)))
+
+(def zoom-label (settings/settings? :zoom))
+(def attract-val (settings/settings? :snapping :attract))
+(def interval-val (settings/settings? :snapping :interval))
+(def pages-count (settings/settings? :pages :count))
+(def multi-page? (settings/settings? :multi-page?))
+(def two-sided? (settings/settings? :pages :two-sided))
+(def page-format (settings/settings? :page-format))
+
+(defelem settings []
+  (div :id "settings-wrapper"
+       :class "settings"
+       (div :style "margin-left:20px; margin-top:20px"
+            (label
+             (input
+               :type "checkbox"
+               :click #(do (settings/settings! (neg-snapping :enabled) :snapping :enabled) true)
+               :value (settings/settings? :snapping :enabled))
+               " Enable snap grid"))
+
+       (div :style "margin-left:20px; margin-top:5px"
+            (label
+             (input
+               :type "checkbox"
+               :click #(do (settings/settings! (neg-snapping :visible) :snapping :visible) true)
+               :value (settings/settings? :snapping :visible))
+               " Display snap grid"))
+
+       (div :style "margin-left:20px; margin-top:5px"
+            (label
+             (input
+              :type "range" :min 0 :max 100 :step 10
+              :value (settings/settings? :snapping :interval)
+              :input #(settings/settings! @% :snapping :interval))
+              (text "~{interval-val}")
+               " Snap grid interval"))
+
+       (div :style "margin-left:20px; margin-top:5px"
+            (label
+              (input
+                :type "range" :min 0 :max 20 :step 1
+                :value (settings/settings? :snapping :attract)
+                :input #(settings/settings! @% :snapping :attract))
+              (text "~{attract-val}")
+              " Snapping attraction"))
+
+       (div :style "margin-left:20px; margin-top:5px"
+            (label
+              (input
+                :type "range" :min 0 :max 20 :step 1
+                :value (settings/settings? :zoom)
+                :input #(settings/settings! @% :zoom))
+              (text "~{zoom-label}")
+              " Zoom value") )
+))

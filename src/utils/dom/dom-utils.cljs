@@ -15,3 +15,5 @@
     ))
 
 (defn console-log-cond [obj] (when (true? debug) (console-log obj)))
+
+(defn del-ids [head  & tail])

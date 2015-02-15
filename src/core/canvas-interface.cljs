@@ -1,7 +1,13 @@
 (ns core.canvas-interface
   (:require [utils.dom.dom-utils :as dom]
             [tailrecursion.javelin :refer [cell]]
-            [core.settings :refer [settings settings? settings!]]))
+            [core.settings :refer [settings
+                                   settings?
+                                   settings!
+                                   page-formats
+                                   page-width
+                                   page-height]])
+  (:require-macros [tailrecursion.javelin :refer [cell=]]))
 
 (declare add-item)
 (defn js-conj [jscontainer obj]
@@ -20,10 +26,6 @@
 (def layers (atom []))
 (def root-id (atom ""))
 
-(def snap-grid (atom {:visible false
-                      :interval 50
-                      :snap-attract 5
-                      :enabled false}))
 
 (defn add-item
   ([item key]
@@ -45,9 +47,9 @@
 
 (defn redraw-grid []
   (del-items "grid")
-  (when (= true (:visible @snap-grid))
+  (when (= true (:visible (:snapping @settings)))
     (loop [x 0 y 0]
-      (if (= (.getWidth @canvas-sheet) x)
+      (if (<= (.getWidth @canvas-sheet) x)
          x
         (let [line1 (js/fabric.Rect. (js-obj "left" 0
                                              "top" y
@@ -63,24 +65,18 @@
             (set! (.-selectable line) false)
             (let [key (str "grid" (.-left line) "," (.-top line))]
               (add-item line key "grid")))
-          (recur (+ (:interval @snap-grid) x) (+ (:interval @snap-grid) y))))))
+          (recur (+ (:interval (:snapping @settings)) x) (+ (:interval (:snapping @settings)) y))))))
 )
 
-(defn update-snap-grid [{:keys [interval snap-attract visible enabled]}]
-  (reset! snap-grid {:interval interval
-                     :snap-attract snap-attract
-                     :visible visible
-                     :enabled enabled})
-  (redraw-grid))
 
 (defn snap! [target pos-prop pos-prop-set direction]
-  (let  [div  (quot (pos-prop target) (:interval @snap-grid)),
-         rest (mod  (pos-prop target) (:interval @snap-grid))]
-    (let [neww (* div (:interval @snap-grid))]
-      (when (< rest (:snap-attract @snap-grid)) (pos-prop-set target neww)))))
+  (let  [div  (quot (pos-prop target) (:interval (:snapping @settings))),
+         rest (mod  (pos-prop target) (:interval (:snapping @settings)))]
+    (let [neww (* div (:interval (:snapping @settings)))]
+      (when (< rest (:attract (:snapping @settings))) (pos-prop-set target neww)))))
 
 (defn do-snap [event]
-  (when (= true (:enabled @snap-grid))
+  (when (= true (:enabled (:snapping @settings)))
     (let [target (.-target event)]
       (snap! target #(.-left %) #(set! (.-left %) %2) 1)
       (snap! target #(.-top  %) #(set! (.-top %)  %2) 1)))
@@ -88,16 +84,16 @@
 
 (defn initialize [domid]
   (dom/wait-on-element domid (fn [id]
-                                 (reset! root-id id)
-                                 (dom/console-log (str "Initializing canvas with id [ " id " ]."))
-                                 (reset! canvas-sheet (js/fabric.Canvas. id ))
-                                 (.setDimensions @canvas-sheet (js-obj "width" 600 "height" 600)
-                                                               (js-obj "cssOnly" true))
-                                 (update-snap-grid {:interval 50
-                                                    :snap-attract 15
-                                                    :visible true
-                                                    :enabled true})
-                                 (.on @canvas-sheet (js-obj "object:moving"
+                               (dom/console-log @settings)
+                               (dom/console-log dimm)
+                               (reset! root-id id)
+                               (dom/console-log (str "Initializing canvas with id [ " id " ]."))
+                               (reset! canvas-sheet (js/fabric.Canvas. id ))
+                               (cell= (.setDimensions @canvas-sheet (js-obj "width"  page-width
+                                                                            "height" page-height)
+                                                      (js-obj "cssOnly" true)))
+                               (redraw-grid)
+                               (.on @canvas-sheet (js-obj "object:moving"
                                                             #(do-snap %))))))
 (defn layer-ctor [other-layer])
 

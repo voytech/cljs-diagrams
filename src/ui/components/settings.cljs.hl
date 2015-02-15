@@ -59,4 +59,19 @@
                 :input #(settings/settings! @% :zoom))
               (text "~{zoom-label}")
               " Zoom value") )
+
+       (div :style "margin-left:20xp; margin-top:5px"
+           (label)
+            (select
+              :change #(settings/settings! @% :page-format)
+              :value (settings/settings? :page-format)
+                (option :value "A3"  "A3")
+                (option :value "A4"  "A4")
+                (option :value "A5"  "A5")
+                (option :value "A6"  "A6"))
+              (p (text "Value of select input: ~{page-format}")))
+
+       (div :id "settings-debug" :style "margin-left:50px"
+        (p (text "page width  ~{settings/page-width}"))
+        (p (text "page height ~{settings/page-height}")))
 ))

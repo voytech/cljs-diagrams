@@ -6,13 +6,20 @@
 
 (defn neg-snapping [key] (not (is-snapping key)))
 
+
 (def zoom-label (settings/settings? :zoom))
 (def attract-val (settings/settings? :snapping :attract))
 (def interval-val (settings/settings? :snapping :interval))
 (def pages-count (settings/settings? :pages :count))
-(def multi-page? (settings/settings? :multi-page?))
+(def multi-page? (settings/settings? :multi-page))
 (def two-sided? (settings/settings? :pages :two-sided))
 (def page-format (settings/settings? :page-format))
+
+(defelem select-input [{:keys [change value values]}]
+  (select :change change
+          :value value
+          (loop-tpl :bindings [val values]
+                (option :value val val))))
 
 (defelem settings []
   (div :id "settings-wrapper"
@@ -32,6 +39,14 @@
                :click #(do (settings/settings! (neg-snapping :visible) :snapping :visible) true)
                :value (settings/settings? :snapping :visible))
                " Display snap grid"))
+
+       (div :style "margin-left:20px; margin-top:5px"
+            (label
+             (input
+               :type "checkbox"
+               :click #(do (settings/settings! (not (:multi-page @settings/settings)) :multi-page)  true)
+               :value (settings/settings? :multi-page))
+               " Multi page"))
 
        (div :style "margin-left:20px; margin-top:5px"
             (label
@@ -59,12 +74,20 @@
                 :input #(settings/settings! @% :zoom))
               (text "~{zoom-label}")
               " Zoom value") )
-
-       (div :style "margin-left:20xp; margin-top:5px"
+       (div :style "margin-left:20px; margin-top:5px"
+            (label
+               (input
+                  :type "range" :min 1 :max 20 :step 1
+                  :value (settings/settings? :pages :count)
+                  :input #(settings/settings! @% :pages :count))
+               (text "~{pages-count}")
+               " Pages count"))
+       (div :style "margin-left:20px; margin-top:5px"
            (label)
             (select
               :change #(settings/settings! @% :page-format)
               :value (settings/settings? :page-format)
+                (option :value "T"  "Test format")
                 (option :value "A3"  "A3")
                 (option :value "A4"  "A4")
                 (option :value "A5"  "A5")

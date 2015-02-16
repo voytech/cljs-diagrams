@@ -31,7 +31,7 @@
                         :visible true
                         :attract 15
                         :interval 50}
-                     :multi-page? false
+                     :multi-page false
                      :pages {
                              :count 4
                              :two-sided false

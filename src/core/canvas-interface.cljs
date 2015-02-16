@@ -1,12 +1,14 @@
 (ns core.canvas-interface
   (:require [utils.dom.dom-utils :as dom]
             [tailrecursion.javelin :refer [cell]]
+            [tailrecursion.hoplon :refer [canvas by-id append-child add-children! ]]
             [core.settings :refer [settings
                                    settings?
                                    settings!
                                    page-formats
                                    page-width
-                                   page-height]])
+                                   page-height
+                                   ]])
   (:require-macros [tailrecursion.javelin :refer [cell=]]))
 
 (declare add-item)
@@ -23,9 +25,16 @@
 (def node-keys-group (atom {}))
 (def canvas-buffer (atom {}))
 (def canvas-sheet (atom ))
-(def layers (atom []))
-(def root-id (atom ""))
 
+(def page {:groups node-keys-group
+           :buffer canvas-buffer
+           :canvas canvas-sheet
+           :index 0
+           :id "page-1"})
+
+(def project (cell {:current-page-idx 0
+                    :pages {}
+                    :current-page {}}))
 
 (defn add-item
   ([item key]
@@ -45,12 +54,20 @@
       (del-item (get key-map key))))
    (swap! node-keys-group dissoc group))
 
-(defn redraw-grid []
+(defn group-count [key-group]
+  (let [key-map (get @node-keys-group key-group)]
+    (count (keys key-map))))
+
+(defn group? [key-group]
+   (get @node-keys-group key-group)
+)
+
+(defn draw-grid []
   (del-items "grid")
-  (when (= true (:visible (:snapping @settings)))
+  (when (= true @(settings? :snapping :visible))
     (loop [x 0 y 0]
       (if (<= (.getWidth @canvas-sheet) x)
-         x
+        x
         (let [line1 (js/fabric.Rect. (js-obj "left" 0
                                              "top" y
                                              "width" (.getWidth @canvas-sheet)
@@ -63,11 +80,29 @@
                                              "opacity" 0.1))]
           (doseq [line [line1 line2]]
             (set! (.-selectable line) false)
-            (let [key (str "grid" (.-left line) "," (.-top line))]
+            (let [key (str "grid-" (group-count "grid"))]
               (add-item line key "grid")))
-          (recur (+ (:interval (:snapping @settings)) x) (+ (:interval (:snapping @settings)) y))))))
+          (recur (+ @(settings? :snapping :interval) x) (+ @(settings? :snapping :interval) y))))))
 )
 
+;;Not yet used. NEED TESTING.
+(defn reactive-grid[]
+   (loop [indx 0 offset 0]
+           (if (< indx (group-count "grid"))
+             (let [key (get (group? "grid") indx),
+                   key2 (get (group? "grid") (inc indx))]
+               (let [elem (get @canvas-buffer key),
+                     elem2 (get @canvas-buffer key2)]
+                 (dom/console-log (str key " , " key2))
+                 (.setTop elem offset)
+               ;;(.set elem "width" (page-width))
+                 (.setLeft elem2 offset)
+               ;;(.set elem2 "height" (page-height))
+                 (.setVisible elem (settings? :snapping :visible))
+                 (.setVisible elem2 (settings? :snapping :visible)))
+               (recur (+ 2 indx) (+ (settings? :snapping :interval) offset)))
+             indx ))
+)
 
 (defn snap! [target pos-prop pos-prop-set direction]
   (let  [div  (quot (pos-prop target) (:interval (:snapping @settings))),
@@ -82,32 +117,47 @@
       (snap! target #(.-top  %) #(set! (.-top %)  %2) 1)))
 )
 
-(defn initialize [domid]
+(defn initialize-page [domid]
   (dom/wait-on-element domid (fn [id]
-                               (dom/console-log @settings)
-                               (dom/console-log dimm)
-                               (reset! root-id id)
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
                                (reset! canvas-sheet (js/fabric.Canvas. id ))
                                (cell= (.setDimensions @canvas-sheet (js-obj "width"  page-width
                                                                             "height" page-height)
-                                                      (js-obj "cssOnly" true)))
-                               (redraw-grid)
+                                                             (js-obj "cssOnly" true)))
+                               (draw-grid)
+                             ;;(cell= (reactive-grid))
                                (.on @canvas-sheet (js-obj "object:moving"
                                                             #(do-snap %))))))
-(defn layer-ctor [other-layer])
 
-(defn add-layer "Adds a new canvas layer to the layer holder. New layer can be
-                 static or dynamic with control layer on top of it.
-                 When creating new layer, one should decide if it should take
-                 parameters from exisitng layer e.g. root layer or it can be
-                 a sibling layer as in two sided books."
-  [id {:keys [static]}]
-  (.append (.parent (js/jQuery. (str "#" id))) (layer-ctor (dom/by-id @root-id ))))
+(defn page-id [indx]
+  (str "page-" indx))
 
-(defn get-layer [id])
+(defn create-page [id]
+  (dom/console-log "creating page DOM element!")
+  (when (nil? (by-id id))
+     (let [new (canvas :id id
+                       :class "canvas inactive")]
+       (dom/console-log new)
+       (let [wrapper (by-id "canvas-wrapper")]
+         (dom/console-log wrapper)
+         (append-child wrapper new)
+         (initialize-page id)))))
 
-(defn rem-layer [id])
+(defn select-page [id])
+
+(defn manage-pages [settings]
+  (cond
+    (true? (get-in settings [:multi-page]))
+       (loop [indx 0]
+               (if (< indx (get-in settings [:pages :count]))
+                 (do (create-page (page-id indx))
+                     (recur (inc indx)))
+                 true)
+               )
+       :else (create-page (page-id 0))))
+
+(defn initialize-workspace []
+  (cell= (manage-pages settings))) ;;IMPORTANT NOTE A CELL MUST BE USED IN SAME LEXICAL SCOPE AS FORMULA.
 
 (defmulti add :type)
 
@@ -118,8 +168,7 @@
                                    "top" (:top  (:params data))
                                    "angle"   0
                                    "opacity" 1))]
-    (swap! canvas-sheet js-conj photo-node))
-)
+    (swap! canvas-sheet js-conj photo-node)))
 
 (defmethod add "raw" [data])
 

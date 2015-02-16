@@ -13,13 +13,15 @@
    ((comp canvas-sheet/add dnd/dispatch-drop-event) event)
 )
 
-(canvas-sheet/initialize "workspace-1")
+(dom/wait-on-element "canvas-wrapper"  #(canvas-sheet/initialize-workspace))
 
 (defelem workspace []
-  (div :id "canvas-wrapper"
-       :class "workspace-div"
-       :drop resolve-drop
-       :dragover #(.preventDefault %)
-       (canvas :id "workspace-1"
-               :class "canvas"))
+  (div :id "workspace-inner"
+       (div :id "canvas-wrapper"
+            :class "workspace-div"
+            :drop resolve-drop
+            :dragover #(.preventDefault %))
+       (div :id "pagination"
+            :class "page-pagination" )
+       (div :is "slideshow" ))
 )

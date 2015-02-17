@@ -22,6 +22,8 @@
 (defn j-query-id [id]
   (js/jQuery (str "#" id)))
 
+(defn j-query-class [id]
+  (js/jQuery (str "." id)))
 (defn del-ids [head  & tail])
 
 (defn hide-childs [parent]
@@ -34,7 +36,7 @@
   (.get (j-query parent) index))
 
 (defn swap-childs [child1 child2]
-  (.insertBefore (j-query child1) child2))
+  (.insertBefore (j-query child2) child1))
 
 (defn swap-childs-idx [parent idx1 idx2]
   (swap-childs (child-at parent idx1)

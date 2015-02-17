@@ -136,20 +136,16 @@
   (str "page-" indx))
 
 (defn create-page [id]
-  (dom/console-log "creating page DOM element!")
   (when (nil? (by-id id))
      (let [new (canvas :id id
-                       :class  "canvas")]
-       (dom/console-log new)
+                       :class "canvas")]
        (let [wrapper (by-id "canvas-wrapper")]
-         (dom/console-log wrapper)
          (append-child wrapper new)
          (initialize-page id)))))
 
 (defn select-page [id]
-  (dom/swap-childs (child-at (dom/j-query-id "canvas-wrapper") (page-id 0))
-                   (child-at (dom/j-query-id "canvas-wrapper") id))
-  (visible-page id))
+  (dom/console-log (str "selecting page :" id))
+  (visible-page (page-id id)))
 
 
 (defn visible-page [id]
@@ -164,12 +160,13 @@
                (if (< indx (get-in settings [:pages :count]))
                  (do (create-page (page-id indx))
                      (recur (inc indx)))
-                 true)
-               )
+                 true))
        :else (create-page (page-id 0))))
 
 (defn initialize-workspace []
-  (cell= (manage-pages settings))) ;;IMPORTANT NOTE A CELL MUST BE USED IN SAME LEXICAL SCOPE AS FORMULA.
+  (cell= (manage-pages settings))
+  (cell= (select-page (get-in project [:current-page-idx])))
+)
 
 (defmulti add :type)
 

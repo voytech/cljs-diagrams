@@ -12,6 +12,8 @@
   (:require-macros [tailrecursion.javelin :refer [cell=]]))
 
 (declare add-item)
+(declare visible-page)
+
 (defn js-conj [jscontainer obj]
   (.add jscontainer obj)
   jscontainer
@@ -86,7 +88,7 @@
 )
 
 ;;Not yet used. NEED TESTING.
-(defn reactive-grid[]
+(defn reactive-grid [settings]
    (loop [indx 0 offset 0]
            (if (< indx (group-count "grid"))
              (let [key (get (group? "grid") indx),
@@ -98,9 +100,9 @@
                ;;(.set elem "width" (page-width))
                  (.setLeft elem2 offset)
                ;;(.set elem2 "height" (page-height))
-                 (.setVisible elem (settings? :snapping :visible))
-                 (.setVisible elem2 (settings? :snapping :visible)))
-               (recur (+ 2 indx) (+ (settings? :snapping :interval) offset)))
+                 (.setVisible elem (get-in settings [:snapping :visible]))
+                 (.setVisible elem2 (get-in settings [:snapping :visible])))
+               (recur (+ 2 indx) (+ (get-in settings [:snapping :interval]) offset)))
              indx ))
 )
 
@@ -121,6 +123,7 @@
   (dom/wait-on-element domid (fn [id]
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
                                (reset! canvas-sheet (js/fabric.Canvas. id ))
+                               (visible-page "page-0")
                                (cell= (.setDimensions @canvas-sheet (js-obj "width"  page-width
                                                                             "height" page-height)
                                                              (js-obj "cssOnly" true)))
@@ -136,14 +139,23 @@
   (dom/console-log "creating page DOM element!")
   (when (nil? (by-id id))
      (let [new (canvas :id id
-                       :class "canvas inactive")]
+                       :class  "canvas")]
        (dom/console-log new)
        (let [wrapper (by-id "canvas-wrapper")]
          (dom/console-log wrapper)
          (append-child wrapper new)
          (initialize-page id)))))
 
-(defn select-page [id])
+(defn select-page [id]
+  (dom/swap-childs (child-at (dom/j-query-id "canvas-wrapper") (page-id 0))
+                   (child-at (dom/j-query-id "canvas-wrapper") id))
+  (visible-page id))
+
+
+(defn visible-page [id]
+  (.css (js/jQuery ".canvas-container") "display" "none")
+  (.css (.parent (js/jQuery (str "#" id))) "display" "block")
+)
 
 (defn manage-pages [settings]
   (cond

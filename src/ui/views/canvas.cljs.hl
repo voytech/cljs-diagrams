@@ -1,6 +1,7 @@
 (ns ui.views.canvas
   (:require [utils.dom.dnd-utils :as dnd]
             [utils.dom.dom-utils :as dom]
+            [core.settings :as settings]
             [core.canvas-interface :as canvas-sheet]))
 
 
@@ -15,6 +16,13 @@
 
 (dom/wait-on-element "canvas-wrapper"  #(canvas-sheet/initialize-workspace))
 
+(defelem pagination []
+  (ul :class "pagination"
+     (loop-tpl :bindings [idx (cell= (range 0 (get-in settings/settings [:pages :count])))]
+               (li (a
+                     :click #()
+                     :href "#" (str (inc @idx)))))))
+
 (defelem workspace []
   (div :id "workspace-inner"
        (div :id "canvas-wrapper"
@@ -22,6 +30,7 @@
             :drop resolve-drop
             :dragover #(.preventDefault %))
        (div :id "pagination"
-            :class "page-pagination" )
+            :class "page-pagination text-center"
+            (pagination))
        (div :is "slideshow" ))
 )

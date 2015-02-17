@@ -16,4 +16,28 @@
 
 (defn console-log-cond [obj] (when (true? debug) (console-log obj)))
 
+(defn j-query [elem]
+  (js/jQuery elem))
+
+(defn j-query-id [id]
+  (js/jQuery (str "#" id)))
+
 (defn del-ids [head  & tail])
+
+(defn hide-childs [parent]
+)
+
+(defn visible-child [parent child]
+)
+
+(defn child-at [parent index]
+  (.get (j-query parent) index))
+
+(defn swap-childs [child1 child2]
+  (.insertBefore (j-query child1) child2))
+
+(defn swap-childs-idx [parent idx1 idx2]
+  (swap-childs (child-at parent idx1)
+               (child-at parent idx2)))
+
+(defn child-index [parent child])

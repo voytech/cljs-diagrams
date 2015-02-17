@@ -8,7 +8,7 @@ h1 {
 }
 
 #container{
-  height:700px;
+  height:100vh;
   width:100%;
 }
 
@@ -25,6 +25,16 @@ h1 {
   float:left;
   width:30%;
 }
+
+.page-pagination{
+  clear:both;
+  width:100%;
+}
+/* .page-pagination > .pagination{ */
+/*   margin-left:auto !important; */
+/*   margin-right:auto !important; */
+/*   display:block !important; */
+/* } */
 
 .image-loader{
   border-style:none;
@@ -56,16 +66,19 @@ h1 {
 }
 
 .workspace-div{
-  width:100%;
-  height:100%;
+  position:relative;
   background-color:lighter;
 }
-
+#canvas-wrapper{
+  overflow:hidden;
+}
 .canvas-container{
-  display: block;
+  position:absolute;
   margin-right: auto;
   margin-left: auto;
   margin-top:20px;
+  left:0;
+  top:0;
 }
 .canvas{
   display: block;
@@ -74,6 +87,10 @@ h1 {
   border-color:red;
   border-style:dashed;
   border-width:1px;
+}
+
+.canvas.hidden{
+  display:none;
 }
 
 .file-load-ctrl{

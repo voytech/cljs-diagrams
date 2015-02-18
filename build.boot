@@ -9,6 +9,7 @@
                   [tailrecursion/hoplon      "5.10.24"]
                   [tailrecursion/javelin     "3.7.2"]
                   [io.hoplon.vendor/jquery   "2.1.1-0"]
+                  [weasel "0.2.0"]
                   [io.hoplon/twitter.bootstrap "0.2.0"]]
   :out-path     "resources/public"
   :src-paths    #{"src"})
@@ -30,7 +31,7 @@
   []
   (comp (watch) (hoplon {:pretty-print true
                          :prerender false
-                         :source-map true}) (dev-server)))
+                         :source-map true}) (dev-server :port 3333)))
 
 (deftask production
   "Build photo-collage for production."

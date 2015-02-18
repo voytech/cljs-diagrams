@@ -38,6 +38,7 @@
                     :pages {}
                     :current-page {}}))
 
+
 (defn add-item
   ([item key]
      (swap! canvas-sheet js-conj item)
@@ -132,6 +133,9 @@
                                (.on @canvas-sheet (js-obj "object:moving"
                                                             #(do-snap %))))))
 
+(defn dispose-page [domid]
+)
+
 (defn page-id [indx]
   (str "page-" indx))
 
@@ -143,6 +147,12 @@
          (append-child wrapper new)
          (initialize-page id)))))
 
+(defn remove-page [id]
+  (when (not (nil? (by-id id)))
+    (dispose-page id)
+    (dom/remove-element (dom/parent (by-id id)))))
+
+
 (defn select-page [id]
   (dom/console-log (str "selecting page :" id))
   (visible-page (page-id id)))
@@ -153,17 +163,27 @@
   (.css (.parent (js/jQuery (str "#" id))) "display" "block")
 )
 
+
 (defn manage-pages [settings]
   (cond
     (true? (get-in settings [:multi-page]))
-       (loop [indx 0]
-               (if (< indx (get-in settings [:pages :count]))
-                 (do (create-page (page-id indx))
-                     (recur (inc indx)))
-                 true))
-       :else (create-page (page-id 0))))
+      (do
+        (loop [indx (dom/children-count (by-id "canvas-wrapper"))]
+          (if (< (get-in settings [:pages :count]) indx)
+            (do (dom/console-log (str "removing page id:" (dec indx)))
+                (remove-page (page-id (dec indx)))
+                (recur (dec indx)))
+            true))
+        (loop [indx 0]
+          (if (< indx (get-in settings [:pages :count]))
+            (do (create-page (page-id indx))
+                (recur (inc indx)))
+            true)))
+      :else (do
+              (create-page (page-id 0)))))
 
 (defn initialize-workspace []
+  ;;(cell= ((when (true? (get-in settings [:multi-page])) (swap! assoc-in project [:current-page-idx] 0))))
   (cell= (manage-pages settings))
   (cell= (select-page (get-in project [:current-page-idx])))
 )

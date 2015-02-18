@@ -2,6 +2,7 @@
   (:require [utils.dom.dnd-utils :as dnd]
             [utils.dom.dom-utils :as dom]
             [core.settings :as settings]
+            [ui.components.pagination :refer [pagination]]
             [core.canvas-interface :as canvas-sheet]))
 
 (def current-page (cell= (inc (get-in canvas-sheet/project [:current-page-idx]))))
@@ -16,24 +17,19 @@
 
 (dom/wait-on-element "canvas-wrapper"  #(canvas-sheet/initialize-workspace))
 
-(defelem pagination []
-  (ul :class "pagination"
-     (loop-tpl :bindings [idx (cell= (range 0 (get-in settings/settings [:pages :count])))]
-               (li (a
-                     :click #(swap! canvas-sheet/project assoc-in [:current-page-idx] @idx)
-                     :href "#" (str (inc @idx)))))))
-
 (defelem workspace []
   (div :id "workspace-inner"
        (div :id "page-indicator"
             :class "text-center"
-              (text "Current page : ~{current-page}"))
+              (text "Page : ~{current-page}"))
        (div :id "canvas-wrapper"
             :class "workspace-div"
             :drop resolve-drop
             :dragover #(.preventDefault %))
        (div :id "pagination"
             :class "page-pagination text-center"
-            (pagination))
+            (pagination :enabled (cell= (get-in settings/settings [:multi-page]))
+                        :pages (cell= (get-in settings/settings [:pages :count]))
+                        :change-page #(swap! canvas-sheet/project assoc-in [:current-page-idx] %)))
        (div :is "slideshow" ))
 )

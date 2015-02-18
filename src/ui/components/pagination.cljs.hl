@@ -1,0 +1,10 @@
+ (ns ui.components.pagination)
+
+ (defelem pagination [{:keys [enabled pages change-page]}]
+   (ul :class "pagination"
+     (when (true?  true)
+       (loop-tpl :bindings [idx (cell= (if (true? enabled) (range 0 pages)
+                                                           (range 0 1)))]
+         (li (a
+           :click #(change-page @idx)
+           :href "#" (str (inc @idx))))))))

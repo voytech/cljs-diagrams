@@ -20,7 +20,7 @@
                                  (tab :name "Photos" (library-view))
                                  (tab :name "Templates" (div (text "Tempaltes here!")))
                                  (tab :name "Clip-Arts" (div (text "Clip-Arts here!")))
-                                 (tab :name "Settings" (settings ))))
+                                 (tab :name "Settings" (settings))))
 
           (div :id "workspace" (workspace))
           (div :id "slides"))))

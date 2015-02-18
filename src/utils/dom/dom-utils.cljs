@@ -26,11 +26,19 @@
   (js/jQuery (str "." id)))
 (defn del-ids [head  & tail])
 
-(defn hide-childs [parent]
-)
+(defn remove-element [element]
+  (.remove (j-query element)))
+
+(defn children-count [element]
+  (.-length (.children (j-query element))))
+
+(defn hide-childs [parent])
 
 (defn visible-child [parent child]
 )
+
+(defn parent [child]
+  (.parent (j-query child)))
 
 (defn child-at [parent index]
   (.get (j-query parent) index))

@@ -34,8 +34,7 @@
 
 (defn hide-childs [parent])
 
-(defn visible-child [parent child]
-)
+(defn visible-child [parent child])
 
 (defn parent [child]
   (.parent (j-query child)))

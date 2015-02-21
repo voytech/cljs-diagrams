@@ -17,6 +17,11 @@
 (def snapping-enabled (settings/settings? :snapping :enabled))
 (def snapping-visible (settings/settings? :snapping :visible))
 
+(defn css-visible [path]
+  (cell= (if (true? (get-in settings/settings path))
+                  "display:block"
+                  "display:none")))
+
 (defelem select-input [{:keys [change value values]}]
   (select :change change
           :value value
@@ -26,7 +31,7 @@
 (defelem settings []
   (div :id "settings-wrapper"
        :class "settings"
-       (div :style "margin-left:20px; margin-top:20px"
+       (div :class "setting"
             (label
              (input
                :type "checkbox"
@@ -34,7 +39,7 @@
                :value (settings/settings? :snapping :enabled))
                " Enable snap grid"))
 
-       (div :style "margin-left:20px; margin-top:5px"
+       (div :class "setting"
             (label
              (input
                :type "checkbox"
@@ -42,7 +47,7 @@
                :value (settings/settings? :snapping :visible))
                " Display snap grid"))
 
-       (div :style "margin-left:20px; margin-top:5px"
+       (div :class "setting"
             (label
              (input
                :type "checkbox"
@@ -50,7 +55,8 @@
                :value (settings/settings? :multi-page))
                " Multi page"))
 
-       (div :style "margin-left:20px; margin-top:5px"
+       (div :class "setting"
+            :style (css-visible [:snapping :enabled])
             (label
              (input
               :type "range" :min 0 :max 100 :step 10
@@ -59,7 +65,8 @@
               (text "~{interval-val}")
                " Snap grid interval"))
 
-       (div :style "margin-left:20px; margin-top:5px"
+       (div :class "setting"
+            :style (css-visible [:snapping :enabled])
             (label
               (input
                 :type "range" :min 0 :max 20 :step 1
@@ -68,7 +75,7 @@
               (text "~{attract-val}")
               " Snapping attraction"))
 
-       (div :style "margin-left:20px; margin-top:5px"
+       (div :class "setting"
             (label
               (input
                 :type "range" :min 0 :max 20 :step 1
@@ -76,7 +83,8 @@
                 :input #(settings/settings! @% :zoom))
               (text "~{zoom-label}")
               " Zoom value") )
-       (div :style "margin-left:20px; margin-top:5px"
+       (div :style (css-visible [:multi-page])
+            :class "setting"
             (label
                (input
                   :type "range" :min 1 :max 20 :step 1
@@ -84,7 +92,7 @@
                   :input #(settings/settings! @% :pages :count))
                (text "~{pages-count}")
                " Pages count"))
-       (div :style "margin-left:20px; margin-top:5px"
+       (div :class "setting"
            (label)
             (select
               :change #(settings/settings! @% :page-format)
@@ -94,9 +102,9 @@
                 (option :value "A4"  "A4")
                 (option :value "A5"  "A5")
                 (option :value "A6"  "A6"))
-              (p (text "Value of select input: ~{page-format}")))
+              (p (text "Page format:<~{page-format}>")))
 
-       (div :id "settings-debug" :style "margin-left:50px"
+       (div :id "settings-debug" :class "setting"
         (p (text "page width  ~{settings/page-width}"))
         (p (text "page height ~{settings/page-height}"))
         (p (text "multi page  ~{multi-page?}"))

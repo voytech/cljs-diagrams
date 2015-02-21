@@ -30,11 +30,6 @@ h1 {
   clear:both;
   width:100%;
 }
-/* .page-pagination > .pagination{ */
-/*   margin-left:auto !important; */
-/*   margin-right:auto !important; */
-/*   display:block !important; */
-/* } */
 
 .image-loader{
   border-style:none;
@@ -127,5 +122,18 @@ h1 {
   overflow:hidden;
   background-color:lightgray;
 }
+
+.settings{
+  margin-left:auto;
+  margin-right:auto;
+  margin-top:20px;
+  display:block;
+}
+
+.settings > .setting{
+  margin-left:20px;
+  margin-top:10px;
+}
+
 .photo{
 }

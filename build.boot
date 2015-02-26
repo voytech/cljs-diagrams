@@ -1,10 +1,8 @@
-;;#!/usr/bin/env boot
-;;#tailrecursion.boot.core/version "2.5.1"
 (set-env!
   :project      'photo-collage
   :version      "0.1.0-SNAPSHOT"
-  :dependencies '[;;[tailrecursion/boot.task   "2.2.4"]
-                  [tailrecursion/hoplon      "6.0.0-SNAPSHOT"] ;;5.10.24
+  :dependencies '[
+                  [tailrecursion/hoplon      "6.0.0-SNAPSHOT"]
                   [tailrecursion/boot-hoplon "0.1.0-SNAPSHOT" :scope "test"]
                   [tailrecursion/javelin     "3.7.2"]
                   [io.hoplon.vendor/jquery   "2.1.1-0"]
@@ -13,13 +11,9 @@
   :out-path     "resources/public"
   :source-paths    #{"src"})
 
-;; Static resources (css, images, etc.):
-;;(add-sync! (get-env :out-path) #{"assets"})
 
 (require
- ;; '[tailrecursion.hoplon.boot    :refer :all]
   '[tailrecursion.boot-hoplon :refer :all]
- ;; '[tailrecursion.boot.task.ring :refer [dev-server]]
   '[cemerick.cljs.test :refer :all]
   )
 
@@ -46,7 +40,4 @@
 (deftask cljs-test
   "Run clojurescript.test tests"
   []
-  ;; compile cljs -> js
-  ;;
-  ;; execute commands like test-ns
 )

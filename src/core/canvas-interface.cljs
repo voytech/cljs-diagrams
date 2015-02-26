@@ -58,54 +58,62 @@
     (dom/console-log id)
     (get-in @project [:pages (keyword id)])))
 
+;; (defmacro within-page [domid body]
+;;   `(let [page (get-in @project [:pages (keyword ~@domid)])]
+;;      ~@body))
+
+(defn group-elem-count [id key-group]
+  (let [page (get-in @project [:pages (keyword id)])]
+    (count (keys (get-in page [:groups key-group])))))
+
 (defn add-item
   ([id item key]
-     (.add (:cavas (proj-page-by-id id)) item)
+     (.add (:canvas (proj-page-by-id id)) item)
      (swap! project assoc-in [:pages (keyword id) :buffer key] item))
   ([id item key group]
-     (add-item item key)
-     (swap! project assoc-in [:pages (keyword id) :groups group (count (keys (get-in project [:pages (keyword id) :groups group])))] key)))
+     (add-item id item key)
+     (swap! project assoc-in [:pages (keyword id) :groups group (group-elem-count id group)] key)))
 
 (defn del-item [id key]
-  (let [elem (get @canvas-buffer key)]
-    (when (not (nil? elem)) (swap! canvas-sheet js-rem elem))))
+  (let [page (get-in @project [:pages (keyword id)])]
+    (let [elem (get-in page [:buffer key])]
+      (when (not (nil? elem)) (.remove (:canvas page) elem)))))
 
-(defn del-items [id key-group]
+(defn clear-group [id group-name]
   (let [key-map (get @node-keys-group key-group)]
     (doseq [key (keys key-map)]
       (del-item (get key-map key))))
    (swap! node-keys-group dissoc group))
 
-(defn group-count [id key-group]
-  (let [key-map (get @node-keys-group key-group)]
-    (count (keys key-map))))
+(defn items-in-group [pageid group-key]
+  (let [page (get-in @project [:pages (keyword pageid)])]
+    (get (:groups page) group-key)))
 
-(defn group? [id key-group]
-   (get @node-keys-group key-group)
-)
+(defn iterate-group [group-key])
 
 (defn draw-grid [id]
  ;; (del-items "grid")
-  (when (= true @(settings? :snapping :visible))
-    (loop [x 0 y 0]
-      (if (<= (.getWidth (:canvas (proj-page-by-id id))) x)
-        x
-        (let [line1 (js/fabric.Rect. (js-obj "left" 0
-                                             "top" y
-                                             "width" (.getWidth (:canvas (proj-page-by-id id)))
-                                             "height" 1
-                                             "opacity" 0.1)),
-              line2 (js/fabric.Rect. (js-obj "left" x
-                                             "top" 0
-                                             "width" 1
-                                             "height" (.getHeight (:canvas (proj-page-by-id id)))
-                                             "opacity" 0.1))]
-          (doseq [line [line1 line2]]
-            (set! (.-selectable line) false)
-            (let [key (str "grid-" (group-count "grid"))]
-              (add-item line key "grid")))
-          (recur (+ @(settings? :snapping :interval) x) (+ @(settings? :snapping :interval) y))))))
-)
+  (let [page (get-in @project [:pages (keyword id)])]
+    (when (= true @(settings? :snapping :visible))
+      (loop [x 0 y 0]
+        (if (<= @page-width x)
+          x
+          (let [line1 (js/fabric.Rect. (js-obj "left" 0
+                                               "top" y
+                                               "width" @page-width
+                                               "height" 1
+                                               "opacity" 0.1)),
+                line2 (js/fabric.Rect. (js-obj "left" x
+                                               "top" 0
+                                               "width" 1
+                                               "height" @page-height
+                                               "opacity" 0.1))]
+            (doseq [line [line1 line2]]
+              (set! (.-selectable line) false)
+              (let [key (str "grid-" (group-elem-count (:id page) "grid"))]
+                (add-item (:id page) line key "grid")))
+            (recur (+ @(settings? :snapping :interval) x) (+ @(settings? :snapping :interval) y))))))))
+
 
 ;;Not yet used. NEED TESTING.
 (defn reactive-grid [settings]
@@ -152,23 +160,19 @@
   (let [c-container (dom/parent (by-id id))]
     (.index (dom/j-query-class "canvas-container") c-container)))
 
-(defn index-of-page [id]
- ;; (.js/parseInt (last (split id "-")))
-)
-
 (defn initialize-page [domid]
   (dom/wait-on-element domid (fn [id]
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
-                               ;;(reset! canvas-sheet (js/fabric.Canvas. id ))
                                (proj-create-page id true)
                                (cell= (.setDimensions (:canvas (proj-page-by-id id))
                                                                 (js-obj "width"  page-width
                                                                         "height" page-height)
                                                                 (js-obj "cssOnly" true)))
-                               ;;(draw-grid id)
+                               (draw-grid id)
                                (.on (:canvas (proj-page-by-id id)) (js-obj "object:moving" #(do-snap %))))))
 
 (defn dispose-page [domid]
+
 )
 
 (defn create-page [id]
@@ -191,10 +195,9 @@
 
 (defn visible-page [id]
   (.css (js/jQuery ".canvas-container") "display" "none")
-  (.css (.parent (js/jQuery (str "#" id))) "display" "block")
-)
+  (.css (.parent (js/jQuery (str "#" id))) "display" "block"))
 
-(defn- p-manage-pages [{:keys [init-index condition action recur-func]}]
+(defn- repeat-action-on-condition [{:keys [init-index condition action recur-func]}]
   (loop [indx init-index]
     (if (condition indx) (do (action indx) (recur (recur-func indx))) true)))
 
@@ -202,23 +205,25 @@
   (cond
     (true? (get-in settings [:multi-page]))
       (do
-        (p-manage-pages {:init-index (dom/children-count (by-id "canvas-wrapper"))
+        (repeat-action-on-condition
+                        {:init-index (dom/children-count (by-id "canvas-wrapper"))
                          :condition #(< (get-in settings [:pages :count]) %)
                          :action #(remove-page (page-id (dec %)))
                          :recur-func #(dec %)})
-        (p-manage-pages {:init-index 0
+        (repeat-action-on-condition
+                        {:init-index 0
                          :condition #(< % (get-in settings [:pages :count]) )
                          :action #(create-page (page-id %))
                          :recur-func #(inc %)}))
       :else (do
-              (p-manage-pages {:init-index 1
+              (repeat-action-on-condition
+                              {:init-index 1
                                :condition #(< % (dom/children-count (by-id "canvas-wrapper")))
                                :action #(remove-page (page-id %))
                                :recur-func #(inc %)})
               (create-page (page-id 0)))))
 
 (defn initialize-workspace []
-  ;;(cell= ((when (true? (get-in settings [:multi-page])) (swap! assoc-in project [:current-page-idx] 0))))
   (cell= (manage-pages settings))
   ;;(cell= ) lense here to eval each index change into dom id.
   (cell= (select-page (get-in project [:current-page-idx])))

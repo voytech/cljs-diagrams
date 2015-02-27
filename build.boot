@@ -10,8 +10,11 @@
                   [io.hoplon.vendor/jquery   "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
                   [io.hoplon/twitter.bootstrap "0.2.0"]]
-  :out-path     "resources/public"
+  :out-path      "resources/public"
+  :cljs-out-path "tests"
+  :cljs-runner   "\\test-runner\\runner.js"
   :src-paths    #{"src"})
+
 
 ;; Static resources (css, images, etc.):
 (add-sync! (get-env :out-path) #{"assets"})
@@ -50,7 +53,14 @@
 (deftask cljs-test
   "Run clojurescript.test tests"
   []
-  (.. Runtime getRuntime (exec "slimerjs"))
-  ;;(.exec (.getRuntime Runtime) "slimerjs")
- ;; (sh "slimerjs" "test-runner/runner.js" (str (get-env :out-path) "/tests/main.js") )
+   (let [current-dir (System/getProperty "user.dir"),
+         slimer-home (System/getenv "SLIMER_HOME")]
+     (let [result (sh (str slimer-home "\\slimerjs.bat")
+                      (str current-dir (get-env :cljs-runner))
+                      (str current-dir "\\" (get-env :out-path)
+                                       "\\" (get-env :cljs-out-path)
+                                       "\\main.js"))]
+       (println (:out result))
+))
+   identity
 )

@@ -19,6 +19,7 @@
 (require
   '[tailrecursion.hoplon.boot    :refer :all]
   '[tailrecursion.boot.task.ring :refer [dev-server]]
+  '[tailrecursion.boot.task :refer :all]
   '[cemerick.cljs.test :refer :all]
   )
 
@@ -41,6 +42,10 @@
   []
   (hoplon {:optimizations :advanced}))
 
+(deftask cljs-compile
+  "Simple clojurescript compiler task.. "
+  []
+  (cljs :output-path  "/tests/main.js" ))
 
 (deftask cljs-test
   "Run clojurescript.test tests"

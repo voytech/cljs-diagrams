@@ -3,7 +3,7 @@
   :version      "0.1.0-SNAPSHOT"
   :dependencies '[
                   [tailrecursion/hoplon      "6.0.0-SNAPSHOT"]
-                  [adzerk/boot-cljs "0.0-2814-1"]
+                  [adzerk/boot-cljs "0.0-2814-1" :scope "test"]
                   [adzerk/boot-cljs-repl "0.1.9"]
                   [tailrecursion/boot-hoplon "0.1.0-SNAPSHOT" :scope "test"]
                   [tailrecursion/javelin     "3.7.2"]
@@ -11,7 +11,10 @@
                   [com.cemerick/clojurescript.test "0.3.3"]
                   [io.hoplon/twitter.bootstrap "0.2.0"]]
   :asset-paths    #{"assets"}
-  :source-paths   #{"src"})
+  :source-paths   #{"src"}
+  :src-paths      #{"src"} ;;it seems src-paths is needed for cljs task
+ ;;:rsc-paths    #{"html"}
+  )
 
 
 (require
@@ -21,7 +24,7 @@
   '[adzerk.boot-cljs-repl :refer :all]
   )
 
-(deftask build []
+(deftask clojurescript-compile []
   (comp  (cljs :unified true
                :source-map false
                :optimizations :none)))

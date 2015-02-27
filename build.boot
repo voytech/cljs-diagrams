@@ -20,7 +20,7 @@
   '[tailrecursion.hoplon.boot    :refer :all]
   '[tailrecursion.boot.task.ring :refer [dev-server]]
   '[tailrecursion.boot.task :refer :all]
-  '[cemerick.cljs.test :refer :all]
+  '[clojure.java.shell :refer [sh]]
   )
 
 (deftask development
@@ -50,7 +50,7 @@
 (deftask cljs-test
   "Run clojurescript.test tests"
   []
-  ;; compile cljs -> js
-  ;;
-  ;; execute commands like test-ns
+  (.. Runtime getRuntime (exec "slimerjs"))
+  ;;(.exec (.getRuntime Runtime) "slimerjs")
+ ;; (sh "slimerjs" "test-runner/runner.js" (str (get-env :out-path) "/tests/main.js") )
 )

@@ -1,0 +1,1 @@
+boot1 cljs-compile && slimerjs %CD%\test-runner\runner.js  %CD%\resources\public\tests\main.js

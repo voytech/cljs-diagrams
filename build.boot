@@ -10,8 +10,8 @@
                   [io.hoplon.vendor/jquery   "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
                   [io.hoplon/twitter.bootstrap "0.2.0"]]
-  :rsc-path       #{"assets"}
-  :source-paths    #{"src"})
+  :asset-paths    #{"assets"}
+  :source-paths   #{"src"})
 
 
 (require

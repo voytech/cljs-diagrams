@@ -13,7 +13,7 @@
   :out-path      "resources/public"
   :cljs-out-path "tests"
   :cljs-runner   "\\test-runner\\runner.js"
-  :src-paths    #{"src"})
+  :src-paths    #{"src/clj" "src/cljs" "src/hoplon" "src/test"})
 
 
 ;; Static resources (css, images, etc.):

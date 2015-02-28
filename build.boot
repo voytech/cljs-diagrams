@@ -11,15 +11,18 @@
                   [com.cemerick/clojurescript.test "0.3.3"]
                   [io.hoplon/twitter.bootstrap "0.2.0"]]
   :asset-paths    #{"assets"}
+  :out-path       "target"
+  :cljs-out-path  "tests"
   :source-paths   #{"src"}
-  :src-paths      #{"src"} ;;it seems src-paths is needed for cljs task
- ;;:rsc-paths    #{"html"}
-  )
+  :cljs-runner   "\\test-runner\\runner.js"
+  :src-paths    #{"src/clj" "src/cljs" "src/hoplon" "src/test"})
+
 
 
 (require
   '[tailrecursion.boot-hoplon :refer :all]
   '[cemerick.cljs.test :refer :all]
+  '[clojure.java.shell :refer [sh]]
   '[adzerk.boot-cljs :refer :all]
   '[adzerk.boot-cljs-repl :refer :all]
   )
@@ -48,8 +51,22 @@
   []
   (hoplon {:optimizations :advanced}))
 
+(deftask cljs-compile
+  "Simple clojurescript compiler task.. "
+  []
+  (cljs :output-path  "/tests/main.js" ))
 
 (deftask cljs-test
   "Run clojurescript.test tests"
   []
-)
+  (let [current-dir (System/getProperty "user.dir"),
+        slimer-home (System/getenv "SLIMER_HOME")]
+    (let [result (sh (str slimer-home "\\slimerjs.bat")
+                     (str current-dir (get-env :cljs-runner))
+                     (str current-dir "\\" (get-env :out-path)
+                          "\\" (get-env :cljs-out-path)
+                          "\\main.js"))]
+      (println (:out result))
+      ))
+  identity
+  )

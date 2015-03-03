@@ -43,8 +43,8 @@
         tmp-html     (boot/temp-dir!)
         opts         (dissoc *opts* :lib)
         add-cljs     (if lib boot/add-resource boot/add-source)]
-    (println tmp-cljs)
-    (println tmp-html)
+    (println (str "tmp clojurescript: " tmp-cljs))
+    (println (str "tmp html file" tmp-html))
     (boot/with-pre-wrap fileset
       (let [hl (->> fileset
                     (boot/fileset-diff @prev-fileset)
@@ -54,16 +54,15 @@
         (reset! prev-fileset fileset)
         (impl/hoplon (.getPath tmp-cljs) (.getPath tmp-html) hl opts)
         )
-        fileset
-      ;; (-> fileset (add-cljs tmp-cljs) (boot/add-resource tmp-html) boot/commit!)
+       (-> fileset (add-cljs tmp-cljs) (boot/add-resource tmp-html) boot/commit!)
 )))
 
 
 
-(deftask hoplon-compile []
-  (comp  (cljs :unified true
-               :source-map false
-               :optimizations :none) (hoplon)))
+(deftask hoplon-with-cljs [] ;;look at this how this works?
+  (comp  (hoplon-no-pod) (cljs :unified true
+                               :source-map false
+                               :optimizations :none)))
 
 (deftask development
   "Build photo-collage for development."

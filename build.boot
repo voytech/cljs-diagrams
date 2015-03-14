@@ -1,23 +1,27 @@
 (set-env!
   :project      'photo-collage
   :version      "0.1.0-SNAPSHOT"
-  :dependencies '[[boot/core "2.0.0-rc10"]
-                  [adzerk/bootlaces  "0.1.10" :scope "test"]
-                  [tailrecursion/hoplon      "6.0.0-SNAPSHOT"]
-                  [adzerk/boot-cljs "0.0-2814-3" :scope "test"]
-                  [adzerk/boot-cljs-repl "0.1.9"]
-                  [tailrecursion/boot-hoplon "0.1.0-SNAPSHOT" :scope "test"]
-                  [tailrecursion/javelin     "3.7.2"]
-                  [io.hoplon.vendor/jquery   "2.1.1-0"]
+  :dependencies '[[boot/core                       "2.0.0-rc10"]
+                  [adzerk/bootlaces                "0.1.10" :scope "test"]
+                  [tailrecursion/hoplon            "6.0.0-SNAPSHOT"]
+                  [adzerk/boot-cljs                "0.0-2814-3" ]
+                  [adzerk/boot-cljs-repl           "0.1.9"]
+                  [adzerk/boot-reload              "0.2.6"]
+                  [pandeiro/boot-http              "0.6.2"]
+                  [tailrecursion/boot-hoplon       "0.1.0-SNAPSHOT"]
+                  [tailrecursion/javelin           "3.7.2"]
+                  [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
-                  [io.hoplon/twitter.bootstrap "0.2.0"]
-                  [clj-tagsoup "0.3.0"]]
+                  [io.hoplon/twitter.bootstrap     "0.2.0"]
+                  [clj-tagsoup                     "0.3.0"]]
   ;;:asset-paths    #{"assets"}
-  :out-path       "target"
+  :out-path       "resources/public"
+  :target-path    "resources/public"
   :cljs-out-path  "tests"
   :source-paths   #{"src/cljs" "src/test" "src/hoplon"}
-  :cljs-runner   "\\test-runner\\runner.js"
-  :src-paths    #{"src/clj" "src/cljs" "src/hoplon" "src/test"})
+  :resource-paths #{"assets"}
+  :cljs-runner    "\\test-runner\\runner.js"
+  :src-paths      #{"src/clj" "src/cljs" "src/hoplon" "src/test"})
 
 
 
@@ -32,6 +36,8 @@
   '[adzerk.boot-cljs.js-deps    :as deps]
   '[adzerk.boot-cljs.impl :refer :all]
   '[adzerk.boot-cljs-repl :refer :all]
+  '[adzerk.boot-reload    :refer [reload]]
+  '[pandeiro.boot-http :refer [serve]]
   '[boot.core                      :as boot]
   '[boot.file                   :as file]
   '[boot.pod                       :as pod]
@@ -43,6 +49,9 @@
 
 ;;Tasks with no-pod suffix are temporary solution till boot-hoplon and boot-cljs
 ;;provided tasks are not working correctly yet.
+(deftask dev
+  []
+  (comp (watch) (speak) (hoplon) (reload) (cljs)))
 
 (deftask hoplon-no-pod
   [pp pretty-print bool "Pretty-print CLJS files created by the Hoplon compiler."
@@ -54,6 +63,7 @@
         opts         (dissoc *opts* :lib)
         add-cljs     (if lib boot/add-resource boot/add-source)]
     (boot/with-pre-wrap fileset
+      (println "EXECUTING HOPLON COMPILATION TASK....")
       (let [hl (->> fileset
                     (boot/fileset-diff @prev-fileset)
                      boot/input-files
@@ -139,7 +149,18 @@
       (boot/empty-dir! tmp-main)
       (let [{:keys [cljs main]} (deps/scan-fileset fileset)]
         (if (seq main)
-          fileset
+          (do (println (:path (first main)))
+              (let [file (str (:dir (first main)) "\\" (:path (first main)))
+                    content (slurp file)
+                    map (read-string content)]
+             ;; (io/delete-file file)
+              (->> cljs
+                   (mapv (comp symbol util/path->ns boot/tmppath))
+                   (concat [] (:require map))
+                   (assoc {} :require)
+                   (spit (str (:dir (first main)) "\\test.cljs.edn"))
+                  )
+              fileset))
           (let [output-to (or (get-in context [:opts :output-to]) "main.js")
                 out-main  (-> output-to (.replaceAll "\\.js$" "") deps/add-extension)
                 out-file  (doto (io/file tmp-main out-main) io/make-parents)]
@@ -174,8 +195,7 @@
     (comp
      (default-main :context ctx)
      (boot/with-pre-wrap fileset
-       (boot/empty-dir! tmp-result)
-       (let [{:keys [main incs cljs] :as fs} (deps/scan-fileset fileset)]
+         (let [{:keys [main incs cljs] :as fs} (deps/scan-fileset fileset)]
          (loop [[m & more] main, dep-order nil]
            (let [{{:keys [optimizations]} :opts :as ctx} ctx]
              (if m
@@ -193,6 +213,7 @@
 
 (deftask with-logging-fileset []
   (boot/with-pre-wrap fileset
+     (println fileset)
      (println "------------------------------------")
      (->> fileset
           (postwalk #(when (and (map? %) (contains? % :path)) (println (:path %) ))))

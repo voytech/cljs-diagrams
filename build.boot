@@ -23,8 +23,7 @@
   '[tailrecursion.hoplon.boot    :refer :all]
   '[tailrecursion.boot.task.ring :refer [dev-server]]
   '[tailrecursion.boot.task :refer :all]
-  '[clojure.java.shell :refer [sh]]
-  )
+  '[clojure.java.shell :refer [sh]])
 
 (deftask development
   "Build photo-collage for development."

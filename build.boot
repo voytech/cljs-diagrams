@@ -12,7 +12,7 @@
                   [tailrecursion/javelin           "3.7.2"]
                   [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
-                  [io.hoplon/twitter.bootstrap     "0.2.0"]
+                  ;;[hoplon/twitter-bootstrap        "0.1.0"] ;; This will be set if package is released.
                   [clj-tagsoup                     "0.3.0"]]
   ;;:asset-paths    #{"assets"}
   :out-path       "resources/public"
@@ -49,10 +49,6 @@
 
 ;;Tasks with no-pod suffix are temporary solution till boot-hoplon and boot-cljs
 ;;provided tasks are not working correctly yet.
-(deftask dev
-  []
-  (comp (watch) (speak) (hoplon) (reload) (cljs)))
-
 (deftask hoplon-no-pod
   [pp pretty-print bool "Pretty-print CLJS files created by the Hoplon compiler."
    l  lib          bool "Include produced cljs in the final artefact."]
@@ -78,7 +74,6 @@
                         boot/commit!)]
         result)
 )))
-
 
 (defn- debug-dir [dir]
   (doseq [file (file-seq (io/file dir))]
@@ -149,19 +144,8 @@
       (boot/empty-dir! tmp-main)
       (let [{:keys [cljs main]} (deps/scan-fileset fileset)]
         (if (seq main)
-          (do (println (:path (first main)))
-              (let [file (str (:dir (first main)) "\\" (:path (first main)))
-                    content (slurp file)
-                    map (read-string content)]
-             ;; (io/delete-file file)
-              (->> cljs
-                   (mapv (comp symbol util/path->ns boot/tmppath))
-                   (concat [] (:require map))
-                   (assoc {} :require)
-                   (spit (str (:dir (first main)) "\\test.cljs.edn"))
-                  )
-              fileset))
-          (let [output-to (or (get-in context [:opts :output-to]) "main.js")
+          fileset
+         (let [output-to (or (get-in context [:opts :output-to]) "main.js")
                 out-main  (-> output-to (.replaceAll "\\.js$" "") deps/add-extension)
                 out-file  (doto (io/file tmp-main out-main) io/make-parents)]
             (info "Writing %s...\n" (.getName out-file))
@@ -223,6 +207,11 @@
 
 (deftask hoplon-alone []
   (hoplon-no-pod))
+
+(deftask dev
+  []
+  (comp (watch) (speak) (hoplon) (reload) (cljs-no-pod)))
+
 
 (deftask hoplon-with-cljs []
   (comp  (with-logging-fileset)

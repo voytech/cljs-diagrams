@@ -1,12 +1,12 @@
 (page "index.html"
   (:require
-    [tailrecursion.hoplon.reload :refer [reload-all]]
+   ;; [tailrecursion.hoplon.reload :refer [reload-all]]
     [ui.views.toolkit-view :refer [library-view]]
     [ui.views.canvas :refer [workspace]]
     [ui.components.settings :refer [settings]]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
-(reload-all 2000)
+;;(reload-all 2000)
 
 (html
   (head

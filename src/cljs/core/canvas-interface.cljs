@@ -13,19 +13,8 @@
 
 (declare add-item)
 (declare visible-page)
-(declare index-of-page)
 (declare id2idx)
 (declare idx2id)
-
-(defn js-conj [jscontainer obj]
-  (.add jscontainer obj)
-  jscontainer
-)
-
-(defn js-rem [jscontainer obj]
-  (.remove jscontainer obj)
-  jscontainer
-)
 
 (def project (cell {:current-page-idx 0
                     :pages {}
@@ -42,21 +31,18 @@
                            (swap! project assoc-in [:current-page-id] id)
                            (swap! project assoc-in [:current-page-idx] (id2idx id))))))
 
-(defn proj-select-page [id]
-  (swap! project assoc-in [:current-page-id] id)
-  (swap! project assoc-in [:current-page-idx] (id2idx id))
-)
+(defn- assert-keyword [tokeyword]
+  (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 (defn proj-page-by-id [id]
-  (dom/console-log (keyword id))
-  (dom/console-log (get-in @project [:pages (keyword id)]))
-  (get-in @project [:pages (keyword id)])
-)
+  (let [keyword-id (assert-keyword id)]
+    (get-in @project [:pages keyword-id])))
 
 (defn proj-selected-page []
-  (let [id (get-in @project [:current-page-id])]
+  (let [id (get-in @project [:current-page-id])
+        keyword-id (assert-keyword id)]
     (dom/console-log id)
-    (get-in @project [:pages (keyword id)])))
+    (get-in @project [:pages (keyword-id)])))
 
 ;; (defmacro within-page [domid body]
 ;;   `(let [page (get-in @project [:pages (keyword ~@domid)])]
@@ -189,14 +175,14 @@
     (dom/remove-element (dom/parent (by-id id)))))
 
 (defn select-page [index]
-  (dom/console-log "in select-page")
+ ;; (dom/console-log "in select-page")
   (let [id (idx2id index)]
     (when (not (= (get-in project [:current-page-id]) id))
       (do (dom/console-log (str "selecting page :" index ", id :" id))
           (swap! project assoc-in [:current-page-id] id)
-          (visible-page (idx2id index))))))
+          (visible-page id)))))
 
-(defn visible-page [id]
+(defn- visible-page [id]
   (.css (js/jQuery ".canvas-container") "display" "none")
   (.css (.parent (js/jQuery (str "#" id))) "display" "block"))
 
@@ -204,8 +190,19 @@
   (loop [indx init-index]
     (if (condition indx) (do (action indx) (recur (recur-func indx))) true)))
 
+;; Test manage-pages-2 instead of manage-pages it looks better :)
+(defn manage-pages-2 [settings]
+  (let [dom-pages-cnt    (dom/children-count (by-id "canvas-wrapper"))
+        proj-pages-cnt   (get-in settings [:pages :count])
+        orphans-count    (- dom-pages-cnt proj-pages-cnt)
+        orphans-index    (- dom-pages-cnt orphans-count)
+        max-cnt          (max proj-pages-cnt dom-pages-cnt)]
+    (doall (map #(cond (< % orphans-index) (create-page (page-id %))
+                       (>= % orphans-index) (remove-page (page-id %))) (range 0 max-cnt)))
+    ))
+
 (defn manage-pages [settings]
-  (dom/console-log "In manage-pages")
+ ;; (dom/console-log "In manage-pages")
   (cond
     (true? (get-in settings [:multi-page]))
       (when (!= (dom/children-count (by-id "canvas-wrapper"))

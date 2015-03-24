@@ -26,7 +26,7 @@
 
 
 (require
-  '[clojure.java.shell :refer [sh]]
+  ;;'[clojure.java.shell :refer [sh]]
   '[clojure.walk :refer :all]
   '[tailrecursion.boot-hoplon :refer :all]
   '[boot.util :refer [sh]]
@@ -209,10 +209,13 @@
 (deftask hoplon-alone []
   (hoplon-no-pod))
 
-(deftask dev
+(deftask development-watch-reload
   []
   (comp (watch) (speak) (hoplon) (reload) (cljs-no-pod)))
 
+(deftask development-simple
+  []
+  (comp (hoplon) (cljs-no-pod)))
 
 (deftask hoplon-with-cljs []
   (comp  (with-logging-fileset)

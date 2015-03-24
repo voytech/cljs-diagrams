@@ -189,9 +189,11 @@
     (dom/remove-element (dom/parent (by-id id)))))
 
 (defn select-page [index]
-  (dom/console-log (str "selecting page :" index ", id :" (idx2id index)))
-  (swap! project assoc-in [:current-page-id] (idx2id index))
-  (visible-page (idx2id index)))
+  (let [id (idx2id index)]
+    (when (not (= (get-in project [:current-page-id]) id))
+      (do (dom/console-log (str "selecting page :" index ", id :" id))
+          (swap! project assoc-in [:current-page-id] id)
+          (visible-page (idx2id index))))))
 
 (defn visible-page [id]
   (.css (js/jQuery ".canvas-container") "display" "none")
@@ -225,7 +227,6 @@
 
 (defn initialize-workspace []
   (cell= (manage-pages settings))
-  ;;(cell= ) lense here to eval each index change into dom id.
   (cell= (select-page (get-in project [:current-page-idx])))
 )
 

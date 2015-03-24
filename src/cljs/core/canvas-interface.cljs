@@ -189,6 +189,7 @@
     (dom/remove-element (dom/parent (by-id id)))))
 
 (defn select-page [index]
+  (dom/console-log "in select-page")
   (let [id (idx2id index)]
     (when (not (= (get-in project [:current-page-id]) id))
       (do (dom/console-log (str "selecting page :" index ", id :" id))
@@ -204,19 +205,22 @@
     (if (condition indx) (do (action indx) (recur (recur-func indx))) true)))
 
 (defn manage-pages [settings]
+  (dom/console-log "In manage-pages")
   (cond
     (true? (get-in settings [:multi-page]))
-      (do
-        (repeat-action-on-condition
-                        {:init-index (dom/children-count (by-id "canvas-wrapper"))
-                         :condition #(< (get-in settings [:pages :count]) %)
-                         :action #(remove-page (page-id (dec %)))
-                         :recur-func #(dec %)})
-        (repeat-action-on-condition
-                        {:init-index 0
-                         :condition #(< % (get-in settings [:pages :count]) )
-                         :action #(create-page (page-id %))
-                         :recur-func #(inc %)}))
+      (when (!= (dom/children-count (by-id "canvas-wrapper"))
+                (get-in settings [:pages :count]))
+        (do
+          (repeat-action-on-condition
+           {:init-index (dom/children-count (by-id "canvas-wrapper"))
+            :condition #(< (get-in settings [:pages :count]) %)
+            :action #(remove-page (page-id (dec %)))
+            :recur-func #(dec %)})
+          (repeat-action-on-condition
+           {:init-index 0
+            :condition #(< % (get-in settings [:pages :count]) )
+            :action #(create-page (page-id %))
+            :recur-func #(inc %)})))
       :else (do
               (repeat-action-on-condition
                               {:init-index 1
@@ -226,6 +230,7 @@
               (create-page (page-id 0)))))
 
 (defn initialize-workspace []
+  ;; WHY those formulas are evaluated all the time !?!
   (cell= (manage-pages settings))
   (cell= (select-page (get-in project [:current-page-idx])))
 )
@@ -239,7 +244,7 @@
                                    "top" (:top  (:params data))
                                    "angle"   0
                                    "opacity" 1))]
-    (dom/console-log (get-in @project [:current-page-id]))
+    ;;(dom/console-log (get-in @project [:current-page-id]))
     (.add (:canvas (proj-selected-page)) photo-node)))
 
 (defmethod add "raw" [data])

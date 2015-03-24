@@ -26,7 +26,6 @@
 
 
 (require
-  ;;'[clojure.java.shell :refer [sh]]
   '[clojure.walk :refer :all]
   '[tailrecursion.boot-hoplon :refer :all]
   '[boot.util :refer [sh]]
@@ -48,38 +47,6 @@
   '[tailrecursion.boot-hoplon.impl :as impl]
   )
 
-;;Tasks with no-pod suffix are temporary solution till boot-hoplon and boot-cljs
-;;provided tasks are not working correctly yet.
-(deftask hoplon-no-pod
-  [pp pretty-print bool "Pretty-print CLJS files created by the Hoplon compiler."
-   l  lib          bool "Include produced cljs in the final artefact."]
-  (println (str "Boot options " *opts*))
-  (let [prev-fileset (atom nil)
-        tmp-cljs     (boot/temp-dir!)
-        tmp-html     (boot/temp-dir!)
-        opts         (dissoc *opts* :lib)
-        add-cljs     (if lib boot/add-resource boot/add-source)]
-    (boot/with-pre-wrap fileset
-      (println "EXECUTING HOPLON COMPILATION TASK....")
-      (let [hl (->> fileset
-                    (boot/fileset-diff @prev-fileset)
-                     boot/input-files
-                    (boot/by-ext [".hl"])
-                    (map (juxt boot/tmppath (comp (memfn getPath) boot/tmpfile))))]
-        (reset! prev-fileset fileset)
-        (impl/hoplon (.getPath tmp-cljs) (.getPath tmp-html) hl opts)
-        )
-      (let [result  (-> fileset
-                        (add-cljs tmp-cljs)
-                        (boot/add-resource tmp-html)
-                        boot/commit!)]
-        result)
-)))
-
-(defn- debug-dir [dir]
-  (doseq [file (file-seq (io/file dir))]
-    (println file)))
-
 (defn- compile-no-pod
   [{:keys [tmp-src tmp-out main files opts] :as ctx} ]
   (info "Compiling %s...\n" (-> opts :output-to util/get-name))
@@ -88,7 +55,7 @@
         files (:dir (first (:cljs files)))
         {:keys [warnings dep-order]}
         (adzerk.boot-cljs.impl/compile-cljs [(.getPath tmp-src)
-                                             (.getPath files)] opts)]
+                                             (.getPath files)] opts)]     ;;Here added fiels to compile !
     (swap! boot/*warnings* + (or warnings 0))
     (concat dep-order [(-> opts :output-to util/get-name)])))
 
@@ -157,15 +124,6 @@
             (-> fileset (boot/add-source tmp-main) boot/commit!)))))))
 
 
-(defn- with-debug-ctx [ctx]
-  (println (str "main " (:main ctx)))
-  (println (str "files " (:files ctx)))
-  (println (str "tmp-result " (:tmp-result ctx)))
-  (println (str "tmp-out " (:tmp-out ctx)))
-  (println (str "tmp-src " (:tmp-src ctx)))
-   ctx
-)
-
 (deftask cljs-no-pod
   [O optimizations LEVEL   kw   "The optimization level."
    s source-map            bool "Create source maps for compiled JS."
@@ -196,19 +154,6 @@
                    (boot/add-meta (-> fileset (deps/external incs) (deps/compiled dep-order)))
                     boot/commit!)))))))))
 
-(deftask with-logging-fileset []
-  (boot/with-pre-wrap fileset
-     (println fileset)
-     (println "------------------------------------")
-     (->> fileset
-          (postwalk #(when (and (map? %) (contains? % :path)) (println (:path %) ))))
-     (println "------------------------------------")
-     fileset)
-)
-
-(deftask hoplon-alone []
-  (hoplon-no-pod))
-
 (deftask development-watch-reload
   []
   (comp (watch) (speak) (hoplon) (reload) (cljs-no-pod)))
@@ -216,15 +161,6 @@
 (deftask development-simple
   []
   (comp (hoplon) (cljs-no-pod)))
-
-(deftask hoplon-with-cljs []
-  (comp  (with-logging-fileset)
-         (hoplon-no-pod)
-         (with-logging-fileset)
-         (cljs-no-pod :unified true
-                      :source-map true
-                      :optimizations :whitespace)
-         (with-logging-fileset)))
 
 (deftask cljs-test
   "Run clojurescript.test tests"

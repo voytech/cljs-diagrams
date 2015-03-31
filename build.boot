@@ -112,7 +112,7 @@
       (boot/empty-dir! tmp-main)
       (let [{:keys [cljs main]} (deps/scan-fileset fileset)]
         (if (seq main)
-          fileset
+          fileset   ;; THIS ONE IS CHOOSEN WITH HOPLON. AND THIS IS BAD BECAUSE NOT ALL CLJS NAMESPACE ARE APPENDED FOR COMPILATION !!!!
          (let [output-to (or (get-in context [:opts :output-to]) "main.js")
                 out-main  (-> output-to (.replaceAll "\\.js$" "") deps/add-extension)
                 out-file  (doto (io/file tmp-main out-main) io/make-parents)]

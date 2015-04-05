@@ -13,15 +13,15 @@
                   [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
                   ;;[hoplon/twitter-bootstrap        "0.1.0"] ;; This will be set if package is released.
-                  [clj-tagsoup                     "0.3.0"]]
+                  [clj-tagsoup                     "0.3.0"]
+                  [voytech/boot-clojurescript.test "0.1.0-SNAPSHOT"]]
   ;;:asset-paths    #{"assets"}
   :out-path       "resources/public"
   :target-path    "resources/public"
-  :cljs-out-path  "tests"
-  :source-paths   #{"src/cljs" "src/test" "src/hoplon"}
+  :source-paths   #{"src/cljs" "src/main/clj" "src/hoplon"} ;;Echh still need to refactor to src/main/clj src/main/hoplon
+  :test-paths     #{"src/test/cljs" }
   :resource-paths #{"assets"}
-  :cljs-runner    "\\test-runner\\runner.js"
-  :src-paths      #{"src/clj" "src/cljs" "src/hoplon" "src/test"})
+  )
 
 
 
@@ -45,7 +45,9 @@
   '[clojure.pprint              :as pp]
   '[tailrecursion.boot-hoplon.haml :as haml]
   '[tailrecursion.boot-hoplon.impl :as impl]
+  '[boot-clojurescript.test.tasks :as tests]
   )
+
 
 (defn- compile-no-pod
   [{:keys [tmp-src tmp-out main files opts] :as ctx} ]
@@ -162,17 +164,8 @@
   []
   (comp (hoplon) (cljs-no-pod)))
 
-(deftask cljs-test
+(deftask tests
   "Run clojurescript.test tests"
   []
-  (let [current-dir (System/getProperty "user.dir"),
-        slimer-home (System/getenv "SLIMER_HOME")]
-    (let [result (sh (str slimer-home "\\slimerjs.bat")
-                     (str current-dir (get-env :cljs-runner))
-                     (str current-dir "\\" (get-env :out-path)
-                          "\\" (get-env :cljs-out-path)
-                          "\\main.js"))]
-      (println (:out result))
-      ))
-  identity
-  )
+  (comp (watch) (tests/cljs-tests))
+)

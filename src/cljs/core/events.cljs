@@ -31,7 +31,7 @@
                           (:undo-func event)
                           (:undo-buffer event)
                           (:timestamp (new java.util.Date)))]
-    (swap! events (cons processed (rest events))))
+    (swap! events (cons processed (rest events)))))
 
 (defn- manage-events [events]
   (let [new-events (filter #(= (:status %) :NEW) @events)

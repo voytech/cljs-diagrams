@@ -12,7 +12,7 @@
                     2. The drag source comes from desktop (Use FileApi to load image)"
    [event]
    (.preventDefault event)
-   ((comp canvas-sheet/add dnd/dispatch-drop-event) event)
+   ((comp canvas-sheet/add-image dnd/dispatch-drop-event) event)
 )
 
 (dom/wait-on-element "canvas-wrapper"  #(canvas-sheet/initialize-workspace))

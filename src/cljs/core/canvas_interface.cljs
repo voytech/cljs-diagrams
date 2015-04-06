@@ -9,7 +9,8 @@
                                    page-width
                                    page-height
                                    ]])
-  (:require-macros [tailrecursion.javelin :refer [cell=]]))
+  (:require-macros [tailrecursion.javelin :refer [cell=]]
+                   [core.macros :refer [with-page]]))
 
 (declare add-item)
 (declare visible-page)
@@ -44,10 +45,6 @@
     (dom/console-log id)
     (get-in @project [:pages (keyword-id)])))
 
-;; (defmacro within-page [domid body]
-;;   `(let [page (get-in @project [:pages (keyword ~@domid)])]
-;;      ~@body))
-
 (defn group-elem-count [id key-group]
   (let [page (get-in @project [:pages (keyword id)])]
     (count (keys (get-in page [:groups key-group])))))
@@ -78,27 +75,27 @@
 (defn iterate-group [group-key])
 
 (defn draw-grid [id]
- ;; (del-items "grid")
-  (let [page (get-in @project [:pages (keyword id)])]
-    (when (= true @(settings? :snapping :visible))
-      (loop [x 0 y 0]
-        (if (<= @page-width x)
-          x
-          (let [line1 (js/fabric.Rect. (js-obj "left" 0
-                                               "top" y
-                                               "width" @page-width
-                                               "height" 1
-                                               "opacity" 0.1)),
-                line2 (js/fabric.Rect. (js-obj "left" x
-                                               "top" 0
-                                               "width" 1
-                                               "height" @page-height
-                                               "opacity" 0.1))]
-            (doseq [line [line1 line2]]
-              (set! (.-selectable line) false)
-              (let [key (str "grid-" (group-elem-count (:id page) "grid"))]
-                (add-item (:id page) line key "grid")))
-            (recur (+ @(settings? :snapping :interval) x) (+ @(settings? :snapping :interval) y))))))))
+  ;; (let [page (get-in @project [:pages (keyword id)])]
+    (with-page (keyword id) as page
+      (when (= true @(settings? :snapping :visible))
+        (loop [x 0 y 0]
+          (if (<= @page-width x)
+            x
+            (let [line1 (js/fabric.Rect. (js-obj "left" 0
+                                                 "top" y
+                                                 "width" @page-width
+                                                 "height" 1
+                                                 "opacity" 0.1)),
+                  line2 (js/fabric.Rect. (js-obj "left" x
+                                                 "top" 0
+                                                 "width" 1
+                                                 "height" @page-height
+                                                 "opacity" 0.1))]
+              (doseq [line [line1 line2]]
+                (set! (.-selectable line) false)
+                (let [key (str "grid-" (group-elem-count (:id page) "grid"))]
+                  (add-item (:id page) line key "grid")))
+              (recur (+ @(settings? :snapping :interval) x) (+ @(settings? :snapping :interval) y))))))))
 
 
 ;;Not yet used. NEED TESTING.
@@ -232,9 +229,9 @@
   (cell= (select-page (get-in project [:current-page-idx])))
 )
 
-(defmulti add :type)
+(defmulti add-image :type)
 
-(defmethod add "dom" [data]
+(defmethod add-image "dom" [data]
   (let [photo-node (js/fabric.Image.
                            (:data data)
                            (js-obj "left"(:left (:params data))
@@ -244,6 +241,6 @@
     ;;(dom/console-log (get-in @project [:current-page-id]))
     (.add (:canvas (proj-selected-page)) photo-node)))
 
-(defmethod add "raw" [data])
+(defmethod add-image "raw" [data])
 
-(defmethod add "url" [data])
+(defmethod add-image "url" [data])

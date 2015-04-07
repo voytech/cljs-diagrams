@@ -33,20 +33,29 @@
   '[adzerk.boot-reload    :refer [reload]]
   '[pandeiro.boot-http :refer [serve]]
   '[boot.core                      :as boot]
-  '[boot-clojurescript.test.tasks :as tests]
+  '[boot-clojurescript.test.tasks :refer :all]
   )
 
 
-(deftask development-watch-reload
+(deftask continous-dev
   []
   (comp (watch) (speak) (hoplon) (reload) (cljs)))
 
-(deftask development
+(deftask dev
   []
   (comp (hoplon) (cljs)))
+
+(deftask test-driven-dev
+ []
+ (comp (serve) (watch) (hoplon) (reload) (cljs-tests) )) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
 
 (deftask tests
   "Run clojurescript.test tests"
   []
-  (comp (watch) (tests/cljs-tests))
+  (comp (watch) (cljs-tests))
 )
+
+(task-options!
+ serve {
+        :dir "resources/public"
+        })

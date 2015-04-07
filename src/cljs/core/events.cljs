@@ -13,8 +13,9 @@
 
 (def events (cell '()))
 
+
 (defn raise [event]
-  (swap! events (cons event events)))
+  (swap! events conj event))
 
 (defmulti on :event-code)
 
@@ -31,7 +32,7 @@
                           (:undo-func event)
                           (:undo-buffer event)
                           (:timestamp (new java.util.Date)))]
-    (swap! events (cons processed (rest events)))))
+    (swap! events (fn [lst item] (conj (rest lst) item)) processed )))
 
 (defn- manage-events [events]
   (let [new-events (filter #(= (:status %) :NEW) @events)

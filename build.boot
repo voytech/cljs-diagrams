@@ -32,7 +32,7 @@
   '[adzerk.boot-cljs-repl :refer :all]
   '[adzerk.boot-reload    :refer [reload]]
   '[pandeiro.boot-http :refer [serve]]
-  '[boot.core                      :as boot]
+  '[boot.core          :as boot]
   '[boot-clojurescript.test.tasks :refer :all]
   )
 
@@ -47,7 +47,19 @@
 
 (deftask test-driven-dev
  []
- (comp (serve) (watch) (hoplon) (reload) (cljs-tests) )) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
+ (comp (serve)
+       (watch)
+       (hoplon)
+       (reload)
+       ;; (make-shim-edn :edn-name "sample"
+       ;;                :excludes #{'core.canvas-interface
+       ;;                            'core.settings
+       ;;                            'core.events
+       ;;                            'utils.utils
+       ;;                            'tailrecursion.hoplon.app-pages.-index-DOT-html})
+       (cljs-tests))) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
+
+
 
 (deftask tests
   "Run clojurescript.test tests"

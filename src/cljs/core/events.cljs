@@ -25,21 +25,23 @@
 
 ;;ACHTUNG this method changes cell events which may occur in formula re-evaluation!
 (defn- processed [event]
-  (let [processed (Event. (:uid event)
-                          (:event-code) event
-                          (:status :PROCESSED)
+  (let [processed (Event. (:uid event)    ;;transients ????
+                          (:event-code event)
+                          :PROCESSED
                           (:payload event)
                           (:undo-func event)
                           (:undo-buffer event)
-                          (:timestamp (new java.util.Date)))]
-    (swap! events (fn [lst item] (conj (rest lst) item)) processed )))
+                          (:timestamp event))]
+    (swap! events (fn [lst item] (conj (rest lst) item)) processed )
+))
 
 (defn- manage-events [events]
-  (let [new-events (filter #(= (:status %) :NEW) @events)
-        first (first new-events)]
-    (when (not (nil? first))
-      (on first)
-      (processed first))))
+  (let [new-events (filter #(= (:status %) :NEW) events)
+        head (first new-events)]
+    (when (not (nil? head))
+      (on head)
+      (processed head)
+      )))
 
 (defn run-events []
   (cell= (manage-events events)))
@@ -47,3 +49,6 @@
 (defn undo [])
 
 (defn redo [])
+
+(defn clear-history []
+  (reset! events '()))

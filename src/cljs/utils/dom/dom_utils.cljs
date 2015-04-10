@@ -16,6 +16,9 @@
 
 (defn console-log-cond [obj] (when (true? debug) (console-log obj)))
 
+(defn time-now []
+  (js/Date.))
+
 (defn j-query [elem]
   (js/jQuery elem))
 

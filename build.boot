@@ -37,14 +37,15 @@
   )
 
 
-(deftask continous-dev
+(deftask continous
   []
-  (comp (watch) (speak) (hoplon) (reload) (cljs)))
+  (comp (serve) (watch) (speak) (hoplon) (reload) (cljs)))
 
 (deftask dev
   []
   (comp (hoplon) (cljs)))
 
+;;This task should give also reload and cljs-repl
 (deftask test-driven-dev
  []
  (comp (serve)
@@ -57,7 +58,14 @@
        ;;                            'core.events
        ;;                            'utils.utils
        ;;                            'tailrecursion.hoplon.app-pages.-index-DOT-html})
+     ;;  (cljs-repl)
        (cljs-tests))) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
+
+
+;; (deftask sample []
+;;  (comp (hoplon)
+;;        (make-shim-edn :edn-name "sample")
+;;        (cljs-tests))) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
 
 
 

@@ -9,3 +9,9 @@
         (not (symbol? page-var))  (throw (Exception. "third form must be symbol")))
     `(let [~page-var (core.canvas-interface/proj-page-by-id ~page-id)]
        ~@body))
+
+(defmacro with-current-page [as page-var & body])
+
+(defmacro with-canvas-layer [page-id as canv-var & body])
+
+(defmacro with-current-canvas-layer [as canv-var & body])

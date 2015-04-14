@@ -17,20 +17,17 @@
 (declare id2idx)
 (declare idx2id)
 
-(def project (cell {:current-page-idx 0
+(def project (cell {:page-index 0
                     :pages {}
-                    :current-page-id "page-1"}))
+                    :current-page-id "page-0"}))
 
-(defn proj-create-page [id active]
+(defn proj-create-page [id]
   (let [page {:canvas (js/fabric.Canvas. id)
               :buffer {}
               :groups {}
               :index index
               :id id }]
-    (swap! project assoc-in [:pages (keyword id)] page)
-    (when (true? active) (do
-                           (swap! project assoc-in [:current-page-id] id)
-                           (swap! project assoc-in [:current-page-idx] (id2idx id))))))
+    (swap! project assoc-in [:pages (keyword id)] page)))
 
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
@@ -46,7 +43,7 @@
     (get-in @project [:pages (keyword-id)])))
 
 (defn group-elem-count [id key-group]
-  (let [page (get-in @project [:pages (keyword id)])]
+  (with-page (keyword id) as page
     (count (keys (get-in page [:groups key-group])))))
 
 (defn add-item
@@ -58,24 +55,22 @@
      (swap! project assoc-in [:pages (keyword id) :groups group (group-elem-count id group)] key)))
 
 (defn del-item [id key]
-  (let [page (get-in @project [:pages (keyword id)])]
+  (with-page (keyword id) as page
     (let [elem (get-in page [:buffer key])]
       (when (not (nil? elem)) (.remove (:canvas page) elem)))))
 
 (defn clear-group [id group-name]
-  (let [key-map (get @node-keys-group key-group)]
-    (doseq [key (keys key-map)]
-      (del-item (get key-map key))))
-   (swap! node-keys-group dissoc group))
+  (with-page (keyword id) as page
+    (let [group (get (:groups page) group-name)]
+      (doseq [key (keys group)]
+        (del-item id (get group key)))
+      (swap! project assoc-in [:pages (keyword id) :groups] (dissoc (:groups page) [key])))))
 
 (defn items-in-group [pageid group-key]
-  (let [page (get-in @project [:pages (keyword pageid)])]
+  (with-page (keyword pageid) as page
     (get (:groups page) group-key)))
 
-(defn iterate-group [group-key])
-
 (defn draw-grid [id]
-  ;; (let [page (get-in @project [:pages (keyword id)])]
     (with-page (keyword id) as page
       (when (= true @(settings? :snapping :visible))
         (loop [x 0 y 0]
@@ -133,8 +128,10 @@
 (defn page-id [indx]
   (str "page-" indx))
 
-;;bad implemented. CORRECT THIS FURHTER
-(defn idx2id [idx]
+(defn idx2id
+  "Function returns DOM id for given page index. It assumes that there is already
+   child dom node for canvas-container at this index."
+  [idx]
   (let [node (.get (dom/j-query-class "canvas-container") idx)]
      (if (not (nil? node))
        (.attr (.first (.children (dom/j-query node))) "id") -1)))
@@ -146,7 +143,7 @@
 (defn initialize-page [domid]
   (dom/wait-on-element domid (fn [id]
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
-                               (proj-create-page id true)
+                               (proj-create-page id)
                                (cell= (.setDimensions (:canvas (proj-page-by-id id))
                                                                 (js-obj "width"  page-width
                                                                         "height" page-height)
@@ -172,61 +169,50 @@
     (dom/remove-element (dom/parent (by-id id)))))
 
 (defn select-page [index]
- ;; (dom/console-log "in select-page")
   (let [id (idx2id index)]
-    (when (not (= (get-in project [:current-page-id]) id))
-      (do (dom/console-log (str "selecting page :" index ", id :" id))
-          (swap! project assoc-in [:current-page-id] id)
-          (visible-page id)))))
+    (if (not (= (get-in @project [:current-page-id]) id))
+      (do
+        (dom/console-log (str "selecting page :" index ", id :" id))
+        (swap! project assoc-in [:current-page-id] id)
+        (visible-page id)
+        true)
+      false)))
 
 (defn- visible-page [id]
   (.css (js/jQuery ".canvas-container") "display" "none")
   (.css (.parent (js/jQuery (str "#" id))) "display" "block"))
 
-(defn- repeat-action-on-condition [{:keys [init-index condition action recur-func]}]
-  (loop [indx init-index]
-    (if (condition indx) (do (action indx) (recur (recur-func indx))) true)))
-
-;; Test manage-pages-2 instead of manage-pages it looks better :)
-(defn manage-pages-2 [settings]
+(defn- paging-states-diff [settings]
   (let [dom-pages-cnt    (dom/children-count (by-id "canvas-wrapper"))
         proj-pages-cnt   (get-in settings [:pages :count])
-        orphans-count    (- dom-pages-cnt proj-pages-cnt)
-        orphans-index    (- dom-pages-cnt orphans-count)
-        max-cnt          (max proj-pages-cnt dom-pages-cnt)]
-    (doall (map #(cond (< % orphans-index) (create-page (page-id %))
-                       (>= % orphans-index) (remove-page (page-id %))) (range 0 max-cnt)))
-    ))
+        multi-page       (get-in settings [:multi-page])
+        target-num       (if multi-page proj-pages-cnt 1)]
+    {:differs (not (= dom-pages-cnt target-num))
+     :actual-num dom-pages-cnt
+     :target-num target-num
+     :multi-page multi-page})
+)
 
-(defn manage-pages [settings]
- ;; (dom/console-log "In manage-pages")
-  (cond
-    (true? (get-in settings [:multi-page]))
-      (when (!= (dom/children-count (by-id "canvas-wrapper"))
-                (get-in settings [:pages :count]))
-        (do
-          (repeat-action-on-condition
-           {:init-index (dom/children-count (by-id "canvas-wrapper"))
-            :condition #(< (get-in settings [:pages :count]) %)
-            :action #(remove-page (page-id (dec %)))
-            :recur-func #(dec %)})
-          (repeat-action-on-condition
-           {:init-index 0
-            :condition #(< % (get-in settings [:pages :count]) )
-            :action #(create-page (page-id %))
-            :recur-func #(inc %)})))
-      :else (do
-              (repeat-action-on-condition
-                              {:init-index 1
-                               :condition #(< % (dom/children-count (by-id "canvas-wrapper")))
-                               :action #(remove-page (page-id %))
-                               :recur-func #(inc %)})
-              (create-page (page-id 0)))))
+(defn- re-page? [{:keys [differs multi-page actual-num] :as diff}]
+  (or differs (= 0 actual-num)))
+
+;; Test manage-pages-2 instead of manage-pages it looks better :)
+(defn manage-settings [settings]
+  (let [{:keys [differs actual-num target-num multi-page] :as diff} (paging-states-diff settings)]
+    (when (re-page? diff)
+        (dom/console-log "re-paging...")
+        (let [orphans-count    (- actual-num target-num)
+              orphans-index    (- actual-num orphans-count)
+              max-cnt          (max actual-num target-num)]
+
+           (doall (map #(cond (< % orphans-index) (create-page (page-id %))
+                              (>= % orphans-index) (remove-page (page-id %))) (range 0 max-cnt))))
+        (if (not  (select-page (get-in @project [:page-index])))
+                  (visible-page (get-in @project [:current-page-id]))))))
 
 (defn initialize-workspace []
-  ;; WHY those formulas are evaluated all the time !?!
-  (cell= (manage-pages settings))
-  (cell= (select-page (get-in project [:current-page-idx])))
+  (cell= (manage-settings settings))
+  (cell= (select-page (get-in project [:page-index])))
 )
 
 (defmulti add-image :type)
@@ -238,7 +224,6 @@
                                    "top" (:top  (:params data))
                                    "angle"   0
                                    "opacity" 1))]
-    ;;(dom/console-log (get-in @project [:current-page-id]))
     (.add (:canvas (proj-selected-page)) photo-node)))
 
 (defmethod add-image "raw" [data])

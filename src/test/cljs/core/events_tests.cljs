@@ -18,6 +18,7 @@
 
 (defn- debug-events []
   (println "------------------------------------------------------")
+ ;; (clojure.pprint/pprint @events/events)
   (doseq [event @events/events] (println (str (:uid event) (:event-code event) (:status event) (:timestamp event))))
   (println "------------------------------------------------------"))
 
@@ -50,5 +51,5 @@
         (is (= new (first @handled)) "first handled by dispatch event should be as sample-data event")
         (debug-events)
         (done))
-      2000)
+      4000)
    ))

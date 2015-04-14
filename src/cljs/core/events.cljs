@@ -31,7 +31,7 @@
                           (:payload event)
                           (:undo-func event)
                           (:undo-buffer event)
-                          (:timestamp event))]
+                          (dom/time-now))]
     (swap! events (fn [lst item] (conj (rest lst) item)) processed )
 ))
 

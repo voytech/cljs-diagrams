@@ -5,7 +5,7 @@
             [ui.components.pagination :refer [pagination]]
             [core.canvas-interface :as canvas-sheet]))
 
-(def current-page (cell= (inc (get-in canvas-sheet/project [:current-page-idx]))))
+(def current-page (cell= (inc (get-in canvas-sheet/project [:page-index]))))
 
 (defn resolve-drop "Should resolve drop events for following scenarios:
                     1. The drag source is from the library component (image is dragged)
@@ -30,6 +30,6 @@
             :class "page-pagination text-center"
             (pagination :enabled (cell= (get-in settings/settings [:multi-page]))
                         :pages (cell= (get-in settings/settings [:pages :count]))
-                        :change-page #(swap! canvas-sheet/project assoc-in [:current-page-idx] %)))
+                        :change-page #(swap! canvas-sheet/project assoc-in [:page-index] %)))
        (div :is "slideshow" ))
 )

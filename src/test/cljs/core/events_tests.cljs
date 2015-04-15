@@ -3,6 +3,8 @@
                     :refer (is deftest with-test run-tests testing test-var done)])
   (:require [cemerick.cljs.test :as t]
             [core.events :as events]
+            [core.settings :as settings]
+            [core.events-impl :as events-impl]
             [utils.dom.dom-utils :refer [time-now] ]))
 
 (defn- sample-data []
@@ -18,7 +20,6 @@
 
 (defn- debug-events []
   (println "------------------------------------------------------")
- ;; (clojure.pprint/pprint @events/events)
   (doseq [event @events/events] (println (str (:uid event) (:event-code event) (:status event) (:timestamp event))))
   (println "------------------------------------------------------"))
 
@@ -51,5 +52,19 @@
         (is (= new (first @handled)) "first handled by dispatch event should be as sample-data event")
         (debug-events)
         (done))
-      4000)
+      20001000)
    ))
+
+
+(deftest ^:async create-settings-event-test []
+  (events/clear-history)
+  (events/run-events)
+  (events-impl/change-settings! 2 :pages :count)
+  (js/setTimeout
+      (fn []
+        (is (= 1 (count @events/events))   "Number of handled events shoudl be one.")
+        (debug-events)
+        (is (= 2  (get-in @settings/settings [:pages :count])))
+        (done))
+      3000)
+)

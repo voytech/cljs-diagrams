@@ -1,5 +1,6 @@
 (ns core.settings
-  (:require [tailrecursion.javelin :refer [cell ]])
+  (:require [tailrecursion.javelin :refer [cell ]]
+            [core.events :as events])
   (:require-macros [tailrecursion.javelin :refer [cell=]]))
 
 (declare settings?)
@@ -44,3 +45,11 @@
 
 (def page-width  (cell= (:width  (get page-formats (get-in settings [:page-format])))))
 (def page-height (cell= (:height (get page-formats (get-in settings [:page-format])))))
+
+(defmethod events/on :settings-event [event]
+ (let [payload (:payload event)
+       val  (:value payload)
+       path (:path payload)]
+   (println (str "settings path " path))
+   (println (str "settings val  " val))
+   (settings! 2 :pages :count)))

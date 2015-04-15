@@ -74,7 +74,8 @@
     (with-page (keyword id) as page
       (when (= true @(settings? :snapping :visible))
         (loop [x 0 y 0]
-          (if (<= @page-width x)
+          (if (and (<= @page-width x)
+                   (<= @page-height y))
             x
             (let [line1 (js/fabric.Rect. (js-obj "left" 0
                                                  "top" y
@@ -196,7 +197,6 @@
 (defn- re-page? [{:keys [differs multi-page actual-num] :as diff}]
   (or differs (= 0 actual-num)))
 
-;; Test manage-pages-2 instead of manage-pages it looks better :)
 (defn manage-settings [settings]
   (let [{:keys [differs actual-num target-num multi-page] :as diff} (paging-states-diff settings)]
     (when (re-page? diff)

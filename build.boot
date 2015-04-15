@@ -62,13 +62,6 @@
        (cljs-tests))) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
 
 
-;; (deftask sample []
-;;  (comp (hoplon)
-;;        (make-shim-edn :edn-name "sample")
-;;        (cljs-tests))) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
-
-
-
 (deftask tests
   "Run clojurescript.test tests"
   []

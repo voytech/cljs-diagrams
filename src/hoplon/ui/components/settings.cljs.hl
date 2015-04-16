@@ -33,7 +33,7 @@
        :class "settings"
        (div :class "setting"
             (label
-             (input
+             (inpt
                :type "checkbox"
                :click #(do (settings/settings! (neg-snapping :enabled) :snapping :enabled) true)
                :value (settings/settings? :snapping :enabled))

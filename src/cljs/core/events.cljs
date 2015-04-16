@@ -24,10 +24,10 @@
                         (:event-code event))))
 
 ;;ACHTUNG this method changes cell events which may occur in formula re-evaluation!
-(defn- processed [event]
+(defn- change-status [event new-status]
   (let [processed (Event. (:uid event)    ;;transients ????
                           (:event-code event)
-                          :PROCESSED
+                          new-status
                           (:payload event)
                           (:undo-func event)
                           (:undo-buffer event)
@@ -40,13 +40,21 @@
         head (first new-events)]
     (when (not (nil? head))
       (on head)
-      (processed head)
+      (change-status head :PROCESSED)
       )))
 
 (defn run-events []
   (cell= (manage-events events)))
 
-(defn undo [])
+(defn undo []
+  (let [processed-events (filter #(= (:status %) :PROCESSED) @events)
+        head (first processed-events)]
+    (when (not (nil? head))
+      (let [undofn (:undo-func head)]
+
+        (undofn head)
+        (change-status head :UNDONE))
+      )))
 
 (defn redo [])
 

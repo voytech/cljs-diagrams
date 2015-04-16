@@ -50,6 +50,5 @@
  (let [payload (:payload event)
        val  (:value payload)
        path (:path payload)]
-   (println (str "settings path " path))
-   (println (str "settings val  " val))
-   (settings! 2 :pages :count)))
+   (apply settings! val path)
+ ))

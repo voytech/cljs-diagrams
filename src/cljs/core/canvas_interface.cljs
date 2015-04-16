@@ -70,48 +70,48 @@
   (with-page (keyword pageid) as page
     (get (:groups page) group-key)))
 
-(defn draw-grid [id]
-    (with-page (keyword id) as page
-      (when (= true @(settings? :snapping :visible))
-        (loop [x 0 y 0]
-          (if (and (<= @page-width x)
-                   (<= @page-height y))
-            x
-            (let [line1 (js/fabric.Rect. (js-obj "left" 0
-                                                 "top" y
-                                                 "width" @page-width
-                                                 "height" 1
-                                                 "opacity" 0.1)),
-                  line2 (js/fabric.Rect. (js-obj "left" x
-                                                 "top" 0
-                                                 "width" 1
-                                                 "height" @page-height
-                                                 "opacity" 0.1))]
-              (doseq [line [line1 line2]]
-                (set! (.-selectable line) false)
-                (let [key (str "grid-" (group-elem-count (:id page) "grid"))]
-                  (add-item (:id page) line key "grid")))
-              (recur (+ @(settings? :snapping :interval) x) (+ @(settings? :snapping :interval) y))))))))
+;; (defn draw-grid [id]
+;;     (with-page (keyword id) as page
+;;       (when (= true @(settings? :snapping :visible))
+;;         (loop [x 0 y 0]
+;;           (if (and (<= @page-width x)
+;;                    (<= @page-height y))
+;;             x
+;;             (let [line1 (js/fabric.Rect. (js-obj "left" 0
+;;                                                  "top" y
+;;                                                  "width" @page-width
+;;                                                  "height" 1
+;;                                                  "opacity" 0.1)),
+;;                   line2 (js/fabric.Rect. (js-obj "left" x
+;;                                                  "top" 0
+;;                                                  "width" 1
+;;                                                  "height" @page-height
+;;                                                  "opacity" 0.1))]
+;;               (doseq [line [line1 line2]]
+;;                 (set! (.-selectable line) false)
+;;                 (let [key (str "grid-" (group-elem-count (:id page) "grid"))]
+;;                   (add-item (:id page) line key "grid")))
+;;               (recur (+ @(settings? :snapping :interval) x) (+ @(settings? :snapping :interval) y))))))))
 
 
-;;Not yet used. NEED TESTING.
-(defn reactive-grid [settings]
-   (loop [indx 0 offset 0]
-           (if (< indx (group-count "grid"))
-             (let [key (get (group? "grid") indx),
-                   key2 (get (group? "grid") (inc indx))]
-               (let [elem (get @canvas-buffer key),
-                     elem2 (get @canvas-buffer key2)]
-                 (dom/console-log (str key " , " key2))
-                 (.setTop elem offset)
-               ;;(.set elem "width" (page-width))
-                 (.setLeft elem2 offset)
-               ;;(.set elem2 "height" (page-height))
-                 (.setVisible elem (get-in settings [:snapping :visible]))
-                 (.setVisible elem2 (get-in settings [:snapping :visible])))
-               (recur (+ 2 indx) (+ (get-in settings [:snapping :interval]) offset)))
-             indx ))
-)
+;; ;;Not yet used. NEED TESTING.
+;; (defn reactive-grid [settings]
+;;    (loop [indx 0 offset 0]
+;;            (if (< indx (group-count "grid"))
+;;              (let [key (get (group? "grid") indx),
+;;                    key2 (get (group? "grid") (inc indx))]
+;;                (let [elem (get @canvas-buffer key),
+;;                      elem2 (get @canvas-buffer key2)]
+;;                  (dom/console-log (str key " , " key2))
+;;                  (.setTop elem offset)
+;;                ;;(.set elem "width" (page-width))
+;;                  (.setLeft elem2 offset)
+;;                ;;(.set elem2 "height" (page-height))
+;;                  (.setVisible elem (get-in settings [:snapping :visible]))
+;;                  (.setVisible elem2 (get-in settings [:snapping :visible])))
+;;                (recur (+ 2 indx) (+ (get-in settings [:snapping :interval]) offset)))
+;;              indx ))
+;; )
 
 (defn snap! [target pos-prop pos-prop-set direction]
   (let  [div  (quot (pos-prop target) (:interval (:snapping @settings))),
@@ -149,7 +149,7 @@
                                                                 (js-obj "width"  page-width
                                                                         "height" page-height)
                                                                 (js-obj "cssOnly" true)))
-                               (draw-grid id)
+                               ;;(draw-grid id)
                                (.on (:canvas (proj-page-by-id id)) (js-obj "object:moving" #(do-snap %))))))
 
 (defn dispose-page [domid]

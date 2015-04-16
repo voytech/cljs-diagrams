@@ -18,11 +18,19 @@
 
 (def handled (atom '()))
 
+(defn assert-after [milis func]
+  (js/setTimeout (fn [] (func) (done)) milis))
+
 (defn- debug-events []
   (println "------------------------------------------------------")
-  (doseq [event @events/events] (println (str (:uid event) (:event-code event) (:status event) (:timestamp event))))
+  (println "Current Events History Buffer.")
+  (println "------------------------------------------------------")
+  (doseq [event @events/events]
+    (let [strr  (.stringify js/JSON (clj->js event))]
+      (println (str "----" (:uid event) "----"))
+      (println strr)
+      (println (str "----------------------------------"))))
   (println "------------------------------------------------------"))
-
 
 (defmethod events/on :sample [event]
   (println "In on event handler")
@@ -52,13 +60,13 @@
         (is (= new (first @handled)) "first handled by dispatch event should be as sample-data event")
         (debug-events)
         (done))
-      20001000)
+      2000)
    ))
-
 
 (deftest ^:async create-settings-event-test []
   (events/clear-history)
   (events/run-events)
+  (debug-events)
   (events-impl/change-settings! 2 :pages :count)
   (js/setTimeout
       (fn []
@@ -67,4 +75,35 @@
         (is (= 2  (get-in @settings/settings [:pages :count])))
         (done))
       3000)
+)
+
+(deftest ^:async create-mutiple-settings-event-test []
+  (events/clear-history)
+  (events/run-events)
+  (debug-events)
+  (events-impl/change-settings! true :multi-page)
+  (events-impl/change-settings! 2 :pages :count)
+  (events-impl/change-settings! settings/a6k :page-format)
+  (events-impl/change-settings! 5 :zoom)
+  (js/setTimeout (fn []
+                       (is (= true (get-in @settings/settings [:multi-page])))
+                       (is (= 2 (get-in @settings/settings [:pages :count])))
+                       (is (= settings/a6k (get-in @settings/settings [:page-format])))
+                       (is (= 5 (get-in @settings/settings [:zoom])))
+                       (debug-events)
+                       (done))))
+
+(deftest ^:async create-multiple-settings-undo-event-test []
+  (events/clear-history)
+  (events/run-events)
+  (debug-events)
+  (events-impl/change-settings! true :multi-page)
+  (events-impl/change-settings! 2 :pages :count)
+  (js/setTimeout (fn []
+                       (is (= true (get-in @settings/settings [:multi-page])))
+                       (is (= 2 (get-in @settings/settings [:pages :count])))
+                       (debug-events)
+                       (events/undo)
+                       (debug-events)
+                       (done)))
 )

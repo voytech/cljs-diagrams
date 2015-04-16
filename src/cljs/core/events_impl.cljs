@@ -1,5 +1,5 @@
 (ns core.events-impl
-  (:require [core.events :refer [raise Event]]
+  (:require [core.events :refer [raise Event run-events]]
             [utils.dom.dom-utils :as dom]
             [core.settings :as settings]))
 
@@ -19,5 +19,6 @@
           (dom/time-now)))
 
 (defn change-settings! [val & path]
- (raise (new-settings-event-wrapper val path))
-  )
+ (raise (new-settings-event-wrapper val path)))
+
+(run-events) ;;register formula side-effect cell for listening to events list.

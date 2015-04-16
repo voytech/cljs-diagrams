@@ -1,6 +1,9 @@
 (ns ui.components.settings
   (:require [core.canvas-interface :as interface]
-            [core.settings :as settings]))
+            [core.settings :as settings]
+            [core.events-impl :as events-impl]))
+
+
 
 (defn is-snapping [key] (key (:snapping @settings/settings)))
 
@@ -33,9 +36,9 @@
        :class "settings"
        (div :class "setting"
             (label
-             (inpt
+             (input
                :type "checkbox"
-               :click #(do (settings/settings! (neg-snapping :enabled) :snapping :enabled) true)
+               :click #(do (events-impl/change-settings! (neg-snapping :enabled) :snapping :enabled) true)
                :value (settings/settings? :snapping :enabled))
                " Enable snap grid"))
 
@@ -43,15 +46,7 @@
             (label
              (input
                :type "checkbox"
-               :click #(do (settings/settings! (neg-snapping :visible) :snapping :visible) true)
-               :value (settings/settings? :snapping :visible))
-               " Display snap grid"))
-
-       (div :class "setting"
-            (label
-             (input
-               :type "checkbox"
-               :click #(do (settings/settings! (not (:multi-page @settings/settings)) :multi-page) true )
+               :click #(do (events-impl/change-settings! (not (:multi-page @settings/settings)) :multi-page) true )
                :value (settings/settings? :multi-page))
                " Multi page"))
 
@@ -61,7 +56,7 @@
              (input
               :type "range" :min 0 :max 100 :step 10
               :value (settings/settings? :snapping :interval)
-              :input #(settings/settings! @% :snapping :interval))
+              :input #(events-impl/change-settings! @% :snapping :interval))
               (text "~{interval-val}")
                " Snap grid interval"))
 
@@ -71,7 +66,7 @@
               (input
                 :type "range" :min 0 :max 20 :step 1
                 :value (settings/settings? :snapping :attract)
-                :input #(settings/settings! @% :snapping :attract))
+                :input #(events-impl/change-settings! @% :snapping :attract))
               (text "~{attract-val}")
               " Snapping attraction"))
 
@@ -80,7 +75,7 @@
               (input
                 :type "range" :min 0 :max 20 :step 1
                 :value (settings/settings? :zoom)
-                :input #(settings/settings! @% :zoom))
+                :input #(events-impl/change-settings! @% :zoom))
               (text "~{zoom-label}")
               " Zoom value") )
        (div :style (css-visible [:multi-page])
@@ -89,13 +84,13 @@
                (input
                   :type "range" :min 1 :max 20 :step 1
                   :value (settings/settings? :pages :count)
-                  :input #(settings/settings! @% :pages :count))
+                  :input #(events-impl/change-settings! @% :pages :count))
                (text "~{pages-count}")
                " Pages count"))
        (div :class "setting"
            (label)
             (select
-              :change #(settings/settings! @% :page-format)
+              :change #(events-impl/change-settings! @% :page-format)
               :value (settings/settings? :page-format)
                 (option :value "T"  "Test format")
                 (option :value "A3"  "A3")

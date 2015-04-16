@@ -1,6 +1,7 @@
 (ns core.settings
   (:require [tailrecursion.javelin :refer [cell ]]
-            [core.events :as events])
+            [core.events :as events]
+            )
   (:require-macros [tailrecursion.javelin :refer [cell=]]))
 
 (declare settings?)

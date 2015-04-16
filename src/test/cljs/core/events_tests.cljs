@@ -21,16 +21,18 @@
 (defn assert-after [milis func]
   (js/setTimeout (fn [] (func) (done)) milis))
 
-(defn- debug-events []
-  (println "------------------------------------------------------")
-  (println "Current Events History Buffer.")
-  (println "------------------------------------------------------")
-  (doseq [event @events/events]
-    (let [strr  (.stringify js/JSON (clj->js event))]
-      (println (str "----" (:uid event) "----"))
-      (println strr)
-      (println (str "----------------------------------"))))
-  (println "------------------------------------------------------"))
+(defn- debug-events
+  ([scope]
+     (println "------------------------------------------------------")
+     (println (str scope " - History."))
+     (println "------------------------------------------------------")
+     (doseq [event @events/events]
+       (let [strr  (.stringify js/JSON (clj->js event))]
+         (println (str "----" (:uid event) "----"))
+         (println strr)
+         (println (str "----------------------------------"))))
+     (println "------------------------------------------------------"))
+  ([] (debug-events " Events ")))
 
 (defmethod events/on :sample [event]
   (println "In on event handler")
@@ -91,19 +93,21 @@
                        (is (= settings/a6k (get-in @settings/settings [:page-format])))
                        (is (= 5 (get-in @settings/settings [:zoom])))
                        (debug-events)
-                       (done))))
+                       (done)) 1000))
 
 (deftest ^:async create-multiple-settings-undo-event-test []
   (events/clear-history)
   (events/run-events)
-  (debug-events)
+  (debug-events "Testing Undo - 1) Cleared. ")
   (events-impl/change-settings! true :multi-page)
   (events-impl/change-settings! 2 :pages :count)
   (js/setTimeout (fn []
                        (is (= true (get-in @settings/settings [:multi-page])))
                        (is (= 2 (get-in @settings/settings [:pages :count])))
-                       (debug-events)
+                       (debug-events "Testing Undo - 2) Before undo. ")
                        (events/undo)
-                       (debug-events)
-                       (done)))
+                       (js/setTimeout (fn []
+                                        (is (= 4 (get-in @settings/settings [:pages :count])))
+                                        (debug-events "Testing undo -3) After undo")
+                                        (done)) 1000)) 1000)
 )

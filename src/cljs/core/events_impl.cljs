@@ -12,7 +12,9 @@
           :settings-event
           :NEW
           {:value val :path path}
-          (fn [event] (apply change-settings! (:undo-buffer event) path)) ;;as an undo funciton we should revert settings to undo-buffer value under given path!
+          (fn [event]
+            (println (str "Undoing settings to value :" (:undo-buffer event) " on path " path))
+            (apply change-settings! (:undo-buffer event) path)) ;;as an undo funciton we should revert settings to undo-buffer value under given path!
           (get-in @settings/settings path)   ;;In undo-buffer place current settings value under given path
           (dom/time-now)))
 

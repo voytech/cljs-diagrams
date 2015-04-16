@@ -51,9 +51,8 @@
         head (first processed-events)]
     (when (not (nil? head))
       (let [undofn (:undo-func head)]
-
-        (undofn head)
-        (change-status head :UNDONE))
+          (change-status head :UNDONE)
+          (undofn head))
       )))
 
 (defn redo [])

@@ -39,7 +39,7 @@
 
 (deftask continous
   []
-  (comp (serve) (watch) (speak) (hoplon) (reload) (cljs)))
+  (comp (serve) (watch) (speak) (hoplon) (reload) (cljs :source-map true)))
 
 (deftask dev
   []
@@ -52,13 +52,7 @@
        (watch)
        (hoplon)
        (reload)
-       ;; (make-shim-edn :edn-name "sample"
-       ;;                :excludes #{'core.canvas-interface
-       ;;                            'core.settings
-       ;;                            'core.events
-       ;;                            'utils.utils
-       ;;                            'tailrecursion.hoplon.app-pages.-index-DOT-html})
-     ;;  (cljs-repl)
+     ;;(cljs-repl)
        (cljs-tests))) ;;task cljs-tests will also compile clojurescript automatically make shim for runnable SPA.
 
 

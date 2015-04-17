@@ -13,7 +13,6 @@
 
 (def events (cell '()))
 
-
 (defn raise [event]
   (swap! events conj event))
 

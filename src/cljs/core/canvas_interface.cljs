@@ -19,7 +19,7 @@
 
 (def project (cell {:page-index 0
                     :pages {}
-                    :current-page-id "page-0"}))
+                    :current-page-id :page-0}))
 
 (defn proj-create-page [id]
   (let [page {:canvas (js/fabric.Canvas. id)
@@ -39,8 +39,7 @@
 (defn proj-selected-page []
   (let [id (get-in @project [:current-page-id])
         keyword-id (assert-keyword id)]
-    (dom/console-log id)
-    (get-in @project [:pages (keyword-id)])))
+    (get-in @project [:pages keyword-id])))
 
 ;; (defn group-elem-count [id key-group]
 ;;   (with-page (keyword id) as page
@@ -174,12 +173,14 @@
 (defmulti add-image :type)
 
 (defmethod add-image "dom" [data]
+  (println (:data data))
   (let [photo-node (js/fabric.Image.
                            (:data data)
                            (js-obj "left"(:left (:params data))
                                    "top" (:top  (:params data))
                                    "angle"   0
                                    "opacity" 1))]
+    (dom/console-log (proj-selected-page))
     (.add (:canvas (proj-selected-page)) photo-node)))
 
 (defmethod add-image "raw" [data])

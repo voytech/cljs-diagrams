@@ -1,0 +1,52 @@
+(ns ui.components.editing
+  (:require [core.canvas-interface :as interface]
+            [data.js-cell :as jscell]
+            [core.settings :as settings]
+            [core.events-impl :as events-impl]))
+
+(defn css-visible [path]
+  (cell= (if (true? (get-in settings/settings path))
+                  "display:block"
+                  "display:none")))
+
+(defelem editing []
+  (div :id "settings-wrapper"
+       :class "settings container-fluid"
+       (div :class "row"
+            (div :class "col-md-5 setting"
+                 (label
+                  (input
+                   :type "text"
+                   ;;:click #(do (events-impl/change-settings!  :snapping :enabled) true)
+                   :value  (interface/selected-obj-property "left")
+                   )  ;;will be (< getLeft interface/selection_)
+                  " X pos"))
+
+            (div :class "col-md-5 setting"
+                 (label
+                  (input
+                   :type "text"
+                 ;;  :click #(do (events-impl/change-settings! (not (:multi-page @settings/settings)) :multi-page) true )
+                   :value (settings/settings? :multi-page))
+                  " Y pos")))
+       (div :class "row"
+            (div :class "setting col-md-5"
+                 :style (css-visible [:snapping :enabled])
+                 (label
+                  (input
+                   :type "range" :min 0 :max 100 :step 10
+                   :value (settings/settings? :snapping :interval)
+                ;;   :input #(events-impl/change-settings! @% :snapping :interval)
+                   )
+                  " Opacity"))
+
+            (div :class "setting col-md-5"
+                 :style (css-visible [:snapping :enabled])
+                 (label
+                  (input
+                   :type "range" :min 0 :max 20 :step 1
+                   :value (settings/settings? :snapping :attract)
+                  ;; :input #(events-impl/change-settings! @% :snapping :attract)
+                   )
+                  " Shadow")))
+))

@@ -39,7 +39,7 @@
 
 (deftask continous
   []
-  (comp (serve) (watch) (speak) (hoplon) (reload) (cljs :source-map true)))
+  (comp (serve) (watch) (hoplon) (reload) (cljs :source-map true)))
 
 (deftask dev
   []

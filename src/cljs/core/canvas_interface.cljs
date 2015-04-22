@@ -2,6 +2,8 @@
   (:require [utils.dom.dom-utils :as dom]
             [tailrecursion.javelin :refer [cell]]
             [tailrecursion.hoplon :refer [canvas by-id append-child add-children! ]]
+            [core.events :refer [on]]
+            [data.js-cell :as jscell]
             [core.settings :refer [settings
                                    settings?
                                    settings!
@@ -9,7 +11,7 @@
                                    page-width
                                    page-height
                                    ]])
-  (:require-macros [tailrecursion.javelin :refer [cell=]]
+  (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
                    [core.macros :refer [with-page]]))
 
 (declare add-item)
@@ -20,6 +22,14 @@
 (def project (cell {:page-index 0
                     :pages {}
                     :current-page-id :page-0}))
+
+(def selection (cell {}))
+(def selection_ (jscell/js-cell))
+
+;;Business events handlers
+(defmethod on :change-page-event [event]
+  (swap! project assoc-in [:page-index] (:payload event)))
+
 
 (defn proj-create-page [id]
   (let [page {:canvas (js/fabric.Canvas. id)
@@ -37,15 +47,27 @@
     (get-in @project [:pages keyword-id])))
 
 (defn proj-selected-page []
-  (let [id (get-in @project [:current-page-id])
-        keyword-id (assert-keyword id)]
-    (get-in @project [:pages keyword-id])))
+  (when (not (nil? project))
+    (let [id (get-in @project [:current-page-id])
+          keyword-id (assert-keyword id)]
+      (get-in @project [:pages keyword-id]))))
+
+(defn selected-object []
+   (with-current-page as page
+       (let [canvas (:canvas page)
+             active (.getActiveObject canvas)]
+       )))
+
+(defn selected-obj-property [prop]
+  (jscell/get selection_ prop))
+
 
 ;; (defn group-elem-count [id key-group]
 ;;   (with-page (keyword id) as page
 ;;     (count (keys (get-in page [:groups key-group])))))
 
 ;; (defn add-item
+
 ;;   ([id item key]
 ;;      (.add (:canvas (proj-page-by-id id)) item)
 ;;      (swap! project assoc-in [:pages (keyword id) :buffer key] item))
@@ -97,6 +119,18 @@
   (let [c-container (dom/parent (by-id id))]
     (.index (dom/j-query-class "canvas-container") c-container)))
 
+
+(defn- obj-selected [event]
+ (let [target (.-target event)]
+   (jscell/bind selection_ target)))
+
+(defn- obj-modified [event]
+  (let [target (.-target event)]))
+
+(defn- page-event-handlers [id handlers]
+  (doseq [entry handlers]
+    (.on (:canvas (proj-page-by-id id)) (js-obj (first entry) (last entry)))))
+
 (defn initialize-page [domid]
   (dom/wait-on-element domid (fn [id]
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -105,7 +139,10 @@
                                                                 (js-obj "width"  page-width
                                                                         "height" page-height)
                                                                 (js-obj "cssOnly" true)))
-                               (.on (:canvas (proj-page-by-id id)) (js-obj "object:moving" #(do-snap %))))))
+                               (page-event-handlers id [["object:moving"   #(do-snap %)]
+                                                        ["object:selected" #(obj-selected %)]
+                                                        ["object:modified" #(obj-modified %)]])
+                               )))
 
 (defn dispose-page [domid]
 
@@ -180,7 +217,6 @@
                                    "top" (:top  (:params data))
                                    "angle"   0
                                    "opacity" 1))]
-    (dom/console-log (proj-selected-page))
     (.add (:canvas (proj-selected-page)) photo-node)))
 
 (defmethod add-image "raw" [data])

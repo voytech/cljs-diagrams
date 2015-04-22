@@ -3,6 +3,7 @@
     [ui.views.toolkit-view :refer [library-view]]
     [ui.views.canvas :refer [workspace]]
     [ui.components.settings :refer [settings]]
+    [ui.components.editing  :refer [editing]]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
 
@@ -18,7 +19,7 @@
                                  (tab :name "Photos" (library-view))
                                  (tab :name "Templates" (div (text "Tempaltes here!")))
                                  (tab :name "Clip-Arts" (div (text "Clip-Arts here!")))
-                                 (tab :name "Edit Tools" (div (text "Edit tools")))
+                                 (tab :name "Edit Tools" (editing))
                                  (tab :name "Settings" (settings))
                                  ))
 

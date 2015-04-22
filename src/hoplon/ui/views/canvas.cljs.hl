@@ -2,6 +2,7 @@
   (:require [utils.dom.dnd-utils :as dnd]
             [utils.dom.dom-utils :as dom]
             [core.settings :as settings]
+            [core.events-impl :refer [change-page!] ]
             [ui.components.pagination :refer [pagination]]
             [core.canvas-interface :as canvas-sheet]))
 
@@ -30,6 +31,6 @@
             :class "page-pagination text-center"
             (pagination :enabled (cell= (get-in settings/settings [:multi-page]))
                         :pages (cell= (get-in settings/settings [:pages :count]))
-                        :change-page #(swap! canvas-sheet/project assoc-in [:page-index] %)))
+                        :change-page #(change-page! % )))
        (div :is "slideshow" ))
 )

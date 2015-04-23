@@ -7,8 +7,8 @@
 ;; (bind entity javascript-object)
 
 ;; reactive updates
-;; (< getOpacity entity)   -- a macro coverting symbol into call to javascript
-;; (< getXPos entity)
+;; (> getOpacity entity)   -- a macro coverting symbol into call to javascript
+;; (> getXPos entity)
 
 ;; writing values
 ;; (> setOpacity entity 0.5)
@@ -22,13 +22,6 @@
   (or (not (nil? (re-find #"^set.+" fname))))
 )
 
-(defn add-function [struct fname]
-
-)
-
-(defn add-property [struct property val]
- (struct assoc (keyword (to-property key)) val)
-)
 
 (defn to-property [fname]
  (if (or (is-setter fname)
@@ -53,7 +46,7 @@
   (get [this property])
   (set [this property val]))
 
-(deftype JsCell [cel ^{:volatile-mutable true} jsobj]
+(deftype JsCell [cel ^{:volatile-mutable true} jsobj handler]
   IJsCell
   (bind [this mjsobj]
      (set! jsobj mjsobj)
@@ -66,9 +59,13 @@
     (cell= (get-in cel [(keyword property)])))
 
   (set [this property val]
+    (println (str property " : " val))
     (goog.object/set jsobj property val)
-    (swap! cel assoc-in [(keyword property)] val)))
+    (when (not (nil? handler)) (handler jsobj property val))
+    (swap! cel assoc-in [(keyword property)] val)
+    ))
 
 (defn js-cell
-  ([jsobj] (JsCell. (cell {}) jsobj))
+  ([jsobj] (JsCell. (cell {}) jsobj nil))
+  ([jsobj handler] (JsCell. (cell {}) jsobj handler))
   ([] (js-cell (js/Object.))))

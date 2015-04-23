@@ -17,7 +17,7 @@
                  (label
                   (input
                    :type "text"
-                   ;;:click #(do (events-impl/change-settings!  :snapping :enabled) true)
+                   :on-change #(jscell/set interface/selection_ "left" @%) ;;on-change on-blur keyup
                    :value  (interface/selected-obj-property "left")
                    )  ;;will be (< getLeft interface/selection_)
                   " X pos"))

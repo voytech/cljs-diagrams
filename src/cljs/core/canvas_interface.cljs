@@ -18,13 +18,19 @@
 (declare visible-page)
 (declare id2idx)
 (declare idx2id)
+(declare proj-page-by-id)
+(declare proj-selected-page)
 
 (def project (cell {:page-index 0
                     :pages {}
                     :current-page-id :page-0}))
 
-(def selection (cell {}))
-(def selection_ (jscell/js-cell))
+
+(def selection_ (jscell/js-cell (js/Object.) (fn [obj prop val]
+                                               (.setActiveObject (:canvas (proj-selected-page)) obj)
+                                               (.setCoords obj)
+                                               (.renderAll (:canvas (proj-selected-page)) true)
+                                               )))
 
 ;;Business events handlers
 (defmethod on :change-page-event [event]

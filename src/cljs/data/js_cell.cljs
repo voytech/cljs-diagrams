@@ -13,7 +13,9 @@
 ;; writing values
 ;; (> setOpacity entity 0.5)
 ;;
-
+;; TODO: make javascript inner object observalble and register property observer so that changed property is reflected within proxy js-cell
+;; TODO: make ability to change nested properties by key path e.g. [:position :left]
+;; TODO: make property filter so that we can observe and modify via proxy only given properites - includes and excludes rules.
 (defn is-getter [fname]
   (or (not (nil? (re-find #"^get.+" fname)))
       (not (nil? (re-find #"^is.+" fname))))
@@ -41,6 +43,17 @@
                              (swap! props conj key))))
     @props))
 
+(defn- update-js [cel jsobj handler]
+  (when (map? @cel)
+    (doseq [property (keys @cel)]
+      (cell= (do (println (str property " : " (get-in cel [property]))) ;; for each property there is formula cell
+                 (->> (get-in cel [property])
+                      (goog.object/set jsobj (name property)))
+                 ;; (when (not (nil? handler))
+                 ;;   (handler jsobj (name property) (get-in cel [property])))
+                 )
+             ))))
+
 (defprotocol IJsCell
   (bind [this mjsobj])
   (get [this property])
@@ -53,16 +66,17 @@
      (dosync
       (reset! cel {})
       (doall (mapv #(swap! cel assoc-in [(keyword %)] (goog.object/get jsobj %)) (properties jsobj))))
+     (update-js cel jsobj handler)
     )
 
   (get [this property]
     (cell= (get-in cel [(keyword property)])))
 
   (set [this property val]
-    (println (str property " : " val))
-    (goog.object/set jsobj property val)
-    (when (not (nil? handler)) (handler jsobj property val))
-    (swap! cel assoc-in [(keyword property)] val)
+   ;; (println (str property " : " val))
+   ;; (goog.object/set jsobj property val)
+   ;; (when (not (nil? handler)) (handler jsobj property val)) ;; this line and above in func put into cell= on all props
+    (swap! cel assoc-in [(keyword property)] val)  ;; keep only these
     ))
 
 (defn js-cell

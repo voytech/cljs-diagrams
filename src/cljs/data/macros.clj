@@ -1,11 +1,32 @@
 (ns data.macros
-  (:require [cljs.analyzer :as a]))
+  (:require [cljs.analyzer :as a]
+            ))
 
-;; (with-page :page-1 as page (do ))
+(defn is-getter [fname]
+  (or (not (nil? (re-find #"^get.+" fname)))
+      (not (nil? (re-find #"^is.+" fname))))
+)
+(defn is-setter [fname]
+  (or (not (nil? (re-find #"^set.+" fname))))
+)
+
+
+(defn to-property [fname]
+ (if (or (is-setter fname)
+         (is-getter fname))
+   (-> fname
+       (clojure.string/replace #"get" "")
+       (clojure.string/replace #"set" "")
+       (clojure.string/replace #"is" "")
+       (clojure.string/lower-case))
+   false)
+)
+
 (defmacro ->js [function-symbol jscell & args]
-  (cond (not (symbol? function-symbol))  (throw (Exception. "first argument must be javascript setter or getter function symbol")))
-  `(let [property  (data.js-cell/to-property (name ~function-symbol))
-         is-setter (data.js-cell/is-setter   (name ~function-symbol))
-         is-getter (data.js-cell/is-getter   (name ~function-symbol))]
-     (cond (= true is-setter) (data.js-cell/set ~jscell property (first ~args) )
-           (= true is-getter) (data.js-cell/get ~jscell property))))
+   (let [function-str (name function-symbol)
+         prop (to-property function-str)]
+     (cond (= true (is-setter function-str))
+             `(data.js-cell/set ~jscell ~prop ~@args)
+           (= true (is-getter function-str))
+             `(data.js-cell/get ~jscell ~prop)
+           )))

@@ -53,3 +53,9 @@
                (child-at parent idx2)))
 
 (defn child-index [parent child])
+
+(defn visible [id]
+  (.css (js/jQuery (str "#" id)) "display" "block"))
+
+(defn hidden [id]
+  (.css (js/jQuery (str "#" id)) "display" "none"))

@@ -1,3 +1,4 @@
+;;CHange this module to actions.cljs.
 (ns core.events
   (:require [utils.dom.dom-utils :as dom]
             [tailrecursion.javelin :refer [cell]])

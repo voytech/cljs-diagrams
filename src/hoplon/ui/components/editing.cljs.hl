@@ -2,7 +2,10 @@
   (:require [core.canvas-interface :as interface]
             [data.js-cell :as jscell]
             [core.settings :as settings]
-            [core.events-impl :as events-impl]))
+            [core.events-impl :as events-impl])
+  (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
+                   [data.macros :refer [->js]]))
+
 
 (defn css-visible [path]
   (cell= (if (true? (get-in settings/settings path))
@@ -16,17 +19,18 @@
             (div :class "col-md-5 setting"
                  (label
                   (input
-                   :type "text"
-                   :on-change #(jscell/set interface/selection_ "left" @%) ;;on-change on-blur keyup
-                   :value  (interface/selected-obj-property "left")
-                   )  ;;will be (< getLeft interface/selection_)
-                  " X pos"))
+                   :type "range" :min 0 :max 100 :step 5
+                  ;; :input #(events-impl/change-settings! @% :snapping :interval)
+                   :input #(->js setOpacity interface/selection_ (/ @% 100))
+                   :value  (->js getOpacity interface/selection_)
+                   )
+                   " Opacity"))
 
             (div :class "col-md-5 setting"
                  (label
                   (input
                    :type "text"
-                 ;;  :click #(do (events-impl/change-settings! (not (:multi-page @settings/settings)) :multi-page) true )
+                 ;;:click #(do (events-impl/change-settings! (not (:multi-page @settings/settings)) :multi-page) true )
                    :value (settings/settings? :multi-page))
                   " Y pos")))
        (div :class "row"
@@ -36,7 +40,7 @@
                   (input
                    :type "range" :min 0 :max 100 :step 10
                    :value (settings/settings? :snapping :interval)
-                ;;   :input #(events-impl/change-settings! @% :snapping :interval)
+                   :input #(events-impl/change-settings! @% :snapping :interval)
                    )
                   " Opacity"))
 

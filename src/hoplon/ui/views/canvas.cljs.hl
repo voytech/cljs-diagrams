@@ -32,5 +32,7 @@
             (pagination :enabled (cell= (get-in settings/settings [:multi-page]))
                         :pages (cell= (get-in settings/settings [:pages :count]))
                         :change-page #(change-page! % )))
-       (div :is "slideshow" ))
+       (div :id "slideshow" )
+       (div :id "popups-holder"
+            :style "position:relative;"))
 )

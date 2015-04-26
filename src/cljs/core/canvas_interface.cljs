@@ -1,9 +1,10 @@
 (ns core.canvas-interface
   (:require [utils.dom.dom-utils :as dom]
             [tailrecursion.javelin :refer [cell]]
-            [tailrecursion.hoplon :refer [canvas by-id append-child add-children! ]]
+            [tailrecursion.hoplon :refer [canvas div $text by-id append-child add-children! ]]
             [core.events :refer [on]]
             [data.js-cell :as jscell]
+            [ui.components.popup :as p]
             [core.settings :refer [settings
                                    settings?
                                    settings!
@@ -27,10 +28,17 @@
 
 
 (def selection_ (jscell/js-cell (js/Object.) (fn [obj prop val]
-                                               (.setActiveObject (:canvas (proj-selected-page)) obj)
+                                              ;; (.setActiveObject (:canvas (proj-selected-page)) obj)
                                                (.setCoords obj)
                                                (.renderAll (:canvas (proj-selected-page)) true)
                                                )))
+
+(def popup-markup (p/popup {:id "editing"
+                             :positioning "fixed"
+                             :left 0 :top 0}
+                             (div :style "borer-color:black;border-style:solid" ($text "Hello world"))))
+
+(def edit-popup (p/Popup. "editing" popup-markup))
 
 ;;Business events handlers
 (defmethod on :change-page-event [event]
@@ -125,6 +133,9 @@
   (let [c-container (dom/parent (by-id id))]
     (.index (dom/j-query-class "canvas-container") c-container)))
 
+;;
+;;Input events handlers
+;;
 
 (defn- obj-selected [event]
  (let [target (.-target event)]
@@ -137,6 +148,16 @@
   (doseq [entry handlers]
     (.on (:canvas (proj-page-by-id id)) (js-obj (first entry) (last entry)))))
 
+(defn- event-coords [event]
+  {:x (.-clientX event)
+   :y (.-clientY event)})
+
+(defn- handle-popups [event]
+  (let [cords (event-coords event)]
+    (p/attach edit-popup "popups-holder")
+    (p/show-at edit-popup (:x cords) (:y cords))
+    ))
+
 (defn initialize-page [domid]
   (dom/wait-on-element domid (fn [id]
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -147,7 +168,8 @@
                                                                 (js-obj "cssOnly" true)))
                                (page-event-handlers id [["object:moving"   #(do-snap %)]
                                                         ["object:selected" #(obj-selected %)]
-                                                        ["object:modified" #(obj-modified %)]])
+                                                        ["object:modified" #(obj-modified %)]
+                                                        ["mouse:down" #(handle-popups (.-e %))]])
                                )))
 
 (defn dispose-page [domid]

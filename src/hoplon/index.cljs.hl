@@ -2,8 +2,8 @@
   (:require
     [ui.views.toolkit-view :refer [library-view]]
     [ui.views.canvas :refer [workspace]]
-    [ui.components.settings :refer [settings]]
-    [ui.components.editing  :refer [editing]]
+    [ui.views.settings :refer [settings]]
+    [ui.views.editing  :refer [editing]]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
 

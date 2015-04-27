@@ -22,7 +22,6 @@
   (attach [this parent-id]
     (when (nil? (by-id id))
       (let [parent (by-id parent-id)]
-        (println (str "docking:" popup " to:" parent))
         (append-child parent popup ))))
 
   (detach [this]
@@ -41,3 +40,9 @@
   (hide [this]
       (.css (js/jQuery (str "#" id) "display" "none")))
 )
+
+(defn default-popup [id dom-content]
+  (Popup. id (popup {:id id
+                     :positioning "fixed"
+                     :left 0 :top 0}
+                    dom-content)))

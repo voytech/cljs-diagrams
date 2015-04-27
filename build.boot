@@ -1,7 +1,7 @@
 (set-env!
   :project      'photo-collage
   :version      "0.1.0-SNAPSHOT"
-  :dependencies '[[boot/core                       "2.0.0-rc10"]
+  :dependencies '[[boot/core                       "2.0.0-rc10"] ;;rc10
                   [adzerk/bootlaces                "0.1.10" :scope "test"]
                   [tailrecursion/hoplon            "6.0.0-SNAPSHOT"]
                   [adzerk/boot-cljs                "0.0-2814-3" ]
@@ -39,7 +39,11 @@
 
 (deftask continous
   []
-  (comp (serve) (watch) (hoplon) (reload) (cljs :source-map true)))
+  (comp (serve)
+        (watch)
+        (hoplon)
+        (reload)
+        (cljs :source-map true)))
 
 (deftask dev
   []

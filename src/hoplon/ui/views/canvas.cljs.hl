@@ -2,8 +2,9 @@
   (:require [utils.dom.dnd-utils :as dnd]
             [utils.dom.dom-utils :as dom]
             [core.settings :as settings]
-            [core.events-impl :refer [change-page!] ]
+            [core.actions-impl :refer [change-page!] ]
             [ui.components.pagination :refer [pagination]]
+            [ui.views.editing :refer [editing]]
             [core.canvas-interface :as canvas-sheet]))
 
 (def current-page (cell= (inc (get-in canvas-sheet/project [:page-index]))))
@@ -16,7 +17,9 @@
    ((comp canvas-sheet/add-image dnd/dispatch-drop-event) event)
 )
 
-(dom/wait-on-element "canvas-wrapper"  #(canvas-sheet/initialize-workspace))
+(dom/wait-on-element "canvas-wrapper"  (fn [] (canvas-sheet/initialize-workspace)
+                                              (canvas-sheet/add-popup "editing" (editing))
+                                         ))
 
 (defelem workspace []
   (div :id "workspace-inner"

@@ -2,7 +2,7 @@
   (:require [utils.dom.dom-utils :as dom]
             [tailrecursion.javelin :refer [cell]]
             [tailrecursion.hoplon :refer [canvas div $text by-id append-child add-children! ]]
-            [core.events :refer [on]]
+            [core.actions :refer [on]]
             [data.js-cell :as jscell]
             [ui.components.popup :as p]
             [core.settings :refer [settings
@@ -32,17 +32,11 @@
                                                (.setCoords obj)
                                                (.renderAll (:canvas (proj-selected-page)) true)
                                                )))
-
-(def popup-markup (p/popup {:id "editing"
-                             :positioning "fixed"
-                             :left 0 :top 0}
-                             (div :style "borer-color:black;border-style:solid" ($text "Hello world"))))
-
-(def edit-popup (p/Popup. "editing" popup-markup))
+(def popups (atom ()))
 
 ;;Business events handlers
-(defmethod on :change-page-event [event]
-  (swap! project assoc-in [:page-index] (:payload event)))
+(defmethod on :change-page-action [action]
+  (swap! project assoc-in [:page-index] (:payload action)))
 
 
 (defn proj-create-page [id]
@@ -154,8 +148,10 @@
 
 (defn- handle-popups [event]
   (let [cords (event-coords event)]
-    (p/attach edit-popup "popups-holder")
-    (p/show-at edit-popup (:x cords) (:y cords))
+    (println (count @popups))
+    (doseq [popup @popups]
+      (p/attach popup "popups-holder")
+      (p/show-at popup (:x cords) (:y cords)))
     ))
 
 (defn initialize-page [domid]
@@ -234,6 +230,14 @@
   (cell= (manage-settings settings))
   (cell= (select-page (get-in project [:page-index])))
 )
+
+
+;;
+;;API methods !
+;;
+(defn add-popup [id popup]
+  (println (str "Adding popup..." id popup))
+  (swap! popups conj (p/default-popup id popup)))
 
 (defmulti add-image :type)
 

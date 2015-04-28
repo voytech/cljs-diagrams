@@ -1,9 +1,12 @@
 (ns ui.views.canvas
   (:require [utils.dom.dnd-utils :as dnd]
             [utils.dom.dom-utils :as dom]
+            [utils.popups :as popups]
+            [utils.canvas-events-tests :as cet]
             [core.settings :as settings]
             [core.actions-impl :refer [change-page!] ]
             [ui.components.pagination :refer [pagination]]
+            [ui.components.popup :as p]
             [ui.views.editing :refer [editing]]
             [core.canvas-interface :as canvas-sheet]))
 
@@ -18,8 +21,22 @@
 )
 
 (dom/wait-on-element "canvas-wrapper"  (fn [] (canvas-sheet/initialize-workspace)
-                                              (canvas-sheet/add-popup "editing" (editing))
-                                         ))
+                                         ;;maybe should go to popups-impl ?
+                                              (popups/make-popup "editing"
+                                                                 "popups-holder"
+                                                                 (editing)
+                                                                 (fn [popup]
+                                                                   (canvas-sheet/add-event-handler "mouse:down"
+                                                                        (fn [event]
+                                                                          (let [src (.-e event)
+                                                                                crd (cet/client-coords src)])
+                                                                            (when (and (= (.-button src) 2)
+                                                                                       (canvas-sheet/has-selection)
+                                                                                       (.containsPoint (:jsobj canvas-sheet/selection_) (js/fabric.Point.
+                                                                                                                                               (js-obj "x" (:x crd)
+                                                                                                                                                       "y" (:y crd)))))
+                                                                              (p/show-at popup (:x crd) (:y crd)))
+                                                                                   ))))))
 
 (defelem workspace []
   (div :id "workspace-inner"

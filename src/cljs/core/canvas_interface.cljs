@@ -21,6 +21,10 @@
 (declare idx2id)
 (declare proj-page-by-id)
 (declare proj-selected-page)
+(declare add-event-handler)
+(declare do-snap)
+(declare obj-selected)
+(declare obj-modified)
 
 (def project (cell {:page-index 0
                     :pages {}
@@ -32,7 +36,9 @@
                                                (.setCoords obj)
                                                (.renderAll (:canvas (proj-selected-page)) true)
                                                )))
-(def popups (atom ()))
+(def event-handlers (atom {"object:moving"   [do-snap]
+                           "object:selected" [obj-selected]
+                           "object:modified" [obj-modified]}))
 
 ;;Business events handlers
 (defmethod on :change-page-action [action]
@@ -68,36 +74,6 @@
 
 (defn selected-obj-property [prop]
   (jscell/get selection_ prop))
-
-
-;; (defn group-elem-count [id key-group]
-;;   (with-page (keyword id) as page
-;;     (count (keys (get-in page [:groups key-group])))))
-
-;; (defn add-item
-
-;;   ([id item key]
-;;      (.add (:canvas (proj-page-by-id id)) item)
-;;      (swap! project assoc-in [:pages (keyword id) :buffer key] item))
-;;   ([id item key group]
-;;      (add-item id item key)
-;;      (swap! project assoc-in [:pages (keyword id) :groups group (group-elem-count id group)] key)))
-
-;; (defn del-item [id key]
-;;   (with-page (keyword id) as page
-;;     (let [elem (get-in page [:buffer key])]
-;;       (when (not (nil? elem)) (.remove (:canvas page) elem)))))
-
-;; (defn clear-group [id group-name]
-;;   (with-page (keyword id) as page
-;;     (let [group (get (:groups page) group-name)]
-;;       (doseq [key (keys group)]
-;;         (del-item id (get group key)))
-;;       (swap! project assoc-in [:pages (keyword id) :groups] (dissoc (:groups page) [key])))))
-
-;; (defn items-in-group [pageid group-key]
-;;   (with-page (keyword pageid) as page
-;;     (get (:groups page) group-key)))
 
 (defn snap! [target pos-prop pos-prop-set direction]
   (let  [div  (quot (pos-prop target) (:interval (:snapping @settings))),
@@ -138,21 +114,32 @@
 (defn- obj-modified [event]
   (let [target (.-target event)]))
 
+(defn- handle-delegator [key]
+  (fn [event]
+    (println (str "handling " key))
+    (let [vec (get @event-handlers key)]
+      (doseq [func vec]
+        (func event)))))
+
+(defn- reg-delegator [id]
+  (doall (map #(.on (:canvas (proj-page-by-id id)) (js-obj % (handle-delegator %)))
+                  ["object:moving"
+                   "object:selected"
+                   "object:modified"
+                   "mouse:down"])))
+
 (defn- page-event-handlers [id handlers]
   (doseq [entry handlers]
-    (.on (:canvas (proj-page-by-id id)) (js-obj (first entry) (last entry)))))
+      (.on (:canvas (proj-page-by-id id)) (js-obj (first entry) (last entry)))))
 
 (defn- event-coords [event]
   {:x (.-clientX event)
    :y (.-clientY event)})
 
-(defn- handle-popups [event]
-  (let [cords (event-coords event)]
-    (println (count @popups))
-    (doseq [popup @popups]
-      (p/attach popup "popups-holder")
-      (p/show-at popup (:x cords) (:y cords)))
-    ))
+(defn add-event-handler [event func]
+  (let [vec (get @event-handlers event)]
+    (if (nil? vec) (swap! event-handlers assoc-in [event] (vector func))
+                   (swap! event-handlers assoc-in [event (count vec)] func))))
 
 (defn initialize-page [domid]
   (dom/wait-on-element domid (fn [id]
@@ -162,10 +149,11 @@
                                                                 (js-obj "width"  page-width
                                                                         "height" page-height)
                                                                 (js-obj "cssOnly" true)))
-                               (page-event-handlers id [["object:moving"   #(do-snap %)]
-                                                        ["object:selected" #(obj-selected %)]
-                                                        ["object:modified" #(obj-modified %)]
-                                                        ["mouse:down" #(handle-popups (.-e %))]])
+                               ;; (page-event-handlers id [["object:moving"   #(do-snap %)]
+                               ;;                          ["object:selected" #(obj-selected %)]
+                               ;;                          ["object:modified" #(obj-modified %)]
+                               ;;                          ["mouse:down" #(handle-popups (.-e %))]])
+                               (reg-delegator id)
                                )))
 
 (defn dispose-page [domid]
@@ -214,6 +202,7 @@
   (or differs (= 0 actual-num)))
 
 (defn manage-settings [settings]
+  (dom/console-log "manage-settings")
   (let [{:keys [differs actual-num target-num multi-page] :as diff} (paging-states-diff settings)]
     (when (re-page? diff)
         (dom/console-log "re-paging...")
@@ -235,10 +224,6 @@
 ;;
 ;;API methods !
 ;;
-(defn add-popup [id popup]
-  (println (str "Adding popup..." id popup))
-  (swap! popups conj (p/default-popup id popup)))
-
 (defmulti add-image :type)
 
 (defmethod add-image "dom" [data]

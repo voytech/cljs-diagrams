@@ -1,4 +1,4 @@
-(ns ui.components.settings
+(ns ui.views.settings
   (:require [core.canvas-interface :as interface]
             [core.settings :as settings]
             [core.actions-impl :as actions-impl]))
@@ -93,7 +93,7 @@
             (div :class "col-md-5 setting"
                  (label)
                  (select
-                  :change #(events-impl/change-settings! @% :page-format)
+                  :change #(actions-impl/change-settings! @% :page-format)
                   :value (settings/settings? :page-format)
                   (option :value "T"  "Test format")
                   (option :value "A3"  "A3")

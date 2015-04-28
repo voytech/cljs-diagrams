@@ -4,10 +4,13 @@
   (:require-macros
        [tailrecursion.javelin :refer [cell= dosync]]))
 
-(defelem popup [{:keys [id left top positioning ]} kids]
-  (apply (div :id id :style (str "position:" positioning ";"
+(defelem popup [{:keys [id left top max-width positioning ]} kids]
+  (apply (div :id id :class "modal-content"
+                     :style (str "position:" positioning ";"
+                                 "display:none;"
                                  "left:" left "px;"
                                  "top:" top "px;"
+                                 "max-width:" max-width "px;"
                                  "z-index:1000;")) kids))
 
 (defprotocol IPopup
@@ -44,5 +47,5 @@
 (defn default-popup [id dom-content]
   (Popup. id (popup {:id id
                      :positioning "fixed"
-                     :left 0 :top 0}
+                     :left 0 :top 0 :max-width 250}
                     dom-content)))

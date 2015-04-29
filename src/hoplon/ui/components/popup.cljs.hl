@@ -41,7 +41,7 @@
       (.css  (js/jQuery (str "#" id)) "top" (str y "px")))
 
   (hide [this]
-      (.css (js/jQuery (str "#" id) "display" "none")))
+    (.css (js/jQuery (str "#" id)) "display" "none"))
 )
 
 (defn default-popup [id dom-content]

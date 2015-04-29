@@ -14,3 +14,7 @@
   (doseq [popup @popups]
     (p/detach popup))
   (reset! popup ()))
+
+(defn hide-all []
+  (doseq [popup @popups]
+    (p/hide popup)))

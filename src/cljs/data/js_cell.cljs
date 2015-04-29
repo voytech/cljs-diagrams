@@ -46,7 +46,8 @@
 (defn- update-js [cel jsobj handler]
   (when (map? @cel)
     (doseq [property (keys @cel)]
-      (cell= (do (println (str property " : " (get-in cel [property]))) ;; for each property there is formula cell
+      (cell= (do
+                ;; (println (str "property :" property " has value: " (get-in cel [property]) ))
                  (->> (get-in cel [property])
                       (goog.object/set jsobj (name property)))
                  ;; (when (not (nil? handler))
@@ -56,6 +57,7 @@
 
 (defprotocol IJsCell
   (bind [this mjsobj])
+  (data [this])
   (get [this property])
   (set [this property val]))
 
@@ -68,12 +70,11 @@
       (doall (mapv #(swap! cel assoc-in [(keyword %)] (goog.object/get jsobj %)) (properties jsobj))))
      (update-js cel jsobj handler)
     )
-
+  (data [this] @cel)
   (get [this property]
     (cell= (get-in cel [(keyword property)])))
 
   (set [this property val]
-   ;; (println (str property " : " val))
    ;; (goog.object/set jsobj property val)
    ;; (when (not (nil? handler)) (handler jsobj property val)) ;; this line and above in func put into cell= on all props
     (swap! cel assoc-in [(keyword property)] val)  ;; keep only these

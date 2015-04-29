@@ -10,6 +10,9 @@
   (or (not (nil? (re-find #"^set.+" fname))))
 )
 
+(defn- lower-first [strd]
+  (let [s (seq strd)]
+    (apply str (clojure.string/lower-case (first s)) (rest s))))
 
 (defn to-property [fname]
  (if (or (is-setter fname)
@@ -18,7 +21,7 @@
        (clojure.string/replace #"get" "")
        (clojure.string/replace #"set" "")
        (clojure.string/replace #"is" "")
-       (clojure.string/lower-case))
+       (lower-first))
    false)
 )
 

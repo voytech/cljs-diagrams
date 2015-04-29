@@ -36,9 +36,9 @@
                                                (.setCoords obj)
                                                (.renderAll (:canvas (proj-selected-page)) true)
                                                )))
-(def event-handlers (atom {"object:moving"   [do-snap]
-                           "object:selected" [obj-selected]
-                           "object:modified" [obj-modified]}))
+(def event-handlers (atom {"object:moving"   [#(do-snap %)]
+                           "object:selected" [#(obj-selected %)]
+                           "object:modified" [#(obj-modified %)]}))
 
 ;;Business events handlers
 (defmethod on :change-page-action [action]
@@ -49,7 +49,7 @@
   (let [page {:canvas (js/fabric.Canvas. id)
               :buffer {}
               :groups {}
-              :index index
+              ;;:index index
               :id id }]
     (swap! project assoc-in [:pages (keyword id)] page)))
 
@@ -67,10 +67,7 @@
       (get-in @project [:pages keyword-id]))))
 
 (defn selected-object []
-   (with-current-page as page
-       (let [canvas (:canvas page)
-             active (.getActiveObject canvas)]
-       )))
+   (:jsobj selection_))
 
 (defn selected-obj-property [prop]
   (jscell/get selection_ prop))
@@ -116,17 +113,20 @@
 
 (defn- handle-delegator [key]
   (fn [event]
-    (println (str "handling " key))
+   ;; (println (str "handling " key))
     (let [vec (get @event-handlers key)]
       (doseq [func vec]
+    ;;    (println @event-handlers)
         (func event)))))
 
 (defn- reg-delegator [id]
-  (doall (map #(.on (:canvas (proj-page-by-id id)) (js-obj % (handle-delegator %)))
+  (doall
+   (map #(.on (:canvas (proj-page-by-id id)) (js-obj % (handle-delegator %)))
                   ["object:moving"
                    "object:selected"
                    "object:modified"
-                   "mouse:down"])))
+                   "mouse:down"
+                   "mouse:up"])))
 
 (defn- page-event-handlers [id handlers]
   (doseq [entry handlers]

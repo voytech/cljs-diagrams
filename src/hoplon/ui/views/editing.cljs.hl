@@ -5,6 +5,9 @@
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
                    [data.macros :refer [->js]]))
 
+(defn- neg-prop [prop]
+  (not (prop (jscell/data canvas/selection_))))
+
 (defelem editing []
   (div :id "editing-wrapper"
        :class "container-fluid"
@@ -16,20 +19,20 @@
                     :type "range" :min 0 :max 100 :step 5
                     :input #(->js setOpacity canvas/selection_ (/ @% 100))
                     :value  (->js getOpacity canvas/selection_)
-                    )
+                    ))
        (div :style "clear:both" :class "row center-block col-md-12"
             (div :class "col-md-6"
                  (label
                   (input
                    :type "checkbox"
-                   :click #(do (->js setFlipY canvas/selection_ @%) true)
+                   :click #(do (->js setFlipY canvas/selection_ (neg-prop :flipY)) true)
                    :value (->js getFlipY canvas/selection_ ))
                   " Flip Y"))
             (div  :class "col-md-6"
                   (label
                    (input
                     :type "checkbox"
-                    :click #(do (->js setFlipX canvas/selection_ @%) true)
+                    :click #(do (->js setFlipX canvas/selection_ (neg-prop :flipX)) true)
                     :value (->js getFlipX canvas/selection_ ))
                    " Flip X")))
        (div :style "clear:both" :class "row center-block col-md-12"
@@ -37,14 +40,14 @@
                   (label :style "white-space:nowrap"
                    (input
                     :type "checkbox"
-                    :click #(do (->js setLockY canvas/selection_ @%) true)
+                    :click #(do (->js setLockY canvas/selection_ (neg-prop :lockY)) true)
                     :value (->js getLockY canvas/selection_ ))
                    " Lock Y"))
             (div  :class "col-md-6"
                   (label :style "white-space:nowrap"
                    (input
                     :type "checkbox"
-                    :click #(do (->js setLockX canvas/selection_ @%) true)
+                    :click #(do (->js setLockX canvas/selection_ (neg-prop :lockX)) true)
                     :value (->js getLockX canvas/selection_ ))
                    " Lock X")))
        (div :class "row col-md-12 center-block"

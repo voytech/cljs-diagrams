@@ -6,6 +6,10 @@
     [ui.views.editing  :refer [editing]]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
+(defn start []
+  (println "Initializing application...")
+  ;;(.addEventListener js/document "contextmenu"  #(.preventDefault %))
+  )
 
 (html
   (head
@@ -25,3 +29,4 @@
 
           (div :id "workspace" (workspace))
           (div :id "slides"))))
+(start)

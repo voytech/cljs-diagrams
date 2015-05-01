@@ -21,9 +21,8 @@
      (div :id "container"
           (div :id "library" (tabs
                                  (tab :name "Photos" (library-view))
+                                 (tab :name "Tools" (div (text "Tools goes here!")))
                                  (tab :name "Templates" (div (text "Tempaltes here!")))
-                                 (tab :name "Clip-Arts" (div (text "Clip-Arts here!")))
-                                 (tab :name "Edit Tools" (editing))
                                  (tab :name "Settings" (settings))
                                  ))
 

@@ -31,8 +31,10 @@
 
 (defmulti dispatch-drop-event data-transfer-type)
 
-(defmethod dispatch-drop-event "file" [event]
-
+(defmethod dispatch-drop-event "tool-data" [event]
+  (println (:name (get-dnd-data event "tool-data")))
+  {:tool (get-dnd-data event "tool-data")
+   :context (event-layer-coords event)}
 )
 
 (defmethod dispatch-drop-event "imgid" [event]

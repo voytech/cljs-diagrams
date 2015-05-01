@@ -1,10 +1,13 @@
 (ns core.canvas-interface
   (:require [utils.dom.dom-utils :as dom]
+            [utils.dom.dnd-utils :as dnd]
             [tailrecursion.javelin :refer [cell]]
             [tailrecursion.hoplon :refer [canvas div $text by-id append-child add-children! ]]
             [core.actions :refer [on]]
             [data.js-cell :as jscell]
             [ui.components.popup :as p]
+            [core.entities.entity :as e]
+            [core.tools.tool :as t]
             [core.settings :refer [settings
                                    settings?
                                    settings!
@@ -49,7 +52,6 @@
   (let [page {:canvas (js/fabric.Canvas. id)
               :buffer {}
               :groups {}
-              ;;:index index
               :id id }]
     (swap! project assoc-in [:pages (keyword id)] page)))
 
@@ -106,7 +108,8 @@
 
 (defn- obj-selected [event]
  (let [target (.-target event)]
-   (jscell/bind selection_ target)))
+   (jscell/bind selection_ target)
+   ))
 
 (defn- obj-modified [event]
   (let [target (.-target event)]))
@@ -220,14 +223,44 @@
   (cell= (select-page (get-in project [:page-index])))
 )
 
+;;--------------------------------
+;; API dnd event handling with dispatching on transfer type
+;;---------------------------------
+
+(defmethod dnd/dispatch-drop-event "tool-data" [event]
+  (let [tool (dnd/get-dnd-data event "tool-data")
+        context (dnd/event-layer-coords event)
+        tool-obj (t/by-name tool)]
+    (println (str "Invoking action " tool context))
+    ((:func-ctor tool-obj) tool-obj context))
+)
+
+(defmethod dnd/dispatch-drop-event "imgid" [event]
+  {:data (dom/by-id (dnd/get-dnd-data event "imgid"))
+   :params (dnd/event-layer-coords event)
+   :type "dom"}
+)
+
+(defmethod dnd/dispatch-drop-event "text/html" [event]
+ {:data (dnd/get-dnd-data event "text/html")
+  :params (dnd/event-layer-coords event)
+  :type "dom"}
+)
 
 ;;
 ;;API methods !
 ;;
+
+(defn add-entity [entity]
+  (println (str "Is instance of Entity" (instance? e/Entity entity)))
+  (let [src (:src entity)]
+    (if (not (nil? src))
+      (.add (:canvas (proj-selected-page)) src)))
+ )
+
 (defmulti add-image :type)
 
 (defmethod add-image "dom" [data]
-  (println (:data data))
   (let [photo-node (js/fabric.Image.
                            (:data data)
                            (js-obj "left"(:left (:params data))

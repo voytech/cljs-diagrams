@@ -1,5 +1,5 @@
 (ns data.js-cell
-  (:require [tailrecursion.javelin :refer [cell]])
+  (:require [tailrecursion.javelin :refer [cell destroy-cell!]])
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
 ;; definition.
@@ -43,17 +43,19 @@
                              (swap! props conj key))))
     @props))
 
-(defn- update-js [cel jsobj handler]
+(defn- update-js [cel formula-store jsobj handler]
+  (doseq [formula @formula-store]
+    (destroy-cell! formula))
+  (reset! formula-store [])
   (when (map? @cel)
     (doseq [property (keys @cel)]
-      (cell= (do
-                ;; (println (str "property :" property " has value: " (get-in cel [property]) ))
-                 (->> (get-in cel [property])
-                      (goog.object/set jsobj (name property)))
-                 ;; (when (not (nil? handler))
-                 ;;   (handler jsobj (name property) (get-in cel [property])))
-                 )
-             ))))
+      (swap! formula-store conj (cell= (do
+                                         (->> (get-in cel [property])
+                                              (goog.object/set jsobj (name property)))
+                                         ;; (when (not (nil? handler))
+                                         ;;   (handler jsobj (name property) (get-in cel [property])))
+                                         )
+                                       )))))
 
 (defprotocol IJsCell
   (bind [this mjsobj])
@@ -61,14 +63,15 @@
   (get [this property])
   (set [this property val]))
 
-(deftype JsCell [cel ^{:volatile-mutable true} jsobj handler]
+(deftype JsCell [cel formula-store ^{:volatile-mutable true} jsobj handler]
   IJsCell
   (bind [this mjsobj]
      (set! jsobj mjsobj)
      (dosync
       (reset! cel {})
-      (doall (mapv #(swap! cel assoc-in [(keyword %)] (goog.object/get jsobj %)) (properties jsobj))))
-     (update-js cel jsobj handler)
+      (doall (mapv #(swap! cel assoc-in [(keyword %)] (goog.object/get jsobj %)) (properties jsobj)))
+
+      (update-js cel formula-store jsobj handler))
     )
   (data [this] @cel)
   (get [this property]
@@ -81,6 +84,6 @@
     ))
 
 (defn js-cell
-  ([jsobj] (JsCell. (cell {}) jsobj nil))
-  ([jsobj handler] (JsCell. (cell {}) jsobj handler))
+  ([jsobj] (JsCell. (cell {}) (atom []) jsobj nil))
+  ([jsobj handler] (JsCell. (cell {}) (atom []) jsobj handler))
   ([] (js-cell (js/Object.))))

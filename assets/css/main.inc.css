@@ -110,6 +110,7 @@ h1 {
 }
 
 .photo-thumbnail{
+  position:relative;
   border-color:lightgray;
   border-width:1px;
   border-style:solid;
@@ -136,6 +137,18 @@ h1 {
 }
 
 .photo{
+}
+
+.tool-title{
+  position:absolute;
+  background : black;
+  opacity : 0.6;
+  left:0px;
+  top:0px;
+  width:100%;
+  text-align:left;
+  font-weight:bold;
+  color:white;
 }
 
 .btn-gutter {

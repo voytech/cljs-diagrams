@@ -16,8 +16,8 @@
                    (input
                     :id "opacity-slider"
                     :class "pull-right"
-                    :type "range" :min 0 :max 100 :step 5
-                    :input #(->js setOpacity canvas/selection_ (/ @% 100))
+                    :type "range" :min 0 :max 1 :step 0.001
+                    :input #(->js setOpacity canvas/selection_  @% )
                     :value  (->js getOpacity canvas/selection_)
                     ))
        (div :style "clear:both" :class "row center-block col-md-12"

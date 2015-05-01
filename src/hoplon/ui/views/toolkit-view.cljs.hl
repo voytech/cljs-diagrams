@@ -1,5 +1,7 @@
 (ns ui.views.toolkit-view
   (:require [ui.components.photo :as photo ]
+            [core.tools.tools-impl :refer [photo-tool]]
+            [ui.components.tool-box :as toolbox]
            ))
 
 (def photo-lib (cell (list)))
@@ -7,10 +9,14 @@
 (defelem library-view []
   (div
    (photo/photo-loader :class "image-loader"
-                       :callback #(swap! photo-lib conj {:name (:name %),
-                                                         :type (:type %),
-                                                         :content (:content %)}))
-   (photo/photo-list  :list photo-lib)
+                       :callback #(swap! photo-lib conj (photo-tool (:name %)
+                                                                    (:type %)
+                                                                    (:content %))))
+   ;;(photo/photo-list  :list photo-lib)
+   ;;make a dynamically allocated tool-box which can handle new photos loeaded at runtime.
+   ;;I do not know if is this ok to introduce such abstraction to treat photos as single tools.
+   ;;maybe it is just all about applying misleading naming conventions here.
+   (toolbox/tool-box :list photo-lib)
    ))
 
 (defelem templates-view [])

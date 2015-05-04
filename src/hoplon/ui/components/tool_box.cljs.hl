@@ -12,7 +12,7 @@
    ;;           (tool-view tool))
        (if (cell? list)
          (cell= (map #(tool-view %) list))
-         (map #(tool-view %) @list))
+         (map #(tool-view %) list))
    ))
 
 (defn img-src [icon]
@@ -20,10 +20,13 @@
 
 (defelem tool-view [{:keys [name desc type icon func-ctor] :as tool}]
  (div :class "photo-thumbnail"
+      :draggable "true"
+      :dragstart #(dnd/set-dnd-data % "tool-data" name "move")
   (img :class "photo"
        :id name
        :src (img-src icon)
-       :draggable "true"
-       :dragstart #(dnd/set-dnd-data % "tool-data" name "move"))
+      ;; :draggable "true"
+      ;; :dragstart #(dnd/set-dnd-data % "tool-data" name "move")
+       )
   (div :class "tool-title"
      (str name))))

@@ -1,6 +1,7 @@
 (ns ui.views.toolkit-view
   (:require [ui.components.photo :as photo ]
-            [core.tools.tools-impl :refer [photo-tool]]
+            [core.tools.tools-impl :refer [photo-tool
+                                           text-tool]]
             [ui.components.tool-box :as toolbox]
            ))
 
@@ -21,4 +22,6 @@
 
 (defelem templates-view [])
 
-(defelem clip-arts [])
+(defelem tools-view []
+  (toolbox/tool-box :list [
+                           (text-tool)] ))

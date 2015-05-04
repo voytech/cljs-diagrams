@@ -30,21 +30,3 @@
 
 
 (defmulti dispatch-drop-event data-transfer-type)
-
-(defmethod dispatch-drop-event "tool-data" [event]
-  (println (:name (get-dnd-data event "tool-data")))
-  {:tool (get-dnd-data event "tool-data")
-   :context (event-layer-coords event)}
-)
-
-(defmethod dispatch-drop-event "imgid" [event]
-  {:data (dom/by-id (get-dnd-data event "imgid"))
-   :params (event-layer-coords event)
-   :type "dom"}
-)
-
-(defmethod dispatch-drop-event "text/html" [event]
- {:data (get-dnd-data event "text/html")
-  :params (event-layer-coords event)
-  :type "dom"}
-)

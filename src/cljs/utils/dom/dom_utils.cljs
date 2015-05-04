@@ -8,10 +8,8 @@
 
 (defn wait-on-element [id callback]
   (if (nil? (by-id id))
-    ;;(def interval (.setInterval js/window wait-on-element 50 id callback))
     (.setTimeout js/window wait-on-element 50 id callback)
     ((fn []
-        ;;(.clearInterval js/window interval)
         (callback id)))
     ))
 

@@ -41,7 +41,8 @@
                                                )))
 (def event-handlers (atom {"object:moving"   [#(do-snap %)]
                            "object:selected" [#(obj-selected %)]
-                           "object:modified" [#(obj-modified %)]}))
+                           "object:modified" [#(obj-modified %)]
+                           "mouse:up" [#(mouse-up %)]}))
 
 ;;Business events handlers
 (defmethod on :change-page-action [action]
@@ -105,6 +106,14 @@
 ;;
 ;;Input events handlers
 ;;
+(defn- mouse-up [event]
+  (let [src (.-e event)
+        trg (.-target event)]
+    (when (and (= (.-which src) 3)
+               (not (nil? trg)))
+      (let [ent (e/entity-by-id (.-refId trg))]
+        (when (not (nil? (:on-edit ent))) ((:on-edit ent) src))))))
+
 
 (defn- obj-selected [event]
  (let [target (.-target event)]
@@ -116,10 +125,8 @@
 
 (defn- handle-delegator [key]
   (fn [event]
-   ;; (println (str "handling " key))
     (let [vec (get @event-handlers key)]
       (doseq [func vec]
-    ;;    (println @event-handlers)
         (func event)))))
 
 (defn- reg-delegator [id]
@@ -252,23 +259,26 @@
 ;;
 
 (defn add-entity [entity]
-  (println (str "Is instance of Entity" (instance? e/Entity entity)))
+  (when (not (instance? e/Entity entity))
+    (throw (js/Error. (str entity " is not an core.entities.Entity object"))))
   (let [src (:src entity)]
     (if (not (nil? src))
-      (.add (:canvas (proj-selected-page)) src)))
- )
+      (do (.add (:canvas (proj-selected-page)) src)
+          (when (not (nil? (:on-attach entity))) ((:on-attach entity) entity)))))
 
-(defmulti add-image :type)
+  ;; (defmulti add-image :type)
 
-(defmethod add-image "dom" [data]
-  (let [photo-node (js/fabric.Image.
-                           (:data data)
-                           (js-obj "left"(:left (:params data))
-                                   "top" (:top  (:params data))
-                                   "angle"   0
-                                   "opacity" 1))]
-    (.add (:canvas (proj-selected-page)) photo-node)))
+  ;; ;
+                                        ; (defmethod add-image "dom" [data]
+  ;;   (let [photo-node (js/fabric.Image.
+  ;;                            (:data data)
+  ;;                            (js-obj "left"(:left (:params data))
+  ;;                                    "top" (:top  (:params data))
+  ;;                                    "angle"   0
+  ;;                                    "opacity" 1))]
+  ;;     (.add (:canvas (proj-selected-page)) photo-node)))
 
-(defmethod add-image "raw" [data])
+  ;; (defmethod add-image "raw" [data])
 
-(defmethod add-image "url" [data])
+  ;; (defmethod add-image "url" [data])
+  )

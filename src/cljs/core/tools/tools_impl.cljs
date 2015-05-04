@@ -17,5 +17,9 @@
 )
 
 (defn text-tool []
-
+  (tool/create-tool "Write Text!" desc "text" icon (fn [src ctx]
+                                             (-> (entities/create-text-entity
+                                                  "Enter text..."
+                                                  ctx)
+                                                 (canvas/add-entity))))
 )

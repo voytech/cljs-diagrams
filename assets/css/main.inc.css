@@ -117,11 +117,13 @@ h1 {
   display:block;
   margin: 2px 2px 2px 2px;
   float:left;
+  min-height:100px;
+  min-width:100px;
   max-width:150px;
   max-height:150px;
   width:150px;
   overflow:hidden;
-  background-color:lightgray;
+  background-color:white;
 }
 
 .settings{

@@ -22,20 +22,21 @@
 
 (dom/wait-on-element "canvas-wrapper"  (fn [] (canvas-sheet/initialize-workspace)
                                               (.addEventListener (dom/by-id "workspace-inner") "contextmenu"  #(.preventDefault %))
-                                              (popups/make-popup "editing"
-                                                                 "popups-holder"
-                                                                 (editing)
-                                                                 (fn [popup]
-                                                                   (canvas-sheet/add-event-handler "mouse:up"
-                                                                        (fn [event]
-                                                                          (popups/hide-all)
-                                                                          (let [src (.-e event)
-                                                                                trg (.-target event)
-                                                                                crd (cet/client-coords src)]
-                                                                            (when (and (= (.-which src) 3)
-                                                                                       (not (nil? trg)))
-                                                                              (p/show-at popup (:x crd) (:y crd))))
-                                                                                   ))))))
+                                              ;; (popups/make-popup "editing"
+                                              ;;                    "popups-holder"
+                                              ;;                    (editing)
+                                              ;;                    (fn [popup]
+                                              ;;                      (canvas-sheet/add-event-handler "mouse:up"
+                                              ;;                           (fn [event]
+                                              ;;                             (popups/hide-all)
+                                              ;;                             (let [src (.-e event)
+                                              ;;                                   trg (.-target event)
+                                              ;;                                   crd (cet/client-coords src)]
+                                              ;;                               (when (and (= (.-which src) 3)
+                                              ;;                                          (not (nil? trg)))
+                                              ;;                                 (p/show-at popup (:x crd) (:y crd))))
+                                              ;;                                      ))))
+                                              ))
 
 (defelem workspace []
   (div :id "workspace-inner"

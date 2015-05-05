@@ -6,6 +6,7 @@
             [core.actions :refer [on]]
             [data.js-cell :as jscell]
             [ui.components.popup :as p]
+            [utils.popups :as popups]
             [core.entities.entity :as e]
             [core.tools.tool :as t]
             [core.settings :refer [settings
@@ -28,6 +29,7 @@
 (declare do-snap)
 (declare obj-selected)
 (declare obj-modified)
+(declare mouse-up)
 
 (def project (cell {:page-index 0
                     :pages {}
@@ -107,12 +109,14 @@
 ;;Input events handlers
 ;;
 (defn- mouse-up [event]
-  (let [src (.-e event)
-        trg (.-target event)]
-    (when (and (= (.-which src) 3)
-               (not (nil? trg)))
-      (let [ent (e/entity-by-id (.-refId trg))]
-        (when (not (nil? (:on-edit ent))) ((:on-edit ent) src))))))
+   (popups/hide-all)
+  ;; (let [src (.-e event)
+  ;;       trg (.-target event)]
+  ;;   (when (and (= (.-which src) 3)
+  ;;              (not (nil? trg)))
+  ;;     (let [ent (e/entity-by-id (.-refId trg))]
+  ;;       (when (not (nil? (:on-edit ent))) ((:on-edit ent) src)))))
+  )
 
 
 (defn- obj-selected [event]
@@ -263,22 +267,5 @@
     (throw (js/Error. (str entity " is not an core.entities.Entity object"))))
   (let [src (:src entity)]
     (if (not (nil? src))
-      (do (.add (:canvas (proj-selected-page)) src)
-          (when (not (nil? (:on-attach entity))) ((:on-attach entity) entity)))))
-
-  ;; (defmulti add-image :type)
-
-  ;; ;
-                                        ; (defmethod add-image "dom" [data]
-  ;;   (let [photo-node (js/fabric.Image.
-  ;;                            (:data data)
-  ;;                            (js-obj "left"(:left (:params data))
-  ;;                                    "top" (:top  (:params data))
-  ;;                                    "angle"   0
-  ;;                                    "opacity" 1))]
-  ;;     (.add (:canvas (proj-selected-page)) photo-node)))
-
-  ;; (defmethod add-image "raw" [data])
-
-  ;; (defmethod add-image "url" [data])
-  )
+      (.add (:canvas (proj-selected-page)) src)))
+)

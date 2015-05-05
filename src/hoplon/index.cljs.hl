@@ -5,6 +5,7 @@
     [ui.views.canvas :refer [workspace]]
     [ui.views.settings :refer [settings]]
     [ui.views.editing  :refer [editing]]
+    [utils.canvas-popups :as popups]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
 (defn start []

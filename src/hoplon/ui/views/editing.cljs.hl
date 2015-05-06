@@ -1,4 +1,4 @@
-(ns ui.views.editing
+(editingns ui.views.editing
   (:require [core.canvas-interface :as canvas]
             [data.js-cell :as jscell]
             )

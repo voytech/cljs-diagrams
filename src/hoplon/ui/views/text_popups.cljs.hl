@@ -1,0 +1,32 @@
+(ns ui.views.text-popups
+  (:require [core.canvas-interface :as canvas]
+            [data.js-cell :as jscell])
+  (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
+                   [data.macros :refer [->js]]))
+
+(defn- neg-prop [prop]
+  (not (prop (jscell/data canvas/selection_))))
+
+(defelem text-add-popup []
+  (div :id "editing-wrapper"
+       :class "container-fluid"
+       (div :class "col-md-12 top-margin-05"
+           (input
+               :id "create-text"
+               :class "pull-right"
+               :type "text"
+               :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
+               :value  (->js getText canvas/selection_)
+            ))))
+
+(defelem text-edit-popup []
+  (div :id "editing-wrapper"
+       :class "container-fluid"
+       (div :class "col-md-12 top-margin-05"
+           (input
+               :id "create-text"
+               :class "pull-right"
+               :type "text"
+               :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
+               :value  (->js getText canvas/selection_)
+            ))))

@@ -11,47 +11,54 @@
 (defelem text-add-popup []
   (div :id "text-add-i"
        :class "container-fluid"
-       (div :class "col-md-12 top-margin-05"
+       (div :class "form-inline top-margin-05"
            (input
                :id "create-text"
-               :class "pull-right"
+               :class "form-control"
                :type "text"
-               :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
-               :value  (->js getText canvas/selection_)
+               :input #(->js setText canvas/new @% ) ;; maybe canvas/created-entity
+               :value  (->js getText canvas/new)
             ))))
 
 (defelem text-edit-popup []
   (div :id "text-edit-i"
        :class "container-fluid"
-       (div :class "col-md-12 top-margin-05"
-           (label
-             (input
-              :id "create-text"
-              :class "pull-right"
-              :type "text"
-              :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
-              :value  (->js getText canvas/selection_)
-              ) " Text")
-           (div :class "row col-md-12"
-            ;; (label
-            ;;  (select
-            ;;   :change #(->js setFontFamily canvas/selection_  @% )
-            ;;   :value (->js getFontFamily canvas/selection_)
-            ;;   (map  #(option :value %  %) (fonts/available-fonts))
-            ;;   ) " Font")
-            (label
-             (input
-              :id "font-size"
-              :class "pull-right"
-              :type "text"
-              :input #(->js setFontSize canvas/selection_  @% )
-              :value  (->js getFontSize canvas/selection_)
-              ) " Font size")
-            ;; (label
-            ;;  (select
-            ;;   :change #(->js setFontWeight canvas/selection_  @% )
-            ;;   :value (->js getFontWeight canvas/selection_)
-            ;;   (map  #(option :value %  %) ("normal" "bold" "bolder"))
-            ;;   )  " Weight")
-            ))
+       (div :class "top-margin-05 "
+            (div :class "input-group row top-margin-05"
+                 (label :for "create-text" :class "input-group-addon " "Text")
+                 (input
+                  :id "create-text"
+                  :class "pull-right form-control"
+                  :type "text"
+                  :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
+                  :value  (->js getText canvas/selection_)
+                  ))
+            (div :class "row top-margin-05"
+                 (label :for "font-fam" :class "pull-left" "Font")
+                 (select
+                  :id "font-fam"
+                  :class "pull-right"
+                  :change #(->js setFontFamily canvas/selection_  @% )
+                  :value (->js getFontFamily canvas/selection_)
+                  (map  #(option :value %  %) (fonts/available-fonts))
+                  ))
+            (div :class "row top-margin-05"
+                 (label :for "font-size" :class "pull-left" "Size" )
+                 (select
+                  :id "font-size"
+                  :class "pull-right"
+                  :change #(->js setFontSize canvas/selection_  @% )
+                  :value (->js getFontSize canvas/selection_)
+                  (map  #(option :value %  %) (fonts/available-font-sizes))
+                  ))
+            (div :class "row top-margin-05"
+                 (label :for "font-weight" :class "pull-left" "Weight")
+                 (select
+                  :id "font-weight"
+                  :class "pull-right"
+                  :change #(->js setFontWeight canvas/selection_  @% )
+                  :value (->js getFontWeight canvas/selection_)
+                  (map  #(option :value %  %) (fonts/available-font-weights))
+                  ))
+                )
 ))

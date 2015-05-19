@@ -1,11 +1,19 @@
 (ns core.entities.entities-impl
   (:require [core.entities.entity :as entities]
             [utils.dom.dnd-utils :as dnd]
+            [utils.dom.dom-utils :as dom]
             [ui.components.popup :as p]
             [utils.popups :as pp]
             [utils.canvas-events-tests :as cet]))
 
-(defn- show-at-func
+(defn- doc-pos [crd]
+  (let [elem (dom/j-query-class "canvas-container")
+        parent-pos (.offset elem)]
+    {:x (+ (.-left parent-pos) (:x crd))
+     :y (+ (.-top  parent-pos) (:y crd))}
+    ))
+
+(defn- show-popup-func
   ([event-wrapper popup-id bttn]
      (let [event (.-e event-wrapper)
            crd   (cet/client-coords event)]
@@ -13,7 +21,7 @@
          (println (pp/get-popup popup-id))
          (p/show-at (pp/get-popup popup-id) (:x crd) (:y crd)))))
   ([src popup-id]
-     (let [crd {:x (.-left src) :y (.-top src)}]
+     (let [crd (doc-pos {:x (.-left src) :y (.-top src)})]
          (println (pp/get-popup popup-id))
          (p/show-at (pp/get-popup popup-id) (:x crd) (:y crd)))))
 
@@ -22,14 +30,14 @@
                             data
                             (clj->js params))]
     (entities/create-entity "image" img
-                            {"mouseup" #(show-at-func % "editing" 3)})
+                            {"mouseup" #(show-popup-func % "editing" 3)})
                             ))
 
 (defn create-text-entity [text params]
   (let [texte (js/fabric.Text. text (clj->js params))]
     (entities/create-entity "text" texte
-                            {"mouseup" #(show-at-func % "text-edit" 3)
-                             "added"  #(show-at-func texte "text-create")})))
+                            {"mouseup" #(show-popup-func % "text-edit" 3)
+                             "added"  #(show-popup-func texte "text-create")})))
 
 (defn create-slot-entity [params]
   (let [slot (js/fabric.Rect. (clj->js params))]

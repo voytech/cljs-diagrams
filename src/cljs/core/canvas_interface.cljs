@@ -41,6 +41,8 @@
                                                (.setCoords obj)
                                                (.renderAll (:canvas (proj-selected-page)) true)
                                                )))
+(def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
+
 (def event-handlers (atom {"object:moving"   [#(do-snap %)]
                            "object:selected" [#(obj-selected %)]
                            "object:modified" [#(obj-modified %)]
@@ -267,5 +269,7 @@
     (throw (js/Error. (str entity " is not an core.entities.Entity object"))))
   (let [src (:src entity)]
     (if (not (nil? src))
-      (.add (:canvas (proj-selected-page)) src)))
+      (do
+        (.add (:canvas (proj-selected-page)) src)
+        (jscell/bind new src))))
 )

@@ -1,6 +1,7 @@
 (ns ui.views.text-popups
   (:require [core.canvas-interface :as canvas]
-            [data.js-cell :as jscell])
+            [data.js-cell :as jscell]
+            [utils.fonts :as fonts])
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
                    [data.macros :refer [->js]]))
 
@@ -8,7 +9,7 @@
   (not (prop (jscell/data canvas/selection_))))
 
 (defelem text-add-popup []
-  (div :id "editing-wrapper"
+  (div :id "text-add-i"
        :class "container-fluid"
        (div :class "col-md-12 top-margin-05"
            (input
@@ -20,13 +21,37 @@
             ))))
 
 (defelem text-edit-popup []
-  (div :id "editing-wrapper"
+  (div :id "text-edit-i"
        :class "container-fluid"
        (div :class "col-md-12 top-margin-05"
-           (input
-               :id "create-text"
-               :class "pull-right"
-               :type "text"
-               :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
-               :value  (->js getText canvas/selection_)
-            ))))
+           (label
+             (input
+              :id "create-text"
+              :class "pull-right"
+              :type "text"
+              :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
+              :value  (->js getText canvas/selection_)
+              ) " Text")
+           (div :class "row col-md-12"
+            ;; (label
+            ;;  (select
+            ;;   :change #(->js setFontFamily canvas/selection_  @% )
+            ;;   :value (->js getFontFamily canvas/selection_)
+            ;;   (map  #(option :value %  %) (fonts/available-fonts))
+            ;;   ) " Font")
+            (label
+             (input
+              :id "font-size"
+              :class "pull-right"
+              :type "text"
+              :input #(->js setFontSize canvas/selection_  @% )
+              :value  (->js getFontSize canvas/selection_)
+              ) " Font size")
+            ;; (label
+            ;;  (select
+            ;;   :change #(->js setFontWeight canvas/selection_  @% )
+            ;;   :value (->js getFontWeight canvas/selection_)
+            ;;   (map  #(option :value %  %) ("normal" "bold" "bolder"))
+            ;;   )  " Weight")
+            ))
+))

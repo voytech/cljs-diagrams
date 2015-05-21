@@ -5,6 +5,6 @@
   (let [pageid      (str "page-" index)
         canvas-page (dom/by-id pageid)]
     (when (not (nil? canvas-page))
-      (img :class "page-thumb img-thumbnail"
+      (img :class "page-thumb"
            :id (str "thumb-" pageid)
            :src (.toDataURL canvas-page)))))

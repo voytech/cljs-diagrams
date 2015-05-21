@@ -40,7 +40,6 @@
                         :pages (cell= (get-in settings/settings [:pages :count]))
                         :change-page #(change-page! % )
                         :page-thumb #(div :class "page-thumb"
-                                          :onclick (fn [idx] (change-page! idx))
                                           (cell= (do (println (str "re-thumb " canvas-sheet/last-change))
                                                      (page-thumb %))))))
        (div :id "popups-holder"

@@ -30,6 +30,13 @@ h1 {
   clear:both;
   width:100%;
 }
+.inline{
+  display:inline;
+}
+.page-thumb{
+  max-width:100px;
+  max-height:100px;
+}
 
 .image-loader{
   border-style:none;

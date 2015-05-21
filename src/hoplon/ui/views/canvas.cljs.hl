@@ -7,6 +7,7 @@
             [core.actions-impl :refer [change-page!] ]
             [ui.components.pagination :refer [pagination]]
             [ui.components.popup :as p]
+            [ui.components.page-thumb :refer [page-thumb]]
             [ui.views.editing :refer [editing]]
             [core.canvas-interface :as canvas-sheet]))
 
@@ -22,21 +23,7 @@
 
 (dom/wait-on-element "canvas-wrapper"  (fn [] (canvas-sheet/initialize-workspace)
                                               (.addEventListener (dom/by-id "workspace-inner") "contextmenu"  #(.preventDefault %))
-                                              ;; (popups/make-popup "editing"
-                                              ;;                    "popups-holder"
-                                              ;;                    (editing)
-                                              ;;                    (fn [popup]
-                                              ;;                      (canvas-sheet/add-event-handler "mouse:up"
-                                              ;;                           (fn [event]
-                                              ;;                             (popups/hide-all)
-                                              ;;                             (let [src (.-e event)
-                                              ;;                                   trg (.-target event)
-                                              ;;                                   crd (cet/client-coords src)]
-                                              ;;                               (when (and (= (.-which src) 3)
-                                              ;;                                          (not (nil? trg)))
-                                              ;;                                 (p/show-at popup (:x crd) (:y crd))))
-                                              ;;                                      ))))
-                                              ))
+                                                                                        ))
 
 (defelem workspace []
   (div :id "workspace-inner"
@@ -51,8 +38,11 @@
             :class "page-pagination text-center"
             (pagination :enabled (cell= (get-in settings/settings [:multi-page]))
                         :pages (cell= (get-in settings/settings [:pages :count]))
-                        :change-page #(change-page! % )))
-       (div :id "slideshow" )
+                        :change-page #(change-page! % )
+                        :page-thumb #(div :class "page-thumb"
+                                          :onclick (fn [idx] (change-page! idx))
+                                          (cell= (do (println (str "re-thumb " canvas-sheet/last-change))
+                                                     (page-thumb %))))))
        (div :id "popups-holder"
             :style "position:relative;"))
 )

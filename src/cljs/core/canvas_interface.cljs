@@ -35,6 +35,7 @@
                     :pages {}
                     :current-page-id :page-0}))
 
+(def last-change (cell 0))
 
 (def selection_ (jscell/js-cell (js/Object.) (fn [obj prop val]
                                               ;; (.setActiveObject (:canvas (proj-selected-page)) obj)
@@ -43,10 +44,13 @@
                                                )))
 (def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
 
+
 (def event-handlers (atom {"object:moving"   [#(do-snap %)]
                            "object:selected" [#(obj-selected %)]
                            "object:modified" [#(obj-modified %)]
                            "mouse:up" [#(mouse-up %)]}))
+
+(defn- changed [] (reset! last-change (dom/time-now)))
 
 ;;Business events handlers
 (defmethod on :change-page-action [action]
@@ -86,6 +90,7 @@
       (when (< rest (:attract (:snapping @settings))) (pos-prop-set target neww)))))
 
 (defn do-snap [event]
+  (changed)
   (when (= true (:enabled (:snapping @settings)))
     (let [target (.-target event)]
       (snap! target #(.-left %) #(set! (.-left %) %2) 1)
@@ -111,14 +116,7 @@
 ;;Input events handlers
 ;;
 (defn- mouse-up [event]
-   (popups/hide-all)
-  ;; (let [src (.-e event)
-  ;;       trg (.-target event)]
-  ;;   (when (and (= (.-which src) 3)
-  ;;              (not (nil? trg)))
-  ;;     (let [ent (e/entity-by-id (.-refId trg))]
-  ;;       (when (not (nil? (:on-edit ent))) ((:on-edit ent) src)))))
-  )
+   (popups/hide-all))
 
 
 (defn- obj-selected [event]
@@ -165,10 +163,6 @@
                                                                 (js-obj "width"  page-width
                                                                         "height" page-height)
                                                                 (js-obj "cssOnly" true)))
-                               ;; (page-event-handlers id [["object:moving"   #(do-snap %)]
-                               ;;                          ["object:selected" #(obj-selected %)]
-                               ;;                          ["object:modified" #(obj-modified %)]
-                               ;;                          ["mouse:down" #(handle-popups (.-e %))]])
                                (reg-delegator id)
                                )))
 
@@ -271,5 +265,7 @@
     (if (not (nil? src))
       (do
         (.add (:canvas (proj-selected-page)) src)
-        (jscell/bind new src))))
+        (jscell/bind new src)
+        (changed))
+        ))
 )

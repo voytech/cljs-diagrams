@@ -1,0 +1,10 @@
+(ns ui.components.page-thumb
+  (:require [utils.dom.dom-utils :as dom]))
+
+(defn page-thumb [index]
+  (let [pageid      (str "page-" index)
+        canvas-page (dom/by-id pageid)]
+    (when (not (nil? canvas-page))
+      (img :class "page-thumb img-thumbnail"
+           :id (str "thumb-" pageid)
+           :src (.toDataURL canvas-page)))))

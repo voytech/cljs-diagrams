@@ -39,3 +39,8 @@
 
 (defn js-obj-id [src]
   (.-refId src))
+
+(defn entity-from-src [src]
+  (-> src
+      js-obj-id
+      entity-by-id))

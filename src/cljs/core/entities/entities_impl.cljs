@@ -34,14 +34,17 @@
                             ))
 
 (defn create-text-entity [text params]
-  (let [texte (js/fabric.Text. text (clj->js params))]
+   (let [texte (js/fabric.Text. text (clj->js params))]
     (entities/create-entity "text" texte
                             {"mouseup" #(show-popup-func % "text-edit" 3)
                              "added"  #(show-popup-func texte "text-create")})))
 
 (defn create-slot-entity [params]
-  (let [slot (js/fabric.Rect. (clj->js params))]
-    entities/create-entity "slot" slot))
+  (let [aparams (atom params)]
+    (if (nil? (:width params)) (swap! aparams assoc :width 100))
+    (if (nil? (:height params)) (swap! aparams assoc :height 100))
+    (let [slot (js/fabric.Rect. (clj->js @aparams))]
+      (entities/create-entity "slot" slot))))
 
 
 (defn create-circle-entity [])

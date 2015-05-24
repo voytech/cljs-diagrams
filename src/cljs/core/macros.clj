@@ -20,8 +20,13 @@
 
 (defmacro with-canvas [page-id as canv-var & body]
   `(with-page page-id as page
-    (let [~canv-var (:cavas page)] ~@body)))
+    (let [~canv-var (:canvas page)] ~@body)))
 
 (defmacro with-current-canvas [as canv-var & body]
-  `(with-current-page as page
-    (let [~canv-var (:cavas page)] ~@body)))
+  (cond
+        (not (symbol? as))        (throw (Exception. "second form must be symbol"))
+        (not (= (name as) "as"))  (throw (Exception. "second form must be 'as' symbol"))
+        (not (symbol? canv-var))  (throw (Exception. "third form must be symbol")))
+    `(let [page-var# (core.canvas-interface/proj-selected-page)]
+       (when (not (nil? page-var#))
+         (let [~canv-var (:canvas page-var#)] ~@body))))

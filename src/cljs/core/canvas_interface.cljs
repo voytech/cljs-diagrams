@@ -17,7 +17,8 @@
                                    page-height
                                    ]])
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
-                   [core.macros :refer [with-page]]))
+                   [core.macros :refer [with-page
+                                        with-current-canvas]]))
 
 (declare add-item)
 (declare visible-page)
@@ -27,6 +28,7 @@
 (declare proj-selected-page)
 (declare add-event-handler)
 (declare do-snap)
+(declare intersection-test)
 (declare obj-selected)
 (declare obj-modified)
 (declare mouse-up)
@@ -45,7 +47,7 @@
 (def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
 
 
-(def event-handlers (atom {"object:moving"   [#(do-snap %)]
+(def event-handlers (atom {"object:moving"   [#(do-snap %) #(intersection-test %)]
                            "object:selected" [#(obj-selected %)]
                            "object:modified" [#(obj-modified %)]
                            "mouse:up" [#(mouse-up %)]}))
@@ -96,6 +98,22 @@
       (snap! target #(.-left %) #(set! (.-left %) %2) 1)
       (snap! target #(.-top  %) #(set! (.-top %)  %2) 1)))
 )
+
+(defn intersection-test [event]
+  (let [trg (.-target event)]
+    (when (not (nil? trg))
+      (with-current-canvas as canvas
+        (.forEachObject canvas
+                        #(when (not (== % trg))
+                           (when (.intersectsWithObject trg %)
+                             (let [trge (e/entity-from-src trg)
+                                   inte (e/entity-from-src %)
+                                   collide-trge (:collide-func trge)
+                                   collide-inte (:collide-func inte)]
+                               (cond
+                                 (not (nil? collide-trge)) (collide-trge trge inte)
+                                 (not (nil? collide-inte)) (collide-inte inte trge)))))))
+      )))
 
 (defn page-id [indx]
   (str "page-" indx))

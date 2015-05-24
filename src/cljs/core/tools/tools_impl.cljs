@@ -13,13 +13,21 @@
                                                  (canvas/add-entity)))))
 
 (defn slot-tool []
-
+  (tool/create-tool "Placeholder"
+                    "Insert other elements to fit placeholder"
+                    "placeholder"
+                    icon
+                    (fn [src ctx]
+                        (-> (entities/create-slot-entity ctx)
+                            (canvas/add-entity))))
 )
 
 (defn text-tool []
-  (tool/create-tool "Write Text!" desc "text" icon (fn [src ctx]
-                                             (-> (entities/create-text-entity
-                                                  "Enter text..."
-                                                  ctx)
-                                                 (canvas/add-entity))))
+  (tool/create-tool "Write Text!"
+                    "Drag and write a text here."
+                    "text"
+                    icon
+                    (fn [src ctx]
+                       (-> (entities/create-text-entity "Enter text..." ctx)
+                           (canvas/add-entity))))
 )

@@ -47,10 +47,10 @@
 (def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
 
 
-(def event-handlers (atom {"object:moving"   [#(do-snap %) #(intersection-test %)]
+(def event-handlers (atom {"object:moving"   [#(do-snap %) #(intersection-test % :collide-func)]
                            "object:selected" [#(obj-selected %)]
                            "object:modified" [#(obj-modified %)]
-                           "mouse:up" [#(mouse-up %)]}))
+                           "mouse:up" [#(mouse-up %) #(intersection-test % :collide-func-end)]}))
 
 (defn- changed [] (reset! last-change (dom/time-now)))
 
@@ -99,20 +99,24 @@
       (snap! target #(.-top  %) #(set! (.-top %)  %2) 1)))
 )
 
-(defn intersection-test [event]
+(defn intersection-test [event funcname]
   (let [trg (.-target event)]
     (when (not (nil? trg))
       (with-current-canvas as canvas
         (.forEachObject canvas
                         #(when (not (== % trg))
-                           (when (.intersectsWithObject trg %)
+                           (when (or (.intersectsWithObject trg %)
+                                     (.isContainedWithinObject trg %)
+                                     (.isContainedWithinObject % trg))
                              (let [trge (e/entity-from-src trg)
                                    inte (e/entity-from-src %)
-                                   collide-trge (:collide-func trge)
-                                   collide-inte (:collide-func inte)]
+                                   collide-trge (funcname trge)
+                                   collide-inte (funcname inte)]
                                (cond
-                                 (not (nil? collide-trge)) (collide-trge trge inte)
-                                 (not (nil? collide-inte)) (collide-inte inte trge)))))))
+                                 (not (nil? collide-inte)) (collide-inte inte trge)
+                                 (not (nil? collide-trge)) (collide-trge trge inte))
+                                 (.renderAll canvas)
+)))))
       )))
 
 (defn page-id [indx]

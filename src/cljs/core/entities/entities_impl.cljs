@@ -41,10 +41,25 @@
 
 (defn create-slot-entity [params]
   (let [aparams (atom params)]
-    (if (nil? (:width params)) (swap! aparams assoc :width 100))
-    (if (nil? (:height params)) (swap! aparams assoc :height 100))
+    (if (nil? (:width params)) (swap! aparams assoc :width 150))
+    (if (nil? (:height params)) (swap! aparams assoc :height 150))
+    (swap! aparams assoc :fill (str "rgba(0,0,0,0.05)"))
+    (swap! aparams assoc :stroke (str "rgb(0,0,0)"))
+    (swap! aparams assoc :borderColor (str "rgb(0,0,0)"))
     (let [slot (js/fabric.Rect. (clj->js @aparams))]
-      (entities/create-entity "slot" slot))))
+      (entities/create-entity "slot" slot
+                              {}
+                              (fn [src trg])
+                              (fn [src trg]
+                                (let [trgsrc (:src trg)
+                                      srcsrc (:src src)]
+                                  (.set trgsrc "width"  (.getWidth srcsrc)) ;;this can be done by map
+                                  (.set trgsrc "height" (.getHeight srcsrc))
+                                  (.set trgsrc "left" (.getLeft srcsrc))
+                                  (.set trgsrc "top" (.getTop srcsrc))
+                                  (.set trgsrc "scaleX" 1)
+                                  (.set trgsrc "scaleY" 1)))
+                              ))))
 
 
 (defn create-circle-entity [])

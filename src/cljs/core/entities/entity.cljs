@@ -11,14 +11,13 @@
                    type
                    src
                    event-handlers
-                   collide-func
-                   collide-func-end])
+                   ])
 
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
-  ([type src event-handlers collide-func collide-func-end]
+  ([type src event-handlers]
      (let [uid (uuid)
-           entity (Entity. uid type src event-handlers collide-func collide-func-end)]
+           entity (Entity. uid type src event-handlers)]
        (.defineProperty js/Object src ID  (js-obj "value" (:uid entity)
                                                   "writable" true
                                                   "configurable" true
@@ -26,14 +25,13 @@
        (when (not (nil? event-handlers))
          (doseq [key (keys event-handlers)]
            (println (str "registering event handler : " key))
-           (.on src key (get event-handlers key))))
+           (when (not (or (= key "collide") (= key "collide-end")))
+             (.on src key (get event-handlers key)))))
        (println (str "Created entity " type " with id " (.-refId (:src entity))))
        (swap! entities assoc uid entity)
        entity))
-  ([type src] (create-entity type src nil (fn [src trg]) (fn [src trg])))
-  ([type src event-handlers]
-     (create-entity type src event-handlers (fn [src trg]) (fn [src trg])))
-  )
+  ([type src] (create-entity type src {}))
+)
 
 (defn entity-by-id [id]
   (get @entities id))

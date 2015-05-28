@@ -10,7 +10,7 @@
 (defn neg-snapping [key] (not (is-snapping key)))
 
 
-(def zoom-label (settings/settings? :zoom))
+(def zoom-label  (cell= (* 100 (settings/settings? :zoom))))
 (def attract-val (settings/settings? :snapping :attract))
 (def interval-val (settings/settings? :snapping :interval))
 (def pages-count (settings/settings? :pages :count))
@@ -84,7 +84,7 @@
             (div :class "col-md-5 setting"
                  (label
                   (input
-                   :type "range" :min 0 :max 20 :step 1
+                   :type "range" :min 0 :max 2 :step 0.01
                    :value (settings/settings? :zoom)
                    :input #(actions-impl/change-settings! @% :zoom))
                   (text "~{zoom-label}")

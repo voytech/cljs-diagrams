@@ -47,6 +47,14 @@
 (def page-width  (cell= (:width  (get page-formats (get-in settings [:page-format])))))
 (def page-height (cell= (:height (get page-formats (get-in settings [:page-format])))))
 
+(def zoom-page-width  (cell= (* (get-in settings [:zoom])
+                                (:width  (get page-formats (get-in settings [:page-format]))))))
+
+(def zoom-page-height (cell= (* (get-in settings [:zoom])
+                                (:height (get page-formats (get-in settings [:page-format]))))))
+
+(def zoom (cell= (get-in settings [:zoom])))
+
 (defmethod actions/on :settings-action [action]
  (let [payload (:payload action)
        val  (:value payload)

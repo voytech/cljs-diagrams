@@ -15,6 +15,9 @@
                                    page-formats
                                    page-width
                                    page-height
+                                   zoom-page-height
+                                   zoom-page-width
+                                   zoom
                                    ]])
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
                    [core.macros :refer [with-page
@@ -47,10 +50,10 @@
 (def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
 
 
-(def event-handlers (atom {"object:moving"   [#(do-snap %) #(intersection-test % :collide-func)]
+(def event-handlers (atom {"object:moving"   [#(do-snap %) #(intersection-test % "collide")]
                            "object:selected" [#(obj-selected %)]
                            "object:modified" [#(obj-modified %)]
-                           "mouse:up" [#(mouse-up %) #(intersection-test % :collide-func-end)]}))
+                           "mouse:up" [#(mouse-up %) #(intersection-test % "collide-end")]}))
 
 (defn- changed [] (reset! last-change (dom/time-now)))
 
@@ -110,8 +113,8 @@
                                      (.isContainedWithinObject % trg))
                              (let [trge (e/entity-from-src trg)
                                    inte (e/entity-from-src %)
-                                   collide-trge (funcname trge)
-                                   collide-inte (funcname inte)]
+                                   collide-trge (get (:event-handlers trge) funcname)
+                                   collide-inte (get (:event-handlers inte) funcname)]
                                (cond
                                  (not (nil? collide-inte)) (collide-inte inte trge)
                                  (not (nil? collide-trge)) (collide-trge trge inte))
@@ -181,10 +184,15 @@
   (dom/wait-on-element domid (fn [id]
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
                                (proj-create-page id)
-                               (cell= (.setDimensions (:canvas (proj-page-by-id id))
-                                                                (js-obj "width"  page-width
-                                                                        "height" page-height)
-                                                                (js-obj "cssOnly" true)))
+                               (let [canvas (:canvas (proj-page-by-id id))]
+                                 ;; (cell= (.setDimensions canvas
+                                 ;;                        (js-obj "width"  page-width
+                                 ;;                                "height" page-height)
+                                 ;;                        (js-obj "cssOnly" true)))
+                                 (cell= (.setWidth canvas zoom-page-width))
+                                 (cell= (.setHeight canvas zoom-page-height))
+                                 (cell= (.setZoom canvas zoom))
+                                 )
                                (reg-delegator id)
                                )))
 

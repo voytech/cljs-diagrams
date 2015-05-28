@@ -48,17 +48,16 @@
     (swap! aparams assoc :borderColor (str "rgb(0,0,0)"))
     (let [slot (js/fabric.Rect. (clj->js @aparams))]
       (entities/create-entity "slot" slot
-                              {}
-                              (fn [src trg])
-                              (fn [src trg]
-                                (let [trgsrc (:src trg)
-                                      srcsrc (:src src)]
-                                  (.set trgsrc "width"  (.getWidth srcsrc)) ;;this can be done by map
-                                  (.set trgsrc "height" (.getHeight srcsrc))
-                                  (.set trgsrc "left" (.getLeft srcsrc))
-                                  (.set trgsrc "top" (.getTop srcsrc))
-                                  (.set trgsrc "scaleX" 1)
-                                  (.set trgsrc "scaleY" 1)))
+                              {"collide" (fn [src trg])
+                               "collide-end" (fn [src trg]
+                                               (let [trgsrc (:src trg)
+                                                     srcsrc (:src src)]
+                                                 (.set trgsrc "width"  (.getWidth srcsrc)) ;;this can be done by map
+                                                 (.set trgsrc "height" (.getHeight srcsrc))
+                                                 (.set trgsrc "left" (.getLeft srcsrc))
+                                                 (.set trgsrc "top" (.getTop srcsrc))
+                                                 (.set trgsrc "scaleX" 1)
+                                                 (.set trgsrc "scaleY" 1)))}
                               ))))
 
 

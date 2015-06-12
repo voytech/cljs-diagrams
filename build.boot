@@ -5,7 +5,7 @@
                   [adzerk/bootlaces                "0.1.10" :scope "test"]
                   [tailrecursion/hoplon            "6.0.0-SNAPSHOT"]
                   [adzerk/boot-cljs                "0.0-2814-3" ]
-                  [adzerk/boot-cljs-repl           "0.1.9"]
+                  [adzerk/boot-cljs-repl           "0.1.10-SNAPSHOT"]
                   [adzerk/boot-reload              "0.2.6"]
                   [pandeiro/boot-http              "0.6.2"]
                   [tailrecursion/boot-hoplon       "0.1.0-SNAPSHOT"]
@@ -42,6 +42,7 @@
   (comp (serve)
         (watch)
         (hoplon)
+       ;; (cljs-repl)
         (reload)
         (cljs :source-map true)))
 

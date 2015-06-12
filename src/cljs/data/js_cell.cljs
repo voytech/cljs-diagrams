@@ -20,6 +20,7 @@
   (or (not (nil? (re-find #"^get.+" fname)))
       (not (nil? (re-find #"^is.+" fname))))
 )
+
 (defn is-setter [fname]
   (or (not (nil? (re-find #"^set.+" fname))))
 )
@@ -34,13 +35,15 @@
        (clojure.string/replace #"is" ""))
    false)
 )
-
-(defn properties [jsobj]
+;move do sync to refresh
+(defn properties [jsobj func]
   (let [props (atom [])]
-    (goog.object/forEach jsobj
-                         (fn [val key obj]
-                           (when (not (= (type val) js/Function))
-                             (swap! props conj key))))
+     (goog.object/forEach jsobj
+                          (fn [val key obj]
+                            (when (not (= (type val) js/Function))
+                              (when (= "top" key) (println (str "p " key " v " val)))
+                              (func key val)
+                              (swap! props conj key))))
     @props))
 
 (defn- update-js [cel formula-store jsobj handler]
@@ -50,14 +53,14 @@
   (when (map? @cel)
     (doseq [property (keys @cel)]
       (swap! formula-store conj (cell= (do
-                                         (->> (get-in cel [property])
-                                              (goog.object/set jsobj (name property)))
-                                         ;; (when (not (nil? handler))
-                                         ;;   (handler jsobj (name property) (get-in cel [property])))
-                                         )
+                                         (when (not (nil? (get-in cel [property])))
+                                           (->> (get-in cel [property])
+                                                (goog.object/set jsobj (name property)))
+                                           (when (= :top property) (println (str "->" (name property) ":" (get-in cel [property]))))))
                                        )))))
 
 (defprotocol IJsCell
+  (refresh [this])
   (bind [this mjsobj])
   (data [this])
   (get [this property])
@@ -65,25 +68,29 @@
 
 (deftype JsCell [cel formula-store ^{:volatile-mutable true} jsobj handler]
   IJsCell
+  (refresh [this]
+    (dosync (properties jsobj (fn [key val] (swap! cel assoc-in [(keyword key)] val)))))
+
   (bind [this mjsobj]
      (set! jsobj mjsobj)
      (dosync
       (reset! cel {})
-      (doall (mapv #(swap! cel assoc-in [(keyword %)] (goog.object/get jsobj %)) (properties jsobj)))
+      (properties jsobj (fn [key val] (swap! cel assoc-in [(keyword key)] val)))
+      (update-js cel formula-store jsobj handler)))
 
-      (update-js cel formula-store jsobj handler))
-    )
   (data [this] @cel)
+
   (get [this property]
     (cell= (get-in cel [(keyword property)])))
 
   (set [this property val]
-   ;; (goog.object/set jsobj property val)
-   ;; (when (not (nil? handler)) (handler jsobj property val)) ;; this line and above in func put into cell= on all props
     (swap! cel assoc-in [(keyword property)] val)  ;; keep only these
-    ))
+    (println (str "setting value :" (property) " = " ((keyword property) @cel)))))
 
 (defn js-cell
-  ([jsobj] (JsCell. (cell {}) (atom []) jsobj nil))
+  ([jsobj]
+     (let [jscell (JsCell. (cell {}) (atom []) jsobj nil)]
+       (bind jscell jsobj)
+       jscell))
   ([jsobj handler] (JsCell. (cell {}) (atom []) jsobj handler))
   ([] (js-cell (js/Object.))))

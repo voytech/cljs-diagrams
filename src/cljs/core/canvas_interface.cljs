@@ -34,6 +34,7 @@
 (declare intersection-test)
 (declare obj-selected)
 (declare obj-modified)
+(declare obj-moving)
 (declare mouse-up)
 
 (def project (cell {:page-index 0
@@ -42,17 +43,20 @@
 
 (def last-change (cell 0))
 
-(def selection_ (jscell/js-cell (js/Object.) (fn [obj prop val]
-                                              ;; (.setActiveObject (:canvas (proj-selected-page)) obj)
-                                               (.setCoords obj)
-                                               (.renderAll (:canvas (proj-selected-page)) true)
-                                               )))
-(def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
+;; (def selection_ (jscell/js-cell (js/Object.) (fn [obj prop val]
+;;                                               ;; (.setActiveObject (:canvas (proj-selected-page)) obj)
+;;                                                (.setCoords obj)
+;;                                                (.renderAll (:canvas (proj-selected-page)) true)
+;;                                                )))
 
+;; (def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
+
+(def selection_ (cell (e/create-entity "empty" (js/Object.))))
+(def new (cell (e/create-entity "empty" (js/Object.))))
 
 (def event-handlers (atom {"object:moving"   [#(do-snap %) #(intersection-test % "collide")]
                            "object:selected" [#(obj-selected %)]
-                           "object:modified" [#(obj-modified %)]
+                          ; "object:modified" [#(obj-modified %)]
                            "mouse:up" [#(mouse-up %) #(intersection-test % "collide-end")]}))
 
 (defn- changed [] (reset! last-change (dom/time-now)))
@@ -81,12 +85,6 @@
     (let [id (get-in @project [:current-page-id])
           keyword-id (assert-keyword id)]
       (get-in @project [:pages keyword-id]))))
-
-(defn selected-object []
-   (:jsobj selection_))
-
-(defn selected-obj-property [prop]
-  (jscell/get selection_ prop))
 
 (defn snap! [target pos-prop pos-prop-set direction]
   (let  [div  (quot (pos-prop target) (:interval (:snapping @settings))),
@@ -141,16 +139,26 @@
 ;;Input events handlers
 ;;
 (defn- mouse-up [event]
-   (popups/hide-all))
+   (popups/hide-all)
+   (println "mouse up")
+   (e/refresh @selection_))
 
 
 (defn- obj-selected [event]
- (let [target (.-target event)]
-   (jscell/bind selection_ target)
-   ))
+ (let [target (.-target event)
+       entity (e/entity-from-src target)]
+    (println "selected")
+    (e/refresh @selection_)
+    (reset! selection_ entity)
+))
 
-(defn- obj-modified [event]
-  (let [target (.-target event)]))
+;; (defn- obj-moving [event]
+;;   (let [target (.-target event)
+;;         entity (e/entity-from-src target)]
+;;    (println "object moving")
+;;    (e/refresh entity)
+;; ))
+
 
 (defn- handle-delegator [key]
   (fn [event]
@@ -185,12 +193,8 @@
                                (dom/console-log (str "Initializing canvas with id [ " id " ]."))
                                (proj-create-page id)
                                (let [canvas (:canvas (proj-page-by-id id))]
-                                 ;; (cell= (.setDimensions canvas
-                                 ;;                        (js-obj "width"  page-width
-                                 ;;                                "height" page-height)
-                                 ;;                        (js-obj "cssOnly" true)))
-                                 (cell= (.setWidth canvas zoom-page-width))
-                                 (cell= (.setHeight canvas zoom-page-height))
+                                 (cell= (do (.setWidth canvas zoom-page-width)
+                                            (.setHeight canvas zoom-page-height)))
                                  (cell= (.setZoom canvas zoom))
                                  )
                                (reg-delegator id)
@@ -295,7 +299,9 @@
     (if (not (nil? src))
       (do
         (.add (:canvas (proj-selected-page)) src)
-        (jscell/bind new src)
+        (e/refresh entity)
+        ;(jscell/bind new src)
+        (reset! new entity)
         (changed))
         ))
 )

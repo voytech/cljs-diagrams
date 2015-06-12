@@ -9,6 +9,8 @@
             [ui.components.popup :as p]
             [ui.components.page-thumb :refer [page-thumb]]
             [ui.views.editing :refer [editing]]
+            [ui.views.settings :refer [zoom-control]]
+            [ui.views.history-controls :refer [history-ctrls]]
             [core.canvas-interface :as canvas-sheet]))
 
 (def current-page (cell= (inc (get-in canvas-sheet/project [:page-index]))))
@@ -34,14 +36,18 @@
             :class "workspace-div"
             :drop resolve-drop
             :dragover #(.preventDefault %))
+       (div :id "zoom-control"
+            :class "zoom-control-div"
+            (div :class "pull-right" (history-ctrls))
+            (div :class "pull-right col-md-4" (zoom-control)))
        (div :id "pagination"
             :class "page-pagination text-center"
             (pagination :enabled (cell= (get-in settings/settings [:multi-page]))
                         :pages (cell= (get-in settings/settings [:pages :count]))
                         :change-page #(change-page! % )
                         :page-thumb #(div :class "page-thumb"
-                                          (cell= (do (println (str "re-thumb " canvas-sheet/last-change))
-                                                     (page-thumb %))))))
+                                          (cell= (do (let [change canvas-sheet/last-change]
+                                                       (page-thumb %)))))))
        (div :id "popups-holder"
             :style "position:relative;"))
 )

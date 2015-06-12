@@ -1,23 +1,71 @@
-(ns core.entities.entity)
+(ns core.entities.entity
+  (:require [data.js-cell :as jc]
+            [tailrecursion.javelin :refer [cell destroy-cell!]])
+  (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
+
 
 (def ^:private ID "refId")
 
 (def entities (atom {}))
 
+
 (defn uuid []
   (.uuid js/Math 10 16))
+
+(defprotocol IEntity
+  (data [this])
+  (refresh [this])
+  (prop-get  [this property])
+  (prop-set  [this property val]))
 
 (defrecord Entity [uid
                    type
                    src
-                   event-handlers
-                   ])
+                   propcel
+                   event-handlers]
+  IEntity
+  (data [this] ;;
+    (jc/data propcel);@propcel
+  )
+  (prop-get [this property]
+    (jc/get propcel property);(cell= (get-in propcel [(keyword property)])) ;;
+  )
+  (prop-set [this property val]
+    (jc/set propcel property val);(assoc-in propcel [(keyword property)] val) ;;
+  )
+  (refresh [this] ;;
+     (jc/refresh propcel)
+  )
+)
+
+;; (defn- properties [jsobj]
+;;   (let [props (atom [])]
+;;     (goog.object/forEach jsobj
+;;                          (fn [val key obj]
+;;                            (when (not (= (type val) js/Function))
+;;                              (swap! props conj key))))
+;;     @props))
+
+
+;; (defn- reactive-properties [obj]
+;;   (let [propcel (cell {})]
+;;     (doseq [property (properties obj)]
+;;       (let [val (goog.object/get obj property)]
+;;         (.defineProperty js/Object obj property (js-obj
+;;                                                  "set" #(swap! propcel assoc-in [(keyword property)] %)
+;;                                                  "get" #(get-in @propcel [(keyword property)])))
+;;         (goog.object/set obj property val))
+;;        propcel
+;;     ))
+;; )
+
 
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
   ([type src event-handlers]
      (let [uid (uuid)
-           entity (Entity. uid type src event-handlers)]
+           propc (jc/js-cell src) ;(reactive-properties src)
+           entity  (Entity. uid type src propc event-handlers)]
        (.defineProperty js/Object src ID  (js-obj "value" (:uid entity)
                                                   "writable" true
                                                   "configurable" true
@@ -43,3 +91,5 @@
   (-> src
       js-obj-id
       entity-by-id))
+
+(def EMPTY (create-entity "empty" (js/Object.)))

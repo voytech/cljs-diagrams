@@ -1,12 +1,18 @@
-(editingns ui.views.editing
+(ns ui.views.editing
   (:require [core.canvas-interface :as canvas]
-            [data.js-cell :as jscell]
-            )
-  (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
+            [data.js-cell :as jc]
+            [core.entities.entity :as e])
+  (:require-macros [tailrecursion.javelin :refer [cell=]]
                    [data.macros :refer [->js]]))
 
 (defn- neg-prop [prop]
-  (not (prop (jscell/data canvas/selection_))))
+  (not (prop (e/data @canvas/selection_))))
+
+(defn- get-property [property]
+  (cell= (let [uid (:uid canvas/selection_)]
+           (property (e/data (e/entity-by-id uid))))))
+
+;(cell= (println (:left (e/data canvas/selection_))))
 
 (defelem editing []
   (div :id "editing-wrapper"
@@ -17,38 +23,42 @@
                     :id "opacity-slider"
                     :class "pull-right"
                     :type "range" :min 0 :max 1 :step 0.001
-                    :input #(->js setOpacity canvas/selection_  @% )
-                    :value  (->js getOpacity canvas/selection_)
+                    :input #(e/prop-set @canvas/selection_ "opacity" @%)
+                    :value (get-property :opacity)
                     ))
        (div :style "clear:both" :class "row center-block col-md-12"
             (div :class "col-md-6"
                  (label
                   (input
                    :type "checkbox"
-                   :click #(do (->js setFlipY canvas/selection_ (neg-prop :flipY)) true)
-                   :value (->js getFlipY canvas/selection_ ))
+                   ;:click #(do (e/prop-set canvas/selection_ "flipY" (neg-prop :flipY)) true)
+                   ;:value (e/prop-get canvas/selection_ "flipY")
+                   )
                   " Flip Y"))
             (div  :class "col-md-6"
                   (label
                    (input
                     :type "checkbox"
-                    :click #(do (->js setFlipX canvas/selection_ (neg-prop :flipX)) true)
-                    :value (->js getFlipX canvas/selection_ ))
+                   ; :click #(do (e/prop-set canvas/selection_ "flipY" (neg-prop :flipX)) true)
+                   ; :value (e/prop-get canvas/selection_ "flipY")
+                    )
                    " Flip X")))
        (div :style "clear:both" :class "row center-block col-md-12"
             (div  :class "col-md-6"
                   (label :style "white-space:nowrap"
                    (input
                     :type "checkbox"
-                    :click #(do (->js setLockY canvas/selection_ (neg-prop :lockY)) true)
-                    :value (->js getLockY canvas/selection_ ))
+                   ; :click #(do (e/prop-set canvas/selection_ "lockY" (neg-prop :lockY)) true)
+                   ; :value (e/prop-get canvas/selection_ "lockY")
+                    )
                    " Lock Y"))
             (div  :class "col-md-6"
                   (label :style "white-space:nowrap"
                    (input
                     :type "checkbox"
-                    :click #(do (->js setLockX canvas/selection_ (neg-prop :lockX)) true)
-                    :value (->js getLockX canvas/selection_ ))
+                   ;:click #(do (e/prop-set canvas/selection_ "lockX" (neg-prop :lockX)) true)
+                   ; :value (e/prop-get canvas/selection_ "lockX" )
+                    )
                    " Lock X")))
        (div :class "row col-md-12 center-block"
             (input

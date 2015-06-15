@@ -41,7 +41,7 @@
      (goog.object/forEach jsobj
                           (fn [val key obj]
                             (when (not (= (type val) js/Function))
-                              (when (= "top" key) (println (str "p " key " v " val)))
+                              ;(when (= "top" key) (println (str "p " key " v " val)))
                               (func key val)
                               (swap! props conj key))))
     @props))
@@ -56,7 +56,8 @@
                                          (when (not (nil? (get-in cel [property])))
                                            (->> (get-in cel [property])
                                                 (goog.object/set jsobj (name property)))
-                                           (when (= :top property) (println (str "->" (name property) ":" (get-in cel [property]))))))
+                                           ;(when (= :top property) (println (str "->" (name property) ":" (get-in cel [property]))))
+                                           ))
                                        )))))
 
 (defprotocol IJsCell
@@ -84,8 +85,9 @@
     (cell= (get-in cel [(keyword property)])))
 
   (set [this property val]
-    (swap! cel assoc-in [(keyword property)] val)  ;; keep only these
-    (println (str "setting value :" (property) " = " ((keyword property) @cel)))))
+    (let [kw (if (keyword? property) property (keyword property))]
+      (swap! cel assoc-in [kw] val)
+      )))
 
 (defn js-cell
   ([jsobj]

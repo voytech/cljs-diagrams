@@ -24,13 +24,14 @@
                    propcel
                    event-handlers]
   IEntity
-  (data [this] ;;
-    (jc/data propcel);@propcel
+  (data [this]
+    (jc/data propcel)
   )
   (prop-get [this property]
     (jc/get propcel property);(cell= (get-in propcel [(keyword property)])) ;;
   )
   (prop-set [this property val]
+    (println (str propcel property val))
     (jc/set propcel property val);(assoc-in propcel [(keyword property)] val) ;;
   )
   (refresh [this] ;;
@@ -94,6 +95,6 @@
 
 (defn get-entity-property [entity-id key]
   (let [entity (entity-by-id entity-id)]
-    (key (:data entity))))
+    (key (data entity))))
 
 (def EMPTY (create-entity "empty" (js/Object.)))

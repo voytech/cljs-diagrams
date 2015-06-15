@@ -65,6 +65,7 @@
       (when (not (nil? head))
         (debug-action "manage before " head)
         (on head)
+        (debug-action "manage after")
         (change-status head (next-status head))
         ))))
 

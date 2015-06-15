@@ -43,14 +43,6 @@
 
 (def last-change (cell 0))
 
-;; (def selection_ (jscell/js-cell (js/Object.) (fn [obj prop val]
-;;                                               ;; (.setActiveObject (:canvas (proj-selected-page)) obj)
-;;                                                (.setCoords obj)
-;;                                                (.renderAll (:canvas (proj-selected-page)) true)
-;;                                                )))
-
-;; (def new (jscell/js-cell (js/Object.) (fn [obj prop val])))
-
 (def selection_ (cell (e/create-entity "empty" (js/Object.))))
 (def new (cell (e/create-entity "empty" (js/Object.))))
 
@@ -68,7 +60,8 @@
 (defmethod on :change-property-action [action]
   (let [payload (:payload action)
         entity  (e/entity-by-id (:entity-id payload))]
-    (e/prop-set entity (:key payload) (:value payload))))
+    (e/prop-set entity (:key payload) (:value payload))
+    ))
 
 
 
@@ -146,25 +139,15 @@
 ;;
 (defn- mouse-up [event]
    (popups/hide-all)
-   (println "mouse up")
    (e/refresh @selection_))
 
 
 (defn- obj-selected [event]
  (let [target (.-target event)
        entity (e/entity-from-src target)]
-    (println "selected")
     (e/refresh @selection_)
     (reset! selection_ entity)
 ))
-
-;; (defn- obj-moving [event]
-;;   (let [target (.-target event)
-;;         entity (e/entity-from-src target)]
-;;    (println "object moving")
-;;    (e/refresh entity)
-;; ))
-
 
 (defn- handle-delegator [key]
   (fn [event]

@@ -9,9 +9,12 @@
 (defn- neg-prop [prop]
   (not (prop (e/data @canvas/selection_))))
 
-(defn- get-property [property]
+(defn- selection-get-property [property]
   (cell= (let [uid (:uid canvas/selection_)]
            (property (e/data (e/entity-by-id uid))))))
+
+(defn- selection-set-property [property value]
+  (a/change-property! (:uid @canvas/selection_) :opacity value))
 
 
 (defelem editing []
@@ -23,8 +26,8 @@
                     :id "opacity-slider"
                     :class "pull-right"
                     :type "range" :min 0 :max 1 :step 0.001
-                    :input #(a/change-property! (:uid @canvas/selection_) :opacity @%)
-                    :value (get-property :opacity)
+                    :input #(selection-set-property :opacity @%)
+                    :value (selection-get-property :opacity)
                     ))
        (div :style "clear:both" :class "row center-block col-md-12"
             (div :class "col-md-6"

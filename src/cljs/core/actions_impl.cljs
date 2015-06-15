@@ -49,11 +49,11 @@
 
 (defn *change-property!* [entity-id key value status]
    (raise (action-wrapper :change-property-action
-                          {:entity-id entity
+                          {:entity-id entity-id
                            :key key
                            :value value}
                           (fn [action]
-                            (*change-property!* (:undo-buffer action) (:status action)))
+                            (*change-property!* entity-id key (:undo-buffer action) (:status action)))
                           (e/get-entity-property entity-id key)
                           status))
 )

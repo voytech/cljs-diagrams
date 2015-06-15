@@ -44,7 +44,8 @@
         (hoplon)
        ;; (cljs-repl)
         (reload)
-        (cljs :source-map true)))
+        (cljs :source-map true
+              )))
 
 (deftask dev
   []

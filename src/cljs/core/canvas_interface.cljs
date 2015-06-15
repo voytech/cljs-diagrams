@@ -65,6 +65,12 @@
 (defmethod on :change-page-action [action]
   (swap! project assoc-in [:page-index] (:payload action)))
 
+(defmethod on :change-property-action [action]
+  (let [payload (:payload action)
+        entity  (e/entity-by-id (:entity-id payload))]
+    (e/prop-set entity (:key payload) (:value payload))))
+
+
 
 (defn proj-create-page [id]
   (let [page {:canvas (js/fabric.Canvas. id)

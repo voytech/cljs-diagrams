@@ -2,6 +2,7 @@
   (:require [core.actions :refer [raise Action run-actions next-status debug-action]]
             [utils.dom.dom-utils :as dom]
             [core.settings :as settings]
+            [core.entities.entity :as e]
             [core.canvas-interface :refer [project]]))
 
 (declare change-settings!)
@@ -46,10 +47,19 @@
 (defn change-page! [page-num]
   (*change-page!* page-num :NEW))
 
-(defn *change-property!* [entity key value status])
+(defn *change-property!* [entity-id key value status]
+   (raise (action-wrapper :change-property-action
+                          {:entity-id entity
+                           :key key
+                           :value value}
+                          (fn [action]
+                            (*change-property!* (:undo-buffer action) (:status action)))
+                          (e/get-entity-property entity-id key)
+                          status))
+)
 
-(defn change-property! [entity key value]
-  (*change-property!* entity key value :NEW))
+(defn change-property! [entity-id key value]
+  (*change-property!* entity-id key value :NEW))
 
 
 

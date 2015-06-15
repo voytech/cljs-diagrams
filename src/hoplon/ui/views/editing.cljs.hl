@@ -1,7 +1,8 @@
 (ns ui.views.editing
   (:require [core.canvas-interface :as canvas]
             [data.js-cell :as jc]
-            [core.entities.entity :as e])
+            [core.entities.entity :as e]
+            [core.actions-impl :as a])
   (:require-macros [tailrecursion.javelin :refer [cell=]]
                    [data.macros :refer [->js]]))
 
@@ -12,7 +13,6 @@
   (cell= (let [uid (:uid canvas/selection_)]
            (property (e/data (e/entity-by-id uid))))))
 
-;(cell= (println (:left (e/data canvas/selection_))))
 
 (defelem editing []
   (div :id "editing-wrapper"
@@ -23,7 +23,7 @@
                     :id "opacity-slider"
                     :class "pull-right"
                     :type "range" :min 0 :max 1 :step 0.001
-                    :input #(e/prop-set @canvas/selection_ "opacity" @%)
+                    :input #(a/change-property! (:uid @canvas/selection_) :opacity @%)
                     :value (get-property :opacity)
                     ))
        (div :style "clear:both" :class "row center-block col-md-12"

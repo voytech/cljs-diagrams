@@ -92,4 +92,8 @@
       js-obj-id
       entity-by-id))
 
+(defn get-entity-property [entity-id key]
+  (let [entity (entity-by-id entity-id)]
+    (key (:data entity))))
+
 (def EMPTY (create-entity "empty" (js/Object.)))

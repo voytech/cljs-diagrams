@@ -46,7 +46,7 @@
 (def last-change (cell 0))
 
 (def selection_ (cell (e/create-entity "empty" (js/Object.))))
-(def new (cell (e/create-entity "empty" (js/Object.))))
+(def new_ (cell (e/create-entity "empty" (js/Object.))))
 
 (def event-handlers (atom {"object:moving"   [#(do-snap %)
                                               #(intersection-test % "collide")
@@ -79,7 +79,6 @@
       (dosync
        (let [values (:values payload)]
          (doseq [key (keys values)]
-           (println (str "setting = " key ":" (key values)))
            (e/prop-set entity key (key values)))))
       (.renderAll (:canvas (proj-selected-page))))
     ))
@@ -327,8 +326,7 @@
       (do
         (.add (:canvas (proj-selected-page)) src)
         (e/refresh entity)
-        ;(jscell/bind new src)
-        (reset! new entity)
+        (reset! new_ entity)
         (changed))
         ))
 )

@@ -34,16 +34,16 @@
                  (label
                   (input
                    :type "checkbox"
-                   ;:click #(do (e/prop-set canvas/selection_ "flipY" (neg-prop :flipY)) true)
-                   ;:value (e/prop-get canvas/selection_ "flipY")
+                   :click #(do (selection-set-property :flipY (neg-prop :flipY)) true)
+                   :value (selection-get-property :flipY)
                    )
                   " Flip Y"))
             (div  :class "col-md-6"
                   (label
                    (input
                     :type "checkbox"
-                   ; :click #(do (e/prop-set canvas/selection_ "flipY" (neg-prop :flipX)) true)
-                   ; :value (e/prop-get canvas/selection_ "flipY")
+                    :click #(do (selection-set-property :flipX (neg-prop :flipX)) true)
+                    :value (selection-get-property :flipX)
                     )
                    " Flip X")))
        (div :style "clear:both" :class "row center-block col-md-12"
@@ -51,16 +51,16 @@
                   (label :style "white-space:nowrap"
                    (input
                     :type "checkbox"
-                   ; :click #(do (e/prop-set canvas/selection_ "lockY" (neg-prop :lockY)) true)
-                   ; :value (e/prop-get canvas/selection_ "lockY")
+                    :click #(do (selection-set-property :lockY (neg-prop :lockY)) true)
+                    :value (selection-get-property :lockY)
                     )
                    " Lock Y"))
             (div  :class "col-md-6"
                   (label :style "white-space:nowrap"
                    (input
                     :type "checkbox"
-                   ;:click #(do (e/prop-set canvas/selection_ "lockX" (neg-prop :lockX)) true)
-                   ; :value (e/prop-get canvas/selection_ "lockX" )
+                    :click #(do (selection-set-property :lockX (neg-prop :lockX)) true)
+                    :value (selection-get-property :lockX )
                     )
                    " Lock X")))
        (div :class "row col-md-12 center-block"

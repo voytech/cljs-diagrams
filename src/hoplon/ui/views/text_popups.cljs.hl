@@ -1,12 +1,29 @@
 (ns ui.views.text-popups
   (:require [core.canvas-interface :as canvas]
             [data.js-cell :as jscell]
-            [utils.fonts :as fonts])
+            [utils.fonts :as fonts]
+            [core.actions-impl :as a]
+            [core.entities.entity :as e])
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
                    [data.macros :refer [->js]]))
 
 (defn- neg-prop [prop]
   (not (prop (jscell/data canvas/selection_))))
+
+(defn- selection-get-property [property]
+  (cell= (let [uid (:uid canvas/selection_)]
+           (property (e/data (e/entity-by-id uid))))))
+
+(defn- selection-set-property [property value]
+  (a/change-property! (:uid @canvas/selection_) property value))
+
+(defn- new-get-property [property]
+  (cell= (let [uid (:uid canvas/new_)]
+           (property (e/data (e/entity-by-id uid))))))
+
+(defn- new-set-property [property value]
+  (a/change-property! (:uid @canvas/new_) property value))
+
 
 (defelem text-add-popup []
   (div :id "text-add-i"
@@ -16,8 +33,8 @@
                :id "create-text"
                :class "form-control"
                :type "text"
-               :input #(->js setText canvas/new @% ) ;; maybe canvas/created-entity
-               :value  (->js getText canvas/new)
+               :input #(new-set-property :text @% ) ;; maybe canvas/created-entity
+               :value  (new-get-property :text)
             ))))
 
 (defelem text-edit-popup []
@@ -30,16 +47,16 @@
                   :id "create-text"
                   :class "pull-right form-control"
                   :type "text"
-                  :input #(->js setText canvas/selection_  @% ) ;; maybe canvas/created-entity
-                  :value  (->js getText canvas/selection_)
+                  :input #(selection-set-property :text  @% ) ;; maybe canvas/created-entity
+                  :value  (selection-get-property :text)
                   ))
             (div :class "row top-margin-05"
                  (label :for "font-fam" :class "pull-left" "Font")
                  (select
                   :id "font-fam"
                   :class "pull-right"
-                  :change #(->js setFontFamily canvas/selection_  @% )
-                  :value (->js getFontFamily canvas/selection_)
+                  :change #(selection-set-property :fontFamily  @% )
+                  :value (selection-get-property :fontFamily)
                   (map  #(option :value %  %) (fonts/available-fonts))
                   ))
             (div :class "row top-margin-05"
@@ -47,8 +64,8 @@
                  (select
                   :id "font-size"
                   :class "pull-right"
-                  :change #(->js setFontSize canvas/selection_  @% )
-                  :value (->js getFontSize canvas/selection_)
+                  :change #(selection-set-property :fontSize @% )
+                  :value (selection-get-property :fontSize)
                   (map  #(option :value %  %) (fonts/available-font-sizes))
                   ))
             (div :class "row top-margin-05"
@@ -56,8 +73,8 @@
                  (select
                   :id "font-weight"
                   :class "pull-right"
-                  :change #(->js setFontWeight canvas/selection_  @% )
-                  :value (->js getFontWeight canvas/selection_)
+                  :change #(selection-set-property :fontWeight @% )
+                  :value (selection-get-property :fontWeight)
                   (map  #(option :value %  %) (fonts/available-font-weights))
                   ))
                 )

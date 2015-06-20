@@ -3,7 +3,8 @@
             [utils.dom.dom-utils :as dom]
             [core.settings :as settings]
             [core.entities.entity :as e]
-            [core.canvas-interface :refer [project]]))
+           ; [core.canvas-interface :refer [project]]
+            ))
 
 (declare change-settings!)
 
@@ -35,31 +36,59 @@
 (defn change-settings! [val & path]
  (raise (new-settings-action-wrapper val path :NEW)))
 
-(defn- *change-page!* [page-num action-status]
+(defn- *change-page!* [page-num current-val action-status]
   (raise (action-wrapper :change-page-action
                          page-num
                          (fn [action]
-                           (*change-page!* (:undo-buffer action) (:status action)))
-                         (get-in @project [:page-index])
+                           (*change-page!* (:undo-buffer action) (:payload action) (:status action)))
+                         current-val;(get-in @in-project [:page-index])
                          action-status)))
 
 
-(defn change-page! [page-num]
-  (*change-page!* page-num :NEW))
+(defn change-page! [page-num current-val]
+  (*change-page!* page-num current-val :NEW))
 
-(defn *change-property!* [entity-id key value status]
+(defn *change-property!* [entity-id key value status execute]
    (raise (action-wrapper :change-property-action
                           {:entity-id entity-id
                            :key key
-                           :value value}
+                           :value value
+                           :execute execute}
                           (fn [action]
-                            (*change-property!* entity-id key (:undo-buffer action) (:status action)))
+                            (*change-property!* entity-id key (:undo-buffer action) (:status action) true))
                           (e/get-entity-property entity-id key)
                           status))
 )
 
-(defn change-property! [entity-id key value]
-  (*change-property!* entity-id key value :NEW))
+(defn change-property!
+  ([entity-id key value execute] (*change-property!* entity-id key value :NEW execute))
+  ([entity-id key value] (*change-property!* entity-id key value :NEW true)))
+
+(defn build-property-map [entity-id keys]
+  (let [entity (e/entity-by-id entity-id)
+        result (atom {})]
+    (doseq [prop keys]
+      (swap! result assoc-in [prop] (prop (e/data entity)))
+      (println (str prop ":" (prop @result)))
+      )
+    @result)
+)
+
+(defn *change-properties!* [entity-id properties-map status execute]
+   (println (str "execute " execute))
+   (raise (action-wrapper :change-properties-action
+                          {:entity-id entity-id
+                           :values properties-map
+                           :execute execute}
+                          (fn [action]
+                            (*change-properties!* entity-id (:undo-buffer action) (:status action) true))
+                          (build-property-map entity-id (keys properties-map))
+                          status))
+)
+
+(defn change-properties!
+  ([entity-id properties-map execute] (*change-properties!* entity-id properties-map :NEW execute))
+  ([entity-id properties-map] (*change-properties!* entity-id properties-map :NEW true)))
 
 
 

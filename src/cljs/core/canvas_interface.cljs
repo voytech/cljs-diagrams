@@ -9,6 +9,7 @@
             [utils.popups :as popups]
             [core.entities.entity :as e]
             [core.tools.tool :as t]
+            [core.actions-impl :as ac]
             [core.settings :refer [settings
                                    settings?
                                    settings!
@@ -34,9 +35,10 @@
 (declare intersection-test)
 (declare obj-selected)
 (declare obj-modified)
-(declare obj-moving)
+(declare obj-editing-start)
 (declare mouse-up)
 
+(def obj-editing (atom false))
 (def project (cell {:page-index 0
                     :pages {}
                     :current-page-id :page-0}))
@@ -46,9 +48,12 @@
 (def selection_ (cell (e/create-entity "empty" (js/Object.))))
 (def new (cell (e/create-entity "empty" (js/Object.))))
 
-(def event-handlers (atom {"object:moving"   [#(do-snap %) #(intersection-test % "collide")]
+(def event-handlers (atom {"object:moving"   [#(do-snap %)
+                                              #(intersection-test % "collide")
+                                              #(obj-editing-start % [:left :top])]
+                           "object:rotating" [#(obj-editing-start % [:angle])]
+                           "object:scaling"  [#(obj-editing-start % [:scaleX :scaleY])]
                            "object:selected" [#(obj-selected %)]
-                          ; "object:modified" [#(obj-modified %)]
                            "mouse:up" [#(mouse-up %) #(intersection-test % "collide-end")]}))
 
 (defn- changed [] (reset! last-change (dom/time-now)))
@@ -59,9 +64,26 @@
 
 (defmethod on :change-property-action [action]
   (let [payload (:payload action)
-        entity  (e/entity-by-id (:entity-id payload))]
-    (e/prop-set entity (:key payload) (:value payload))
+        entity  (e/entity-by-id (:entity-id payload))
+        execute (:execute payload)]
+    (when (= true execute)
+          (e/prop-set entity (:key payload) (:value payload))
+          (.renderAll (:canvas (proj-selected-page))))
     ))
+
+(defmethod on :change-properties-action [action]
+  (let [payload (:payload action)
+        entity  (e/entity-by-id (:entity-id payload))
+        execute (:execute payload)]
+    (when (= true execute)
+      (dosync
+       (let [values (:values payload)]
+         (doseq [key (keys values)]
+           (println (str "setting = " key ":" (key values)))
+           (e/prop-set entity key (key values)))))
+      (.renderAll (:canvas (proj-selected-page))))
+    ))
+
 
 
 
@@ -119,6 +141,18 @@
 )))))
       )))
 
+(defn- obj-editing-start [event properties]
+  (let [trg (.-target event)
+        id (e/js-obj-id trg)]
+    (when (not (= true @obj-editing))
+      (ac/change-properties! id (ac/build-property-map id properties) false)
+      (reset! obj-editing  true)))
+)
+
+(defn- obj-editing-end []
+  (let [id (:uid @selection_)]
+    (reset! obj-editing false)))
+
 (defn page-id [indx]
   (str "page-" indx))
 
@@ -138,7 +172,9 @@
 ;;Input events handlers
 ;;
 (defn- mouse-up [event]
+  (println "mouse - up ")
    (popups/hide-all)
+   (obj-editing-end)
    (e/refresh @selection_))
 
 
@@ -159,6 +195,8 @@
   (doall
    (map #(.on (:canvas (proj-page-by-id id)) (js-obj % (handle-delegator %)))
                   ["object:moving"
+                   "object:rotating"
+                   "object:scaling"
                    "object:selected"
                    "object:modified"
                    "mouse:down"

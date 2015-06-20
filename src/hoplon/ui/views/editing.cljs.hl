@@ -14,7 +14,7 @@
            (property (e/data (e/entity-by-id uid))))))
 
 (defn- selection-set-property [property value]
-  (a/change-property! (:uid @canvas/selection_) :opacity value))
+  (a/change-property! (:uid @canvas/selection_) property value))
 
 
 (defelem editing []

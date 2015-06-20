@@ -44,7 +44,7 @@
             :class "page-pagination text-center"
             (pagination :enabled (cell= (get-in settings/settings [:multi-page]))
                         :pages (cell= (get-in settings/settings [:pages :count]))
-                        :change-page #(change-page! % )
+                        :change-page #(change-page! % (get-in @canvas-sheet/project [:page-index]))
                         :page-thumb #(div :class "page-thumb"
                                           (cell= (do (let [change canvas-sheet/last-change]
                                                        (page-thumb %)))))))

@@ -58,3 +58,13 @@
 
 (defn hidden [id]
   (.css (js/jQuery (str "#" id)) "display" "none"))
+
+(defn remove-childs [parent]
+  (.empty (j-query parent)))
+
+(defn append-child [parent child]
+  (.appendChild parent child))
+
+(defn replace-container-content [container content]
+  (remove-childs container)
+  (append-child container content))

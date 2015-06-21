@@ -4,7 +4,7 @@
             [core.entities.entities-impl :as entities]
             [core.canvas-interface :as canvas]))
 
-
+;; Consider making macro deftool for implementing new tools. More concise and cleaner approach.
 (defn photo-tool [name desc icon]
   (tool/create-tool name desc "photo" icon (fn [src ctx]
                                              (-> (entities/create-image-entity

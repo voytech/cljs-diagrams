@@ -1,9 +1,9 @@
 (ns core.router.routes
   (:require [core.router.router :as router]
-            [ui.pages.main :as m]
-            [ui.pages.admin :as a]
+            [ui.pages.main :refer [main]]
+            [ui.pages.admin :refer [admin]]
 ))
 
 (router/set-container-id "main-container" )
-(router/def-route "main" (m/main))
-(router/def-route "admin" (a/admin))
+(router/def-route "#/main" (main))
+(router/def-route "#/admin" (admin))

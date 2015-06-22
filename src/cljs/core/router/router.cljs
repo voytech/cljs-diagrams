@@ -2,11 +2,12 @@
   (:require [utils.dom.dom-utils :as dom]))
 
 (def ^:private routes (atom {}))
-;Consider using many container per route.
+
+; TODO!! Consider using many container per route.
 (def container-id (atom -1))
 
 (defn goto-page [route]
-  (set! (.-hash js/location) route))
+  (set! (.-hash (.-location js/window)) route))
 
 (defn set-container-id [id]
   (reset! container-id id))

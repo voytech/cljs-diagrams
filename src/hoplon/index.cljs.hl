@@ -13,6 +13,7 @@
   (router/def-route "#/main" (main))
   (router/def-route "#/admin" (admin))
   (router/route)
+  (router/goto-page "#/admin")
   (println "Initialized")
 )
 

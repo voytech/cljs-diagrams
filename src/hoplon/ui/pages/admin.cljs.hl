@@ -1,0 +1,20 @@
+(ns ui.pages.admin
+  (:require
+   [ui.views.toolkit-view :refer [library-view
+                                  tools-view]]
+   [ui.views.canvas :refer [workspace]]
+   [ui.views.settings :refer [settings]]
+   [ui.views.editing  :refer [editing]]
+   [utils.canvas-popups :as popups]
+   [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
+
+(defelem admin[]
+  (div :id "container"
+       (div :id "library" (tabs
+                           (tab :name "Clip-arts" (tools-view))
+                           (tab :name "Templates" (div (text "Tempaltes here!")))
+                           (tab :name "Printing" (div (text "Here tenant can make printing specifications")))
+                           (tab :name "Settings" (settings))
+                           ))
+
+       (div :id "workspace" (workspace))))

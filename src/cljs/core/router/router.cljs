@@ -1,7 +1,8 @@
 (ns core.router.router
   (:require [utils.dom.dom-utils :as dom]))
 
-(def routes (atom {}))
+(def ^:private routes (atom {}))
+;Consider using many container per route.
 (def container-id (atom -1))
 
 (defn goto-page [route]
@@ -10,7 +11,7 @@
 (defn set-container-id [id]
   (reset! container-id id))
 
-(defn defroute [route page]
+(defn def-route [route page]
   (swap! routes assoc-in [route] page))
 
 ; TODO IMPORTANT!!!
@@ -18,12 +19,15 @@
 ; All associated js objects should be garbage collected.
 (defn- on-hash-change []
   (when (= -1 @container-id) (throw (js/Error. "No container specified for router.")))
-  (let [location (.-hash js/location)
+  (let [location (.-hash (.-location js/window))
         page (get @routes location)
         container (dom/by-id @container-id)]
+    (println (str "location : " location))
+    (println (str "container : " container))
+    (println (str "page : " page))
     (when (not (nil? page))
       (dom/remove-childs container)
       (dom/append-child container page))))
 
 (defn route []
-  (.on js/window "hashchange" #(on-hash-change)))
+  (.addEventListener js/window "hashchange" #(on-hash-change)))

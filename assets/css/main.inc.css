@@ -210,3 +210,14 @@ h1 {
 .right-margin-2 {
   margin-top : 2em
 }
+
+#main-container{
+  width:100%;
+  height:100%;
+}
+
+.logo {
+ font-family:"Calibri";
+ font-size:x-large;
+ font-weight:bold;
+}

@@ -90,7 +90,5 @@
   ([entity-id properties-map execute] (*change-properties!* entity-id properties-map :NEW execute))
   ([entity-id properties-map] (*change-properties!* entity-id properties-map :NEW true)))
 
-
-
 (run-actions)
 ;;register formula side-effect cell for listening to actions list.

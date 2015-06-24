@@ -9,16 +9,22 @@
                   [adzerk/boot-reload              "0.2.6"]
                   [pandeiro/boot-http              "0.6.2"]
                   [tailrecursion/boot-hoplon       "0.1.0-SNAPSHOT"]
+                  [tailrecursion/boot-ring         "0.1.0"]
+                  [rwillig/boot-castra             "0.1.0-SNAPSHOT"]
                   [tailrecursion/javelin           "3.7.2"]
                   [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
-                  ;;[hoplon/twitter-bootstrap        "0.1.0"] ;; This will be set if package is released.
+                  [com.datomic/datomic-free        "0.8.4159" :exclusions [commons-codec]] ; this clashes with castra.
                   [clj-tagsoup                     "0.3.0"]
+                  [tailrecursion/castra            "2.2.2"]
+                  [ring/ring                       "1.3.2"]
+                  [ring/ring-core                  "1.3.2"]
+                  [ring/ring-jetty-adapter         "1.3.2"]
                   [voytech/boot-clojurescript.test "0.1.0-SNAPSHOT"]]
   ;;:asset-paths    #{"assets"}
   :out-path       "resources/public"
   :target-path    "resources/public"
-  :source-paths   #{"src/cljs" "src/main/clj" "src/hoplon"} ;;Echh still need to refactor to src/main/clj src/main/hoplon
+  :source-paths   #{"src/cljs" "src/clj" "src/hoplon"} ;;Echh still need to refactor to src/main/clj src/main/hoplon
   :test-paths     #{"src/test/cljs" }
   :resource-paths #{"assets"}
   )
@@ -34,6 +40,10 @@
   '[pandeiro.boot-http :refer [serve]]
   '[boot.core          :as boot]
   '[boot-clojurescript.test.tasks :refer :all]
+  '[rwillig.boot-castra :as c]
+  '[tailrecursion.castra.handler :as h :refer [castra]]
+  '[tailrecursion.boot-ring      :as r]
+  '[app :refer [run-app]]
   )
 
 
@@ -42,15 +52,40 @@
   (comp (serve)
         (watch)
         (hoplon)
-       ;; (cljs-repl)
         (reload)
-        (cljs :source-map true
-              )))
+        (cljs :source-map true)
+        ))
 
 (deftask dev
   []
   (comp (hoplon) (cljs)))
 
+(deftask dev-server []
+  (comp (watch)
+        (hoplon)
+        (cljs :source-map true)
+        (c/castra-dev-server :namespaces 'core.api
+                             :port 3000
+                             :join true
+                             :docroot "resources/public")))
+
+(deftask dev-server-2 []
+  (comp
+       ; (watch)
+      ;  (hoplon)
+      ;  (cljs :source-map true)
+        (r/head)
+        (r/dev-mode)
+        (r/session-cookie "a 16-byte secret")
+        (r/files "resources/public")
+        (r/reload)
+        (c/task-castra :namespaces 'core.api)
+        (r/jetty :port 3000 :join true)))
+
+;Only for testing castra.
+(deftask run-server []
+  (run-app 8080 "resources/public")
+)
 ;;This task should give also reload and cljs-repl
 (deftask test-driven-dev
  []

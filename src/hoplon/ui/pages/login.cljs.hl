@@ -1,0 +1,22 @@
+(ns ui.pages.login
+  (:require [core.router.router :as r]
+            [core.api.api :as a]))
+
+(defelem login[]
+ (div :id "login-page" :class "container-fluid col-md-12 row"
+      (div :id "inner" :class "col-md-offset-4 col-md-3"
+           (div :id "logo" :class "logo text-center" "PHOTO COLLAGE BETA" )
+           (hr  :id "separator" :class "separator")
+           (div :id "login-centered" :class "center-block"
+                (form :on-submit #(a/login! (val-id "username") (val-id "password"))
+                 (div :class "form-group"
+                      (label :for "username" "Enter Username")
+                      (input :class "form-control input-sm" :type "text" :id "username"))
+                 (div :class "form-group"
+                      (label :for "password" "Enter password")
+                      (input :class "form-control input-sm" :type "password" :id "password"))
+                 (hr  :id "separator" :class "separator")
+                 (button :type "submit" :class "btn btn-primary" "Login")
+                 (text " - or - ")
+                 (a :href "javascript:void(0)" :on-click #(r/goto-page "#/register")
+                    (text "Register")))))))

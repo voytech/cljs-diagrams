@@ -11,7 +11,7 @@
 (defelem admin[]
   (div :id "container"
        (div :id "library" (tabs
-                           (tab :name "Clip-arts" (tools-view))
+                           (tab :name "Clip-Arts" (tools-view))
                            (tab :name "Templates" (div (text "Tempaltes here!")))
                            (tab :name "Printing" (div (text "Here tenant can make printing specifications")))
                            (tab :name "Settings" (settings))

@@ -1,19 +1,22 @@
 (page "index.html"
   (:require
     [core.router.router :as router]
-   ; [core.router.routes :as routes]
     [ui.pages.main :refer [main]]
     [ui.pages.admin :refer [admin]]
+    [ui.pages.register :refer [register]]
+    [ui.pages.login :refer [login]]
     [utils.canvas-popups :as popups]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
 (defn start []
   (println "Initializing application...")
   (router/set-container-id "main-container" )
-  (router/def-route "#/main" (main))
-  (router/def-route "#/admin" (admin))
+  (router/def-route "#/main"     (main))
+  (router/def-route "#/admin"    (admin))
+  (router/def-route "#/register" (register))
+  (router/def-route "#/login"    (login))
   (router/route)
-  (router/goto-page "#/admin")
+  (router/goto-page "#/login")
   (println "Initialized")
 )
 

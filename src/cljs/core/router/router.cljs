@@ -23,9 +23,6 @@
   (let [location (.-hash (.-location js/window))
         page (get @routes location)
         container (dom/by-id @container-id)]
-    (println (str "location : " location))
-    (println (str "container : " container))
-    (println (str "page : " page))
     (when (not (nil? page))
       (dom/remove-childs container)
       (dom/append-child container page))))

@@ -6,14 +6,19 @@
    [ring.middleware.session.cookie   :refer [cookie-store]]
    [ring.middleware.file             :refer [wrap-file]]
    [ring.middleware.file-info        :refer [wrap-file-info]]
+   [ring.middleware.serve-index      :refer [wrap-index]]
    [tailrecursion.castra.handler     :refer [castra]]))
 
 (def public-path "resources/public")
 
-(defn run-app [port path]
+(defn start [port path namespace join]
   (->
-    (castra 'core.api)
+    (castra namespace)
     (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
     (wrap-file (or path public-path))
+    (wrap-index (or path public-path))
     (wrap-file-info)
-    (run-jetty {:join? true :port port})))
+    (run-jetty {:join? join :port port}))
+)
+(defn run-app [port path]
+  (start port path 'core.api true))

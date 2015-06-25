@@ -9,8 +9,6 @@
                   [adzerk/boot-reload              "0.2.6"]
                   [pandeiro/boot-http              "0.6.2"]
                   [tailrecursion/boot-hoplon       "0.1.0-SNAPSHOT"]
-                  [tailrecursion/boot-ring         "0.1.0"]
-                  [rwillig/boot-castra             "0.1.0-SNAPSHOT"]
                   [tailrecursion/javelin           "3.7.2"]
                   [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
@@ -40,12 +38,21 @@
   '[pandeiro.boot-http :refer [serve]]
   '[boot.core          :as boot]
   '[boot-clojurescript.test.tasks :refer :all]
-  '[rwillig.boot-castra :as c]
   '[tailrecursion.castra.handler :as h :refer [castra]]
-  '[tailrecursion.boot-ring      :as r]
-  '[app :refer [run-app]]
+  '[app :refer [run-app start]]
   )
 
+
+(deftask start-server-task [n namespace    SYM  sym  "The castra handler(s) to serve."
+                     d docroot       PATH str  "The directory to serve."
+                     p port          PORT int  "The port to listen on. (Default: 8000)"
+                     j join          JOIN bool "Wait for server."]
+  (let [join? (or join false)
+        port! (or port 8080)
+        path  (or docroot "resources/public" )]
+    (boot/with-pre-wrap fileset
+      (start port! path namespace join?)
+      fileset)))
 
 (deftask continous
   []
@@ -64,28 +71,8 @@
   (comp (watch)
         (hoplon)
         (cljs :source-map true)
-        (c/castra-dev-server :namespaces 'core.api
-                             :port 3000
-                             :join true
-                             :docroot "resources/public")))
+        (start-server-task :namespace 'core.api :port 3000 :join false)))
 
-(deftask dev-server-2 []
-  (comp
-       ; (watch)
-      ;  (hoplon)
-      ;  (cljs :source-map true)
-        (r/head)
-        (r/dev-mode)
-        (r/session-cookie "a 16-byte secret")
-        (r/files "resources/public")
-        (r/reload)
-        (c/task-castra :namespaces 'core.api)
-        (r/jetty :port 3000 :join true)))
-
-;Only for testing castra.
-(deftask run-server []
-  (run-app 8080 "resources/public")
-)
 ;;This task should give also reload and cljs-repl
 (deftask test-driven-dev
  []

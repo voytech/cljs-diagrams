@@ -11,14 +11,19 @@
 
 (def public-path "resources/public")
 
+(def server (atom nil))
+(def running (atom false))
+
+
 (defn start [port path namespace join]
-  (->
-    (castra namespace)
-    (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
-    (wrap-file (or path public-path))
-    (wrap-index (or path public-path))
-    (wrap-file-info)
-    (run-jetty {:join? join :port port}))
+  (reset! server (->
+                  (castra namespace)
+                  (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
+                  (wrap-file (or path public-path))
+                  (wrap-index (or path public-path))
+                  (wrap-file-info)
+                  (run-jetty {:join? join :port port})))
+  (reset! running true)
 )
 (defn run-app [port path]
   (start port path 'core.api true))

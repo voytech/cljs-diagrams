@@ -1,0 +1,12 @@
+(ns ui.components.main-menu)
+
+(defrecord MenuItem [title tool-tip description action])
+
+(defelem main-menu [{:keys [items orientation]}]
+  (when (not (coll? items)) (throw (js/Error. "items parameter must be collection of MenuItems")))
+  (div :class "collapse navbar-collapse"
+       :id "main-menu"
+       (ul :class "nav navbar-nav"
+          (map #(li :class "active" (a :href "#" (span :class "sr-only") (:title %))) items)
+       )
+  ))

@@ -39,7 +39,7 @@
   '[boot.core          :as boot]
   '[boot-clojurescript.test.tasks :refer :all]
   '[tailrecursion.castra.handler :as h :refer [castra]]
-  '[app :refer [run-app start]]
+  '[app :refer [run-app start running]]
   )
 
 
@@ -51,7 +51,8 @@
         port! (or port 8080)
         path  (or docroot "resources/public" )]
     (boot/with-pre-wrap fileset
-      (start port! path namespace join?)
+      ;verify if it is running then just skip.
+      (when (not running) (start port! path namespace join?))
       fileset)))
 
 (deftask continous

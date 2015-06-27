@@ -1,0 +1,39 @@
+(ns ui.components.accordion
+  (:require [utils.dom.dom-utils :as dom]))
+
+;Those are exposed elements
+(defelem entry-title [& elem]
+  (div elem))
+
+(defelem entry-body [& elem]
+  (div elem))
+
+(defelem entry [& headnbody]
+  (div headnbody))
+
+(defn- toggle-elem-at [index states-cel]
+  (let [new-state (not (get @states-cel index))]
+    (dosync (doall (map-indexed #(swap! assoc states-cel %1 (if (= index %1)
+                                                              new-state
+                                                              false)) @states-cel)))))
+
+;Private DOM nodes created using functions
+(defn- create-entry [index element states-cel]
+  (println (str "element " element))
+  (let [childs  (.childNodes element)
+        header  (.aget childs 0) ;(first element)
+        content (.aget childs 1) ;(last element)
+        ]
+    (div :class "panel panel-default"
+        (div :class "panel-heading"
+             :click #(toggle-elem-at index states-cel) header
+             )
+        (div :class "panel-collapse collapse in"
+             (div :class "panel-body" content)))))
+
+(defelem accordion [{:keys [id]} elems]
+  (let [states (map-indexed #(if (= 0 %1) true false) elems)
+        statesv (cell (vec states))]
+    (doall (map-indexed #(println (str "index " %1 " elem " %2)) elems))
+    (div :class "panel-group" :id id
+         (map-indexed #(create-entry %1 %2 statesv) elems))))

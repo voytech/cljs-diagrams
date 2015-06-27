@@ -13,7 +13,7 @@ h1 {
 }
 
 
-#library, #config, #workspace{
+#config, #workspace{
   border-width:1px;
   border-color:lightgray;
   border-style:solid;

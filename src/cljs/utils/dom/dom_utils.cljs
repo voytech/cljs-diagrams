@@ -24,6 +24,9 @@
 (defn j-query-id [id]
   (js/jQuery (str "#" id)))
 
+(defn j-query-attr [attr val]
+  (js/jQuery (str "[" attr "=\"" val "\"]")))
+
 (defn j-query-class [id]
   (js/jQuery (str "." id)))
 (defn del-ids [head  & tail])
@@ -59,11 +62,21 @@
 (defn hidden [id]
   (.css (js/jQuery (str "#" id)) "display" "none"))
 
+(defn elem-visible [elem]
+  (.css (js/jQuery elem) "display" "block"))
+
+(defn elem-hidden [elem]
+  (.css (js/jQuery elem) "display" "none"))
+
+
 (defn remove-childs [parent]
   (.empty (j-query parent)))
 
 (defn append-child [parent child]
   (.appendChild parent child))
+
+(defn attr [elem name val]
+  (.attr (j-query elem) name val))
 
 (defn replace-container-content [container content]
   (remove-childs container)

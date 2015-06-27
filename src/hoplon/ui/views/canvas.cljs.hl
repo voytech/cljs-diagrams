@@ -29,9 +29,6 @@
 
 (defelem workspace []
   (div :id "workspace-inner"
-       (div :id "page-indicator"
-            :class "text-center"
-              (text "Page : ~{current-page}"))
        (div :id "canvas-wrapper"
             :class "workspace-div"
             :drop resolve-drop

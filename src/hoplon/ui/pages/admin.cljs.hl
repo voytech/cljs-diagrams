@@ -5,16 +5,54 @@
    [ui.views.canvas :refer [workspace]]
    [ui.views.settings :refer [settings]]
    [ui.views.editing  :refer [editing]]
+   [ui.components.main-menu :refer [main-menu MenuItem]]
+   [ui.components.accordion :refer [accordion entry entry-title entry-body]]
    [utils.canvas-popups :as popups]
    [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
 (defelem admin[]
   (div :id "container"
-       (div :id "library" (tabs
-                           (tab :name "Clip-Arts" (tools-view))
-                           (tab :name "Templates" (div (text "Tempaltes here!")))
-                           (tab :name "Printing" (div (text "Here tenant can make printing specifications")))
-                           (tab :name "Settings" (settings))
-                           ))
-
-       (div :id "workspace" (workspace))))
+       (div :id "menu" (main-menu  :items [(MenuItem. "Customize"
+                                                      "Prepare photo collage templates, load resources, describe your offer."
+                                                      "Prepare photo collage templates, load resources, describe your offer."
+                                                      #())
+                                           (MenuItem. "Customers"
+                                                      "Manage your customers"
+                                                      "See and manage all your customers. Browse private messages. Manage orders"
+                                                      #())
+                                           (MenuItem. "Orders"
+                                                      "Manage orders"
+                                                      "See and manage customer orders."
+                                                      #())
+                                           (MenuItem. "Messages"
+                                                      "System messages"
+                                                      "Read all system messages from service maintainer."
+                                                      #())
+                                           (MenuItem. "Account Settings"
+                                                      "Your account settings"
+                                                      "Change your privacy settings."
+                                                      #())]
+                                   :orientation "horizontal"))
+       (div :id "content"
+            ;; (div :id "library" (tabs
+            ;;                     (tab :name "Clip-Arts" (tools-view))
+            ;;                     (tab :name "Templates" (div (text "Tempaltes here!")))
+            ;;                     (tab :name "Printing" (div (text "Here tenant can make printing specifications")))
+            ;;                     (tab :name "Settings" (settings))
+            ;;                     ))
+            (div :id "library"
+                 (accordion
+                  (entry
+                    (entry-title "Clip-Arts")
+                    (entry-body  "body1"))
+                  (entry
+                    (entry-title "Backgrounds")
+                    (entry-body  "body2"))
+                  (entry
+                    (entry-title "Templates")
+                    (entry-body  "body2"))
+                  (entry
+                    (entry-title "Printing")
+                    (entry-body  "body2"))
+                  ))
+            (div :id "workspace" (workspace)))))

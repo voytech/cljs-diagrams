@@ -16,7 +16,7 @@
   (router/def-route "#/register" (register))
   (router/def-route "#/login"    (login))
   (router/route)
-  (router/goto-page "#/login")
+  (router/goto-page "#/admin")
   (println "Initialized")
 )
 
@@ -25,7 +25,9 @@
    (link :href "css/bootstrap.inc.css" :rel "stylesheet" )
    (link :href "css/main.inc.css" :rel "stylesheet" )
    (script :src "js/bootstrap-filestyle.inc.js")
-   (script :src "js/init.inc.js"))
+   (script :src "js/init.inc.js")
+   (script :src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"))
+
   (body
    (div :id "main-container" )))
 

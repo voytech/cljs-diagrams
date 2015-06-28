@@ -1,5 +1,7 @@
 (ns ui.views.toolkit-view
-  (:require [ui.components.photo :as photo ]
+  (:require
+            [core.project-resources :as res]
+            [ui.components.photo :as photo ]
             [core.tools.tools-impl :refer [photo-tool
                                            text-tool
                                            slot-tool]]
@@ -8,6 +10,16 @@
 
 (def photo-lib (cell (list)))
 (def cliparts-lib (cell (list)))
+(def backgrounds-lib (cell (list)))
+
+;ADD MEMOIZE to this function.
+(defn- prepare-tools [resource-type tool-func]
+  (cell= (let [rsrcs (resource-type res/resources)]
+           (println (str "crafting tool for: " resource-type))
+           (println (str "there are [" (count rsrcs) "] resources for: " resource-type))
+           (map #(tool-func (:name %)
+                            (:type %)
+                            (:content %)) (vals rsrcs)))))
 
 (defelem library-view []
   (div
@@ -26,13 +38,9 @@
   (div ))
 
 (defelem cliparts-view []
-  (div
-   (photo/photo-loader :class "image-loader"
-                       :callback #(swap! cliparts-lib conj (photo-tool (:name %)
-                                                                       (:type %)
-                                                                       (:content %))))
-   (toolbox/tool-box :list cliparts-lib)
-   ))
+  (div (photo/photo-loader :class "image-loader"
+                           :callback #(res/add-resource res/CLIPART %))
+    (toolbox/tool-box :list (prepare-tools res/CLIPART photo-tool))))
 
 (defelem backgrounds-view []
   (div))

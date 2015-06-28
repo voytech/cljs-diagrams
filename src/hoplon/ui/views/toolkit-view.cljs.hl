@@ -7,6 +7,7 @@
            ))
 
 (def photo-lib (cell (list)))
+(def cliparts-lib (cell (list)))
 
 (defelem library-view []
   (div
@@ -21,7 +22,20 @@
    (toolbox/tool-box :list photo-lib)
    ))
 
-(defelem templates-view [])
+(defelem templates-view []
+  (div ))
+
+(defelem cliparts-view []
+  (div
+   (photo/photo-loader :class "image-loader"
+                       :callback #(swap! cliparts-lib conj (photo-tool (:name %)
+                                                                       (:type %)
+                                                                       (:content %))))
+   (toolbox/tool-box :list cliparts-lib)
+   ))
+
+(defelem backgrounds-view []
+  (div))
 
 (defelem tools-view []
   (toolbox/tool-box :list [

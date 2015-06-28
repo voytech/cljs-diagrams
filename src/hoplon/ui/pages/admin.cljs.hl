@@ -1,7 +1,10 @@
 (ns ui.pages.admin
   (:require
    [ui.views.toolkit-view :refer [library-view
-                                  tools-view]]
+                                  tools-view
+                                  cliparts-view
+                                  backgrounds-view
+                                  templates-view]]
    [ui.views.canvas :refer [workspace]]
    [ui.views.settings :refer [settings]]
    [ui.views.editing  :refer [editing]]
@@ -44,13 +47,13 @@
                  (accordion
                   (entry
                     (entry-title "Clip-Arts")
-                    (entry-body  "body1"))
+                    (entry-body  (cliparts-view)))
                   (entry
                     (entry-title "Backgrounds")
-                    (entry-body  "body2"))
+                    (entry-body  (backgrounds-view)))
                   (entry
                     (entry-title "Templates")
-                    (entry-body  "body2"))
+                    (entry-body  (templates-view)))
                   (entry
                     (entry-title "Printing")
                     (entry-body  "body2"))

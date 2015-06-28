@@ -13,9 +13,24 @@
 
 (defn load-file [file callback]
   (let [reader (js/FileReader.)]
-     (set! (.-onload reader) #(callback {:name (.-name file)
-                                         :type (.-type file)
-                                         :content (.-result (.-target %))}))
+    (set! (.-onload reader) #(let [data (.-result (.-target %))
+                                   result-map (atom {})
+                                   img-type (re-matches #"image.*" (.-type file))]
+
+                               (swap! result-map assoc :name (.-name file)
+                                                       :type (.-type file)
+                                                       :last-modified (.-lastModifiedDate file)
+                                                       :size (.-size file)
+                                                       :content data)
+                               (if (not (nil? img-type))
+                                 (let [image (js/Image.)]
+                                   (set! (.-src image) data)
+                                   (set! (.-onload image) (fn []
+                                                            (swap! result-map assoc :width (.-width image)
+                                                                                    :height (.-height image))
+                                                            (callback @result-map))))
+                                 (callback @result-map))
+                               ))
      (.readAsDataURL reader file))
 )
 

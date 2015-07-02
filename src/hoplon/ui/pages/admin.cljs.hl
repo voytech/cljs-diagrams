@@ -37,13 +37,7 @@
                                                       #())]
                                    :orientation "horizontal"))
        (div :id "content"
-            ;; (div :id "library" (tabs
-            ;;                     (tab :name "Clip-Arts" (tools-view))
-            ;;                     (tab :name "Templates" (div (text "Tempaltes here!")))
-            ;;                     (tab :name "Printing" (div (text "Here tenant can make printing specifications")))
-            ;;                     (tab :name "Settings" (settings))
-            ;;                     ))
-            (div :id "library"
+          (div :id "library"
                  (accordion
                   (entry
                     (entry-title "Clip-Arts")

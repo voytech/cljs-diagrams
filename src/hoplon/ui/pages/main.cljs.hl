@@ -1,6 +1,6 @@
 (ns ui.pages.main
   (:require
-   [ui.views.toolkit-view :refer [library-view
+   [ui.views.toolkit-view :refer [photos-view
                                   tools-view]]
    [ui.views.canvas :refer [workspace]]
    [ui.views.settings :refer [settings]]
@@ -11,7 +11,7 @@
 (defelem main[]
   (div :id "container"
        (div :id "library" (tabs
-                           (tab :name "Photos" (library-view))
+                           (tab :name "Photos" (photos-view))
                            (tab :name "Tools" (tools-view))
                            (tab :name "Templates" (div (text "Tempaltes here!")))
                            (tab :name "Settings" (settings))

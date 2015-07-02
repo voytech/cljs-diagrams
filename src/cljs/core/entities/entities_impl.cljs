@@ -33,6 +33,15 @@
                             {"mouseup" #(show-popup-func % "editing" 3)})
                             ))
 
+(defn create-background-entity [data params]
+  (let [img (js/fabric.Image. data
+                              (clj->js {:originX "left"
+                                        :originY "top"
+                                        :width 100
+                                        :height 100
+                                        }))]
+      (entities/create-entity "background" img {})))
+
 (defn create-text-entity [text params]
    (let [texte (js/fabric.Text. text (clj->js params))]
     (entities/create-entity "text" texte

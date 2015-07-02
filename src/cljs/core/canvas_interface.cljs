@@ -295,10 +295,10 @@
 ;;---------------------------------
 
 (defmethod dnd/dispatch-drop-event "tool-data" [event]
-  (let [tool (dnd/get-dnd-data event "tool-data")
+  (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
-        tool-obj (t/by-name tool)]
-    (println (str "Invoking action " tool context))
+        tool-obj (t/by-id tool-id)]
+    (println (str "Invoking action for tool : " (:name tool-obj) " of type " (:type tool-obj) " " context))
     ((:func-ctor tool-obj) tool-obj context))
 )
 
@@ -328,5 +328,18 @@
         (e/refresh entity)
         (reset! new_ entity)
         (changed))
+        )))
+
+(defn set-background [entity]
+  (when (not (instance? e/Entity entity))
+    (throw (js/Error. (str entity " is not an core.entities.Entity object"))))
+  (let [src (:src entity)
+        canv (:canvas (proj-selected-page))]
+    (if (not (nil? src))
+      (do
+        (println "Setting background entity.")
+        (.setBackgroundImage (:canvas (proj-selected-page)) src #(.bind (.renderAll canv) canv))
+       ; (e/refresh entity)
+        (changed))
         ))
-)
+  )

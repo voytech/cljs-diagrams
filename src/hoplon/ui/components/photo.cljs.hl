@@ -48,7 +48,6 @@
 
 (defelem photo-loader [{:keys [class callback ]}]
   (div :class class
-       :id "drop-area"
        :drop #(drop! % callback)
        :on-dragover dragover
        (div :class "file-load-wrapper"

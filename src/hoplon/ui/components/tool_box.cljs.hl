@@ -8,8 +8,6 @@
 (defelem tool-box [{:keys [list]}]
   (div)
   (div :class "thumbs-container"
-   ;; (loop-tpl :bindings [tool list]
-   ;;           (tool-view tool))
        (if (cell? list)
          (cell= (map #(tool-view %) list))
          (map #(tool-view %) list))
@@ -21,12 +19,14 @@
 (defelem tool-view [{:keys [name desc type icon func-ctor] :as tool}]
  (div :class "photo-thumbnail"
       :draggable "true"
-      :dragstart #(dnd/set-dnd-data % "tool-data" name "move")
-  (img :class "photo"
-       :id name
-       :src (img-src icon)
-      ;; :draggable "true"
-      ;; :dragstart #(dnd/set-dnd-data % "tool-data" name "move")
-       )
+      :style (str "background-image :url(" icon ");"
+                  "background-repeat:no-repeat;"
+                  "background-size:contain;"
+                  "background-position:center;")
+      :dragstart #(dnd/set-dnd-data % "tool-data" (:uid tool) "move")
+   ;; (img :class "photo"
+   ;;      :id name
+   ;;      :src (img-src icon)
+   ;;      )
   (div :class "tool-title"
      (str name))))

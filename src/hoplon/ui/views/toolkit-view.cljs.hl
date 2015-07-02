@@ -4,46 +4,50 @@
             [ui.components.photo :as photo ]
             [core.tools.tools-impl :refer [photo-tool
                                            text-tool
-                                           slot-tool]]
-            [ui.components.tool-box :as toolbox]
-           ))
+                                           slot-tool
+                                           background-tool]]
+            [ui.components.tool-box :as toolbox]))
 
-(def photo-lib (cell (list)))
-(def cliparts-lib (cell (list)))
-(def backgrounds-lib (cell (list)))
 
 ;ADD MEMOIZE to this function.
 (defn- prepare-tools [resource-type tool-func]
   (cell= (let [rsrcs (resource-type res/resources)]
-           (println (str "crafting tool for: " resource-type))
-           (println (str "there are [" (count rsrcs) "] resources for: " resource-type))
-           (map #(tool-func (:name %)
-                            (:type %)
-                            (:content %)) (vals rsrcs)))))
+           (map tool-func (vals rsrcs))
+           )))
 
-(defelem library-view []
-  (div
-   (photo/photo-loader :class "image-loader"
-                       :callback #(swap! photo-lib conj (photo-tool (:name %)
-                                                                    (:type %)
-                                                                    (:content %))))
-   ;;(photo/photo-list  :list photo-lib)
-   ;;make a dynamically allocated tool-box which can handle new photos loeaded at runtime.
-   ;;I do not know if is this ok to introduce such abstraction to treat photos as single tools.
-   ;;maybe it is just all about applying misleading naming conventions here.
-   (toolbox/tool-box :list photo-lib)
-   ))
+(defelem resource-library [{:keys [id type tool-func]}]
+    (println (str "creating resource library for" type))
+    (div :id id
+     (photo/photo-loader :class "image-loader"
+                         :callback #(do (println (str "call on: " id " type " type ))
+                                        (res/add-resource type %)))
+     (toolbox/tool-box :list (prepare-tools type tool-func))))
+
+(defelem photos-view []
+  (resource-library :id "photos-lib"
+                    :type res/PHOTO
+                    :tool-func #(photo-tool (:name %)
+                                            (:type %)
+                                            (:content %)
+                                            res/PHOTO)))
+
+(defelem cliparts-view []
+  (resource-library :id "cliparts-lib"
+                    :type res/CLIPART
+                    :tool-func #(photo-tool (:name %)
+                                            (:type %)
+                                            (:content %)
+                                             res/CLIPART)))
+
+(defelem backgrounds-view []
+  (resource-library :id "backgrounds-lib"
+                    :type res/BACKGROUND
+                    :tool-func #(background-tool (:name %)
+                                                 (:type %)
+                                                 (:content %))))
 
 (defelem templates-view []
   (div ))
-
-(defelem cliparts-view []
-  (div (photo/photo-loader :class "image-loader"
-                           :callback #(res/add-resource res/CLIPART %))
-    (toolbox/tool-box :list (prepare-tools res/CLIPART photo-tool))))
-
-(defelem backgrounds-view []
-  (div))
 
 (defelem tools-view []
   (toolbox/tool-box :list [

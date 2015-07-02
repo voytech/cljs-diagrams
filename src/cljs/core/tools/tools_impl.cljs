@@ -8,17 +8,24 @@
 
 ;; Consider making macro deftool for implementing new tools. More concise and cleaner approach.
 
-(defn photo-tool [name desc icon]
+(defn photo-tool [name desc icon res-type]
   (tool/create-tool name desc "photo" icon (fn [src ctx]
-                                             (let [resource (res/find-resource (:name src))]
+                                             (let [resource (res/find-resource (:name src) res-type)]
                                                (-> (entities/create-image-entity
-                                                    (img :src (:content resource)) ;(by-id (:name src))
+                                                    (img :src (:content resource))
                                                     ctx)
                                                    (canvas/add-entity))))))
 
 ;; (defn clipart-tool [name desc icon]
 ;;   (tool/create-tool name desc "clipart" icon))
 
+(defn background-tool [name desc icon]
+  (tool/create-tool name desc "background" icon  (fn [src ctx]
+                                                   (let [resource (res/find-resource (:name src) res/BACKGROUND)]
+                                                     (-> (entities/create-background-entity
+                                                          (img :src (:content resource))
+                                                          ctx)
+                                                         (canvas/set-background))))))
 
 (defn slot-tool []
   (tool/create-tool "Placeholder"

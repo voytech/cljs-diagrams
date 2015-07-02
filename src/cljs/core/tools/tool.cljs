@@ -2,7 +2,12 @@
 
 (def tools (atom {}))
 
-(defrecord Tool [name
+(defn uuid []
+  (.uuid js/Math 10 16))
+
+
+(defrecord Tool [uid
+                 name
                  desc
                  type
                  icon
@@ -10,8 +15,8 @@
 
 (defn create-tool
   ([name desc type icon func-ctor]
-     (let [tool (Tool. name desc type icon func-ctor)]
-       (swap! tools assoc name tool)
+     (let [tool (Tool. (uuid) name desc type icon func-ctor)]
+       (swap! tools assoc (:uid tool) tool)
        tool))
   ([name type func-ctor]
      (create-tool name "?" type nil func-ctor))
@@ -20,3 +25,6 @@
 
 (defn by-name [name]
   (get @tools name))
+
+(defn by-id [id]
+  (get @tools id))

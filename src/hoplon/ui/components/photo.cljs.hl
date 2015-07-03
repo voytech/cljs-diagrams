@@ -51,11 +51,11 @@
        :drop #(drop! % callback)
        :on-dragover dragover
        (div :class "file-load-wrapper"
-            (input :id "fileload"
+            (input
                    :type "file"
                    :name "files[]"
                    :class "filestyle"
-                   :change #(select-files! % callback) ))))
+                   :change #(select-files! % callback)))))
 
 (defelem photo-list [{:keys [list]}]
   (div)

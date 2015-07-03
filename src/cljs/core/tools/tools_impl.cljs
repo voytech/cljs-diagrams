@@ -6,8 +6,6 @@
             [tailrecursion.hoplon :refer [img]]
             [core.canvas-interface :as canvas]))
 
-;; Consider making macro deftool for implementing new tools. More concise and cleaner approach.
-
 (defn photo-tool [name desc icon res-type]
   (tool/create-tool name desc "photo" icon (fn [src ctx]
                                              (let [resource (res/find-resource (:name src) res-type)]
@@ -15,9 +13,6 @@
                                                     (img :src (:content resource))
                                                     ctx)
                                                    (canvas/add-entity))))))
-
-;; (defn clipart-tool [name desc icon]
-;;   (tool/create-tool name desc "clipart" icon))
 
 (defn background-tool [name desc icon]
   (tool/create-tool name desc "background" icon  (fn [src ctx]
@@ -33,9 +28,8 @@
                     "placeholder"
                     icon
                     (fn [src ctx]
-                        (-> (entities/create-slot-entity ctx)
-                            (canvas/add-entity))))
-)
+                      (-> (entities/create-slot-entity ctx)
+                          (canvas/add-entity)))))
 
 (defn text-tool []
   (tool/create-tool "Write Text!"
@@ -43,6 +37,5 @@
                     "text"
                     icon
                     (fn [src ctx]
-                       (-> (entities/create-text-entity "Enter text..." ctx)
-                           (canvas/add-entity))))
-)
+                      (-> (entities/create-text-entity "Enter text..." ctx)
+                          (canvas/add-entity)))))

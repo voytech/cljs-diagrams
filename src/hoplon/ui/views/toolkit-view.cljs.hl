@@ -40,11 +40,14 @@
                                              res/CLIPART)))
 
 (defelem backgrounds-view []
-  (resource-library :id "backgrounds-lib"
+   (resource-library :id "backgrounds-lib"
                     :type res/BACKGROUND
                     :tool-func #(background-tool (:name %)
                                                  (:type %)
                                                  (:content %))))
+
+(defelem templates-view-header []
+  (div (text "Templates")))
 
 (defelem templates-view []
   (div ))

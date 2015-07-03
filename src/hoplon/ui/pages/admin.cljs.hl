@@ -1,10 +1,11 @@
 (ns ui.pages.admin
   (:require
-   [ui.views.toolkit-view :refer [library-view
+   [ui.views.toolkit-view :refer [
                                   tools-view
                                   cliparts-view
                                   backgrounds-view
-                                  templates-view]]
+                                  templates-view
+                                  templates-view-header]]
    [ui.views.canvas :refer [workspace]]
    [ui.views.settings :refer [settings]]
    [ui.views.editing  :refer [editing]]
@@ -40,14 +41,14 @@
           (div :id "library"
                  (accordion
                   (entry
+                    (entry-title (templates-view-header))
+                    (entry-body  (templates-view)))
+                  (entry
                     (entry-title "Clip-Arts")
                     (entry-body  (cliparts-view)))
                   (entry
                     (entry-title "Backgrounds")
                     (entry-body  (backgrounds-view)))
-                  (entry
-                    (entry-title "Templates")
-                    (entry-body  (templates-view)))
                   (entry
                     (entry-title "Printing")
                     (entry-body  "body2"))

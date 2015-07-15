@@ -1,5 +1,5 @@
 (ns ui.views.editing
-  (:require [core.canvas-interface :as canvas]
+  (:require [core.project.project :as canvas]
             [data.js-cell :as jc]
             [core.entities.entity :as e]
             [core.actions-impl :as a])

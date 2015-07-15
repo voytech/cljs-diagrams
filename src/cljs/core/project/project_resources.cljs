@@ -1,4 +1,4 @@
-(ns core.project-resources
+(ns core.project.project-resources
   (:require  [tailrecursion.javelin :refer [cell]]
              [tailrecursion.hoplon :refer [canvas div $text by-id append-child add-children!]]))
 

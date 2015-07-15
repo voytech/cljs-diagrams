@@ -2,9 +2,9 @@
   (:require [core.tools.tool :as tool]
             [utils.dom.dom-utils :refer [by-id]]
             [core.entities.entities-impl :as entities]
-            [core.project-resources :as res]
+            [core.project.project-resources :as res]
             [tailrecursion.hoplon :refer [img]]
-            [core.canvas-interface :as canvas]))
+            [core.project.project :as canvas]))
 
 (defn photo-tool [name desc icon res-type]
   (tool/create-tool name desc "photo" icon (fn [src ctx]

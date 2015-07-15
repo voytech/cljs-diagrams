@@ -1,4 +1,4 @@
-(ns core.settings
+(ns core.project.settings
   (:require [tailrecursion.javelin :refer [cell ]]
             [core.actions :as actions]
             )

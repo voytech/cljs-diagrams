@@ -1,5 +1,5 @@
 (ns ui.views.text-popups
-  (:require [core.canvas-interface :as canvas]
+  (:require [core.project.project :as canvas]
             [data.js-cell :as jscell]
             [utils.fonts :as fonts]
             [core.actions-impl :as a]

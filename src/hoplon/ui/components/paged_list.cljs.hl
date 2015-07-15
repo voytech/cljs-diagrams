@@ -1,0 +1,21 @@
+(ns ui.components.paged-list)
+
+;; Paged list introduces paging logic to list containg of any elements.
+;; provider provides elements to be placed in list for selected page.
+(defelem paged-list [{:keys [nodes-per-page provider]}]
+  (let [page-nr (atom 0)
+        result  (cell= (provider page-nr nodes-per-page))
+        hasmore (:hasmore result)
+        entries (:entries result)]
+    (div
+     (div entries)
+     (div :class "btn-group btn-gutter"
+          (button :type "button"
+                  :class "btn btn-default btn-xs"
+                  :click #(when (> @page-nr 0) (swap! page-nr dec))
+                  (span :class "glyphicon glyphicon-arrow-left")
+                  )
+          (button :type "button"
+                  :class "btn btn-default btn-xs"
+                  :click #(when (= true hasmore) (swap! page-nr inc))
+                  (span :class "glyphicon glyphicon-arrow-right"))))))

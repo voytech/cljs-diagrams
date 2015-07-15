@@ -1,6 +1,6 @@
 (ns ui.views.settings
-  (:require [core.canvas-interface :as interface]
-            [core.settings :as settings]
+  (:require [core.project.project :as interface]
+            [core.project.settings :as settings]
             [core.actions-impl :as actions-impl]))
 
 

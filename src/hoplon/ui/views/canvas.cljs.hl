@@ -3,7 +3,7 @@
             [utils.dom.dom-utils :as dom]
             [utils.popups :as popups]
             [utils.canvas-events-tests :as cet]
-            [core.settings :as settings]
+            [core.project.settings :as settings]
             [core.actions-impl :refer [change-page!] ]
             [ui.components.pagination :refer [pagination]]
             [ui.components.popup :as p]
@@ -11,7 +11,7 @@
             [ui.views.editing :refer [editing]]
             [ui.views.settings :refer [zoom-control]]
             [ui.views.history-controls :refer [history-ctrls]]
-            [core.canvas-interface :as canvas-sheet]))
+            [core.project.project :as canvas-sheet]))
 
 (def current-page (cell= (inc (get-in canvas-sheet/project [:page-index]))))
 

@@ -1,4 +1,4 @@
-(ns core.canvas-interface
+(ns core.project.project
   (:require [utils.dom.dom-utils :as dom]
             [utils.dom.dnd-utils :as dnd]
             [tailrecursion.javelin :refer [cell]]
@@ -10,7 +10,7 @@
             [core.entities.entity :as e]
             [core.tools.tool :as t]
             [core.actions-impl :as ac]
-            [core.settings :refer [settings
+            [core.project.settings :refer [settings
                                    settings?
                                    settings!
                                    page-formats
@@ -39,6 +39,7 @@
 (declare mouse-up)
 
 (def obj-editing (atom false))
+
 (def project (cell {:page-index 0
                     :pages {}
                     :current-page-id :page-0}))

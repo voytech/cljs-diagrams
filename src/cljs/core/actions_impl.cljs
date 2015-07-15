@@ -1,7 +1,7 @@
 (ns core.actions-impl
   (:require [core.actions :refer [raise Action run-actions next-status debug-action]]
             [utils.dom.dom-utils :as dom]
-            [core.settings :as settings]
+            [core.project.settings :as settings]
             [core.entities.entity :as e]
            ; [core.canvas-interface :refer [project]]
             ))

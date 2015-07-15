@@ -7,7 +7,7 @@
         (not (symbol? as))        (throw (Exception. "second form must be symbol"))
         (not (= (name as) "as"))  (throw (Exception. "second form must be 'as' symbol"))
         (not (symbol? page-var))  (throw (Exception. "third form must be symbol")))
-    `(let [~page-var (core.canvas-interface/proj-page-by-id ~page-id)]
+    `(let [~page-var (core.project.project/proj-page-by-id ~page-id)]
        ~@body))
 
 (defmacro with-current-page [as page-var & body]
@@ -15,7 +15,7 @@
         (not (symbol? as))        (throw (Exception. "second form must be symbol"))
         (not (= (name as) "as"))  (throw (Exception. "second form must be 'as' symbol"))
         (not (symbol? page-var))  (throw (Exception. "third form must be symbol")))
-    `(let [~page-var (core.canvas-interface/proj-selected-page)]
+    `(let [~page-var (core.project.project/proj-selected-page)]
        (when (not (nil? ~page-var)) ~@body)))
 
 (defmacro with-canvas [page-id as canv-var & body]
@@ -27,6 +27,6 @@
         (not (symbol? as))        (throw (Exception. "second form must be symbol"))
         (not (= (name as) "as"))  (throw (Exception. "second form must be 'as' symbol"))
         (not (symbol? canv-var))  (throw (Exception. "third form must be symbol")))
-    `(let [page-var# (core.canvas-interface/proj-selected-page)]
+    `(let [page-var# (core.project.project/proj-selected-page)]
        (when (not (nil? page-var#))
          (let [~canv-var (:canvas page-var#)] ~@body))))

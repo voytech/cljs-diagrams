@@ -33,7 +33,7 @@
                         :visible true
                         :attract 15
                         :interval 50}
-                     :multi-page false
+                     :multi-page false ;; TODO: This should be simplified - remove multi-page
                      :pages {
                              :count 4
                              :two-sided false

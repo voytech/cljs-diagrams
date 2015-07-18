@@ -38,14 +38,13 @@
 (declare obj-editing-start)
 (declare mouse-up)
 
-(def obj-editing (atom false))
-
+;;TODO: refactor project to project-data
 (def project (cell {:page-index 0
                     :pages {}
                     :current-page-id :page-0}))
 
 (def last-change (cell 0))
-
+(def obj-editing (atom false))
 (def selection_ (cell (e/create-entity "empty" (js/Object.))))
 (def new_ (cell (e/create-entity "empty" (js/Object.))))
 
@@ -59,7 +58,7 @@
 
 (defn- changed [] (reset! last-change (dom/time-now)))
 
-;;Business events handlers
+;;business action handlers
 (defmethod on :change-page-action [action]
   (swap! project assoc-in [:page-index] (:payload action)))
 

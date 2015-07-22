@@ -3,62 +3,78 @@
                                                   get-property
                                                   get-template
                                                   templates
-                                                  init-templates]]))
+                                                  init-templates
+                                                  add-empty-template
+                                                  project-templates]]))
 
 (defn- neg-prop [name prop]
   (not (prop (get-template name))))
 
-
+(defelem templates-header []
+  (div (text "Templates")
+   (button :class "btn btn-default pull-right btn-xs "
+           :type "button"
+           :click #(do (.stopPropagation %)
+                       (add-empty-template))
+           (span :class "glyphicon glyphicon-plus"))))
 
 (defelem template-view [{:keys [name]}]
-  (div
-   (div :class "panel panel-default"
-        (div :class "panel-heading"
-             (div :class "input-group"
-                  (input
-                   :class "form-control"
-                   :type "text"
-                   :input #(update-property name :name @% )
-                   :value (get-property name :name))
-                  (span :class "input-group-btn"
-                        (button :class "btn btn-default" :type "button"
-                                (span :class "glyphicon glyphicon-collapse-down")))))
-        (div :class "panel-body"
-             (div :class "row top-margin-1"
-                  (div
-                   (div :class "col-md-6 setting"
-                        (label
-                         (input
-                          :type "range" :min 1 :max 20 :step 1
-                          :value (get-property name  :page-count)
-                          :input #(update-property name :page-count @%))
-                         " Pages Count "))
-                   (div :class "col-md-6 setting"
-                        (label :style "white-space: nowrap;"
-                               (input
-                                :type "checkbox"
-                                :value (get-property name :fixed-page-count)
-                                :click #(do (update-property name :fixed-page-count (neg-prop name :fixed-page-count)) true ))
-                               " Fixed Page Count"))))
-             (div :class "row"
-                  (div :class "col-md-12 setting"
-                       (label :style "white-space: nowrap;"
-                              (input
-                               :type "range" :min 1 :max 20 :step 1
-                               :value (get-property name :max-page-count)
-                               :input #(update-property name :max-page-count @%))
-                              " Max Page Count")))
-             (div :class "row"
-                  (div :class "col-md-5 setting"
-                       (label)
-                       (select
-                        (p (text "Page format"))))
-                  (div :class "row"
-                       (div :class "col-md-5 setting"
-                            (label)
-                            (select
-                             (p (text "Printing Surfaces"))))))))))
+  (let [collapsed (cell true)]
+    (div
+     (div :class "panel panel-default"
+          (div :class "panel-heading"
+               (div :class "input-group"
+                    (input
+                     :class "form-control"
+                     :type "text"
+                     :on-change #(update-property name :name @% )
+                     :value (get-property name :name))
+                    (span :class "input-group-btn"
+                          (button :class "btn btn-default"
+                                  :type "button"
+                                  :click #(reset! collapsed (not @collapsed))
+                                  (span :class "glyphicon glyphicon-collapse-down")))))
+          (div :class (cell=  {:panel-body true
+                               :panel-collapse true
+                               :collapse collapsed})
+               (div :class "row top-margin-1"
+                    (div
+                     (div :class "col-md-6 setting"
+                          (label
+                           (input
+                            :type "range" :min 1 :max 20 :step 1
+                            :value (get-property name  :page-count)
+                            :input #(update-property name :page-count @%))
+                           " Pages Count "))
+                     (div :class "col-md-6 setting"
+                          (label :style "white-space: nowrap;"
+                                 (input
+                                  :type "checkbox"
+                                  :value (get-property name :fixed-page-count)
+                                  :click #(do (update-property name :fixed-page-count (neg-prop name :fixed-page-count)) true ))
+                                 " Fixed Page Count"))))
+               (div :class "row"
+                    (div :class "col-md-12 setting"
+                         (label :style "white-space: nowrap;"
+                                (input
+                                 :type "range" :min 1 :max 20 :step 1
+                                 :value (get-property name :max-page-count)
+                                 :input #(update-property name :max-page-count @%))
+                                " Max Page Count")))
+               (div :class "row"
+                    (div :class "col-md-5 setting"
+                         (label)
+                         (select
+                          (p (text "Page format"))))
+                    (div :class "row"
+                         (div :class "col-md-5 setting"
+                              (label)
+                              (select
+                               (p (text "Printing Surfaces")))))))))))
 
 (defelem templates-view []
-  (doall (map #(template-view :name (:name %)) (templates)))
-)
+  (div :id "templates"
+   (cell=  (let [keys (keys project-templates)]
+             (doseq [key keys]
+               (println (str "Template details: " (.stringify js/JSON (clj->js (get project-templates key))))))
+             (doall (map #(template-view :name %) keys))))))

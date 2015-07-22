@@ -7,7 +7,7 @@
 (def ^:private DEFAULT_DESCRIPTION "Enter description")
 
 ;;TODO:THIS CELL SHOULD BE LOADED FROM BACKEND
-(def project-templates (cell {}))
+(def project-templates (cell (sorted-map)))
 
 (defrecord ProjectTemplate [name
                             description
@@ -61,15 +61,15 @@
 (defn get-template [name]
   (get @project-templates name))
 
-(defn get-property [name property]
-  (cell= (println (str "template name " name " property " property " = " (get-in project-templates [name property]))))
+(defn get-property-formula [name property]
   (cell= (get-in project-templates [name property]))) ;; TODO: wonder if it will work. First level is map, second is record.
 
+(defn get-property [name property]
+  (get-in @project-templates [name property]))
+
 (defn templates []
-  (println "debuging templates:")
-  (doseq [temp (vals @project-templates)]
-      (println (str "template " (:name temp) " = " (.stringify js/JSON (clj->js temp)))))
   (vals @project-templates))
+
 
 (defn init-templates []
   (when (empty? @project-templates)

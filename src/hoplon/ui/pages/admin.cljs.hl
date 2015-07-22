@@ -10,7 +10,7 @@
    [ui.views.canvas :refer [workspace]]
    [ui.views.settings :refer [settings]]
    [ui.views.editing  :refer [editing]]
-   [ui.views.tenant.templates :refer [templates-view]]
+   [ui.views.tenant.templates :refer [templates-view templates-header]]
    [ui.components.main-menu :refer [main-menu MenuItem]]
    [ui.components.accordion :refer [accordion entry entry-title entry-body]]
    [utils.canvas-popups :as popups]
@@ -45,7 +45,7 @@
           (div :id "library"
                  (accordion
                   (entry
-                    (entry-title "Templates")
+                    (entry-title (templates-header))
                     (entry-body  (templates-view)))
                   (entry
                     (entry-title "Clip-Arts")

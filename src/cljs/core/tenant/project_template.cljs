@@ -1,14 +1,15 @@
 (ns core.tenant.project-template
   (:require [tailrecursion.javelin :refer [cell ]]
-            [core.actions :as actions]))
+            [core.actions :as actions])
+  (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
 (def ^:private DEFAULT_NAME "Enter name")
 (def ^:private DEFAULT_DESCRIPTION "Enter description")
 
+;;TODO:THIS CELL SHOULD BE LOADED FROM BACKEND
 (def project-templates (cell {}))
 
-(defrecord ProjectTemplate [
-                            name
+(defrecord ProjectTemplate [name
                             description
                             page-count
                             fixed-count?
@@ -25,7 +26,8 @@
       name)))
 
 (defn add-empty-template []
-  (let [template (ProjectTemplate. DEFAULT_NAME
+  (let [name (next-default-name DEFAULT_NAME (count @project-templates))
+        template (ProjectTemplate. name
                                    DEFAULT_DESCRIPTION
                                    1
                                    false
@@ -34,8 +36,7 @@
                                    true
                                    {}
                                    false)]
-    (swap! project-templates assoc-in [(next-default-name (:name template)
-                                                          (count @project-templates))] template)))
+    (swap! project-templates assoc-in [ name ] template)))
 
 (defn update-property [name property value]
   (let [existing (get @project-templates name)]
@@ -61,7 +62,15 @@
   (get @project-templates name))
 
 (defn get-property [name property]
-  (cell= get-in project-templates [name property])) ;; TODO: wonder if it will work. First level is map, second is record.
+  (cell= (println (str "template name " name " property " property " = " (get-in project-templates [name property]))))
+  (cell= (get-in project-templates [name property]))) ;; TODO: wonder if it will work. First level is map, second is record.
 
 (defn templates []
-  @project-templates)
+  (println "debuging templates:")
+  (doseq [temp (vals @project-templates)]
+      (println (str "template " (:name temp) " = " (.stringify js/JSON (clj->js temp)))))
+  (vals @project-templates))
+
+(defn init-templates []
+  (when (empty? @project-templates)
+    (add-empty-template)))

@@ -6,13 +6,17 @@
                                   backgrounds-view
                                   templates-view
                                   templates-view-header]]
+   [core.tenant.project-template :refer [init-templates]]
    [ui.views.canvas :refer [workspace]]
    [ui.views.settings :refer [settings]]
    [ui.views.editing  :refer [editing]]
+   [ui.views.tenant.templates :refer [templates-view]]
    [ui.components.main-menu :refer [main-menu MenuItem]]
    [ui.components.accordion :refer [accordion entry entry-title entry-body]]
    [utils.canvas-popups :as popups]
    [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
+
+(init-templates)
 
 (defelem admin[]
   (div :id "container"
@@ -41,7 +45,7 @@
           (div :id "library"
                  (accordion
                   (entry
-                    (entry-title (templates-view-header))
+                    (entry-title "Templates")
                     (entry-body  (templates-view)))
                   (entry
                     (entry-title "Clip-Arts")

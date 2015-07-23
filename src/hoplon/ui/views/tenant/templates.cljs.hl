@@ -18,12 +18,29 @@
                        (add-empty-template))
            (span :class "glyphicon glyphicon-plus"))))
 
+(defelem counter [{:keys [name property title]}]
+  (div :class "col-md-12"
+       (span (str " " title " "))
+       (div :class "col-md-6 row pull-right"
+            (button :class "btn btn-default  btn-xs"
+                    :type "button"
+                    :click #(update-property name property (dec (get-property name property )))
+                    (span :class "glyphicon glyphicon-minus"))
+            (input :class "input-sm"
+                   :type  "text"
+                   :style "border-color:transparent;box-shadow:none;-webkit-box-shadow:none;outline:none;width:45px;important!"
+                   :value (get-property name property ))
+            (button :class "btn btn-default btn-xs"
+                    :type "button"
+                    :click #(update-property name property (inc (get-property name property)))
+                    (span :class "glyphicon glyphicon-plus")))))
+
 (defelem template-view [{:keys [name]}]
   (let [collapsed (cell true)]
     (div
      (div :class "panel panel-default"
           (div :class "panel-heading"
-               (div :class "input-group"
+               (div :class "input-group input-group-sm"
                     (input
                      :class "form-control"
                      :type "text"
@@ -38,29 +55,16 @@
                                :panel-collapse true
                                :collapse collapsed})
                (div :class "row top-margin-1"
-                    (div
-                     (div :class "col-md-6 setting"
-                          (label
-                           (input
-                            :type "range" :min 1 :max 20 :step 1
-                            :value (get-property name  :page-count)
-                            :input #(update-property name :page-count @%))
-                           " Pages Count "))
-                     (div :class "col-md-6 setting"
-                          (label :style "white-space: nowrap;"
-                                 (input
-                                  :type "checkbox"
-                                  :value (get-property name :fixed-page-count)
-                                  :click #(do (update-property name :fixed-page-count (neg-prop name :fixed-page-count)) true ))
-                                 " Fixed Page Count"))))
-               (div :class "row"
-                    (div :class "col-md-12 setting"
-                         (label :style "white-space: nowrap;"
-                                (input
-                                 :type "range" :min 1 :max 20 :step 1
-                                 :value (get-property name :max-page-count)
-                                 :input #(update-property name :max-page-count @%))
-                                " Max Page Count")))
+                   (counter :title "Page count" :property :page-count :name name))
+               (div :class "row top-margin-1"
+                    (counter :title "Max Pages" :property :max-page-count :name name))
+               (div :class "row col-md-12"
+                    (span :style "white-space: nowrap;" "Fixed page count")
+                    (div :class "pull-right"
+                     (input
+                          :type "checkbox"
+                          :value (get-property name :fixed-page-count)
+                          :click #(do (update-property name :fixed-page-count (neg-prop name :fixed-page-count)) true))))
                (div :class "row"
                     (div :class "col-md-5 setting"
                          (label)

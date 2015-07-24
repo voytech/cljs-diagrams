@@ -1,0 +1,6 @@
+(ns ui.components.combo-box)
+
+(defelem combo-box [{:keys [data on-change]}]
+  (select :class "margin-02m"
+     :change #(on-change @%)
+     (doall (map #(option :value % %) data))))

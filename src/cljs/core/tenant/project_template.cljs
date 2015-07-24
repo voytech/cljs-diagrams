@@ -32,9 +32,9 @@
                                    1
                                    false
                                    15
-                                   {}
+                                   #{}
                                    true
-                                   {}
+                                   #{}
                                    false)]
     (swap! project-templates assoc-in [ name ] template)))
 

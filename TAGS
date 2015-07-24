@@ -389,7 +389,7 @@ tailrecursion.priority_map.PersistentPriorityMap.prototype.cljs$core$ISeqable$_s
 tailrecursion.priority_map.PersistentPriorityMap.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this$,meta__$1){cljs$core$IWithMeta$_with_meta$arity$2315,13808
 tailrecursion.priority_map.PersistentPriorityMap.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this$,entry){cljs$core$ICollection$_conj$arity$2321,14127
 tailrecursion.priority_map.PersistentPriorityMap.prototype.call = (function() {call331,14538
-tailrecursion.priority_map.PersistentPriorityMap.prototype.apply = (function (self__,args9443){apply360,15346
+tailrecursion.priority_map.PersistentPriorityMap.prototype.apply = (function (self__,args9581){apply360,15346
 tailrecursion.priority_map.PersistentPriorityMap.prototype.cljs$core$IFn$_invoke$arity$1 = (function (item){cljs$core$IFn$_invoke$arity$1366,15589
 tailrecursion.priority_map.PersistentPriorityMap.prototype.cljs$core$IFn$_invoke$arity$2 = (function (item,not_found){cljs$core$IFn$_invoke$arity$2372,15788
 tailrecursion.priority_map.PersistentPriorityMap.prototype.cljs$core$ISorted$_sorted_seq$arity$2 = (function (this$,ascending_QMARK_){cljs$core$ISorted$_sorted_seq$arity$2378,16007
@@ -590,7 +590,7 @@ resources/public/out/tailrecursion/hoplon.js,871
 Element.prototype.cljs$core$IFn$ = true;Element510,17411
 Element.prototype.cljs$core$IFn$ = true;cljs$core$IFn$510,17411
 Element.prototype.call = (function() { call512,17453
-Element.prototype.apply = (function (self__,args9633){apply550,18584
+Element.prototype.apply = (function (self__,args9771){apply550,18584
 Element.prototype.cljs$core$IFn$_invoke$arity$2 = (function() { cljs$core$IFn$_invoke$arity$2555,18767
 Element.prototype.cljs$core$IPrintWithWriter$ = true;cljs$core$IPrintWithWriter$591,19820
 Element.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this$,writer,opts){cljs$core$IPrintWithWriter$_pr_writer$arity$3593,19875
@@ -599,8 +599,8 @@ jQuery.Event.prototype.cljs$core$IDeref$ = true;cljs$core$IDeref$1247,50604
 jQuery.Event.prototype.cljs$core$IDeref$_deref$arity$1 = (function (this$){cljs$core$IDeref$_deref$arity$11249,50654
 
 resources/public/out/tailrecursion/castra.js,2157
-tailrecursion.castra.CastraEx.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k8561,else__4176__auto__){tailrecursion.castra.CastraEx50,1303
-tailrecursion.castra.CastraEx.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k8561,else__4176__auto__){cljs$core$ILookup$_lookup$arity$350,1303
+tailrecursion.castra.CastraEx.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k8616,else__4176__auto__){tailrecursion.castra.CastraEx50,1303
+tailrecursion.castra.CastraEx.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k8616,else__4176__auto__){cljs$core$ILookup$_lookup$arity$350,1303
 tailrecursion.castra.CastraEx.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this__4187__auto__,writer__4188__auto__,opts__4189__auto__){cljs$core$IPrintWithWriter$_pr_writer$arity$393,2019
 tailrecursion.castra.CastraEx.prototype.cljs$core$IMeta$_meta$arity$1 = (function (this__4171__auto__){cljs$core$IMeta$_meta$arity$1104,4078
 tailrecursion.castra.CastraEx.prototype.cljs$core$ICloneable$_clone$arity$1 = (function (this__4167__auto__){cljs$core$ICloneable$_clone$arity$1110,4263
@@ -608,9 +608,9 @@ tailrecursion.castra.CastraEx.prototype.cljs$core$ICounted$_count$arity$1 = (fun
 tailrecursion.castra.CastraEx.prototype.cljs$core$IHash$_hash$arity$1 = (function (this__4168__auto__){cljs$core$IHash$_hash$arity$1122,4851
 tailrecursion.castra.CastraEx.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (this__4169__auto__,other__4170__auto__){cljs$core$IEquiv$_equiv$arity$2136,5267
 tailrecursion.castra.CastraEx.prototype.cljs$core$IMap$_dissoc$arity$2 = (function (this__4182__auto__,k__4183__auto__){cljs$core$IMap$_dissoc$arity$2152,5816
-tailrecursion.castra.CastraEx.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__8560){cljs$core$IAssociative$_assoc$arity$3162,7087
+tailrecursion.castra.CastraEx.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__8615){cljs$core$IAssociative$_assoc$arity$3162,7087
 tailrecursion.castra.CastraEx.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (this__4185__auto__){cljs$core$ISeqable$_seq$arity$1202,10032
-tailrecursion.castra.CastraEx.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__8560){cljs$core$IWithMeta$_with_meta$arity$2208,11635
+tailrecursion.castra.CastraEx.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__8615){cljs$core$IWithMeta$_with_meta$arity$2208,11635
 tailrecursion.castra.CastraEx.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this__4178__auto__,entry__4179__auto__){cljs$core$ICollection$_conj$arity$2214,12004
 
 resources/public/out/tailrecursion/hoplon/app_pages/_index_DOT_html.cljs,2256
@@ -698,6 +698,25 @@ resources/public/out/clojure/string.cljs,741
 (defn trim-newlinetrim-newline151,4253
 (defn blank?blank?163,4594
 (defn escapeescape168,4699
+
+resources/public/out/clojure/set.js,0
+
+resources/public/out/clojure/set.cljs,525
+(defn- bubble-max-key [k coll]bubble-max-key13,571
+(defn unionunion19,794
+(defn intersectionintersection31,1134
+(defn differencedifference46,1609
+(defn selectselect61,2029
+(defn projectproject67,2188
+(defn rename-keysrename-keys72,2324
+(defn renamerename82,2585
+(defn indexindex87,2745
+(defn map-invertmap-invert97,3033
+(defn joinjoin101,3155
+(defn subset? subset?131,4285
+(defn superset? superset?137,4426
+(def xs #{{:a 11 :b 1 :c 1 :d 4}xs145,4593
+(def ys #{{:a 11 :b 11 :c 11 :e 5}ys149,4698
 
 resources/public/out/utils/popups.cljs,235
 (ns utils.popupsutils.popups1,0
@@ -2997,6 +3016,35 @@ resources/public/out/core/router/router.cljs,484
 (defn- on-hash-change []on-hash-change37,1238
 (defn route []route54,2015
 
+resources/public/out/core/tenant/project_template.cljs,687
+(ns core.tenant.project-templatecore.tenant.project-template1,0
+(def project-templates (cell (sorted-map)))project-templates10,338
+(defn- next-default-name [name index]next-default-name22,757
+(defn add-empty-template []add-empty-template28,947
+(defn update-property [name property value]update-property41,1480
+(defn update-template [template]update-template48,1801
+(defn add-template [template]add-template55,2114
+(defn get-template [name]get-template61,2342
+(defn get-property-formula [name property]get-property-formula64,2402
+(defn get-property [name property]get-property67,2571
+(defn templates []templates70,2654
+(defn init-templates []init-templates74,2704
+
+resources/public/out/core/tenant/project_template.js,2372
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k13694,else__4176__auto__){core.tenant.project_template.ProjectTemplate56,1977
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k13694,else__4176__auto__){cljs$core$ILookup$_lookup$arity$356,1977
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this__4187__auto__,writer__4188__auto__,opts__4189__auto__){cljs$core$IPrintWithWriter$_pr_writer$arity$3103,2901
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$IMeta$_meta$arity$1 = (function (this__4171__auto__){cljs$core$IMeta$_meta$arity$1114,5357
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$ICloneable$_clone$arity$1 = (function (this__4167__auto__){cljs$core$ICloneable$_clone$arity$1120,5557
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$ICounted$_count$arity$1 = (function (this__4177__auto__){cljs$core$ICounted$_count$arity$1126,6045
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$IHash$_hash$arity$1 = (function (this__4168__auto__){cljs$core$IHash$_hash$arity$1132,6284
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (this__4169__auto__,other__4170__auto__){cljs$core$IEquiv$_equiv$arity$2146,6715
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$IMap$_dissoc$arity$2 = (function (this__4182__auto__,k__4183__auto__){cljs$core$IMap$_dissoc$arity$2162,7279
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__13693){cljs$core$IAssociative$_assoc$arity$3172,8862
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (this__4185__auto__){cljs$core$ISeqable$_seq$arity$1216,13293
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__13693){cljs$core$IWithMeta$_with_meta$arity$2222,15278
+core.tenant.project_template.ProjectTemplate.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this__4178__auto__,entry__4179__auto__){cljs$core$ICollection$_conj$arity$2228,15773
+
 resources/public/out/core/actions.cljs,926
 (ns core.actionscore.actions2,37
 (def history-length 50)history-length8,235
@@ -3035,8 +3083,8 @@ resources/public/out/core/tools/tools_impl.cljs,248
 (defn text-tool []text-tool34,1686
 
 resources/public/out/core/tools/tool.js,2030
-core.tools.tool.Tool.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10243,else__4176__auto__){core.tools.tool.Tool47,1213
-core.tools.tool.Tool.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10243,else__4176__auto__){cljs$core$ILookup$_lookup$arity$347,1213
+core.tools.tool.Tool.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10381,else__4176__auto__){core.tools.tool.Tool47,1213
+core.tools.tool.Tool.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10381,else__4176__auto__){cljs$core$ILookup$_lookup$arity$347,1213
 core.tools.tool.Tool.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this__4187__auto__,writer__4188__auto__,opts__4189__auto__){cljs$core$IPrintWithWriter$_pr_writer$arity$382,1832
 core.tools.tool.Tool.prototype.cljs$core$IMeta$_meta$arity$1 = (function (this__4171__auto__){cljs$core$IMeta$_meta$arity$193,3546
 core.tools.tool.Tool.prototype.cljs$core$ICloneable$_clone$arity$1 = (function (this__4167__auto__){cljs$core$ICloneable$_clone$arity$199,3722
@@ -3044,9 +3092,9 @@ core.tools.tool.Tool.prototype.cljs$core$ICounted$_count$arity$1 = (function (th
 core.tools.tool.Tool.prototype.cljs$core$IHash$_hash$arity$1 = (function (this__4168__auto__){cljs$core$IHash$_hash$arity$1111,4253
 core.tools.tool.Tool.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (this__4169__auto__,other__4170__auto__){cljs$core$IEquiv$_equiv$arity$2125,4660
 core.tools.tool.Tool.prototype.cljs$core$IMap$_dissoc$arity$2 = (function (this__4182__auto__,k__4183__auto__){cljs$core$IMap$_dissoc$arity$2141,5200
-core.tools.tool.Tool.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__10242){cljs$core$IAssociative$_assoc$arity$3151,6296
+core.tools.tool.Tool.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__10380){cljs$core$IAssociative$_assoc$arity$3151,6296
 core.tools.tool.Tool.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (this__4185__auto__){cljs$core$ISeqable$_seq$arity$1183,8372
-core.tools.tool.Tool.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__10242){cljs$core$IWithMeta$_with_meta$arity$2189,9639
+core.tools.tool.Tool.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__10380){cljs$core$IWithMeta$_with_meta$arity$2189,9639
 core.tools.tool.Tool.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this__4178__auto__,entry__4179__auto__){cljs$core$ICollection$_conj$arity$2195,9962
 
 resources/public/out/core/tools/tool.cljs,201
@@ -3147,20 +3195,20 @@ resources/public/out/core/project/settings.cljs,1321
 (def zoom (cell= (get-in settings [:zoom])))zoom56,1928
 (defmethod actions/on :settings-action [action]actions/on58,1974
 
-resources/public/out/core/actions.js,2016
-core.actions.Action.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k9978,else__4176__auto__){core.actions.Action51,1427
-core.actions.Action.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k9978,else__4176__auto__){cljs$core$ILookup$_lookup$arity$351,1427
-core.actions.Action.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this__4187__auto__,writer__4188__auto__,opts__4189__auto__){cljs$core$IPrintWithWriter$_pr_writer$arity$390,2128
-core.actions.Action.prototype.cljs$core$IMeta$_meta$arity$1 = (function (this__4171__auto__){cljs$core$IMeta$_meta$arity$1101,4067
-core.actions.Action.prototype.cljs$core$ICloneable$_clone$arity$1 = (function (this__4167__auto__){cljs$core$ICloneable$_clone$arity$1107,4242
-core.actions.Action.prototype.cljs$core$ICounted$_count$arity$1 = (function (this__4177__auto__){cljs$core$ICounted$_count$arity$1113,4592
-core.actions.Action.prototype.cljs$core$IHash$_hash$arity$1 = (function (this__4168__auto__){cljs$core$IHash$_hash$arity$1119,4806
-core.actions.Action.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (this__4169__auto__,other__4170__auto__){cljs$core$IEquiv$_equiv$arity$2133,5212
-core.actions.Action.prototype.cljs$core$IMap$_dissoc$arity$2 = (function (this__4182__auto__,k__4183__auto__){cljs$core$IMap$_dissoc$arity$2149,5751
-core.actions.Action.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__9977){cljs$core$IAssociative$_assoc$arity$3159,6987
-core.actions.Action.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (this__4185__auto__){cljs$core$ISeqable$_seq$arity$1195,9607
-core.actions.Action.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__9977){cljs$core$IWithMeta$_with_meta$arity$2201,11100
-core.actions.Action.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this__4178__auto__,entry__4179__auto__){cljs$core$ICollection$_conj$arity$2207,11455
+resources/public/out/core/actions.js,2020
+core.actions.Action.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10116,else__4176__auto__){core.actions.Action51,1427
+core.actions.Action.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10116,else__4176__auto__){cljs$core$ILookup$_lookup$arity$351,1427
+core.actions.Action.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this__4187__auto__,writer__4188__auto__,opts__4189__auto__){cljs$core$IPrintWithWriter$_pr_writer$arity$390,2134
+core.actions.Action.prototype.cljs$core$IMeta$_meta$arity$1 = (function (this__4171__auto__){cljs$core$IMeta$_meta$arity$1101,4073
+core.actions.Action.prototype.cljs$core$ICloneable$_clone$arity$1 = (function (this__4167__auto__){cljs$core$ICloneable$_clone$arity$1107,4248
+core.actions.Action.prototype.cljs$core$ICounted$_count$arity$1 = (function (this__4177__auto__){cljs$core$ICounted$_count$arity$1113,4598
+core.actions.Action.prototype.cljs$core$IHash$_hash$arity$1 = (function (this__4168__auto__){cljs$core$IHash$_hash$arity$1119,4812
+core.actions.Action.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (this__4169__auto__,other__4170__auto__){cljs$core$IEquiv$_equiv$arity$2133,5218
+core.actions.Action.prototype.cljs$core$IMap$_dissoc$arity$2 = (function (this__4182__auto__,k__4183__auto__){cljs$core$IMap$_dissoc$arity$2149,5757
+core.actions.Action.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__10115){cljs$core$IAssociative$_assoc$arity$3159,6993
+core.actions.Action.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (this__4185__auto__){cljs$core$ISeqable$_seq$arity$1195,9638
+core.actions.Action.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__10115){cljs$core$IWithMeta$_with_meta$arity$2201,11131
+core.actions.Action.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this__4178__auto__,entry__4179__auto__){cljs$core$ICollection$_conj$arity$2207,11488
 
 resources/public/out/core/entities/entity.cljs,540
 (ns core.entities.entitycore.entities.entity1,0
@@ -3187,8 +3235,8 @@ resources/public/out/core/entities/entities_impl.cljs,533
 (defn create-rect-entity [])create-rect-entity75,3261
 
 resources/public/out/core/entities/entity.js,2908
-core.entities.entity.Entity.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10028,else__4176__auto__){core.entities.entity.Entity159,4560
-core.entities.entity.Entity.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10028,else__4176__auto__){cljs$core$ILookup$_lookup$arity$3159,4560
+core.entities.entity.Entity.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10166,else__4176__auto__){core.entities.entity.Entity159,4560
+core.entities.entity.Entity.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10166,else__4176__auto__){cljs$core$ILookup$_lookup$arity$3159,4560
 core.entities.entity.Entity.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this__4187__auto__,writer__4188__auto__,opts__4189__auto__){cljs$core$IPrintWithWriter$_pr_writer$arity$3190,5159
 core.entities.entity.Entity.prototype.cljs$core$IMeta$_meta$arity$1 = (function (this__4171__auto__){cljs$core$IMeta$_meta$arity$1201,6755
 core.entities.entity.Entity.prototype.cljs$core$ICloneable$_clone$arity$1 = (function (this__4167__auto__){cljs$core$ICloneable$_clone$arity$1207,6938
@@ -3196,9 +3244,9 @@ core.entities.entity.Entity.prototype.cljs$core$ICounted$_count$arity$1 = (funct
 core.entities.entity.Entity.prototype.cljs$core$IHash$_hash$arity$1 = (function (this__4168__auto__){cljs$core$IHash$_hash$arity$1219,7485
 core.entities.entity.Entity.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (this__4169__auto__,other__4170__auto__){cljs$core$IEquiv$_equiv$arity$2233,7899
 core.entities.entity.Entity.prototype.cljs$core$IMap$_dissoc$arity$2 = (function (this__4182__auto__,k__4183__auto__){cljs$core$IMap$_dissoc$arity$2249,8446
-core.entities.entity.Entity.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__10027){cljs$core$IAssociative$_assoc$arity$3259,9509
+core.entities.entity.Entity.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__10165){cljs$core$IAssociative$_assoc$arity$3259,9509
 core.entities.entity.Entity.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (this__4185__auto__){cljs$core$ISeqable$_seq$arity$1287,11347
-core.entities.entity.Entity.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__10027){cljs$core$IWithMeta$_with_meta$arity$2293,12489
+core.entities.entity.Entity.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__10165){cljs$core$IWithMeta$_with_meta$arity$2293,12489
 core.entities.entity.Entity.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this__4178__auto__,entry__4179__auto__){cljs$core$ICollection$_conj$arity$2299,12821
 core.entities.entity.Entity.prototype.core$entities$entity$IEntity$ = true;core$entities$entity$IEntity$309,13333
 core.entities.entity.Entity.prototype.core$entities$entity$IEntity$data$arity$1 = (function (this$){core$entities$entity$IEntity$data$arity$1311,13410
@@ -3223,7 +3271,7 @@ cljs.core.Symbol.prototype.cljs$core$IHash$_hash$arity$1 = (function (sym){cljs
 cljs.core.Symbol.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (_,new_meta){cljs$core$IWithMeta$_with_meta$arity$23255,88292
 cljs.core.Symbol.prototype.cljs$core$IMeta$_meta$arity$1 = (function (_){cljs$core$IMeta$_meta$arity$13261,88513
 cljs.core.Symbol.prototype.call = (function() {call3267,88650
-cljs.core.Symbol.prototype.apply = (function (self__,args7387){apply3296,89423
+cljs.core.Symbol.prototype.apply = (function (self__,args7442){apply3296,89423
 cljs.core.Symbol.prototype.cljs$core$IFn$_invoke$arity$1 = (function (coll){cljs$core$IFn$_invoke$arity$13302,89634
 cljs.core.Symbol.prototype.cljs$core$IFn$_invoke$arity$2 = (function (coll,not_found){cljs$core$IFn$_invoke$arity$23308,89802
 cljs.core.Symbol.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (_,other){cljs$core$IEquiv$_equiv$arity$23314,89985
@@ -3274,8 +3322,8 @@ cljs.core.RSeq.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (coll){clj
 cljs.core.RSeq.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,new_meta){cljs$core$IWithMeta$_with_meta$arity$24455,118773
 cljs.core.RSeq.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,o){cljs$core$ICollection$_conj$arity$24461,118969
 (cljs.core.RSeq.prototype[cljs.core.ITER_SYMBOL] = (function (){core.RSeq4479,119524
-cljs.core.MetaFn.prototype.apply = (function (self__,args7472){cljs.core.MetaFn5433,143818
-cljs.core.MetaFn.prototype.apply = (function (self__,args7472){apply5433,143818
+cljs.core.MetaFn.prototype.apply = (function (self__,args7527){cljs.core.MetaFn5433,143818
+cljs.core.MetaFn.prototype.apply = (function (self__,args7527){apply5433,143818
 cljs.core.MetaFn.prototype.cljs$core$IFn$_invoke$arity$0 = (function (){cljs$core$IFn$_invoke$arity$05439,144029
 cljs.core.MetaFn.prototype.cljs$core$IFn$_invoke$arity$1 = (function (a){cljs$core$IFn$_invoke$arity$15445,144170
 cljs.core.MetaFn.prototype.cljs$core$IFn$_invoke$arity$2 = (function (a,b){cljs$core$IFn$_invoke$arity$25451,144314
@@ -3360,7 +3408,7 @@ cljs.core.Keyword.prototype.cljs$core$INamed$_name$arity$1 = (function (_){cljs
 cljs.core.Keyword.prototype.cljs$core$INamed$_namespace$arity$1 = (function (_){cljs$core$INamed$_namespace$arity$18930,239970
 cljs.core.Keyword.prototype.cljs$core$IHash$_hash$arity$1 = (function (this$){cljs$core$IHash$_hash$arity$18936,240111
 cljs.core.Keyword.prototype.call = (function() {call8950,240477
-cljs.core.Keyword.prototype.apply = (function (self__,args7660){apply8979,241234
+cljs.core.Keyword.prototype.apply = (function (self__,args7715){apply8979,241234
 cljs.core.Keyword.prototype.cljs$core$IFn$_invoke$arity$1 = (function (coll){cljs$core$IFn$_invoke$arity$18985,241446
 cljs.core.Keyword.prototype.cljs$core$IFn$_invoke$arity$2 = (function (coll,not_found){cljs$core$IFn$_invoke$arity$28991,241604
 cljs.core.Keyword.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (_,other){cljs$core$IEquiv$_equiv$arity$28997,241782
@@ -3469,7 +3517,7 @@ cljs.core.PersistentVector.prototype.cljs$core$ISeqable$_seq$arity$1 = (function
 cljs.core.PersistentVector.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$215840,442863
 cljs.core.PersistentVector.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,o){cljs$core$ICollection$_conj$arity$215846,443126
 cljs.core.PersistentVector.prototype.call = (function() {call15883,444441
-cljs.core.PersistentVector.prototype.apply = (function (self__,args7939){apply15912,445196
+cljs.core.PersistentVector.prototype.apply = (function (self__,args7994){apply15912,445196
 cljs.core.PersistentVector.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$115918,445417
 cljs.core.PersistentVector.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$215924,445583
 (cljs.core.PersistentVector.prototype[cljs.core.ITER_SYMBOL] = (function (){core.PersistentVector15968,447357
@@ -3514,12 +3562,12 @@ cljs.core.Subvec.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (coll){c
 cljs.core.Subvec.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$216379,459932
 cljs.core.Subvec.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,o){cljs$core$ICollection$_conj$arity$216385,460170
 cljs.core.Subvec.prototype.call = (function() {call16391,460443
-cljs.core.Subvec.prototype.apply = (function (self__,args7955){apply16420,461188
+cljs.core.Subvec.prototype.apply = (function (self__,args8010){apply16420,461188
 cljs.core.Subvec.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$116426,461399
 cljs.core.Subvec.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$216432,461555
 (cljs.core.Subvec.prototype[cljs.core.ITER_SYMBOL] = (function (){core.Subvec16450,462157
-cljs.core.TransientVector.prototype.apply = (function (self__,args7968){cljs.core.TransientVector16625,467107
-cljs.core.TransientVector.prototype.apply = (function (self__,args7968){apply16625,467107
+cljs.core.TransientVector.prototype.apply = (function (self__,args8023){cljs.core.TransientVector16625,467107
+cljs.core.TransientVector.prototype.apply = (function (self__,args8023){apply16625,467107
 cljs.core.TransientVector.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$116631,467327
 cljs.core.TransientVector.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$216637,467495
 cljs.core.TransientVector.prototype.cljs$core$ILookup$_lookup$arity$2 = (function (coll,k){cljs$core$ILookup$_lookup$arity$216643,467683
@@ -3580,7 +3628,7 @@ cljs.core.ObjMap.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (coll){c
 cljs.core.ObjMap.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$217433,491272
 cljs.core.ObjMap.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,entry){cljs$core$ICollection$_conj$arity$217439,491513
 cljs.core.ObjMap.prototype.call = (function() {call17449,491888
-cljs.core.ObjMap.prototype.apply = (function (self__,args7981){apply17478,492639
+cljs.core.ObjMap.prototype.apply = (function (self__,args8036){apply17478,492639
 cljs.core.ObjMap.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$117484,492850
 cljs.core.ObjMap.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$217490,493009
 cljs.core.PersistentArrayMapSeq.prototype.equiv = (function (other){cljs.core.PersistentArrayMapSeq17749,499228
@@ -3630,7 +3678,7 @@ cljs.core.PersistentArrayMap.prototype.cljs$core$ISeqable$_seq$arity$1 = (functi
 cljs.core.PersistentArrayMap.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$218253,513685
 cljs.core.PersistentArrayMap.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,entry){cljs$core$ICollection$_conj$arity$218259,513926
 cljs.core.PersistentArrayMap.prototype.call = (function() {call18287,514737
-cljs.core.PersistentArrayMap.prototype.apply = (function (self__,args7995){apply18316,515500
+cljs.core.PersistentArrayMap.prototype.apply = (function (self__,args8050){apply18316,515500
 cljs.core.PersistentArrayMap.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$118322,515723
 cljs.core.PersistentArrayMap.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$218328,515894
 (cljs.core.PersistentArrayMap.prototype[cljs.core.ITER_SYMBOL] = (function (){core.PersistentArrayMap18371,517379
@@ -3723,7 +3771,7 @@ cljs.core.PersistentHashMap.prototype.cljs$core$ISeqable$_seq$arity$1 = (functio
 cljs.core.PersistentHashMap.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$220182,568599
 cljs.core.PersistentHashMap.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,entry){cljs$core$ICollection$_conj$arity$220188,568876
 cljs.core.PersistentHashMap.prototype.call = (function() {call20216,569686
-cljs.core.PersistentHashMap.prototype.apply = (function (self__,args8070){apply20245,570448
+cljs.core.PersistentHashMap.prototype.apply = (function (self__,args8125){apply20245,570448
 cljs.core.PersistentHashMap.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$120251,570670
 cljs.core.PersistentHashMap.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$220257,570840
 (cljs.core.PersistentHashMap.prototype[cljs.core.ITER_SYMBOL] = (function (){core.PersistentHashMap20293,572090
@@ -3784,7 +3832,7 @@ cljs.core.BlackNode.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (node)
 cljs.core.BlackNode.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (node,meta){cljs$core$IWithMeta$_with_meta$arity$220966,591956
 cljs.core.BlackNode.prototype.cljs$core$ICollection$_conj$arity$2 = (function (node,o){cljs$core$ICollection$_conj$arity$220972,592252
 cljs.core.BlackNode.prototype.call = (function() {call20978,592508
-cljs.core.BlackNode.prototype.apply = (function (self__,args8101){apply21007,593262
+cljs.core.BlackNode.prototype.apply = (function (self__,args8156){apply21007,593262
 cljs.core.BlackNode.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$121013,593476
 cljs.core.BlackNode.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$221019,593638
 (cljs.core.BlackNode.prototype[cljs.core.ITER_SYMBOL] = (function (){core.BlackNode21037,594274
@@ -3819,7 +3867,7 @@ cljs.core.RedNode.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (node){
 cljs.core.RedNode.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (node,meta){cljs$core$IWithMeta$_with_meta$arity$221266,601235
 cljs.core.RedNode.prototype.cljs$core$ICollection$_conj$arity$2 = (function (node,o){cljs$core$ICollection$_conj$arity$221272,601529
 cljs.core.RedNode.prototype.call = (function() {call21278,601783
-cljs.core.RedNode.prototype.apply = (function (self__,args8103){apply21307,602535
+cljs.core.RedNode.prototype.apply = (function (self__,args8158){apply21307,602535
 cljs.core.RedNode.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$121313,602747
 cljs.core.RedNode.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$221319,602907
 (cljs.core.RedNode.prototype[cljs.core.ITER_SYMBOL] = (function (){core.RedNode21337,603525
@@ -3849,7 +3897,7 @@ cljs.core.PersistentTreeMap.prototype.cljs$core$ISeqable$_seq$arity$1 = (functio
 cljs.core.PersistentTreeMap.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$221730,614475
 cljs.core.PersistentTreeMap.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,entry){cljs$core$ICollection$_conj$arity$221736,614727
 cljs.core.PersistentTreeMap.prototype.call = (function() {call21764,615537
-cljs.core.PersistentTreeMap.prototype.apply = (function (self__,args8105){apply21793,616299
+cljs.core.PersistentTreeMap.prototype.apply = (function (self__,args8160){apply21793,616299
 cljs.core.PersistentTreeMap.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$121799,616521
 cljs.core.PersistentTreeMap.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$221805,616691
 cljs.core.PersistentTreeMap.prototype.cljs$core$ISorted$_sorted_seq$arity$2 = (function (coll,ascending_QMARK_){cljs$core$ISorted$_sorted_seq$arity$221811,616881
@@ -3908,12 +3956,12 @@ cljs.core.PersistentHashSet.prototype.cljs$core$ISeqable$_seq$arity$1 = (functio
 cljs.core.PersistentHashSet.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$222723,643541
 cljs.core.PersistentHashSet.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,o){cljs$core$ICollection$_conj$arity$222729,643774
 cljs.core.PersistentHashSet.prototype.call = (function() {call22735,644025
-cljs.core.PersistentHashSet.prototype.apply = (function (self__,args8164){apply22764,644787
+cljs.core.PersistentHashSet.prototype.apply = (function (self__,args8219){apply22764,644787
 cljs.core.PersistentHashSet.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$122770,645009
 cljs.core.PersistentHashSet.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$222776,645179
 (cljs.core.PersistentHashSet.prototype[cljs.core.ITER_SYMBOL] = (function (){core.PersistentHashSet22830,646907
-cljs.core.TransientHashSet.prototype.apply = (function (self__,args8188){cljs.core.TransientHashSet22880,648264
-cljs.core.TransientHashSet.prototype.apply = (function (self__,args8188){apply22880,648264
+cljs.core.TransientHashSet.prototype.apply = (function (self__,args8243){cljs.core.TransientHashSet22880,648264
+cljs.core.TransientHashSet.prototype.apply = (function (self__,args8243){apply22880,648264
 cljs.core.TransientHashSet.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$122886,648485
 cljs.core.TransientHashSet.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$222896,648760
 cljs.core.TransientHashSet.prototype.cljs$core$ILookup$_lookup$arity$2 = (function (tcoll,v){cljs$core$ILookup$_lookup$arity$222906,649050
@@ -3943,7 +3991,7 @@ cljs.core.PersistentTreeSet.prototype.cljs$core$ISeqable$_seq$arity$1 = (functio
 cljs.core.PersistentTreeSet.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (coll,meta__$1){cljs$core$IWithMeta$_with_meta$arity$223158,656697
 cljs.core.PersistentTreeSet.prototype.cljs$core$ICollection$_conj$arity$2 = (function (coll,o){cljs$core$ICollection$_conj$arity$223164,656930
 cljs.core.PersistentTreeSet.prototype.call = (function() {call23170,657181
-cljs.core.PersistentTreeSet.prototype.apply = (function (self__,args8191){apply23199,657943
+cljs.core.PersistentTreeSet.prototype.apply = (function (self__,args8246){apply23199,657943
 cljs.core.PersistentTreeSet.prototype.cljs$core$IFn$_invoke$arity$1 = (function (k){cljs$core$IFn$_invoke$arity$123205,658165
 cljs.core.PersistentTreeSet.prototype.cljs$core$IFn$_invoke$arity$2 = (function (k,not_found){cljs$core$IFn$_invoke$arity$223211,658335
 cljs.core.PersistentTreeSet.prototype.cljs$core$ISorted$_sorted_seq$arity$2 = (function (coll,ascending_QMARK_){cljs$core$ISorted$_sorted_seq$arity$223217,658525
@@ -4064,7 +4112,7 @@ cljs.core.MultiFn.prototype.cljs$core$IMultiFn$_prefer_method$arity$3 = (functio
 cljs.core.MultiFn.prototype.cljs$core$IMultiFn$_methods$arity$1 = (function (mf){cljs$core$IMultiFn$_methods$arity$127540,796943
 cljs.core.MultiFn.prototype.cljs$core$IMultiFn$_prefers$arity$1 = (function (mf){cljs$core$IMultiFn$_prefers$arity$127546,797123
 cljs.core.MultiFn.prototype.call = (function() {call27552,797303
-cljs.core.MultiFn.prototype.apply = (function (self__,args8485){apply27915,809633
+cljs.core.MultiFn.prototype.apply = (function (self__,args8540){apply27915,809633
 cljs.core.MultiFn.prototype.cljs$core$IFn$_invoke$arity$0 = (function (){cljs$core$IFn$_invoke$arity$027921,809845
 cljs.core.MultiFn.prototype.cljs$core$IFn$_invoke$arity$1 = (function (a){cljs$core$IFn$_invoke$arity$127934,810217
 cljs.core.MultiFn.prototype.cljs$core$IFn$_invoke$arity$2 = (function (a,b){cljs$core$IFn$_invoke$arity$227947,810594
@@ -4554,8 +4602,8 @@ resources/public/out/ui/pages/admin.js,0
 
 resources/public/out/ui/pages/register.js,0
 
-resources/public/out/ui/pages/admin.cljs,2047
-(ns ui.pages.admin (:require [ui.views.toolkit-view :refer [tools-view cliparts-view backgrounds-view templates-view templates-view-header]] [ui.views.canvas :refer [workspace]] [ui.views.settings :refer [settings]] [ui.views.editing :refer [editing]] [ui.components.main-menu :refer [main-menu MenuItem]] [ui.components.accordion :refer [accordion entry entry-title entry-body]] [utils.canvas-popups :as popups] [hoplon.twitter.bootstrap :as b :refer [container tab tabs]] [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.pages.admin1,0
+resources/public/out/ui/pages/admin.cljs,2171
+(ns ui.pages.admin (:require [ui.views.toolkit-view :refer [tools-view cliparts-view backgrounds-view templates-view templates-view-header]] [core.tenant.project-template :refer [init-templates]] [ui.views.canvas :refer [workspace]] [ui.views.settings :refer [settings]] [ui.views.editing :refer [editing]] [ui.views.tenant.templates :refer [templates-view templates-header]] [ui.components.main-menu :refer [main-menu MenuItem]] [ui.components.accordion :refer [accordion entry entry-title entry-body]] [utils.canvas-popups :as popups] [hoplon.twitter.bootstrap :as b :refer [container tab tabs]] [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.pages.admin1,0
 
 resources/public/out/ui/pages/main.js,0
 
@@ -4576,6 +4624,8 @@ resources/public/out/ui/components/tool_box.cljs,1748
 
 resources/public/out/ui/components/pagination.cljs,1656
 (ns ui.components.pagination (:require [ui.components.page-thumb :as pt] [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.components.pagination1,0
+
+resources/public/out/ui/components/combo_box.js,0
 
 resources/public/out/ui/components/main_menu.cljs,1620
 (ns ui.components.main-menu (:require [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.components.main-menu1,0
@@ -4599,17 +4649,20 @@ resources/public/out/ui/components/accordion.js,0
 resources/public/out/ui/components/photo.cljs,2741
 (ns ui.components.photo (:require [utils.dom.dnd-utils :as dnd] [utils.dom.dom-utils :as dom] [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.components.photo1,0
 (defn dragover [event] (.log js/window.console event) (.stopPropagation event) (.preventDefault event))dragover3,1649
-(defn load-file [file callback] (let [reader (js/FileReader.)] (set! (.-onload reader) (fn* [p1__2515#] (let [data (.-result (.-target p1__2515#)) result-map (atom {}) img-type (re-matches #"image.*" (.-type file))] (swap! result-map assoc :name (.-name file) :type (.-type file) :last-modified (.-lastModifiedDate file) :size (.-size file) :content data) (if (not (nil? img-type)) (let [image (js/Image.)] (set! (.-src image) data) (set! (.-onload image) (fn [] (swap! result-map assoc :width (.-width image) :height (.-height image)) (callback (clojure.core/deref result-map))))) (callback (clojure.core/deref result-map)))))) (.readAsDataURL reader file)))load-file9,1801
+(defn load-file [file callback] (let [reader (js/FileReader.)] (set! (.-onload reader) (fn* [p1__1439#] (let [data (.-result (.-target p1__1439#)) result-map (atom {}) img-type (re-matches #"image.*" (.-type file))] (swap! result-map assoc :name (.-name file) :type (.-type file) :last-modified (.-lastModifiedDate file) :size (.-size file) :content data) (if (not (nil? img-type)) (let [image (js/Image.)] (set! (.-src image) data) (set! (.-onload image) (fn [] (swap! result-map assoc :width (.-width image) :height (.-height image)) (callback (clojure.core/deref result-map))))) (callback (clojure.core/deref result-map)))))) (.readAsDataURL reader file)))load-file9,1801
 (defn drop! [event handle] (.stopPropagation event) (.preventDefault event) (dnd/data-transfer event))drop!11,2462
 (defn select-files! [event callback] (let [files (.-files (.-target event))] (let [file (aget files 0)] (load-file file callback))))select-files!13,2566
+
+resources/public/out/ui/components/combo_box.cljs,1620
+(ns ui.components.combo-box (:require [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.components.combo-box1,0
 
 resources/public/out/ui/components/page_thumb.cljs,1876
 (ns ui.components.page-thumb (:require [utils.dom.dom-utils :as dom] [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.components.page-thumb1,0
 (defn page-thumb [index] (let [pageid (str "page-" index) canvas-page (dom/by-id pageid)] (when (not (nil? canvas-page)) (img :class "page-thumb" :id (str "thumb-" pageid) :src (.toDataURL canvas-page)))))page-thumb3,1624
 
 resources/public/out/ui/components/main_menu.js,2196
-ui.components.main_menu.MenuItem.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10523,else__4176__auto__){ui.components.main_menu.MenuItem43,1197
-ui.components.main_menu.MenuItem.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10523,else__4176__auto__){cljs$core$ILookup$_lookup$arity$343,1197
+ui.components.main_menu.MenuItem.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10679,else__4176__auto__){ui.components.main_menu.MenuItem43,1197
+ui.components.main_menu.MenuItem.prototype.cljs$core$ILookup$_lookup$arity$3 = (function (this__4175__auto__,k10679,else__4176__auto__){cljs$core$ILookup$_lookup$arity$343,1197
 ui.components.main_menu.MenuItem.prototype.cljs$core$IPrintWithWriter$_pr_writer$arity$3 = (function (this__4187__auto__,writer__4188__auto__,opts__4189__auto__){cljs$core$IPrintWithWriter$_pr_writer$arity$370,1766
 ui.components.main_menu.MenuItem.prototype.cljs$core$IMeta$_meta$arity$1 = (function (this__4171__auto__){cljs$core$IMeta$_meta$arity$181,3224
 ui.components.main_menu.MenuItem.prototype.cljs$core$ICloneable$_clone$arity$1 = (function (this__4167__auto__){cljs$core$ICloneable$_clone$arity$187,3412
@@ -4617,9 +4670,9 @@ ui.components.main_menu.MenuItem.prototype.cljs$core$ICounted$_count$arity$1 = (
 ui.components.main_menu.MenuItem.prototype.cljs$core$IHash$_hash$arity$1 = (function (this__4168__auto__){cljs$core$IHash$_hash$arity$199,3965
 ui.components.main_menu.MenuItem.prototype.cljs$core$IEquiv$_equiv$arity$2 = (function (this__4169__auto__,other__4170__auto__){cljs$core$IEquiv$_equiv$arity$2113,4384
 ui.components.main_menu.MenuItem.prototype.cljs$core$IMap$_dissoc$arity$2 = (function (this__4182__auto__,k__4183__auto__){cljs$core$IMap$_dissoc$arity$2129,4936
-ui.components.main_menu.MenuItem.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__10522){cljs$core$IAssociative$_assoc$arity$3139,5946
+ui.components.main_menu.MenuItem.prototype.cljs$core$IAssociative$_assoc$arity$3 = (function (this__4180__auto__,k__4181__auto__,G__10678){cljs$core$IAssociative$_assoc$arity$3139,5946
 ui.components.main_menu.MenuItem.prototype.cljs$core$ISeqable$_seq$arity$1 = (function (this__4185__auto__){cljs$core$ISeqable$_seq$arity$1163,7502
-ui.components.main_menu.MenuItem.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__10522){cljs$core$IWithMeta$_with_meta$arity$2169,8501
+ui.components.main_menu.MenuItem.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = (function (this__4172__auto__,G__10678){cljs$core$IWithMeta$_with_meta$arity$2169,8501
 ui.components.main_menu.MenuItem.prototype.cljs$core$ICollection$_conj$arity$2 = (function (this__4178__auto__,entry__4179__auto__){cljs$core$ICollection$_conj$arity$2175,8834
 
 resources/public/out/ui/components/tool_box.js,0
@@ -4630,7 +4683,7 @@ resources/public/out/ui/components/pagination.js,0
 
 resources/public/out/ui/components/accordion.cljs,2351
 (ns ui.components.accordion (:require [utils.dom.dom-utils :as dom] [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.components.accordion1,0
-(defn- toggle-elem-at [index states-cel] (let [new-state (not (get (clojure.core/deref states-cel) index))] (dosync (doall (map-indexed (fn* [p1__1974#] (swap! states-cel assoc p1__1974# (if (= index p1__1974#) new-state false))) (clojure.core/deref states-cel))))))toggle-elem-at11,1806
+(defn- toggle-elem-at [index states-cel] (let [new-state (not (get (clojure.core/deref states-cel) index))] (dosync (doall (map-indexed (fn* [p1__4471#] (swap! states-cel assoc p1__4471# (if (= index p1__4471#) new-state false))) (clojure.core/deref states-cel))))))toggle-elem-at11,1806
 (defn- create-entry [index element states-cel] (let [childs (goog.object/get element "childNodes") header (.item childs 0) content (.item childs 1)] (div :class "panel panel-default" (div :class "panel-heading" :click (fn* [] (toggle-elem-at index states-cel)) header) (div :class (cell= {:panel-collapse true, :collapse (not (get states-cel index))}) (div :class "panel-body" content)))))create-entry13,2074
 
 resources/public/out/ui/views/editing.cljs,2164
@@ -4651,6 +4704,12 @@ resources/public/out/ui/views/text_popups.cljs,2467
 (defn- selection-set-property [property value] (a/change-property! (:uid (clojure.core/deref canvas/selection_)) property value))selection-set-property7,1956
 (defn- new-get-property [property] (cell= (let [uid (:uid canvas/new_)] (property (e/data (e/entity-by-id uid))))))new-get-property9,2087
 (defn- new-set-property [property value] (a/change-property! (:uid (clojure.core/deref canvas/new_)) property value))new-set-property11,2204
+
+resources/public/out/ui/views/tenant/templates.js,0
+
+resources/public/out/ui/views/tenant/templates.cljs,1920
+(ns ui.views.tenant.templates (:require [core.tenant.project-template :refer [update-property get-property get-template templates init-templates add-empty-template project-templates]] [clojure.set :refer [union]] [ui.components.combo-box :refer [combo-box]] [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))ui.views.tenant.templates1,0
+(defn- neg-prop [name prop] (not (prop (get-template name))))neg-prop3,1813
 
 resources/public/out/ui/views/canvas.js,0
 
@@ -4732,7 +4791,7 @@ resources/public/out/adzerk/boot_reload/client.js,0
 resources/public/out/hoplon/twitter/bootstrap.cljs,2632
 (ns hoplon.twitter.bootstrap (:require [tailrecursion.hoplon :refer [form audio input hgroup do! timeout $text rely base h1 embed h3 body keygen val-id on-append! progress main cite on-page-load object i p nav ruby relx check-val! a menu blockquote img $comment span track seq?* data u dl select html thead del eventsource append-child fieldset rel aside figure figcaption q on! bdi video address caption parse-args by-id dd rp hr tbody table acronym frame applet html-var add-initfn! pre ul dir html-time add-attributes! html-map sup dfn sub mark script big button wbr strong li dt frameset td tr section th optgroup rel-event iframe legend em kbd spliced article isindex abbr command source output basefont route-cell header datalist tfoot s ins footer title is-ie8 h5 canvas param font div option summary samp center small style textarea loop-tpl* strike h4 tt head add-children! ol details col vector?* label rt when-dom h6 link page-load colgroup meter html-meta text-val! bdo b code node? noframes replace-children! noscript safe-nth h2 area br unsplice]] [tailrecursion.javelin :refer [input? cell cell? destroy-cell! ^{:private true} last-rank ^{:deprecated true} lift lens? set-formula! cell-doseq* ^{:private true, :dynamic true} *tx* deref* set-cell! lens formula? alts! dosync* cell-map formula]]) (:require-macros [tailrecursion.hoplon :refer [text with-timeout sexp defelem def-values with-page-load loop-tpl with-interval with-init!]] [tailrecursion.javelin :refer [with-let mx2 dosync cell= set-cell!= prop-cell cell-doseq defc cell-let-1 defc= macroexpand-all mx cell-let]]))hoplon.twitter.bootstrap1,0
 (defn- mkreset [sep] (->> cols-prefixes (map (fn [[k v]] [(keyword (str k sep v)) false])) (into {})))mkreset5,1701
-(defn- mkcol-key [key m] (reduce-kv (fn* [p1__5195# p2__5196# p3__5197#] (assoc p1__5195# (keyword (str "col-" (name p2__5196#) (cols-seps key) p3__5197#)) true)) {} m))mkcol-key11,2038
+(defn- mkcol-key [key m] (reduce-kv (fn* [p1__5010# p2__5011# p3__5012#] (assoc p1__5010# (keyword (str "col-" (name p2__5011#) (cols-seps key) p3__5012#)) true)) {} m))mkcol-key11,2038
 (defn- do-classes [elem key val] (do! elem :class (merge (cols-reset key) (mkcol-key key val))))do-classes13,2209
 (defmethod do! :col [elem key val] (do-classes elem key val))do!15,2307
 (defmethod do! :offset [elem key val] (do-classes elem key val))do!17,2370
@@ -4888,18 +4947,19 @@ src/cljs/core/router/router.cljs,484
 (defn- on-hash-change []on-hash-change37,1238
 (defn route []route54,2015
 
-src/cljs/core/tenant/project_template.cljs,604
+src/cljs/core/tenant/project_template.cljs,687
 (ns core.tenant.project-templatecore.tenant.project-template1,0
-(def project-templates (cell {}))project-templates9,272
-(defn- next-default-name [name index]next-default-name22,710
-(defn add-empty-template []add-empty-template28,900
-(defn update-property [name property value]update-property41,1481
-(defn update-template [template]update-template48,1802
-(defn add-template [template]add-template55,2115
-(defn get-template [name]get-template61,2343
-(defn get-property [name property]get-property64,2403
-(defn templates []templates67,2562
-(defn init-templates []init-templates70,2604
+(def project-templates (cell (sorted-map)))project-templates10,338
+(defn- next-default-name [name index]next-default-name22,757
+(defn add-empty-template []add-empty-template28,947
+(defn update-property [name property value]update-property41,1480
+(defn update-template [template]update-template48,1801
+(defn add-template [template]add-template55,2114
+(defn get-template [name]get-template61,2342
+(defn get-property-formula [name property]get-property-formula64,2402
+(defn get-property [name property]get-property67,2571
+(defn templates []templates70,2654
+(defn init-templates []init-templates74,2704
 
 src/cljs/core/actions.cljs,926
 (ns core.actionscore.actions2,37

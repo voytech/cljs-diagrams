@@ -5,7 +5,9 @@
                                                   templates
                                                   init-templates
                                                   add-empty-template
-                                                  project-templates]]))
+                                                  project-templates]]
+            [clojure.set :refer [union]]
+            [ui.components.combo-box :refer [combo-box]]))
 
 (defn- neg-prop [name prop]
   (not (prop (get-template name))))
@@ -21,19 +23,22 @@
 (defelem counter [{:keys [name property title]}]
   (div :class "col-md-12"
        (span (str " " title " "))
-       (div :class "col-md-6 row pull-right"
-            (button :class "btn btn-default  btn-xs"
+       (div :class "col-md-4 row pull-right"
+            (button :class "btn btn-default btn-xs"
                     :type "button"
                     :click #(update-property name property (dec (get-property name property )))
                     (span :class "glyphicon glyphicon-minus"))
-            (input :class "input-sm"
+            (input :class "input-xs"
                    :type  "text"
-                   :style "border-color:transparent;box-shadow:none;-webkit-box-shadow:none;outline:none;width:45px;important!"
                    :value (get-property name property ))
-            (button :class "btn btn-default btn-xs"
+            (button :class "btn btn-primary btn-xs"
                     :type "button"
                     :click #(update-property name property (inc (get-property name property)))
                     (span :class "glyphicon glyphicon-plus")))))
+
+(defelem tag [{:keys [name]}]
+  (span :class "label label-default margin-02m" name
+        (span :class "glyphicon glyphicon-remove")))
 
 (defelem template-view [{:keys [name]}]
   (let [collapsed (cell true)]
@@ -54,27 +59,53 @@
           (div :class (cell=  {:panel-body true
                                :panel-collapse true
                                :collapse collapsed})
-               (div :class "row top-margin-1"
-                   (counter :title "Page count" :property :page-count :name name))
-               (div :class "row top-margin-1"
-                    (counter :title "Max Pages" :property :max-page-count :name name))
-               (div :class "row col-md-12"
-                    (span :style "white-space: nowrap;" "Fixed page count")
-                    (div :class "pull-right"
-                     (input
-                          :type "checkbox"
-                          :value (get-property name :fixed-page-count)
-                          :click #(do (update-property name :fixed-page-count (neg-prop name :fixed-page-count)) true))))
                (div :class "row"
-                    (div :class "col-md-5 setting"
-                         (label)
-                         (select
-                          (p (text "Page format"))))
-                    (div :class "row"
-                         (div :class "col-md-5 setting"
-                              (label)
-                              (select
-                               (p (text "Printing Surfaces")))))))))))
+                   (counter :title "Page count" :property :page-count :name name))
+               (div :class "hdiv")
+               (div :class "row"
+                   (counter :title "Max Pages" :property :max-page-count :name name))
+               (div :class "hdiv")
+               (div :class "row"
+                    (div :class "col-md-12"
+                         (span :style "white-space: nowrap;" "Fixed page count")
+                         (div :class "pull-right"
+                              (input
+                               :type "checkbox"
+                               :value (get-property name :fixed-page-count)
+                               :click #(do (update-property name :fixed-page-count (neg-prop name :fixed-page-count)) true)))))
+               (div :class "row"
+                    (div :class "col-md-12"
+                         (span :style "white-space: nowrap;" "Custom format")
+                         (div :class "pull-right"
+                              (input
+                               :type "checkbox"
+                               :value (get-property name :custom-format?)
+                               :click #(do (update-property name :custom-format? (neg-prop name :custom-format?)) true)))))
+               (div :class "row"
+                    (div :class "col-md-12"
+                         (span :style "white-space: nowrap;" "Client notes")
+                         (div :class "pull-right"
+                              (input
+                               :type "checkbox"
+                               :value (get-property name :client-requests?)
+                               :click #(do (update-property name :client-requests? (neg-prop name :client-requests?)) true)))))
+
+
+               (div :class "hdiv")
+               (div :class "row"
+                    (div :class "col-md-12"
+                         (span :style "white-space: nowrap;" "Page formats")
+                         (let [selection (cell "A4")]
+                           (div :class "pull-right "
+                                 (combo-box :data ["A4" "A6" "A3" "A2" "A1"] :on-change #(reset! selection %))
+                                 (button :class "btn btn-primary btn-xs"
+                                         :type "button"
+                                         :click #(->> (union #{@selection} (get-property name :page-formats))
+                                                      (update-property name :page-formats))
+                                         (span :class "glyphicon glyphicon-plus"))
+                                ))))
+               (div (doall (map #(tag :name %) (get-property name :page-formats))))
+                   )))))
 
 (defelem templates-view []
   (div :id "templates"

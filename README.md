@@ -5,7 +5,6 @@ A sample clojure/clojure-scrip/hoplon appliaction for creating photo calendars, 
 
 - java 1.7+
 - [boot][1]
-- [leiningen][2]
 
 ## Usage
 

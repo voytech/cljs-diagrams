@@ -57,7 +57,8 @@
 (defn- update-current-prop [property value]
   (when (not (nil? @current-template))
     (println (str "updating " property ":" value))
-    (swap! current-template assoc-in [property] value)))
+    (swap! current-template assoc-in [property] value)
+    (println (str "updated to " (property current-template)))))
 
 (defn- merge-current [template]
   (let [loaded (is-loaded (:name template))]
@@ -94,13 +95,16 @@
 (defn get-template [name]
   (by-name name))
 
+(defn current-value [name]
+  (name @current-template))
+
 (defn get-property [name property]
-  (get-in @project-templates [(index-of @project-templates (by-name name)) property])
-  ;; (cell= (if (= (:name current-template) name)
-  ;;          (property current-template)
-  ;;          (println (get-in project-templates [(index-of project-templates (by-name name)) property]))
-  ;;          )
-  ;;        )
+  ;(cell= (when (not (nil? current-template)) (property current-template)))
+   (cell= (if (= (:name current-template) name)
+            (do (println "current template") (property current-template))
+            (do (println "vector " ) (get-in project-templates [(index-of project-templates (by-name name)) property]))
+            )
+          )
   )
 
 (defn load-template [name]

@@ -5,9 +5,13 @@
                                                   templates
                                                   init-templates
                                                   add-empty-template
-                                                  project-templates]]
+                                                  project-templates
+                                                  current-template
+                                                  load-template
+                                                  ]]
             [clojure.set :refer [union]]
-            [ui.components.combo-box :refer [combo-box]]))
+            [ui.components.combo-box :refer [combo-box]]
+            [ui.components.paged-list :refer [paged-list]]))
 
 (defn- neg-prop [name prop]
   (not (prop (get-template name))))
@@ -30,7 +34,7 @@
                     (span :class "glyphicon glyphicon-minus"))
             (input :class "input-xs"
                    :type  "text"
-                   :value (get-property name property ))
+                   :value (get-property name property))
             (button :class "btn btn-primary btn-xs"
                     :type "button"
                     :click #(update-property name property (inc (get-property name property)))
@@ -41,7 +45,6 @@
         (span :class "glyphicon glyphicon-remove")))
 
 (defelem template-view [{:keys [name]}]
-  (let [collapsed (cell true)]
     (div
      (div :class "panel panel-default"
           (div :class "panel-heading"
@@ -54,11 +57,11 @@
                     (span :class "input-group-btn"
                           (button :class "btn btn-default"
                                   :type "button"
-                                  :click #(reset! collapsed (not @collapsed))
+                                  :click #(load-template name)
                                   (span :class "glyphicon glyphicon-collapse-down")))))
           (div :class (cell=  {:panel-body true
                                :panel-collapse true
-                               :collapse collapsed})
+                               :collapse (not= name (:name current-template))})
                (div :class "row"
                    (counter :title "Page count" :property :page-count :name name))
                (div :class "hdiv")
@@ -105,11 +108,17 @@
                                          (span :class "glyphicon glyphicon-plus"))
                                 ))))
                (div (doall (map #(tag :name %) (get-property name :page-formats))))
-                   )))))
+                   ))))
 
 (defelem templates-view []
+  ;; (div :id "templates"
+  ;;     (paged-list :nodes-per-page 5
+  ;;                 :provider (fn [page-nr nodes-per-page]
+  ;;                             (cell= (let [keys project-templates]
+  ;;                                      (doseq [key keys]
+  ;;                                        (println (str "Template details: " (.stringify js/JSON (clj->js (get project-templates key))))))
+  ;;                                      {:entries (doall (map #(template-view :name ) keys))
+  ;;                                       :hasmore false})))))
   (div :id "templates"
-   (cell=  (let [keys (keys project-templates)]
-             (doseq [key keys]
-               (println (str "Template details: " (.stringify js/JSON (clj->js (get project-templates key))))))
-             (doall (map #(template-view :name %) keys))))))
+       (cell= (doall (map #(template-view :name (:name %)) project-templates))))
+  )

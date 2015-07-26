@@ -7,15 +7,16 @@
                                                   add-empty-template
                                                   project-templates
                                                   current-template
-                                                  current-value
+                                                  current-template-value
                                                   load-template
+                                                  save-template
                                                   ]]
             [clojure.set :refer [union]]
             [ui.components.combo-box :refer [combo-box]]
             [ui.components.paged-list :refer [paged-list]]))
 
-(defn- neg-prop [name prop]
-  (not (current-value prop)))
+(defn- neg-prop [prop]
+  (not (current-template-value prop)))
 
 (defelem templates-header []
   (div (text "Templates")
@@ -25,91 +26,160 @@
                        (add-empty-template))
            (span :class "glyphicon glyphicon-plus"))))
 
-(defelem counter [{:keys [name property title]}]
+(defelem counter [{:keys [property title]}]
   (div :class "col-md-12"
        (span (str " " title " "))
        (div :class "col-md-4 row pull-right"
             (button :class "btn btn-default btn-xs"
                     :type "button"
-                    :click #(update-property name property (dec (current-value property)))
+                    :click #(update-property property (dec (current-template-value property)))
                     (span :class "glyphicon glyphicon-minus"))
             (input :class "input-xs"
                    :type  "text"
-                   :value (get-property name property))
+                   :value (get-property property))
             (button :class "btn btn-primary btn-xs"
                     :type "button"
-                    :click #(update-property name property (inc (current-value property)))
+                    :click #(update-property property (inc (current-template-value property)))
                     (span :class "glyphicon glyphicon-plus")))))
 
 (defelem tag [{:keys [name]}]
   (span :class "label label-default margin-02m" name
         (span :class "glyphicon glyphicon-remove")))
 
+
 (defelem template-view [{:keys [name]}]
-    (div
-     (div :class "panel panel-default"
-          (div :class "panel-heading"
-               (div :class "input-group input-group-sm"
-                    (input
-                     :class "form-control"
-                     :type "text"
-                     :on-change #(update-property name :name @% )
-                     :value (get-property name :name))
-                    (span :class "input-group-btn"
-                          (button :class "btn btn-default"
-                                  :type "button"
-                                  :click #(load-template name)
-                                  (span :class "glyphicon glyphicon-collapse-down")))))
-          (div :class (cell=  {:panel-body true
-                               :panel-collapse true
-                               :collapse (not= name (:name current-template))})
-               (div :class "row"
-                   (counter :title "Page count" :property :page-count :name name))
-               (div :class "hdiv")
-               (div :class "row"
-                   (counter :title "Max Pages" :property :max-page-count :name name))
-               (div :class "hdiv")
-               (div :class "row"
-                    (div :class "col-md-12"
-                         (span :style "white-space: nowrap;" "Fixed page count")
-                         (div :class "pull-right"
-                              (input
-                               :type "checkbox"
-                               :value (get-property name :fixed-page-count)
-                               :click #(do (update-property name :fixed-page-count (neg-prop name :fixed-page-count)) true)))))
-               (div :class "row"
-                    (div :class "col-md-12"
-                         (span :style "white-space: nowrap;" "Custom format")
-                         (div :class "pull-right"
-                              (input
-                               :type "checkbox"
-                               :value (get-property name :custom-format?)
-                               :click #(do (update-property name :custom-format? (neg-prop name :custom-format?)) true)))))
-               (div :class "row"
-                    (div :class "col-md-12"
-                         (span :style "white-space: nowrap;" "Client notes")
-                         (div :class "pull-right"
-                              (input
-                               :type "checkbox"
-                               :value (get-property name :client-requests?)
-                               :click #(do (update-property name :client-requests? (neg-prop name :client-requests?)) true)))))
+  (div
+   (println (str "creating element template-view: " name))
+   (div
+    (let [show-info (cell false)]
+      (div :class "panel panel-default"
+           (div :class "panel-heading"
+                (div :class "input-group input-group-sm"
+                     (input
+                      :class "form-control"
+                      :type  "text"
+                      :readonly true
+                      :value (get-property name :name))
+                     (span :class "input-group-btn"
+                           (button :class "btn btn-default"
+                                   :type "button"
+                                   :click #(reset! show-info (not @show-info))
+                                   (span :class "glyphicon glyphicon-info-sign"))
+                           (button :class "btn btn-default"
+                                   :type "button"
+                                   :click #(load-template name)
+                                   (span :class "glyphicon glyphicon-open")))))
+           (div :class (cell=  {:panel-body true
+                                :panel-collapse true
+                                :collapse (not show-info)})
+                (div :class "row col-md-12"
+                     (let [pcount (get-property name :page-count)]
+                       (div (text "Page count : ~{pcount}"))))
+                (div :class "hdiv")
+                (div :class "row col-md-12"
+                     (let [pmcount (get-property name :max-page-count)]
+                       (div (text "Max page count : ~{pmcount}"))))
+                (div :class "hdiv")
+                (div :class "row"
+                     (div :class "col-md-12"
+                          (span :style "white-space: nowrap;" "Fixed page count")
+                          (div :class "pull-right"
+                               (input
+                                :type "checkbox"
+                                :value (get-property name :fixed-page-count)))))
+                (div :class "row"
+                     (div :class "col-md-12"
+                          (span :style "white-space: nowrap;" "Custom format")
+                          (div :class "pull-right"
+                               (input
+                                :type "checkbox"
+                                :value (get-property name :custom-format?)))))
+                (div :class "row"
+                     (div :class "col-md-12"
+                          (span :style "white-space: nowrap;" "Client notes")
+                          (div :class "pull-right"
+                               (input
+                                :type "checkbox"
+                                :value (get-property name :client-requests?)))))
+                (div :class "hdiv")
+                (div
+                 (cell= (let [page-formats (seq (:page-formats current-template))]
+                          (println page-formats)
+                          (doall (map #(tag :name %) page-formats)))))
+                )
+           )))))
 
+(defelem template-edit []
+  (div :class (cell= {:hidden (nil? current-template)})
+   (println (str "creating element template-edit"))
+   (div :class "panel panel-default"
+        (div :class "panel-heading"
+             (div :class "input-group input-group-sm"
+                  (input
+                   :class "form-control"
+                   :type "text"
+                   :on-change #(update-property :name @% )
+                   :value (get-property :name))
+                  (span :class "input-group-btn"
+                        (button :class "btn btn-default"
+                                :type "button"
+                                :click #(save-template)
+                                (span :class "glyphicon glyphicon-save")))))
+        (div :class  (cell= {:panel-body true
+                             :panel-collapse true
+                             :collapse false})
+             (div :class "row"
+                  (counter :title    "Page count"
+                           :property :page-count ))
+             (div :class "hdiv")
+             (div :class "row"
+                  (counter :title    "Max Pages"
+                           :property :max-page-count ))
+             (div :class "hdiv")
+             (div :class "row"
+                  (div :class "col-md-12"
+                       (span :style "white-space: nowrap;" "Fixed page count")
+                       (div :class "pull-right"
+                            (input
+                             :type "checkbox"
+                             :value (get-property :fixed-page-count)
+                             :click #(do (update-property :fixed-page-count (neg-prop :fixed-page-count)) true)))))
+             (div :class "row"
+                  (div :class "col-md-12"
+                       (span :style "white-space: nowrap;" "Custom format")
+                       (div :class "pull-right"
+                            (input
+                             :type "checkbox"
+                             :value (get-property :custom-format?)
+                             :click #(do (update-property :custom-format? (neg-prop :custom-format?)) true)))))
+             (div :class "row"
+                  (div :class "col-md-12"
+                       (span :style "white-space: nowrap;" "Client notes")
+                       (div :class "pull-right"
+                            (input
+                             :type "checkbox"
+                             :value (get-property :client-requests?)
+                             :click #(do (update-property :client-requests? (neg-prop :client-requests?)) true)))))
 
-               (div :class "hdiv")
-               (div :class "row"
-                    (div :class "col-md-12"
-                         (span :style "white-space: nowrap;" "Page formats")
-                         (let [selection (cell "A4")]
-                           (div :class "pull-right "
-                                 (combo-box :data ["A4" "A6" "A3" "A2" "A1"] :on-change #(reset! selection %))
-                                 (button :class "btn btn-primary btn-xs"
-                                         :type "button"
-                                         :click #(->> (union #{@selection} (get-property name :page-formats))
-                                                      (update-property name :page-formats))
-                                         (span :class "glyphicon glyphicon-plus"))
-                                ))))
-               ;(div (doall (map #(tag :name %) (get-property name :page-formats))))
-                   ))))
+             (div :class "hdiv")
+             (div :class "row"
+                  (div :class "col-md-12"
+                       (span :style "white-space: nowrap;" "Page formats")
+                       (let [selection (cell "A4")]
+                         (div :class "pull-right "
+                              (combo-box :data ["A4" "A6" "A3" "A2" "A1"] :on-change #(reset! selection %))
+                              (button :class "btn btn-primary btn-xs"
+                                      :type "button"
+                                      :click #(->> (union #{@selection} (current-template-value :page-formats))
+                                                   (update-property :page-formats))
+                                      (span :class "glyphicon glyphicon-plus"))
+                              ))))
+
+             (div
+              (cell= (let [page-formats (seq (:page-formats current-template))]
+                       (println page-formats)
+                       (doall (map #(tag :name %) page-formats))))))
+        )))
 
 (defelem templates-view []
   ;; (div :id "templates"
@@ -121,5 +191,13 @@
   ;;                                      {:entries (doall (map #(template-view :name ) keys))
   ;;                                       :hasmore false})))))
   (div :id "templates"
-       (cell= (doall (map #(template-view :name (:name %)) project-templates))))
+       (div :id "template-edit"
+            (template-edit))
+       (div :id "templates-grid"
+            (paged-list :nodes-per-page 3
+                        :provider (fn [page-nr nodes-per-page]
+                                    (cell= {:entries (doall (map #(template-view :name (:name %)) project-templates))
+                                            :hasmore true})))
+           ; (cell= (doall (map #(template-view :name (:name %)) project-templates)))
+            ))
   )

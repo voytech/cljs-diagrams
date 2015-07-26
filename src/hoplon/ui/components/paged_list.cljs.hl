@@ -3,7 +3,7 @@
 ;; Paged list introduces paging logic to list containg of any elements.
 ;; provider provides elements to be placed in list for selected page.
 (defelem paged-list [{:keys [nodes-per-page provider]}]
-  (let [page-nr (atom 0)
+  (let [page-nr (cell 0)
         result  (cell= (provider page-nr nodes-per-page))
         hasmore (:hasmore result)
         entries (:entries result)]

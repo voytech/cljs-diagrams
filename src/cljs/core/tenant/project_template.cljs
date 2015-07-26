@@ -1,5 +1,5 @@
 (ns core.tenant.project-template
-  (:require [tailrecursion.javelin :refer [cell ]]
+  (:require [tailrecursion.javelin :refer [cell destroy-cell! set-cell!]]
             [core.actions :as actions])
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
@@ -9,6 +9,7 @@
 ;;TODO:Cells below will be loaded from castra backend.
 ;;project-templates changes only when adding new template/ when paging.
 (def project-templates (cell []))
+(def current-template-index (atom -1))
 ;;current-template changes only when editing.
 (def current-template (cell nil))
 
@@ -30,6 +31,9 @@
 
 (defn- by-name [name]
   (first (filter #(= name (:name %)) @project-templates)))
+
+(defn- template-index-of [name]
+  (index-of @project-templates (by-name name)))
 
 (defn- next-default-name [name index]
   (let [found-name (by-name name)]
@@ -54,65 +58,51 @@
                                    false)]
     (swap! project-templates conj template)))
 
-(defn- update-current-prop [property value]
+(defn- silent-update [index template]
+  (let [deref-templates @project-templates]
+    (destroy-cell! project-templates)
+    (->> (assoc-in deref-templates [index] template)
+         (set-cell! project-templates))))
+
+(defn- update-property [property value]
   (when (not (nil? @current-template))
-    (println (str "updating " property ":" value))
     (swap! current-template assoc-in [property] value)
-    (println (str "updated to " (property current-template)))))
+    (silent-update @current-template-index  @current-template)
+    ))
 
 (defn- merge-current [template]
-  (let [loaded (is-loaded (:name template))]
-    (when (= true loaded)
-      (->> (merge template @current-template)
-           (reset! current-template)))))
-
-(defn update-property [name property value]
-  (let [existing (by-name name)
-        loaded (is-loaded name)
-        index (index-of @project-templates existing)]
-    (if (= true loaded)
-        (update-current-prop property value)
-        (when (not (nil? existing))
-            (let [merged (merge existing {property value})]
-               (swap! project-templates assoc-in [index] merged))))))
-
-(defn update-template [template]
-  (let [existing (by-name (:name template))
-        loaded (is-loaded name)
-        index (index-of @project-templates existing)]
-    (if (= true loaded)
-      (merge-current template)
-      (when (not (nil? existing))
-          (->> (merge existing template)
-                     (swap! project-templates assoc-in [index]))))))
+  (->> (merge template @current-template)
+       (reset! current-template)))
 
 (defn add-template [template]
   (let [existing (by-name (:name template))]
-    (if (not (nil? existing))
-       (update-template template)
-       (swap! project-templates conj existing))))
+    (when (nil? existing)
+       (swap! project-templates conj template))))
 
 (defn get-template [name]
   (by-name name))
 
-(defn current-value [name]
+(defn current-template-value [name]
   (name @current-template))
 
-(defn get-property [name property]
-  ;(cell= (when (not (nil? current-template)) (property current-template)))
-   (cell= (if (= (:name current-template) name)
-            (do (println "current template") (property current-template))
-            (do (println "vector " ) (get-in project-templates [(index-of project-templates (by-name name)) property]))
-            )
-          )
-  )
+(defn get-property
+  ([property] (cell= (when (not (nil? current-template))
+                   (property current-template))))
+  ([name property]
+     (cell= (let [ind (template-index-of name)]
+              (get-in project-templates [ind property])))))
 
 (defn load-template [name]
   (println (str "loading template: " name))
-  (let [template (by-name name)]
+  (let [template (by-name name)
+        ind (tempate-index-of name)]
     (when (not (nil? template))
       (reset! current-template template)
+      (reset! current-template-index ind)
       (println (str "Loaded template " (.stringify js/JSON (clj->js @current-template)))))))
+
+(defn save-template []
+  (println "Saving template"))
 
 (defn templates []
   @project-templates)

@@ -104,6 +104,12 @@ h1 {
   border-width:1px;
 }
 
+.visible {
+  display:block;
+}
+.hidden {
+  display:none;
+}
 .canvas.hidden{
   display:none;
 }

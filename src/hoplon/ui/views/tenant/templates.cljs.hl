@@ -10,6 +10,7 @@
                                                   current-template-value
                                                   load-template
                                                   save-template
+                                                  change-page
                                                   ]]
             [clojure.set :refer [union]]
             [ui.components.combo-box :refer [combo-box]]
@@ -103,9 +104,10 @@
                                 :value (get-property name :client-requests?)))))
                 (div :class "hdiv")
                 (div
-                 (cell= (let [page-formats (seq (:page-formats current-template))]
-                          (println page-formats)
-                          (doall (map #(tag :name %) page-formats)))))
+                 ;; (cell= (let [page-formats (seq (:page-formats get-property name :page-formats))]
+                 ;;          (println page-formats)
+                 ;;          (doall (map #(tag :name %) page-formats))))
+                 )
                 )
            )))))
 
@@ -182,22 +184,11 @@
         )))
 
 (defelem templates-view []
-  ;; (div :id "templates"
-  ;;     (paged-list :nodes-per-page 5
-  ;;                 :provider (fn [page-nr nodes-per-page]
-  ;;                             (cell= (let [keys project-templates]
-  ;;                                      (doseq [key keys]
-  ;;                                        (println (str "Template details: " (.stringify js/JSON (clj->js (get project-templates key))))))
-  ;;                                      {:entries (doall (map #(template-view :name ) keys))
-  ;;                                       :hasmore false})))))
   (div :id "templates"
        (div :id "template-edit"
             (template-edit))
        (div :id "templates-grid"
-            (paged-list :nodes-per-page 3
-                        :provider (fn [page-nr nodes-per-page]
-                                    (cell= {:entries (doall (map #(template-view :name (:name %)) project-templates))
-                                            :hasmore true})))
-           ; (cell= (doall (map #(template-view :name (:name %)) project-templates)))
-            ))
-  )
+            (cell= (paged-list :nodes-per-page 3
+                               :change-page-func change-page
+                               :data  (doall (map #(template-view :name (:name %)) project-templates)))))
+  ))

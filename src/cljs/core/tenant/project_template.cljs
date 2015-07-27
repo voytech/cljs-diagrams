@@ -1,11 +1,13 @@
 (ns core.tenant.project-template
   (:require [tailrecursion.javelin :refer [cell destroy-cell! set-cell!]]
-            [core.actions :as actions])
+            [core.actions :as actions]
+            )
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
 (def ^:private DEFAULT_NAME "Enter name")
 (def ^:private DEFAULT_DESCRIPTION "Enter description")
 
+(def all-templates (cell []))
 ;;TODO:Cells below will be loaded from castra backend.
 ;;project-templates changes only when adding new template/ when paging.
 (def project-templates (cell []))
@@ -56,7 +58,7 @@
                                    true
                                    #{}
                                    false)]
-    (swap! project-templates conj template)))
+    (swap! all-templates conj template)))
 
 (defn- silent-update [index template]
   (let [deref-templates @project-templates]
@@ -95,7 +97,7 @@
 (defn load-template [name]
   (println (str "loading template: " name))
   (let [template (by-name name)
-        ind (tempate-index-of name)]
+        ind (template-index-of name)]
     (when (not (nil? template))
       (reset! current-template template)
       (reset! current-template-index ind)
@@ -107,7 +109,20 @@
 (defn templates []
   @project-templates)
 
+(defn check-page [pagenr items-per-page]
+  (let [start (* (- pagenr 1) items-per-page)]
+    (< start (dec (count @all-templates)))))
+
+(defn change-page [pagenr items-per-page]
+  (let [start  (* (- pagenr 1) items-per-page)
+        end  (+ start items-per-page)
+        subv (subvec @all-templates start end)
+        ]
+     (println (str "change page : " pagenr ", " start ", " end))
+     (reset! project-templates subv)
+     (check-page (inc pagenr) items-per-page)
+    ))
 
 (defn init-templates []
   (when (empty? @project-templates)
-    (add-empty-template)))
+    (dotimes [n 20] (add-empty-template))))

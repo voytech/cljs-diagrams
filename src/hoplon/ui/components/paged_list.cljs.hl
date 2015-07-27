@@ -3,25 +3,21 @@
 ;; Paged list introduces paging logic to list containg of any elements.
 ;; provider provides elements to be placed in list for selected page.
 (defelem paged-list [{:keys [nodes-per-page
-                             data
+                             to-element
                              change-page-func
                              ]}]
-  (div (let [page-nr (atom 0)
+  (div (let [page-nr (cell 1)
              hasmore (atom true)]
          (div
-          (println (str "Entries " (count data)))
-          (div data)
+          (div (cell= (let [data (change-page-func page-nr nodes-per-page)]
+                        (doall (map #(to-element %) data)))))
           (div :class "row center-block"
                (div :class "btn-group center-block"
                     (button :type "button"
                             :class "btn btn-default btn-xs"
-                            :click #(when (> @page-nr 0) (do (swap! page-nr dec)
-                                                             (reset! hasmore (change-page-func @page-nr nodes-per-page))))
+                            :click #(when (> @page-nr 0) (swap! page-nr dec))
                             (span :class "glyphicon glyphicon-arrow-left"))
                     (button :type "button"
                             :class "btn btn-default btn-xs"
-                            :click #(when (= true @hasmore)
-                                               (do (swap! page-nr inc)
-                                                   (println (str "change page to " @page-nr " has more " @hasmore))
-                                                   (reset! hasmore (change-page-func @page-nr nodes-per-page))))
+                            :click #(when (= true @hasmore) (swap! page-nr inc))
                             (span :class "glyphicon glyphicon-arrow-right"))))))))

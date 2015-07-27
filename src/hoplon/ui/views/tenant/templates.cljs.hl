@@ -47,6 +47,22 @@
   (span :class "label label-default margin-02m" name
         (span :class "glyphicon glyphicon-remove")))
 
+(defelem tag-bag [{:keys [title property source-data]}]
+  (div (div :class "row"
+            (div :class "col-md-12"
+                 (span :style "white-space: nowrap;" title)
+                 (let [selection (cell (first source-data))]
+                   (div :class "pull-right "
+                        (combo-box :data source-data :on-change #(reset! selection %))
+                        (button :class "btn btn-primary btn-xs"
+                                :type "button"
+                                :click #(->> (union #{@selection} (current-template-value property))
+                                             (update-property property))
+                                (span :class "glyphicon glyphicon-plus"))
+                        ))))
+       (div
+        (cell= (let [items (seq (property current-template))]
+                 (doall (map #(tag :name %) items)))))))
 
 (defelem template-view [{:keys [name]}]
   (div
@@ -76,11 +92,9 @@
                 (div :class "row col-md-12"
                      (let [pcount (get-property name :page-count)]
                        (div (text "Page count : ~{pcount}"))))
-                (div :class "hdiv")
                 (div :class "row col-md-12"
                      (let [pmcount (get-property name :max-page-count)]
                        (div (text "Max page count : ~{pmcount}"))))
-                (div :class "hdiv")
                 (div :class "row"
                      (div :class "col-md-12"
                           (span :style "white-space: nowrap;" "Fixed page count")
@@ -164,23 +178,10 @@
                              :click #(do (update-property :client-requests? (neg-prop :client-requests?)) true)))))
 
              (div :class "hdiv")
-             (div :class "row"
-                  (div :class "col-md-12"
-                       (span :style "white-space: nowrap;" "Page formats")
-                       (let [selection (cell "A4")]
-                         (div :class "pull-right "
-                              (combo-box :data ["A4" "A6" "A3" "A2" "A1"] :on-change #(reset! selection %))
-                              (button :class "btn btn-primary btn-xs"
-                                      :type "button"
-                                      :click #(->> (union #{@selection} (current-template-value :page-formats))
-                                                   (update-property :page-formats))
-                                      (span :class "glyphicon glyphicon-plus"))
-                              ))))
-
-             (div
-              (cell= (let [page-formats (seq (:page-formats current-template))]
-                       (println page-formats)
-                       (doall (map #(tag :name %) page-formats))))))
+             (tag-bag :title "Available page formats" :property :page-formats :source-data ["A1" "A2" "A3" "A4" "A5" "A6"])
+             (div :class "hdiv")
+             (tag-bag :title "Available print surfaces" :property :printing-surfaces :source-data ["Paper" "Wood" "Metal"])
+             )
         )))
 
 (defelem templates-view []
@@ -188,7 +189,6 @@
        (div :id "template-edit"
             (template-edit))
        (div :id "templates-grid"
-            (cell= (paged-list :nodes-per-page 3
-                               :change-page-func change-page
-                               :data  (doall (map #(template-view :name (:name %)) project-templates)))))
-  ))
+           (paged-list :nodes-per-page 3
+                       :to-element #(template-view :name (:name %))
+                       :change-page-func change-page))))

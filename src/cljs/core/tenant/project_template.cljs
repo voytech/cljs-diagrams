@@ -38,7 +38,7 @@
   (index-of @project-templates (by-name name)))
 
 (defn- next-default-name [name index]
-  (let [found-name (by-name name)]
+  (let [found-name (first (filter #(= name (:name %)) @all-templates))]
     (if (not (nil? found-name))
       (recur (str DEFAULT_NAME " " index) (inc index))
       name)))
@@ -48,7 +48,7 @@
         (= (:name @current-template) name)) false))
 
 (defn add-empty-template []
-  (let [name (next-default-name DEFAULT_NAME (count @project-templates))
+  (let [name (next-default-name DEFAULT_NAME (count @all-templates))
         template (ProjectTemplate. name
                                    DEFAULT_DESCRIPTION
                                    1
@@ -58,6 +58,7 @@
                                    true
                                    #{}
                                    false)]
+    (println (str "Adding template: " (.stringify js/JSON (clj->js template))))
     (swap! all-templates conj template)))
 
 (defn- silent-update [index template]
@@ -70,6 +71,7 @@
   (when (not (nil? @current-template))
     (swap! current-template assoc-in [property] value)
     (silent-update @current-template-index  @current-template)
+   ; (swap! all-templates assoc-in)
     ))
 
 (defn- merge-current [template]
@@ -114,14 +116,15 @@
     (< start (dec (count @all-templates)))))
 
 (defn change-page [pagenr items-per-page]
-  (let [start  (* (- pagenr 1) items-per-page)
-        end  (+ start items-per-page)
-        subv (subvec @all-templates start end)
-        ]
-     (println (str "change page : " pagenr ", " start ", " end))
-     (reset! project-templates subv)
-     (check-page (inc pagenr) items-per-page)
-    ))
+  (when (check-page pagenr items-per-page)
+    (let [start  (* (- pagenr 1) items-per-page)
+          end  (+ start items-per-page)
+          subv (subvec @all-templates start end)
+          ]
+      (println (str "change page : " pagenr ", " start ", " end))
+      (reset! project-templates subv)
+      subv
+      )))
 
 (defn init-templates []
   (when (empty? @project-templates)

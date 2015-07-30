@@ -43,11 +43,16 @@
                     :click #(update-property property (inc (current-template-value property)))
                     (span :class "glyphicon glyphicon-plus")))))
 
-(defelem tag [{:keys [name]}]
-  (span :class "label label-default margin-02m" name
+(defelem tag [{:keys [name on-click active?]}]
+  (span :click #(on-click name) :class (cell=  {:tag true
+                                                :label true
+                                                :label-default (not (active?))
+                                                :label-primary (active?)
+                                                :margin-02m true
+                                                }) name
         (span :class "glyphicon glyphicon-remove")))
 
-(defelem tag-bag [{:keys [title property source-data]}]
+(defelem tag-bag [{:keys [title s-property t-property source-data]}]
   (div (div :class "row"
             (div :class "col-md-12"
                  (span :style "white-space: nowrap;" title)
@@ -56,13 +61,16 @@
                         (combo-box :data source-data :on-change #(reset! selection %))
                         (button :class "btn btn-primary btn-xs"
                                 :type "button"
-                                :click #(->> (union #{@selection} (current-template-value property))
-                                             (update-property property))
+                                :click #(->> (union #{@selection} (current-template-value s-property))
+                                             (update-property s-property))
                                 (span :class "glyphicon glyphicon-plus"))
                         ))))
        (div
-        (cell= (let [items (seq (property current-template))]
-                 (doall (map #(tag :name %) items)))))))
+        (cell= (let [items (seq (s-property current-template))]
+                 (doall (map #(tag :name %
+                                   :on-click (fn [name]
+                                               (update-property t-property name))
+                                   :active? (fn [] (= % (t-property current-template)))) items)))))))
 
 (defelem template-view [{:keys [name]}]
   (div
@@ -178,9 +186,13 @@
                              :click #(do (update-property :client-requests? (neg-prop :client-requests?)) true)))))
 
              (div :class "hdiv")
-             (tag-bag :title "Available page formats" :property :page-formats :source-data ["A1" "A2" "A3" "A4" "A5" "A6"])
+             (tag-bag :title "Available page formats"
+                      :t-property :current-format
+                      :s-property :page-formats :source-data ["A1" "A2" "A3" "A4" "A5" "A6"])
              (div :class "hdiv")
-             (tag-bag :title "Available print surfaces" :property :printing-surfaces :source-data ["Paper" "Wood" "Metal"])
+             (tag-bag :title "Available print surfaces"
+                      :t-property :current-surface
+                      :s-property :printing-surfaces :source-data ["Paper" "Wood" "Metal"])
              )
         )))
 

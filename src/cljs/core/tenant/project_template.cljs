@@ -1,6 +1,6 @@
 (ns core.tenant.project-template
   (:require [tailrecursion.javelin :refer [cell destroy-cell! set-cell!]]
-            [core.actions :as actions]
+            [core.project.settings :refer [settings!]]
             )
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
@@ -21,8 +21,10 @@
                             fixed-count?
                             max-page-count
                             page-formats
+                            current-format
                             custom-format?
                             printing-surfaces
+                            current-surface
                             client-requests?])
 
 (defn- index-of [coll v]
@@ -55,8 +57,10 @@
                                    false
                                    15
                                    #{}
+                                   nil
                                    true
                                    #{}
+                                   nil
                                    false)]
     (println (str "Adding template: " (.stringify js/JSON (clj->js template))))
     (swap! all-templates conj template)))
@@ -128,4 +132,11 @@
 
 (defn init-templates []
   (when (empty? @project-templates)
-    (dotimes [n 20] (add-empty-template))))
+    (dotimes [n 20] (add-empty-template)))
+
+  (cell= (when (not (nil? current-template))
+           (let [pcount (:page-count current-template)]
+             (settings! pcount :pages :count))))
+  (cell= (when (not (nil? current-template))
+           (let [format (:current-format current-template)]
+             (settings! format :page-format)))))

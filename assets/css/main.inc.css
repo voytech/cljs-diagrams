@@ -257,3 +257,15 @@ h1 {
   border-width: 1px 0;
   margin: 1px 0;
 }
+
+.tag {
+}
+
+.tag:hover{
+ cursor:pointer;
+ background-color: #f0ad4e;
+}
+
+.tag .selected{
+  background-color: #337ab7;
+}

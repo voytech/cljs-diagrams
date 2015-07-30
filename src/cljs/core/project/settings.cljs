@@ -33,9 +33,9 @@
                         :visible true
                         :attract 15
                         :interval 50}
-                     :multi-page false ;; TODO: This should be simplified - remove multi-page
+                     :multi-page true;; TODO: This should be simplified - remove multi-page
                      :pages {
-                             :count 4
+                             :count 1
                              :two-sided false
                              }
                      :zoom 1}))

@@ -39,26 +39,6 @@
   )
 )
 
-;; (defn- properties [jsobj]
-;;   (let [props (atom [])]
-;;     (goog.object/forEach jsobj
-;;                          (fn [val key obj]
-;;                            (when (not (= (type val) js/Function))
-;;                              (swap! props conj key))))
-;;     @props))
-
-
-;; (defn- reactive-properties [obj]
-;;   (let [propcel (cell {})]
-;;     (doseq [property (properties obj)]
-;;       (let [val (goog.object/get obj property)]
-;;         (.defineProperty js/Object obj property (js-obj
-;;                                                  "set" #(swap! propcel assoc-in [(keyword property)] %)
-;;                                                  "get" #(get-in @propcel [(keyword property)])))
-;;         (goog.object/set obj property val))
-;;        propcel
-;;     ))
-;; )
 
 
 (defn create-entity
@@ -98,3 +78,5 @@
     (key (data entity))))
 
 (def EMPTY (create-entity "empty" (js/Object.)))
+
+(defmulti create-entity-for-type (fn [type data params] type))

@@ -83,18 +83,16 @@
       (.renderAll (:canvas (proj-selected-page))))
     ))
 
-
-
+(defn- assert-keyword [tokeyword]
+  (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 (defn proj-create-page [id]
   (let [page {:canvas (js/fabric.Canvas. id)
               :buffer {}
               :groups {}
-              :id id }]
+              :id (assert-keyword id)
+              :number (id2idx id) }]
     (swap! project assoc-in [:pages (keyword id)] page)))
-
-(defn- assert-keyword [tokeyword]
-  (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 (defn proj-page-by-id [id]
   (let [keyword-id (assert-keyword id)]

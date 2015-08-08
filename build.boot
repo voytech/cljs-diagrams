@@ -70,7 +70,10 @@
   (comp (watch)
         (hoplon)
         (cljs :source-map true)
-        (start-server-task :namespace 'core.api :port 3000 :join false)))
+        (start-server-task :namespace ['core.api
+                                       'core.services.tenant.templates-service]
+                           :port 3000
+                           :join false)))
 
 ;;This task should give also reload and cljs-repl
 (deftask test-driven-dev

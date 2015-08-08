@@ -73,3 +73,14 @@
 (defn create-circle-entity [])
 
 (defn create-rect-entity [])
+
+;;dispatch methods for creating different kinds of supported entities.
+
+(defmethod entities/create-entity-for-type "background" [type data params]
+  (create-background-entity data params))
+
+(defmethod entities/create-entity-for-type "text" [type data params]
+  (create-text-entity data params))
+
+(defmethod entities/create-entity-for-type "image" [type data params]
+  (create-image-entity data params))

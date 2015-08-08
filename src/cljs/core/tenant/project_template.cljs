@@ -1,6 +1,8 @@
 (ns core.tenant.project-template
   (:require [tailrecursion.javelin :refer [cell destroy-cell! set-cell!]]
             [core.project.settings :refer [settings!]]
+            [core.project.project-services :refer [serialize deserialize]]
+            [core.api.api :as api]
             )
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
@@ -110,7 +112,10 @@
       (println (str "Loaded template " (.stringify js/JSON (clj->js @current-template)))))))
 
 (defn save-template []
-  (println "Saving template"))
+  (println "Saving template")
+  (let [serialized-project-data (serialize)]
+    (println (str "serialized " (.stringify js/JSON (clj->js serialized-project-data))))
+    (api/save-template! serialized-project-data)))
 
 (defn templates []
   @project-templates)

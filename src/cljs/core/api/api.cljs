@@ -11,3 +11,5 @@
 (def register!  (mkremote 'core.api/register  state error loading))
 (def login!     (mkremote 'core.api/login     state error loading))
 (def logout!    (mkremote 'core.api/logout    state error loading))
+
+(def save-template! (mkremote 'core.services.tenant.templates-service/save-template state error loading))

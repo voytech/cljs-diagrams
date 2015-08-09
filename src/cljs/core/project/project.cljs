@@ -225,8 +225,7 @@
                                )))
 
 (defn dispose-page [domid]
-
-)
+ )
 
 (defn create-page [id]
   (when (nil? (by-id id))
@@ -287,6 +286,14 @@
   (cell= (manage-settings settings))
   (cell= (select-page (get-in project [:page-index])))
 )
+
+(defn cleanup-project-data []
+ (doseq [page (:pages project)]
+   (remove-page (if (keyword? (:id page)) (name (:id page)) (:id page))))
+ (reset! project {:page-index 0
+                  :pages {}
+                  :current-page-id :page-0})
+ (reset! e/entities {}))
 
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type

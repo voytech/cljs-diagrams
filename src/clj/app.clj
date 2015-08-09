@@ -17,7 +17,7 @@
 
 (defn start [port path namespace join]
   (reset! server (->
-                  (castra namespace)
+                  (apply castra namespace)
                   (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
                   (wrap-file (or path public-path))
                   (wrap-index (or path public-path))

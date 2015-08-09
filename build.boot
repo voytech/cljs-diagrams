@@ -41,7 +41,7 @@
   )
 
 
-(deftask start-server-task [n namespace    SYM  sym  "The castra handler(s) to serve."
+(deftask start-server-task [n namespace   SYM  [sym]  "The castra handler(s) to serve."
                      d docroot       PATH str  "The directory to serve."
                      p port          PORT int  "The port to listen on. (Default: 8000)"
                      j join          JOIN bool "Wait for server."]
@@ -50,7 +50,7 @@
         path  (or docroot "resources/public" )]
     (boot/with-pre-wrap fileset
       ;verify if it is running then just skip.
-      (when (not running) (start port! path namespace join?))
+      (when (not @running) (start port! path namespace join?))
       fileset)))
 
 (deftask continous
@@ -70,8 +70,7 @@
   (comp (watch)
         (hoplon)
         (cljs :source-map true)
-        (start-server-task :namespace ['core.api
-                                       'core.services.tenant.templates-service]
+        (start-server-task :namespace ['core.api 'core.services.tenant.templates-service]
                            :port 3000
                            :join false)))
 

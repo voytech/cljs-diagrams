@@ -76,11 +76,29 @@
 
 ;;dispatch methods for creating different kinds of supported entities.
 
-(defmethod entities/create-entity-for-type "background" [type data params]
-  (create-background-entity data params))
+(defmethod entities/create-entity-for-type "background" [type data-obj]
+  (entities/create-entity "background" data-obj {}))
 
-(defmethod entities/create-entity-for-type "text" [type data params]
-  (create-text-entity data params))
+(defmethod entities/create-entity-for-type "text" [type data-obj]
+  (entities/create-entity "text" data-obj
+                          {"mouseup" #(show-popup-func % "text-edit" 3)
+                           "added"  #(show-popup-func data-obj "text-create")}))
 
-(defmethod entities/create-entity-for-type "image" [type data params]
-  (create-image-entity data params))
+(defmethod entities/create-entity-for-type "image" [type data-obj]
+  (entities/create-entity "image" data-obj
+                          {"mouseup" #(show-popup-func % "editing" 3)})
+  )
+
+(defmethod entities/create-entity-for-type "slot" [type data-obj]
+  (entities/create-entity "slot" data-obj
+                          {"collide" (fn [src trg])
+                           "collide-end" (fn [src trg]
+                                           (let [trgsrc (:src trg)
+                                                 srcsrc (:src src)]
+                                             (.set trgsrc "width"  (.getWidth srcsrc)) ;;this can be done by map
+                                             (.set trgsrc "height" (.getHeight srcsrc))
+                                             (.set trgsrc "left" (.getLeft srcsrc))
+                                             (.set trgsrc "top" (.getTop srcsrc))
+                                             (.set trgsrc "scaleX" 1)
+                                             (.set trgsrc "scaleY" 1)))}
+                          ))

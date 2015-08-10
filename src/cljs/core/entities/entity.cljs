@@ -8,6 +8,7 @@
 
 (def entities (atom {}))
 
+(declare js-obj-id)
 
 (defn uuid []
   (.uuid js/Math 10 16))
@@ -44,7 +45,7 @@
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
   ([type src event-handlers]
-     (let [uid (uuid)
+     (let [uid (or (js-obj-id src) (uuid)) ; if we are re-creating entity after loading page - there is already identifier.
            propc (jc/js-cell src) ;(reactive-properties src)
            entity  (Entity. uid type src propc event-handlers)]
        (.defineProperty js/Object src ID  (js-obj "value" (:uid entity)
@@ -79,4 +80,4 @@
 
 (def EMPTY (create-entity "empty" (js/Object.)))
 
-(defmulti create-entity-for-type (fn [type data params] type))
+(defmulti create-entity-for-type (fn [type data-obj] type))

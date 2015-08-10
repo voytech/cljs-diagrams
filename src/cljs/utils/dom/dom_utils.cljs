@@ -10,8 +10,10 @@
   (if (nil? (by-id id))
     (.setTimeout js/window wait-on-element 50 id callback)
     ((fn []
-        (callback id)))
-    ))
+        (callback id)))))
+
+(defn do-after [callback milis]
+  (.setTimeout js/window callback milis))
 
 (defn console-log-cond [obj] (when (true? debug) (console-log obj)))
 

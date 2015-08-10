@@ -88,10 +88,8 @@
 
 (defn proj-create-page [id]
   (let [page {:canvas (js/fabric.Canvas. id)
-              :buffer {}
-              :groups {}
               :id (assert-keyword id)
-              :number (id2idx id) }]
+              :number (id2idx id)}]
     (swap! project assoc-in [:pages (keyword id)] page)))
 
 (defn proj-page-by-id [id]
@@ -225,7 +223,10 @@
                                )))
 
 (defn dispose-page [domid]
- )
+  (let [page (proj-page-by-id domid)
+        canvas (:canvas page)]
+       (.clear canvas)
+       (.dispose canvas)))
 
 (defn create-page [id]
   (when (nil? (by-id id))
@@ -237,8 +238,10 @@
 
 (defn remove-page [id]
   (when (not (nil? (by-id id)))
+    (println (str "removing page " id))
     (dispose-page id)
-    (dom/remove-element (dom/parent (by-id id)))))
+    (dom/remove-element (dom/parent (by-id id)))
+    (changed)))
 
 (defn select-page [index]
   (let [id (idx2id index)]
@@ -262,8 +265,7 @@
     {:differs (not (= dom-pages-cnt target-num))
      :actual-num dom-pages-cnt
      :target-num target-num
-     :multi-page multi-page})
-)
+     :multi-page multi-page}))
 
 (defn- re-page? [{:keys [differs multi-page actual-num] :as diff}]
   (or differs (= 0 actual-num)))
@@ -288,12 +290,18 @@
 )
 
 (defn cleanup-project-data []
- (doseq [page (:pages project)]
-   (remove-page (if (keyword? (:id page)) (name (:id page)) (:id page))))
- (reset! project {:page-index 0
+  (doseq [page (vals (:pages @project))]
+    (->> page :canvas .clear))
+  (reset! e/entities {})
+  (changed))
+
+(defn dispose-workspace []
+  (doseq [page (vals (:pages @project))]
+    (remove-page (if (keyword? (:id page)) (name (:id page)) (:id page))))
+  (reset! project {:page-index 0
                   :pages {}
                   :current-page-id :page-0})
- (reset! e/entities {}))
+  (reset! e/entities {}))
 
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
@@ -321,6 +329,9 @@
 
 ;;
 ;;API methods !
+;;It can be re-factored so that each
+;;entity is added via add-entity multi method.
+;;A dispatch then should be made on entity type.
 ;;
 
 (defn add-entity [entity]

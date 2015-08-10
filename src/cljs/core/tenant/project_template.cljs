@@ -1,8 +1,9 @@
 (ns core.tenant.project-template
   (:require [tailrecursion.javelin :refer [cell destroy-cell! set-cell!]]
             [core.project.settings :refer [settings!]]
-            [core.project.project-services :refer [serialize deserialize]]
-            [core.api.api :as api]
+            [core.project.project-services :refer [serialize deserialize cleanup-project-data]]
+            [core.tenant.api.templates-api :as api]
+            [utils.dom.dom-utils :as dom]
             )
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
@@ -113,9 +114,11 @@
 
 (defn save-template []
   (println "Saving template")
-  (let [serialized-project-data (serialize)]
-    (println (str "serialized " (.stringify js/JSON (clj->js serialized-project-data))))
-    (api/save-template! serialized-project-data)))
+  (->> (serialize) (api/save-template!))
+  (let [serialized (serialize)]
+    (cleanup-project-data)
+    (dom/do-after #(deserialize serialized) 5000))
+  )
 
 (defn templates []
   @project-templates)
@@ -125,15 +128,14 @@
     (< start (dec (count @all-templates)))))
 
 (defn change-page [pagenr items-per-page]
-  (when (check-page pagenr items-per-page)
-    (let [start  (* (- pagenr 1) items-per-page)
-          end  (+ start items-per-page)
-          subv (subvec @all-templates start end)
-          ]
-      (println (str "change page : " pagenr ", " start ", " end))
-      (reset! project-templates subv)
-      subv
-      )))
+   (when (check-page pagenr items-per-page)
+     (let [start  (* (- pagenr 1) items-per-page)
+           end  (+ start items-per-page)
+           subv (subvec @all-templates start end)
+           ]
+       (println (str "change page : " pagenr ", " start ", " end))
+       (reset! project-templates subv)
+       subv)))
 
 (defn init-templates []
   (when (empty? @project-templates)

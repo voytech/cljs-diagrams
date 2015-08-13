@@ -2,13 +2,17 @@
   :project      'photo-collage
   :version      "0.1.0-SNAPSHOT"
   :dependencies '[[boot/core                       "2.0.0-rc10"] ;;rc10
+                  [org.clojure/clojure "1.7.0"]
+                  [org.clojure/clojurescript "0.0-3308"] ;; Need to explicitly provide 0.0-3308 as latest - otherwise it will take older version.
+                  [org.clojure/tools.nrepl "0.2.10"]
                   [adzerk/bootlaces                "0.1.10" :scope "test"]
-                  [tailrecursion/hoplon            "6.0.0-SNAPSHOT"]
-                  [adzerk/boot-cljs                "0.0-2814-3" ]
-                  [adzerk/boot-reload              "0.2.6"]
-                  [pandeiro/boot-http              "0.6.2"]
-                  [tailrecursion/boot-hoplon       "0.1.0-SNAPSHOT"]
-                  [tailrecursion/javelin           "3.7.2"]
+                  [tailrecursion/hoplon            "6.0.0-SNAPSHOT"] ;was:6.0.0-SNAPSHOT ;new 6.0.0-alpha4  - alpha4 doesnt work.
+                  [adzerk/boot-cljs                "0.0-2814-0" ] ;was:0.0-2814-3;new 0.0-3308-0  - this new doesnt work
+                  [adzerk/boot-cljs-repl "0.1.9" :scope "test"] ;current is 0.1.9
+                  [adzerk/boot-reload              "0.3.1"]
+                  [pandeiro/boot-http              "0.6.3-SNAPSHOT"]
+                  [tailrecursion/boot-hoplon       "0.1.1"]; was "0.1.0-SNAPSHOT" new 0.1.1
+                  [tailrecursion/javelin           "3.8.0"];old 3.7.2 new 3.8.0
                   [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
                   [com.datomic/datomic-free        "0.8.4159" :exclusions [commons-codec]] ; this clashes with castra.
@@ -17,21 +21,32 @@
                   [ring/ring                       "1.3.2"]
                   [ring/ring-core                  "1.3.2"]
                   [ring/ring-jetty-adapter         "1.3.2"]
+                  [acyclic/squiggly-clojure "0.1.3-SNAPSHOT"]  ; Possible junk!. Just testing.
                   [voytech/boot-clojurescript.test "0.1.0-SNAPSHOT"]]
-  ;;:asset-paths    #{"assets"}
   :out-path       "resources/public"
   :target-path    "resources/public"
-  :source-paths   #{"src/cljs" "src/clj" "src/hoplon"} ;;Echh still need to refactor to src/main/clj src/main/hoplon
+  :source-paths   #{"src/cljs" "src/clj" "src/hoplon"}
   :test-paths     #{"src/test/cljs" }
   :resource-paths #{"assets"}
   )
 
+;;Support for cider-nrepl.
+(require 'boot.repl)
+(swap! boot.repl/*default-dependencies*
+       concat '[[cider/cider-nrepl "0.10.0-SNAPSHOT"]]) ;;was 0.9.1
+
+(swap! boot.repl/*default-middleware*
+       conj 'cider.nrepl/cider-middleware)
+;;End of cider-nrepl support.
+;;Add support for flycheck-clojure
+(require 'squiggly-clojure.core)
 
 (require
   '[tailrecursion.boot-hoplon :refer :all]
   '[boot.util :refer [sh]]
   '[cemerick.cljs.test :refer :all]
   '[adzerk.boot-cljs :refer :all]
+  '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
   '[adzerk.boot-reload    :refer [reload]]
   '[pandeiro.boot-http :refer [serve]]
   '[boot.core          :as boot]
@@ -59,7 +74,8 @@
         (watch)
         (hoplon)
         (reload)
-        (cljs :source-map true)
+        (cljs-repl)
+        (cljs :source-map true :optimizations :none)
         ))
 
 (deftask dev
@@ -69,7 +85,8 @@
 (deftask dev-server []
   (comp (watch)
         (hoplon)
-        (cljs :source-map true)
+        (cljs-repl)
+        (cljs :source-map true :optimizations :none)
         (start-server-task :namespace ['core.api 'core.services.tenant.templates-service]
                            :port 3000
                            :join false)))

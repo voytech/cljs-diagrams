@@ -10,7 +10,7 @@
 (defn- serialize-page [page]
   (let [canvas (:canvas page)]
     {
-    ;:svg (.toSVG canvas)
+     :svg (.toSVG canvas)
      :id (assert-keyword (:id page))
      :number (:number page)
      :data {
@@ -40,8 +40,6 @@
                                                (doseq [index (range 0 (.-length (.getObjects canvas)))] ;Does it include background ?
                                                  (let [src (.item canvas index)
                                                        ent (first (filter (fn [e] (= (:uid e) (.-refId src))) entities))]
-                                                   (println (str "src" src))
-                                                   (println (str "ent" ent))
                                                    (e/create-entity-for-type (:type ent) src)
                                                    ))
                                                  )
@@ -51,7 +49,7 @@
   (project/cleanup-project-data))
 
 (defn deserialize [data]
-  (println "deserializing")
+  (cleanup-project-data)
   (reset! s/settings (:settings data))
   (doall (map #(load-page %) (->> data :pages (sort-by :number))))
   )

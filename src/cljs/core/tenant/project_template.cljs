@@ -114,11 +114,7 @@
 
 (defn save-template []
   (println "Saving template")
-  (->> (serialize) (api/save-template!))
-  (let [serialized (serialize)]
-    (cleanup-project-data)
-    (dom/do-after #(deserialize serialized) 5000))
-  )
+  (->> (serialize) (api/save-template!)))
 
 (defn templates []
   @project-templates)

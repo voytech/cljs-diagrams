@@ -7,13 +7,13 @@
    [ring.middleware.file             :refer [wrap-file]]
    [ring.middleware.file-info        :refer [wrap-file-info]]
    [ring.middleware.serve-index      :refer [wrap-index]]
-   [tailrecursion.castra.handler     :refer [castra]]))
+   [tailrecursion.castra.handler     :refer [castra]]
+   ))
 
 (def public-path "resources/public")
 
 (def server (atom nil))
 (def running (atom false))
-
 
 (defn start [port path namespace join]
   (reset! server (->
@@ -23,7 +23,7 @@
                   (wrap-index (or path public-path))
                   (wrap-file-info)
                   (run-jetty {:join? join :port port})))
-  (reset! running true)
-)
+  (reset! running true))
+
 (defn run-app [port path]
   (start port path 'core.api true))

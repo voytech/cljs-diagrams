@@ -1,5 +1,6 @@
 (ns core.entities.entities-impl
   (:require [core.entities.entity :as entities]
+            [cljsjs.fabric]
             [utils.dom.dnd-utils :as dnd]
             [utils.dom.dom-utils :as dom]
             [ui.components.popup :as p]

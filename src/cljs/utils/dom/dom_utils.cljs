@@ -1,4 +1,5 @@
-(ns utils.dom.dom-utils)
+(ns utils.dom.dom-utils
+  (:require [cljsjs.jquery]))
 
 (def debug false)
 

@@ -1,6 +1,7 @@
 (ns core.entities.entity
   (:require [data.js-cell :as jc]
-            [tailrecursion.javelin :refer [cell destroy-cell!]])
+            [tailrecursion.javelin :refer [cell destroy-cell!]]
+            [cljs-uuid-utils.core :as u])
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
 
@@ -11,7 +12,9 @@
 (declare js-obj-id)
 
 (defn uuid []
-  (.uuid js/Math 10 16))
+  (-> u/make-random-uuid u/uuid-string)
+  ;(.uuid js/Math 10 16)
+  )
 
 (defprotocol IEntity
   (data [this])

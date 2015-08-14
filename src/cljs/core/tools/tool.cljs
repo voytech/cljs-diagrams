@@ -1,9 +1,12 @@
-(ns core.tools.tool)
+(ns core.tools.tool
+  (:require [cljs-uuid-utils.core :as u]))
 
 (def tools (atom {}))
 
 (defn uuid []
-  (.uuid js/Math 10 16))
+  (-> u/make-random-uuid u/uuid-string)
+  ;(.uuid js/Math 10 16)
+  )
 
 
 (defrecord Tool [uid

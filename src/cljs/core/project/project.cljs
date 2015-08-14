@@ -1,5 +1,7 @@
 (ns core.project.project
-  (:require [utils.dom.dom-utils :as dom]
+  (:require [cljsjs.jquery]
+            [cljsjs.fabric]
+            [utils.dom.dom-utils :as dom]
             [utils.dom.dnd-utils :as dnd]
             [tailrecursion.javelin :refer [cell]]
             [tailrecursion.hoplon :refer [canvas div $text by-id append-child add-children! ]]

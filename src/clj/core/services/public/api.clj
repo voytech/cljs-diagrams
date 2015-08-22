@@ -1,4 +1,4 @@
-(ns core.api
+(ns core.services.public.api
   (:require [tailrecursion.castra :refer [defrpc ex error *session*]]
             [cemerick.friend :refer [authenticated *identity*]]))
 

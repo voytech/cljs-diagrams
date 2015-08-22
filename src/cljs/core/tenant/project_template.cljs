@@ -1,7 +1,9 @@
 (ns core.tenant.project-template
   (:require [tailrecursion.javelin :refer [cell destroy-cell! set-cell!]]
             [core.project.settings :refer [settings!]]
-            [core.project.project-services :refer [serialize deserialize cleanup-project-data]]
+            [core.project.project-services :refer [serialize-project-data
+                                                   deserialize-project-data
+                                                   cleanup-project-data]]
             [core.tenant.api.templates-api :as api]
             [utils.dom.dom-utils :as dom]
             )
@@ -113,8 +115,12 @@
       (println (str "Loaded template " (.stringify js/JSON (clj->js @current-template)))))))
 
 (defn save-template []
-  (println "Saving template")
-  (->> (serialize) (api/save-template!)))
+  (->> {
+        :project (serialize-project-data)
+        :template-name (:name @current-template)
+        ;:template @current-template
+        }
+       (api/save-template!)))
 
 (defn templates []
   @project-templates)

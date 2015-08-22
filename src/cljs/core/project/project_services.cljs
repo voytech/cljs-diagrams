@@ -19,14 +19,6 @@
            }
     }))
 
-
-(defn serialize []
-  {
-   :settings @s/settings
-   :pages (doall (map #(serialize-page %) (vals (:pages @project/project))))
-  })
-
-
 (defn- load-page [page-json]
   (let [canvas-clj-data (-> page-json :data :canvas)
         canvas-js-data (-> canvas-clj-data clj->js)
@@ -48,7 +40,13 @@
 (defn cleanup-project-data []
   (project/cleanup-project-data))
 
-(defn deserialize [data]
+(defn serialize-project-data []
+  {
+   :settings @s/settings
+   :pages (doall (map #(serialize-page %) (vals (:pages @project/project))))
+  })
+
+(defn deserialize-project-data [data]
   (cleanup-project-data)
   (reset! s/settings (:settings data))
   (doall (map #(load-page %) (->> data :pages (sort-by :number))))

@@ -8,7 +8,7 @@
 (defc error nil)
 (defc loading [])
 
-(def save-template! (mkremote 'core.services.tenant.templates-service/save-template state error loading))
+(def save-template! (mkremote 'core.services.tenant.templates-service/save-template state error loading :url "/core/services/tenant"))
 (def load-template! nil)
 (def all-templates! nil)
 (def templates-like! nil)

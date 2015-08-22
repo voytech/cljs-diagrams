@@ -21,6 +21,7 @@
    [cemerick.friend                  :as friend]
    [compojure.core :refer :all]
    [compojure.route :as route]
+   [core.auth.roles :refer :all]
    ))
 
 (def public-path "resources/public")
@@ -33,9 +34,9 @@
                          (concat
                           [(POST "/login" [] logged-in-handler)]
                           (restricted-castra-routes [{:namespace 'core.services.tenant
-                                                      :roles [:TENANT]}
+                                                      :roles [:core.auth.roles/TENANT]}
                                                      {:namespace 'core.services.user
-                                                      :roles [:TENANT :USER]}
+                                                      :roles [:core.auth.roles/USER]}
                                                      {:namespace 'core.services.public ;Empty vector indicates not authorized access.
                                                       :roles []}])))
 

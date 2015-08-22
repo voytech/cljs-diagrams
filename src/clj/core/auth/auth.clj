@@ -5,11 +5,11 @@
             [ring.util.request :as rur]
             [cemerick.friend.workflows :as cfw]
             [compojure.core    :refer :all]
-            [cemerick.friend :as friend])
+            [cemerick.friend :as friend]
+            [core.auth.roles :refer :all])
   ;(:import  [java.io ByteArrayInputStream ByteArrayOutputStream])
   )
 
-(derive ::TENANT ::USER)
 
 (defn username-passwd-auth? [request]
   (let [[username password] (cljson->clj (rur/body-string request))]
@@ -23,7 +23,7 @@
 (def global-credential-fn
   (fn [{:keys [username password]}]
       {:username username
-       :roles [::USER]
+       :roles [:core.auth.roles/USER]
        }))
 
 (def global-unauthorized-handler

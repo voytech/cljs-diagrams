@@ -43,11 +43,11 @@
        }))
 
 (def global-unauthorized-handler
- (fn [req] {:satus 403 :body "Unauthorized (friend handler)"})
+ (fn [req] {:status 403 :body "Unauthorized (friend handler)"})
 )
 
 (def global-unauthenticated-handler
- (fn [req] {:satus 401 :body "Unauthenticated (friend handler)"})
+ (fn [req] {:status 401 :body "Unauthenticated (friend handler)"})
 )
 
 ;; ONLY tests.
@@ -58,10 +58,10 @@
 [& {:keys [credential-fn realm] :as basic-config}]
   (fn [req]
     (println "castra workflow:")
-    (cfw/make-auth {:username "wojtek"
-                    :roles [:TENANT]}
-                   {:cemerick.firend/workflow :castra
-                    :cemerick.firend/redirect-on-auth false})
+     (cfw/make-auth {:username "wojtek"
+                     :roles [:USER]}
+                    {:cemerick.friend/workflow :castra
+                     :cemerick.friend/redirect-on-auth? false})
     ;; (let [auth-data (username-passwd-auth? req)]
     ;;     (println (str "auth-data " auth-data))
     ;;     (if auth-data

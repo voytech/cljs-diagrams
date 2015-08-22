@@ -6,7 +6,6 @@
 
 (defn- index-file [request root-path]
   (when (= :get (:request-method request))
-    (println (str (:request-method request) ":" (codec/url-decode (request/path-info request))))
     (let [path (subs (codec/url-decode (request/path-info request)) 1)]
       (when (empty? path)
         (println (str "serving index.html from " root-path "/index.html" ))

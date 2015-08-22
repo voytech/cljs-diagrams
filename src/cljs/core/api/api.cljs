@@ -8,6 +8,6 @@
 (defc error nil)
 (defc loading [])
 
-(def register!  (mkremote 'core.services.public.api/register  state error loading :url "/core/services/public"))
-(def login!     (mkremote 'core.services.public.api/login     state error loading :url "/core/services/public"))
+(def register!  (mkremote 'core.services.public.api/register  state error loading ["/core/services/public"]))
+(def login!     (mkremote 'core.services.public.api/login     state error loading ["/core/services/public"]))
 (def logout!    (mkremote 'core.services.public.api/logout    state error loading :url "/core/services/public"))

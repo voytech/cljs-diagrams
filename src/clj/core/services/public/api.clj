@@ -7,9 +7,8 @@
   {:identity username})
 
 (defrpc register [user passwd email]
-  (authenticated {:message "register requires authentication"}
-                 (println (str *identity*))
-                 (println (str "User: " user ", Ema" email ", Password " passwd))))
+  (println (str *identity*))
+  (println (str "User: " user ", Ema" email ", Password " passwd)))
 
 (defrpc logout []
   (println "Logged out!"))

@@ -10,6 +10,7 @@
    [ring.middleware.params           :refer [wrap-params]]
    [ring.middleware.nested-params    :refer [wrap-nested-params]]
    [ring.middleware.keyword-params   :refer [wrap-keyword-params]]
+   [ring.middleware.logger           :as logger]
   ; [tailrecursion.castra.handler     :refer [castra]]
    [core.auth.castra-endpoints       :refer [restricted-castra-routes]]
    [core.auth.auth                   :refer [global-credential-fn
@@ -37,7 +38,7 @@
 
                   (friend/authenticate {:unauthorized-handler    global-unauthorized-handler
                                         :unauthenticated-handler global-unauthenticated-handler
-                                        :allow-anon? false
+                                        :allow-anon? true
                                         :workflows [(username-password-authentication-workflow
                                                     :credential-fn global-credential-fn)
                                                     ]})
@@ -48,6 +49,7 @@
                   (wrap-keyword-params)
                   (wrap-nested-params)
                   (wrap-params)
+                 ; (logger/wrap-with-logger)
                   (run-jetty {:join? join :port port})))
   (reset! running true))
 

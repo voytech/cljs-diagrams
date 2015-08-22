@@ -33,8 +33,9 @@ finally pass castra handler restricted to all child namespaces of main namespace
       (POST (if-not (.startsWith req-path "/") (str "/" req-path) req-path)
             []
             (if (empty? roles)
-                (apply castra child-ns)
-                (friend/wrap-authorize (apply castra child-ns) roles))))))
+                 (apply castra child-ns)
+                 (friend/wrap-authorize (apply castra child-ns) roles))
+            ))))
 
 (defn restricted-castra-routes [castra-routes]
   (doall (map #(protect-castra-route %) castra-routes)))

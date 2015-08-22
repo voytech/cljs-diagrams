@@ -6,13 +6,15 @@
                   [org.clojure/clojurescript "0.0-3308"] ;; Need to explicitly provide 0.0-3308 as latest - otherwise it will take older version.
                   [org.clojure/tools.nrepl "0.2.10"]
                   [adzerk/bootlaces                "0.1.10" :scope "test"]
-                  [tailrecursion/hoplon            "6.0.0-SNAPSHOT"] ;was:6.0.0-SNAPSHOT ;new 6.0.0-alpha4  - alpha4 doesnt work.
                   [adzerk/boot-cljs                "0.0-3308-0" ] ;was:0.0-2814-3;new 0.0-3308-0 - inc.js ext.js no longer supported. Use cljsjs instead.
                   [adzerk/boot-cljs-repl "0.1.9" :scope "test"] ;current is 0.1.9
                   [adzerk/boot-reload              "0.3.1"]
                   [pandeiro/boot-http              "0.6.3-SNAPSHOT"]
+                  [tailrecursion/hoplon            "6.0.0-SNAPSHOT"] ;was:6.0.0-SNAPSHOT ;new 6.0.0-alpha4  - alpha4 doesnt work.
                   [tailrecursion/boot-hoplon       "0.1.1"]; was "0.1.0-SNAPSHOT" new 0.1.1
                   [tailrecursion/javelin           "3.8.0"];old 3.7.2 new 3.8.0
+                  [tailrecursion/cljson            "1.0.7"]
+                  [tailrecursion/castra            "2.2.2"]
                   [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
                   [com.cemerick/friend             "0.2.1"]
@@ -20,7 +22,6 @@
                   [bultitude                       "0.2.7"]
                   [com.datomic/datomic-free        "0.8.4159" :exclusions [commons-codec]] ; this clashes with castra.
                   [clj-tagsoup                     "0.3.0"]
-                  [tailrecursion/castra            "2.2.2"]
                   [com.cognitect/transit-clj       "0.8.281"]
                   [ring/ring                       "1.3.2"]
                   [ring/ring-core                  "1.3.2"]

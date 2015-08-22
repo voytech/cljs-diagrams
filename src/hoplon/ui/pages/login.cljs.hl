@@ -1,6 +1,6 @@
 (ns ui.pages.login
   (:require [core.router.router :as r]
-            [core.api.api :as a]))
+            [core.auth :as a]))
 
 (defelem login[]
  (div :id "login-page" :class "container-fluid col-md-12 row"
@@ -8,8 +8,7 @@
            (div :id "logo" :class "logo text-center" "PHOTO COLLAGE BETA" )
            (hr  :id "separator" :class "separator")
            (div :id "login-centered" :class "center-block"
-                (form :on-submit #(a/login! {:authentication {:username (val-id "username")
-                                                              :password (val-id "password")}})
+                (form :on-submit #(a/login (val-id "username") (val-id "password"))
                  (div :class "form-group"
                       (label :for "username" "Enter Username")
                       (input :class "form-control input-sm" :type "text" :id "username"))

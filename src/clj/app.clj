@@ -16,6 +16,7 @@
    [core.auth.auth                   :refer [global-credential-fn
                                              global-unauthorized-handler
                                              global-unauthenticated-handler
+                                             logged-in-handler
                                              username-password-authentication-workflow]]
    [cemerick.friend                  :as friend]
    [compojure.core :refer :all]
@@ -29,12 +30,14 @@
 (defn start [port path namespace join]
   (reset! server (->
                   (apply routes
-                         (restricted-castra-routes [{:namespace 'core.services.tenant
-                                                     :roles [:TENANT]}
-                                                    {:namespace 'core.services.user
-                                                     :roles [:TENANT :USER]}
-                                                    {:namespace 'core.services.public ;Empty vector indicates not authorized access.
-                                                     :roles []}]))
+                         (concat
+                          [(POST "/login" [] logged-in-handler)]
+                          (restricted-castra-routes [{:namespace 'core.services.tenant
+                                                      :roles [:TENANT]}
+                                                     {:namespace 'core.services.user
+                                                      :roles [:TENANT :USER]}
+                                                     {:namespace 'core.services.public ;Empty vector indicates not authorized access.
+                                                      :roles []}])))
 
                   (friend/authenticate {:unauthorized-handler    global-unauthorized-handler
                                         :unauthenticated-handler global-unauthenticated-handler

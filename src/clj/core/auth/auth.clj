@@ -7,7 +7,6 @@
             [compojure.core    :refer :all]
             [cemerick.friend :as friend]
             [core.auth.roles :refer :all])
-  ;(:import  [java.io ByteArrayInputStream ByteArrayOutputStream])
   )
 
 

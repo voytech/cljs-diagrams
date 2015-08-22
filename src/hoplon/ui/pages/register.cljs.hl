@@ -1,5 +1,5 @@
 (ns ui.pages.register
-  (:require [core.api.api :as a]))
+  (:require [core.api.auth :as a]))
 
 (defelem register []
  (div :id "register-page" :class "container-fluid col-md-12 row"

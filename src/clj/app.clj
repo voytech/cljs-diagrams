@@ -11,7 +11,6 @@
    [ring.middleware.nested-params    :refer [wrap-nested-params]]
    [ring.middleware.keyword-params   :refer [wrap-keyword-params]]
    [ring.middleware.logger           :as logger]
-  ; [tailrecursion.castra.handler     :refer [castra]]
    [core.auth.castra-endpoints       :refer [restricted-castra-routes]]
    [core.auth.auth                   :refer [global-credential-fn
                                              global-unauthorized-handler

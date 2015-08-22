@@ -1,6 +1,6 @@
 (ns ui.pages.login
   (:require [core.router.router :as r]
-            [core.auth :as a]))
+            [core.api.auth :as a]))
 
 (defelem login[]
  (div :id "login-page" :class "container-fluid col-md-12 row"

@@ -1,10 +1,6 @@
-(ns core.services.public.api
+(ns core.services.public.auth
   (:require [tailrecursion.castra :refer [defrpc ex error *session*]]
             [cemerick.friend :refer [authenticated *identity*]]))
-
-(defrpc login [{{:keys [username password]} :authentication}]
-  (println (str "User: " username ", Password " password))
-  {:identity username})
 
 (defrpc register [user passwd email]
   (println (str *identity*))

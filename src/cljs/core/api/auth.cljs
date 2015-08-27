@@ -4,17 +4,27 @@
  (:require-macros
     [tailrecursion.javelin :refer [defc defc= cell=]]))
 
-(defc state {})
+(defc register-result {})
+(defc logout-result {})
+(defc login-result {})
 (defc error nil)
 (defc loading [])
 
-(def register!  (mkremote 'core.services.public.auth/register  state error loading ["/core/services/public"]))
+(def register!  (mkremote 'core.services.public.auth/register
+                          register-result
+                          error
+                          loading
+                          ["/core/services/public"]))
 
-(def logout!    (mkremote 'core.services.public.auth/logout    state error loading ["/core/services/public"]))
+(def logout!    (mkremote 'core.services.public.auth/logout
+                          logout-result
+                          error
+                          loading
+                          ["/core/services/public"]))
 
 (defn login [username password]
   (async "/login" `[~username ~password]
-         #() ;success handler
-         #() ;error handler
+         #(reset! login-result %) ;success handler
+         #(reset! error %) ;error handler
          #() ;run always
          :ajax-impl nil))

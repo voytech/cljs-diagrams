@@ -21,13 +21,13 @@
                   [com.cemerick/friend             "0.2.1"]
                   [compojure                       "1.4.0"]
                   [bultitude                       "0.2.7"]
-                  [com.datomic/datomic-free        "0.8.4159" :exclusions [commons-codec]] ; this clashes with castra.
+                  [com.datomic/datomic-free        "0.9.5206" :exclusions [commons-codec]] ; this clashes with castra.
                   [clj-tagsoup                     "0.3.0"]
                   [com.cognitect/transit-clj       "0.8.281"]
                   [ring/ring                       "1.3.2"]
                   [ring/ring-core                  "1.3.2"]
                   [ring/ring-jetty-adapter         "1.3.2"]
-                  [ring.middleware.logger "0.5.0"]
+                  ;[ring.middleware.logger "0.5.0"]
                   [cljsjs/fabric "1.5.0-0"]
                   [cljsjs/jquery "2.1.4-0"]
                   [cljsjs/jquery-ui "1.11.3-1"]

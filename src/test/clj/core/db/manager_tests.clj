@@ -5,6 +5,12 @@
 (deftest test-load-properties
   (is (= "datomic:free://localhost:4334" (:db-url (load-configuration "resources/schema/properties.edn")))))
 
-(deftest test-load-schema [])
+(deftest test-load-schema
+  (is (not (nil? (load-file "resources/schema/public_schema.edn")))))
+
 (deftest test-initialize-db
-  (is (= 4 4)))
+  (let [schema-map (load-file "resources/schema/public_schema.edn")
+        init-result @(initialize-database SHARED-DB schema-map)]
+    (println init-result)
+    (is (not (nil? init-result)))
+    (is (not (nil? (-> init-result :db-after))))))

@@ -26,7 +26,7 @@
   :db/doc "A reference to tenant database url."
   :db.install/_attribute :db.part/db}
 
- {:db/id #db/id[]:db.part/user
+ {:db/id #db/id[:db.part/user]
   :db/ident :core.auth.roles/TENANT}
 
  {:db/id #db/id[:db.part/user]

@@ -1,4 +1,4 @@
-# photo-books
+# photo-collage
 
 A sample clojure/clojure-scrip/hoplon appliaction for creating photo calendars, photo books and similar things
 ## Dependencies

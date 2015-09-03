@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [core.db.manager :refer :all]))
 
+;Wait !! for test purposes - only mem db.
 (deftest test-load-properties
   (is (= "datomic:free://localhost:4334" (:db-url (load-configuration "resources/schema/properties.edn")))))
 

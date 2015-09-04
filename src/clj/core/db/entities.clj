@@ -51,16 +51,26 @@
          entity-var
          )))
 
-(defmacro pre [& defentities]
+(defmacro init [opts & defentities]
   `(do (create-ns 'mappings.runtime)
       (def ^:dynamic *entities-frequencies* nil)
-      (binding [*entities-frequencies* (atom {}) ] ; may use no atom just a map and the update var root binding :)
+      (binding [*entities-frequencies* (atom {})
+                *mapping-detection* (:mapping-detection ~opts)] ; may use no atom just a map and the update var root binding :)
         ~@defentities
         (intern 'mappings.runtime 'entities-frequencies @*entities-frequencies*))))
 
+(defn- var-by-symbol [symbol]
+  (-> symbol resolve var-get))
+
 (defn find-mapping [service-entity]
   (require 'mappings.runtime)
-  )
+  (->> (mapv #(get mapping.runtime/entities-frequencies %) (keys service-entity))
+           concat
+           frequencies
+           (apply max-key val)
+           key
+           val
+           var-by-symbol))
 
 (defn map-entity
   ([source])

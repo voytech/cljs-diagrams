@@ -1,4 +1,5 @@
-(ns core.db.entities)
+(ns core.db.entities
+  (:require [datomic.api :as d]))
 
 ; Below mapping should be defined using concise macro defined api as follows:
 ; (defentity user-login
@@ -23,6 +24,17 @@
                                 :user/name     {:key :username},
                                 :user/password {:key :password}
                  })
+(defn var-by-symbol [symbol]
+  (-> symbol resolve var-get))
+
+(defn inject-def [ns var-name value]
+ (intern ns var-name value))
+
+(defn entities-frequencies []
+  (var-by-symbol 'mappings.runtime/entities-frequencies))
+
+(defn inject-dynamic-def [ns var-name value]
+  (.setDynamic (intern ns var-name value)))
 
 
 (defn- validate [property-1 direction property-2 with opts-map]
@@ -38,43 +50,50 @@
 (defn- property-to-entity [property entity-name]
   )
 
-(defmacro defentity [entity-name opts & rules]
+(defn concat-into [& items]
+  (into [] (apply concat items)))
+
+;TODO: create mapping-type attribute for datomic. When saving entity pass this mapping-type so that unmapping can be done.
+(defmacro defentity [entity-name & rules]
   `(do (create-ns 'mappings.runtime)
-       (let [entity-var (intern 'mappings.runtime ~entity-name
-                                {:type (keyword ~entity-name)
-                                 :mapping (apply merge (map #(macroexpand-1 %) (list ~@rules))) ; I think map and macroexpand is not needed.
-                                 }
-                                )]
-         (when (:auto-resolve ~opts)
-           (let [prop-map (apply merge (map #({% [(:type entity-var)]}) (-> entity-var :mappings (keys))))]
-             (swap! *entities-frequencies* (partial merge-with concat) prop-map)))
-         entity-var
+       (let [entity-var# (var-get (intern 'mappings.runtime ~entity-name
+                                          {:type (symbol (str "mappings.runtime/" (name ~entity-name)))
+                                           :mapping (apply merge (map #(macroexpand-1 %) (list ~@rules))) ; I think map and macroexpand is not needed.
+                                           }
+                                          ))]
+         (when (:mapping-detection (var-by-symbol 'mappings.runtime/mapping-opts))
+           (let [prop-map# (apply merge (mapv (fn [k#] {k# [(:type entity-var#)]}) (-> entity-var# :mapping (keys))))]
+              (swap! (var-by-symbol 'mappings.runtime/*entities-frequencies*) (partial merge-with concat-into) prop-map#)))
+         entity-var#
          )))
 
 (defmacro init [opts & defentities]
   `(do (create-ns 'mappings.runtime)
-      (def ^:dynamic *entities-frequencies* nil)
-      (binding [*entities-frequencies* (atom {})
-                *mapping-detection* (:mapping-detection ~opts)] ; may use no atom just a map and the update var root binding :)
-        ~@defentities
-        (intern 'mappings.runtime 'entities-frequencies @*entities-frequencies*))))
+       (inject-def 'mappings.runtime '~'mapping-opts ~opts)
+       (inject-def 'mappings.runtime '~'*entities-frequencies* (atom {}))
+       ~@defentities
+       (->> @(var-by-symbol 'mappings.runtime/*entities-frequencies*)
+             (inject-def 'mappings.runtime '~'entities-frequencies))
+       ))
 
-(defn- var-by-symbol [symbol]
+(defn mapping-by-symbol [symbol]
   (-> symbol resolve var-get))
 
 (defn find-mapping [service-entity]
-  (require 'mappings.runtime)
-  (->> (mapv #(get mapping.runtime/entities-frequencies %) (keys service-entity))
-           concat
-           frequencies
-           (apply max-key val)
-           key
-           val
-           var-by-symbol))
+  (let [freqs (->> (mapv #(get (var-by-symbol 'mappings.runtime/entities-frequencies) %) (keys service-entity))
+                   (apply concat)
+                   (frequencies))
+        freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
+        max-val (apply max (mapv #(get freqs %) (keys freqs)))
+        max-entries (filter #(= max-val (:v %)) freqs-vec)]
+     (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
+     (-> (first max-entries)
+         :k
+         (var-by-symbol))
+    ))
 
 (defn map-entity
-  ([source])
-  ([source explicit-mapping]
-   (postwalk #(when (keyword? %)
-                (when-let [found (get (:mapping explicit-mapping) %)]
-                       (:key found))) explicit-mapping)))
+  ([source mapping]
+       )
+  ([source]
+   (map-entity source (find-mapping source))))

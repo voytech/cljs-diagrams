@@ -94,6 +94,13 @@
 
 (defn map-entity
   ([source mapping]
-       )
+   (let [source-props (keys source)
+         target-props (:mapping mapping)
+         temp-source (atom source)]
+     (map #(do (swap! temp-source assoc (:key (% target-props))
+                      (if-let [lookup (:lookup-ref (% target-props))]
+                        (lookup (% source))
+                        (% source)))
+               (swap! temp-source dissoc %)) source-props)))
   ([source]
    (map-entity source (find-mapping source))))

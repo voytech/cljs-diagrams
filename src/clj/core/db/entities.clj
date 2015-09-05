@@ -97,10 +97,11 @@
    (let [source-props (keys source)
          target-props (:mapping mapping)
          temp-source (atom source)]
-     (map #(do (swap! temp-source assoc (:key (% target-props))
-                      (if-let [lookup (:lookup-ref (% target-props))]
-                        (lookup (% source))
-                        (% source)))
-               (swap! temp-source dissoc %)) source-props)))
+     (doall (map #(do (swap! temp-source assoc (:key (% target-props))
+                             (if-let [lookup (:lookup-ref (% target-props))]
+                               (lookup (% source))
+                               (% source)))
+                      (swap! temp-source dissoc %)) source-props))
+     @temp-source))
   ([source]
    (map-entity source (find-mapping source))))

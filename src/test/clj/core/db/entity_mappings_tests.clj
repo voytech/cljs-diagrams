@@ -60,7 +60,7 @@
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
             (from :roles    to :user/roles    with {:required true})
-            (from :tenant   to :user/tenant   with {:lookup-ref #([:user/name %])}))
+            (from :tenant   to :user/tenant   with {:lookup-ref (fn [val] [:user/name val])}))
        (defentity 'tenant-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
@@ -68,6 +68,10 @@
             (from :organization to :tenant/org with {:required true})))
   (let [entity {:username "Wojtek"
                 :password "Gudzunt"
-                :dburl    "localhost:432"}]
+                :dburl    "localhost:432"}
+        entity1 {:username "wojciech"
+                 :password "tdsadsa"
+                 :tenant "empik-photo"}]
     (println (map-entity entity))
+    (println (map-entity entity1))
     ))

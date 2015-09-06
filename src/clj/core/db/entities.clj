@@ -105,7 +105,8 @@
 
 (defmethod map-property-disp :relation [{:keys [type conf conf-value source-entity target-property source-property-value]}]
     (swap! source-entity assoc target-property (map-entity source-property-value
-                                                           (var-by-symbol type))))
+                                                           (var-by-symbol (-> conf-value
+                                                                              :type)))))
 
 (defmethod map-property-disp :default [{:keys [type conf conf-value source-entity target-property source-property-value]}]
   (swap! source-entity assoc target-property source-property-value))
@@ -115,7 +116,7 @@
      (map-property-disp {
                          :type type
                          :conf with-key
-                         :conf-value (with-key with)
+                         :conf-value (get with with-key)
                          :source-entity temp-source
                          :target-property target-property
                          :source-property-value value})

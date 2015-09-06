@@ -3,27 +3,35 @@
 
 ; Below mapping should be defined using concise macro defined api as follows:
 ; (defentity user-login
-;   (from :username to :user/name     with {:required true})
+;   (from :username to :user/name     with {:required true, unique true})
 ;   (from :password to :user/password with {:required true})
 ;   (from :roles    to :user/roles    with {:required true})
-;   (from :tenant   to :user/tenant   with {:lookup-ref #([:user/name %])}))
+;   (from :tenant   to :user/tenant   with {:lookup-ref #([:user/name %])})
+;   (from :messages to :user/message  with {:relation {:type 'message}
+;                                           }
+
 ; Above defentity is a macro and from is also macro which should be expanded.
 ; Entity will add datomic attribute :shared/type representing type of mapping, when pulling entities.
+(declare map-entity)
 (def user-login {
                  :type :user-login,
                  :mapping {
                                 :username {:key :user/name,
-                                            :required true},
+                                           :with {:required true}},
                                 :password {:key :user/password,
-                                            :required true},
+                                           :with {:required true}},
                                 :roles    {:key  :user/roles,
-                                            :required true},
+                                           :with {:required true}},
                                 :tenant   {:key :user/tenant,
-                                            :lookup-ref #([:user/name %])}}
+                                           :with {:lookup-ref #([:user/name %])}}}
 
                                 :user/name     {:key :username},
                                 :user/password {:key :password}
                  })
+
+(defn mapping-into-ns [mapping-symbol]
+  (symbol (str "mappings.runtime/" (name mapping-symbol))))
+
 (defn var-by-symbol [symbol]
   (-> symbol resolve var-get))
 
@@ -45,10 +53,8 @@
 
 (defmacro from [property to attribute with opts-map]
      (validate property to attribute with opts-map)
-    `{~property (merge {:key ~attribute} ~opts-map)})
-
-(defn- property-to-entity [property entity-name]
-  )
+    `{~property {:key ~attribute, :with ~opts-map}  ;(merge {:key ~attribute} ~opts-map)
+      })
 
 (defn concat-into [& items]
   (into [] (apply concat items)))
@@ -92,16 +98,49 @@
          (var-by-symbol))
     ))
 
-(defn map-entity
+(defmulti map-property-disp :conf)
+
+(defmethod map-property-disp :lookup-ref [{:keys [type conf conf-value source-entity target-property source-property-value]}]
+  (swap! source-entity assoc target-property (conf-value source-property-value)))
+
+(defmethod map-property-disp :relation [{:keys [type conf conf-value source-entity target-property source-property-value]}]
+    (swap! source-entity assoc target-property (map-entity source-property-value
+                                                           (var-by-symbol type))))
+
+(defmethod map-property-disp :default [{:keys [type conf conf-value source-entity target-property source-property-value]}]
+  (swap! source-entity assoc target-property source-property-value))
+
+(defn- map-property [type temp-source target-property value with]
+  (doseq [with-key (keys with)]
+     (map-property-disp {
+                         :type type
+                         :conf with-key
+                         :conf-value (with-key with)
+                         :source-entity temp-source
+                         :target-property target-property
+                         :source-property-value value})
+    ))
+
+(defmulti map-entity (fn ([source mapping] (type source))
+                         ([source] (type source))))
+
+(defmethod map-entity (type {})
   ([source mapping]
    (let [source-props (keys source)
          target-props (:mapping mapping)
          temp-source (atom source)]
-     (doall (map #(do (swap! temp-source assoc (:key (% target-props))
-                             (if-let [lookup (:lookup-ref (% target-props))]
-                               (lookup (% source))
-                               (% source)))
-                      (swap! temp-source dissoc %)) source-props))
+     (doall (map #(do  (map-property (:type mapping)
+                                     temp-source
+                                     (:key (% target-props))
+                                     (% source)
+                                     (:with (% target-props)))
+                       (swap! temp-source dissoc %)) source-props))
      @temp-source))
   ([source]
    (map-entity source (find-mapping source))))
+
+(defmethod map-entity (type [])
+  ([source mapping]
+   (mapv #(map-entity % mapping) source))
+  ([source]
+   (map-entity source (find-mapping (first source))))) ;;Use first entity in the vector to determine mapping.

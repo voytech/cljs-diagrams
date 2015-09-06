@@ -32,6 +32,7 @@
   (let [entity {:username "Wojtek"
                 :password "Gudzunt"
                 :dburl    "localhost:432"}]
+    (println (find-mapping entity))
     (is (= 'mappings.runtime/tenant-login (-> (find-mapping entity)
                                               (:type))))))
 
@@ -74,4 +75,25 @@
                  :tenant "empik-photo"}]
     (println (map-entity entity))
     (println (map-entity entity1))
+    ))
+
+(deftest test-map-entity-vec-via-mapping-def
+  (init {:mapping-detection true}
+       (defentity 'user-login
+            (from :username to :user/name     with {:required true})
+            (from :password to :user/password with {:required true})
+            (from :roles    to :user/roles    with {:required true})
+            (from :tenant   to :user/tenant   with {:lookup-ref (fn [val] [:user/name val])}))
+       (defentity 'tenant-login
+            (from :username to :user/name     with {:required true})
+            (from :password to :user/password with {:required true})
+            (from :dburl    to :tenant/dburl  with {:required true})
+            (from :organization to :tenant/org with {:required true})))
+  (let [entity-vec [{:username "Wojtek"
+                     :password "Gudzunt"
+                     :dburl    "localhost:432"}
+                    {:username "Jack"
+                     :password "Jack1"
+                     :dburl    "jack.com"}]]
+    (println (map-entity entity-vec))
     ))

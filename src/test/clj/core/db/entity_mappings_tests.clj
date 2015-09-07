@@ -33,8 +33,8 @@
                 :password "Gudzunt"
                 :dburl    "localhost:432"}]
     (println (find-mapping entity))
-    (is (= 'mappings.runtime/tenant-login (-> (find-mapping entity)
-                                              (:type))))))
+    (is (= 'tenant-login (-> (find-mapping entity)
+                             (:type))))))
 
 (deftest test-cannot-resolve-mapping
   (init {:mapping-detection true}
@@ -99,7 +99,9 @@
     ))
 
 (deftest test-map-entity-with-rel-via-mapping-def
-  (init {:mapping-detection true}
+  (init {:mapping-detection true
+         :db-partition :db.part/user
+         :workspace-ns 'mappings.runtime}
        (defentity 'user-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
@@ -109,7 +111,7 @@
             (from :username to :user/name      with {:required true})
             (from :password to :user/password  with {:required true})
             (from :dburl    to :tenant/dburl   with {:required true})
-            (from :users    to :tenant/users   with {:relation {:type 'mappings.runtime/user-login}})
+            (from :users    to :tenant/users   with {:relation {:type 'user-login}})
             (from :organization to :tenant/org with {:required true})))
   (let [entity-vec {:username "Wojtek"
                     :password "Gudzunt"

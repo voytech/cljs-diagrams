@@ -29,6 +29,7 @@
                                 :user/password {:key :password}
                  })
 
+(def ^:private DEFAULT_PARTITION "db")
 (defn mapping-into-ns [mapping-symbol]
   (symbol (str "mappings.runtime/" (name mapping-symbol))))
 
@@ -63,7 +64,7 @@
 (defmacro defentity [entity-name & rules]
   `(do (create-ns 'mappings.runtime)
        (let [entity-var# (var-get (intern 'mappings.runtime ~entity-name
-                                          {:type (symbol (str "mappings.runtime/" (name ~entity-name)))
+                                          {:type (symbol (name ~entity-name))
                                            :mapping (apply merge (map #(macroexpand-1 %) (list ~@rules))) ; I think map and macroexpand is not needed.
                                            }
                                           ))]
@@ -93,8 +94,11 @@
         max-val (apply max (mapv #(get freqs %) (keys freqs)))
         max-entries (filter #(= max-val (:v %)) freqs-vec)]
      (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
-     (-> (first max-entries)
+     (->> (first max-entries)
          :k
+         name
+         (str "mappings.runtime/")
+         symbol
          (var-by-symbol))
     ))
 
@@ -106,7 +110,8 @@
 (defmethod map-property-disp :relation [{:keys [type conf conf-value source-entity target-property source-property-value]}]
     (swap! source-entity assoc target-property (map-entity source-property-value
                                                            (var-by-symbol (-> conf-value
-                                                                              :type)))))
+                                                                              :type
+                                                                              mapping-into-ns)))))
 
 (defmethod map-property-disp :default [{:keys [type conf conf-value source-entity target-property source-property-value]}]
   (swap! source-entity assoc target-property source-property-value))
@@ -120,6 +125,12 @@
                          :source-entity temp-source
                          :target-property target-property
                          :source-property-value value})
+    ))
+
+(defn make-temp-id []
+  (let [partition (or (:db-partition (var-by-symbol 'mappings.runtime/mapping-opts))
+                       DEFAULT_PARTITION)]
+    (d/tempid partition) ;#db/id[partition]
     ))
 
 (defmulti map-entity (fn ([source mapping] (type source))
@@ -136,6 +147,7 @@
                                      (% source)
                                      (:with (% target-props)))
                        (swap! temp-source dissoc %)) source-props))
+     (swap! temp-source assoc :db/id (make-temp-id))
      @temp-source))
   ([source]
    (map-entity source (find-mapping source))))

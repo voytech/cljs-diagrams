@@ -12,26 +12,37 @@
 
 ; Above defentity is a macro and from is also macro which should be expanded.
 ; Entity will add datomic attribute :shared/type representing type of mapping, when pulling entities.
-(declare map-entity)
-(def user-login {
-                 :type :user-login,
-                 :mapping {
-                                :username {:key :user/name,
-                                           :with {:required true}},
-                                :password {:key :user/password,
-                                           :with {:required true}},
-                                :roles    {:key  :user/roles,
-                                           :with {:required true}},
-                                :tenant   {:key :user/tenant,
-                                           :with {:lookup-ref #([:user/name %])}}}
+(declare map-entity
+         var-by-symbol)
 
-                                :user/name     {:key :username},
-                                :user/password {:key :password}
-                 })
+(def DEFAULT_PARTITION :db.part/user)
 
-(def ^:private DEFAULT_PARTITION "db")
+(def ENTITY_TYPE_ATTRIB
+  {:db/id #db/id[:db.part/db]
+   :db/ident :entity/type
+   :db/valueType :db.type/ref
+   :db/cardinality :db.cardinality/one
+   :db/doc "Entity level shema attribute - name of entity"
+   :db.install/_attribute :db.part/db})
+
+(defn- connect []
+   (d/connect (:db-url (var-by-symbol 'mappings.runtime/mapping-opts))))
+
+(defn- initialize-database []
+  (println "Initializing database...")
+  (let [connection-string (:db-url (var-by-symbol 'mappings.runtime/mapping-opts))]
+    (d/create-database connection-string)))
+
 (defn mapping-into-ns [mapping-symbol]
   (symbol (str "mappings.runtime/" (name mapping-symbol))))
+
+(defn db-mapping-type [mapping-type]
+  (keyword (name mapping-type)))
+
+(defn- mapping-enum [entity-name]
+  [{:db/id #db/id[:db.part/user],
+    :db/ident (db-mapping-type entity-name)
+    :db/cardinality :db.cardinality/one}])
 
 (defn var-by-symbol [symbol]
   (-> symbol resolve var-get))
@@ -62,6 +73,8 @@
 
 ;TODO: create mapping-type attribute for datomic. When saving entity pass this mapping-type so that unmapping can be done.
 (defmacro defentity [entity-name & rules]
+   (d/transact (connect) (mapping-enum (eval entity-name)))
+   (println (str "Created db enum for " (eval entity-name)))
   `(do (create-ns 'mappings.runtime)
        (let [entity-var# (var-get (intern 'mappings.runtime ~entity-name
                                           {:type (symbol (name ~entity-name))
@@ -75,9 +88,11 @@
          )))
 
 (defmacro init [opts & defentities]
-  `(do (create-ns 'mappings.runtime)
-       (inject-def 'mappings.runtime '~'mapping-opts ~opts)
-       (inject-def 'mappings.runtime '~'*entities-frequencies* (atom {}))
+   (create-ns 'mappings.runtime)
+   (intern 'mappings.runtime 'mapping-opts (eval opts))
+   (initialize-database)
+   (d/transact (connect) [ENTITY_TYPE_ATTRIB])
+  `(do (inject-def 'mappings.runtime '~'*entities-frequencies* (atom {}))
        ~@defentities
        (->> @(var-by-symbol 'mappings.runtime/*entities-frequencies*)
              (inject-def 'mappings.runtime '~'entities-frequencies))
@@ -130,11 +145,12 @@
 (defn make-temp-id []
   (let [partition (or (:db-partition (var-by-symbol 'mappings.runtime/mapping-opts))
                        DEFAULT_PARTITION)]
-    (d/tempid partition) ;#db/id[partition]
+    (d/tempid partition)
     ))
 
 (defmulti map-entity (fn ([source mapping] (type source))
                          ([source] (type source))))
+
 
 (defmethod map-entity (type {})
   ([source mapping]
@@ -147,7 +163,8 @@
                                      (% source)
                                      (:with (% target-props)))
                        (swap! temp-source dissoc %)) source-props))
-     (swap! temp-source assoc :db/id (make-temp-id))
+     (swap! temp-source assoc :db/id (make-temp-id)) ; for nested object this is not needed.
+     (swap! temp-source assoc :entity/type (db-mapping-type (:type mapping)))
      @temp-source))
   ([source]
    (map-entity source (find-mapping source))))

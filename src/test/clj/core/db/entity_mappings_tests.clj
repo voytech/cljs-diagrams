@@ -1,9 +1,20 @@
 (ns core.db.entity-mappings-tests
   (:require [clojure.test :refer :all]
-            [core.db.entities :refer :all]))
+            [core.db.entities :refer :all]
+            [core.db.manager :refer :all]))
+
+(defn- mem-db-url []
+ (println (:db-url (load-configuration "resources/schema/test_properties.edn")))
+ (:db-url (load-configuration "resources/schema/test_properties.edn"))
+ )
+
+(defn- init-in-memory-db []
+  (initialize-database (mem-db-url) (load-file "resources/schema/public_schema.edn")))
 
 (deftest test-defentity-macro
-  (init {:mapping-detection true}
+  (init-in-memory-db)
+  (init {:mapping-detection true
+         :db-url (mem-db-url)}
        (defentity 'user-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
@@ -18,7 +29,9 @@
 )
 
 (deftest test-resolve-mapping
-  (init {:mapping-detection true}
+  (init-in-memory-db)
+  (init {:mapping-detection true
+         :db-url (mem-db-url)}
        (defentity 'user-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
@@ -37,7 +50,9 @@
                              (:type))))))
 
 (deftest test-cannot-resolve-mapping
-  (init {:mapping-detection true}
+  (init-in-memory-db)
+  (init {:mapping-detection true
+         :db-url (mem-db-url)}
        (defentity 'user-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
@@ -56,7 +71,9 @@
     ))
 
 (deftest test-map-entity-via-mapping-def
-  (init {:mapping-detection true}
+  (init-in-memory-db)
+  (init {:mapping-detection true
+         :db-url (mem-db-url)}
        (defentity 'user-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
@@ -78,7 +95,9 @@
     ))
 
 (deftest test-map-entity-vec-via-mapping-def
-  (init {:mapping-detection true}
+  (init-in-memory-db)
+  (init {:mapping-detection true
+         :db-url (mem-db-url)}
        (defentity 'user-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})
@@ -99,9 +118,11 @@
     ))
 
 (deftest test-map-entity-with-rel-via-mapping-def
-  (init {:mapping-detection true
-         :db-partition :db.part/user
-         :workspace-ns 'mappings.runtime}
+  (init-in-memory-db)
+  (init {:mapping-detection true,
+         :db-partition :db.part/user,
+         :workspace-ns 'mappings.runtime
+         :db-url (mem-db-url)}
        (defentity 'user-login
             (from :username to :user/name     with {:required true})
             (from :password to :user/password with {:required true})

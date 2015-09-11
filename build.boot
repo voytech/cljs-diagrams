@@ -114,7 +114,8 @@
 (deftask tests-clj
   "Run clojure tests"
   []
-  (comp (test :namespaces #{'core.db.entity-mappings-tests})))
+  (comp (test :namespaces #{'core.db.entity-mappings-tests
+                            'core.db.manager-tests})))
 
 (deftask continous-tests-clj []
   (comp (watch)

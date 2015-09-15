@@ -83,29 +83,29 @@
                            (find-mapping entity)))
     ))
 
-;; (deftest test-map-entity-via-mapping-def
-;;   (init-in-memory-db)
-;;   (init {:mapping-detection true
-;;          :db-url (mem-db-url)}
-;;        (defentity 'user-login
-;;             (from :username to :user/name     with {:required true})
-;;             (from :password to :user/password with {:required true})
-;;             (from :roles    to :user/roles    with {:required true})
-;;             (from :tenant   to :user/tenant   with {:lookup-ref (fn [val] [:user/name val])}))
-;;        (defentity 'tenant-login
-;;             (from :username to :user/name     with {:required true})
-;;             (from :password to :user/password with {:required true})
-;;             (from :dburl    to :tenant/dburl  with {:required true})
-;;             (from :organization to :tenant/org with {:required true})))
-;;   (let [entity {:username "Wojtek"
-;;                 :password "sdasdjhg"
-;;                 :dburl    "localhost:432"}
-;;         entity1 {:username "wojciech"
-;;                  :password "tdsadsa"
-;;                  :tenant "empik-photo"}]
-;;     (println (map-entity entity))
-;;     (println (map-entity entity1))
-;;     ))
+(deftest test-map-entity-via-mapping-def
+ (init {:mapping-inference true
+         :auto-persist-schema true
+         :db-url (mem-db-url)}
+       (defentity 'user.login
+            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :password  type :db.type/string                            with {:required true})
+            (property name :roles     type :db.type/ref                               with {:required true})
+            (property name :tenant    type :db.type/ref                               with {:lookup-ref (fn [v] [:user.login/username v])}))
+       (defentity 'tenant.login
+            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :password      type :db.type/string                            with {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+  (let [entity {:username "Wojtek"
+                :password "sdasdjhg"
+                :dburl    "localhost:432"}
+        entity1 {:username "wojciech"
+                 :password "tdsadsa"
+                 :tenant "empik-photo"}]
+    (println (map-entity entity))
+    (println (map-entity entity1))
+    ))
 
 ;; (deftest test-map-entity-vec-via-mapping-def
 ;;   (init-in-memory-db)

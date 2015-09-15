@@ -41,7 +41,6 @@
   (is (not (nil? (get-frequencies)))))
 
 (deftest test-resolve-mapping
-  (init-in-memory-db)
   (init {:mapping-inference true
          :auto-persist-schema true
          :db-url (mem-db-url)}
@@ -63,26 +62,26 @@
     (is (= 'tenant.login (-> (find-mapping entity)
                              (:type))))))
 
-;; (deftest test-cannot-resolve-mapping
-;;   (init-in-memory-db)
-;;   (init {:mapping-detection true
-;;          :db-url (mem-db-url)}
-;;        (defentity 'user-login
-;;             (from :username to :user/name     with {:required true})
-;;             (from :password to :user/password with {:required true})
-;;             (from :roles    to :user/roles    with {:required true})
-;;             (from :tenant   to :user/tenant   with {:lookup-ref #([:user/name %])}))
-;;        (defentity 'tenant-login
-;;             (from :username to :user/name     with {:required true})
-;;             (from :password to :user/password with {:required true})
-;;             (from :dburl    to :tenant/dburl  with {:required true})
-;;             (from :organization to :tenant/org with {:required true})))
-;;   (let [entity {:username "Wojtek"
-;;                 :password "asdjkhasd"}]
-;;      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-;;                            #"Cannot determine mapping. At least two mappings with same frequency"
-;;                            (find-mapping entity)))
-;;     ))
+(deftest test-cannot-resolve-mapping
+ (init {:mapping-inference true
+         :auto-persist-schema true
+         :db-url (mem-db-url)}
+       (defentity 'user.login
+            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :password  type :db.type/string                            with {:required true})
+            (property name :roles     type :db.type/ref                               with {:required true})
+            (property name :tenant    type :db.type/ref                               with {:lookup-ref #([:user.login/username %])}))
+       (defentity 'tenant.login
+            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :password      type :db.type/string                            with {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+  (let [entity {:username "Wojtek"
+                :password "asdjkhasd"}]
+     (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                           #"Cannot determine mapping. At least two mappings with same frequency"
+                           (find-mapping entity)))
+    ))
 
 ;; (deftest test-map-entity-via-mapping-def
 ;;   (init-in-memory-db)

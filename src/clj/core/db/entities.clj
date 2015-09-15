@@ -187,10 +187,9 @@
 (defmethod map-property-disp :lookup-ref [{:keys [type conf conf-value source-entity target-property source-property-value]}]
   (swap! source-entity assoc target-property (conf-value source-property-value)))
 
-(defmethod map-property-disp :relation [{:keys [type conf conf-value source-entity target-property source-property-value]}]
+(defmethod map-property-disp :ref-type [{:keys [type conf conf-value source-entity target-property source-property-value]}]
     (swap! source-entity assoc target-property (map-entity source-property-value
                                                            (var-by-symbol (-> conf-value
-                                                                              :type
                                                                               mapping-into-ns)))))
 
 (defmethod map-property-disp :default [{:keys [type conf conf-value source-entity target-property source-property-value]}]

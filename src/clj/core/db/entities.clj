@@ -28,7 +28,8 @@
 ; 5. Persist nested component entities - automatically resolved from service entity
 
 (declare map-entity
-         var-by-symbol)
+         var-by-symbol
+         reverse-mapping?)
 
 (def DEFAULT_PARTITION :db.part/user)
 
@@ -162,20 +163,22 @@
   (-> symbol resolve var-get))
 
 (defn find-mapping [service-entity]
-  (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
-                   (apply concat)
-                   (frequencies))
-        freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
-        max-val (apply max (mapv #(get freqs %) (keys freqs)))
-        max-entries (filter #(= max-val (:v %)) freqs-vec)]
-     (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
-     (->> (first max-entries)
-         :k
-         name
-         (str "core.db.entities/")
-         symbol
-         (var-by-symbol))
-    ))
+  (if (reverse-mapping? service-entity)
+    (->> (name (:entity/type service-entity)) (str "core.db.entities/") symbol (var-by-symbol))
+    (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
+                     (apply concat)
+                     (frequencies))
+          freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
+          max-val (apply max (mapv #(get freqs %) (keys freqs)))
+          max-entries (filter #(= max-val (:v %)) freqs-vec)]
+      (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
+      (->> (first max-entries)
+           :k
+           name
+           (str "core.db.entities/")
+           symbol
+           (var-by-symbol))
+      )))
 
 
 (defn reverse-mapping? [entity]
@@ -221,10 +224,11 @@
                     {:property property
                      :mapping mapping}))))
 
+
 (defmethod map-entity (type {})
   ([source mapping]
-   (let [source-props (keys source)
-         target-props (:mapping mapping)
+   (let [source-props (-> (keys source) set (disj :db/id :entity/type))
+         target-props (if (reverse-mapping? source) (:rev-mapping mapping) (:mapping mapping))
          temp-source (atom source)]
      (doall (map #(do  (has? % target-props)
                        (map-property (:type mapping)

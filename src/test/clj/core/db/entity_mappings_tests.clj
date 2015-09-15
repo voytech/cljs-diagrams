@@ -1,7 +1,11 @@
 (ns core.db.entity-mappings-tests
   (:require [clojure.test :refer :all]
             [core.db.entities :refer :all]
-            [core.db.manager :refer :all]))
+            [core.db.manager :refer :all]
+            [datomic.api :as d]))
+
+(defn- h2-db-url []
+  (str (:db-url (load-configuration "resources/schema/properties.edn")) "/testing"))
 
 (defn- mem-db-url []
  (println (:db-url (load-configuration "resources/schema/test_properties.edn")))
@@ -10,21 +14,31 @@
 (defn- init-in-memory-db []
   (initialize-database (mem-db-url) (load-file "resources/schema/public_schema.edn")))
 
+(defn- find-property-named [prop-name dburl]
+  (let [db (d/db (d/connect dburl))]
+    (:db/ident (first (first (d/q '[:find (pull ?p [:db/ident])
+                                    :in $ ?name
+                                    :where [?p :db/ident ?name]] db prop-name))))))
+
 (deftest test-defentity-macro
-  (init-in-memory-db)
-  (init {:mapping-detection true
+  (init {:mapping-inference true
+         :auto-persist-schema true
          :db-url (mem-db-url)}
        (defentity 'user.login
-            (property name :username  type :db.type/string    with {:required true})
-            (property name :password  type :db.type/string    with {:required true})
-            (property name :roles     type :db.type/ref       with {:required true})
-            (property name :tenant    type :db.type/ref       with {:lookup-ref #([:user.login/username %])}))
+            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :password  type :db.type/string                            with {:required true})
+            (property name :roles     type :db.type/ref                               with {:required true})
+            (property name :tenant    type :db.type/ref                               with {:lookup-ref #([:user.login/username %])}))
        (defentity 'tenant.login
-            (property name :username  type :db.type/string     with {:required true})
-            (property name :password  type :db.type/string     with {:required true})
-            (property name :dburl     type :db.type/string     with {:required true})
-            (property name :organization  type :db.type/string with {:required true})))
- (is (not (nil? (get-frequencies)))))
+            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :password      type :db.type/string                            with {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+  (is (= :user.login/username (find-property-named :user.login/username (mem-db-url))))
+  (is (= :user.login/password (find-property-named :user.login/password (mem-db-url))))
+  (is (= :user.login/roles (find-property-named :user.login/roles (mem-db-url))))
+  (is (= :user.login/tenant (find-property-named :user.login/tenant (mem-db-url))))
+  (is (not (nil? (get-frequencies)))))
 
 ;; (deftest test-resolve-mapping
 ;;   (init-in-memory-db)

@@ -47,20 +47,17 @@
 (def ^:dynamic curr-entity-name "")
 
 (defn make-temp-id []
-  (let [partition (or (:db-partition mapping-opts;(var-by-symbol 'mappings.runtime/mapping-opts)
-                       )
+  (let [partition (or (:db-partition mapping-opts)
                        DEFAULT_PARTITION)]
     (d/tempid partition)
     ))
 
 (defn- connect []
-   (d/connect (:db-url mapping-opts;(var-by-symbol 'mappings.runtime/mapping-opts)
-               )))
+   (d/connect (:db-url mapping-opts)))
 
 (defn- initialize-database []
   (println "Initializing database...")
-  (let [connection-string (:db-url mapping-opts) ;(var-by-symbol 'mappings.runtime/mapping-opts)
-                           ]
+  (let [connection-string (:db-url mapping-opts)]
     (d/create-database connection-string)))
 
 (defn mapping-into-ns [mapping-symbol]
@@ -70,7 +67,7 @@
   (keyword (name mapping-type)))
 
 (defn- mapping-enum [entity-name]
-  [{:db/id #db/id[:db.part/user],
+  [{:db/id (d/tempid :db.part/user),
     :db/ident (db-mapping-type entity-name)
     ;:db/cardinality :db.cardinality/one
     }])
@@ -86,26 +83,27 @@
    (var-by-symbol 'core.db.entities/entities-frequencies))
 
 
-(defn- validate [property-1 direction property-2 with opts-map]
-  (when (not (keyword? property-1))  (throw (IllegalArgumentException. "first arg must be keyword")))
-  (when (not (symbol? direction))    (throw (IllegalArgumentException. "second argument must be symbol 'to'")))
-  (when (not (keyword? property-2))  (throw (IllegalArgumentException. "third argument must be keyword")))
-  (when (not (symbol? with))         (throw (IllegalArgumentException. "fourth argument must be symbol"))))
-
 (defn- create-db-property [property-def]
-  (-> {:db/id (make-temp-id)
+  (-> {:db/id (d/tempid :db.part/db)
        :db/ident (:to-property property-def)
        :db/valueType (:type property-def)
        :db.install/_attribute :db.part/db}
-      (merge (when-let [card (:cardinality property-def)] {:db/cardinality card})))
+      (merge (if-let [uniq (:unique property-def)] {:db/unique uniq} {}))
+      (merge (if-let [card (:cardinality property-def)] {:db/cardinality card} {:db/cardinality :db.cardinality/one})))
   )
 
 (defn- append-schema [next-db-property]
   (def schema (conj schema next-db-property)))
 
+(defn persist-schema []
+  (println "printing schema")
+  (println schema)
+  (d/transact (connect) schema)
+  )
+
 (defn- do-check [key val]
   (when-not (and (symbol? key)
-                 (contains? #{'name 'type 'cardinality 'with} key))
+                 (contains? #{'name 'type 'cardinality 'with 'index 'unique} key))
     (throw (IllegalArgumentException. (str "Wrong description of rule (" first "," val ")")))))
 
 (defn- decode-args [args]
@@ -141,8 +139,8 @@
                                             :rev-mapping (binding [flag true]
                                                            (apply merge (mapv #(eval %) rules)))
                                            }
-                                          ))]
-         (when (:mapping-detection mapping-opts)
+                                           ))]
+         (when (:mapping-inference mapping-opts)
            (let [prop-map (apply merge (mapv (fn [k] {k [(:type entity-var)]}) (-> entity-var :mapping (keys))))]
              (def entities-frequencies (merge-with concat-into entities-frequencies prop-map))))
          )))
@@ -153,14 +151,16 @@
     (def ^:dynamic mapping-opts options))
   (initialize-database)
   (d/transact (connect) [ENTITY_TYPE_ATTRIB])
-  (eval defentities))
+  (eval defentities)
+  (when (:auto-persist-schema mapping-opts)
+    (persist-schema)
+     identity))
 
 (defn mapping-by-symbol [symbol]
   (-> symbol resolve var-get))
 
 (defn find-mapping [service-entity]
-  (let [freqs (->> (mapv #(get entities-frequencies %;(var-by-symbol 'mappings.runtime/entities-frequencies) %
-                           ) (keys service-entity))
+  (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
                    (apply concat)
                    (frequencies))
         freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
@@ -174,6 +174,7 @@
          symbol
          (var-by-symbol))
     ))
+
 
 (defn reverse-mapping? [entity]
   (if (isa? (type entity) clojure.lang.PersistentVector)

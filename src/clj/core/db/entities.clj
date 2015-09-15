@@ -88,8 +88,9 @@
        :db/ident (:to-property property-def)
        :db/valueType (:type property-def)
        :db.install/_attribute :db.part/db}
-      (merge (if-let [uniq (:unique property-def)] {:db/unique uniq} {}))
-      (merge (if-let [card (:cardinality property-def)] {:db/cardinality card} {:db/cardinality :db.cardinality/one})))
+      (merge (if-let [uniq  (:unique property-def)] {:db/unique uniq} {}))
+      (merge (if-let [cmpnt (:component? property-def)] {:db/isComponent cmpnt} {}))
+      (merge (if-let [card  (:cardinality property-def)] {:db/cardinality card} {:db/cardinality :db.cardinality/one})))
   )
 
 (defn- append-schema [next-db-property]
@@ -103,7 +104,7 @@
 
 (defn- do-check [key val]
   (when-not (and (symbol? key)
-                 (contains? #{'name 'type 'cardinality 'with 'index 'unique} key))
+                 (contains? #{'name 'type 'cardinality 'mapping-opts 'index 'unique 'component?} key))
     (throw (IllegalArgumentException. (str "Wrong description of rule (" first "," val ")")))))
 
 (defn- decode-args [args]
@@ -121,8 +122,9 @@
     (if (not flag) (do (append-schema (create-db-property property-def))
                        {(:name decoded)
                         (dissoc (assoc decoded :to-property to-property) :name)})
-                   {to-property
-                    (dissoc (assoc decoded :to-property prop-name) :name)})))
+                   {to-property {:to-property prop-name}
+                    ;(dissoc (assoc decoded :to-property prop-name) :name)
+                    })))
 
 (defn concat-into [& items]
   (into [] (apply concat items)))
@@ -229,7 +231,7 @@
                                      temp-source
                                      (:to-property (% target-props))
                                      (% source)
-                                     (:with (% target-props)))
+                                     (:mapping-opts (% target-props)))
                        (swap! temp-source dissoc %)) source-props))
      (swap! temp-source assoc :db/id (make-temp-id)) ; for nested object this is not needed.
      (swap! temp-source assoc :entity/type (db-mapping-type (:type mapping)))

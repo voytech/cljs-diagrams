@@ -25,15 +25,15 @@
          :auto-persist-schema true
          :db-url (mem-db-url)}
        (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password  type :db.type/string                            with {:required true})
-            (property name :roles     type :db.type/ref                               with {:required true})
-            (property name :tenant    type :db.type/ref                               with {:lookup-ref #([:user.login/username %])}))
+            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password  type :db.type/string                            mapping-opts {:required true})
+            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
        (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password      type :db.type/string                            with {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password      type :db.type/string                            mapping-opts {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
   (is (= :user.login/username (find-property-named :user.login/username (mem-db-url))))
   (is (= :user.login/password (find-property-named :user.login/password (mem-db-url))))
   (is (= :user.login/roles (find-property-named :user.login/roles (mem-db-url))))
@@ -45,15 +45,15 @@
          :auto-persist-schema true
          :db-url (mem-db-url)}
        (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password  type :db.type/string                            with {:required true})
-            (property name :roles     type :db.type/ref                               with {:required true})
-            (property name :tenant    type :db.type/ref                               with {:lookup-ref #([:user.login/username %])}))
+            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password  type :db.type/string                            mapping-opts {:required true})
+            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
        (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password      type :db.type/string                            with {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password      type :db.type/string                            mapping-opts {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
 
   (let [entity {:username "Wojtek"
                 :password "sdakdshd"
@@ -67,15 +67,15 @@
          :auto-persist-schema true
          :db-url (mem-db-url)}
        (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password  type :db.type/string                            with {:required true})
-            (property name :roles     type :db.type/ref                               with {:required true})
-            (property name :tenant    type :db.type/ref                               with {:lookup-ref #([:user.login/username %])}))
+            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password  type :db.type/string                            mapping-opts {:required true})
+            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
        (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password      type :db.type/string                            with {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password      type :db.type/string                            mapping-opts {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
   (let [entity {:username "Wojtek"
                 :password "asdjkhasd"}]
      (is (thrown-with-msg? clojure.lang.ExceptionInfo
@@ -87,16 +87,16 @@
  (init {:mapping-inference true
          :auto-persist-schema true
          :db-url (mem-db-url)}
-       (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password  type :db.type/string                            with {:required true})
-            (property name :roles     type :db.type/ref                               with {:required true})
-            (property name :tenant    type :db.type/ref                               with {:lookup-ref (fn [v] [:user.login/username v])}))
+      (defentity 'user.login
+            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password  type :db.type/string                            mapping-opts {:required true})
+            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
        (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password      type :db.type/string                            with {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password      type :db.type/string                            mapping-opts {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
   (let [entity {:username "Wojtek"
                 :password "sdasdjhg"
                 :dburl    "localhost:432"}
@@ -113,15 +113,15 @@
          :auto-persist-schema true
          :db-url (mem-db-url)}
        (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password  type :db.type/string                            with {:required true})
-            (property name :roles     type :db.type/ref                               with {:required true})
-            (property name :tenant    type :db.type/ref                               with {:lookup-ref (fn [v] [:user.login/username v])}))
+            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password  type :db.type/string                            mapping-opts {:required true})
+            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
        (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password      type :db.type/string                            with {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password      type :db.type/string                            mapping-opts {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
   (let [entity-vec [{:username "Wojtek"
                      :password "asdasdasd"
                      :dburl    "localhost:432"}
@@ -131,21 +131,21 @@
     (println (map-entity entity-vec))
     ))
 
-(deftest test-map-entity-with-rel-via-mapping-def
+(deftest test-map-entity-mapping-opts-rel-via-mapping-def
   (init {:mapping-inference true
          :auto-persist-schema true
          :db-url (mem-db-url)}
        (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password  type :db.type/string                            with {:required true})
-            (property name :roles     type :db.type/ref                               with {:required true})
-            (property name :tenant    type :db.type/ref                               with {:lookup-ref (fn [v] [:user.login/username v])}))
+            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password  type :db.type/string                            mapping-opts {:required true})
+            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
        (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :password      type :db.type/string                            with {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity with {:required true})
-            (property name :users         type :db.type/ref                               with {:ref-type 'user.login})
-            (property name :organization  type :db.type/string unique :db.unique/identity with {:required true})))
+            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password      type :db.type/string                            mapping-opts {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
     (let [entity-vec {:username "Wojtek"
                     :password "adasd"
                     :dburl    "localhost:432"

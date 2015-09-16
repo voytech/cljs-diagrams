@@ -148,7 +148,7 @@
              (def entities-frequencies (merge-with concat-into entities-frequencies prop-map))))
          )))
 
-(defmacro init [opts & defentities]
+(defmacro defschema [opts & defentities]
   (def ^:dynamic flag false)
   (let [options (eval opts)]
     (def ^:dynamic mapping-opts options))
@@ -180,6 +180,9 @@
            (var-by-symbol))
       )))
 
+(defn- entity? [entity]
+  (or (isa? (type entity) clojure.lang.PersistentVector)
+      (isa? (type entity) clojure.lang.PersistentArrayMap)))
 
 (defn reverse-mapping? [entity]
   (if (isa? (type entity) clojure.lang.PersistentVector)
@@ -187,36 +190,38 @@
     (contains? entity :entity/type)))
 
 
-(defmulti map-property-disp :conf)
+(defmulti apply-mapping-opts :opt-key)
 
-(defmethod map-property-disp :lookup-ref [{:keys [type conf conf-value source-entity target-property source-property-value]}]
-  (swap! source-entity assoc target-property (conf-value source-property-value)))
+(defmethod apply-mapping-opts :lookup-ref [{:keys [type func opt-key opt-value source target-property property-value]}]
+  (reset! *substitute* false)
+  (swap! source assoc target-property (opt-value property-value)))
 
-(defmethod map-property-disp :ref-type [{:keys [type conf conf-value source-entity target-property source-property-value]}]
-    (swap! source-entity assoc target-property (map-entity source-property-value
-                                                           (var-by-symbol (-> conf-value
-                                                                              mapping-into-ns)))))
+(defmethod apply-mapping-opts :ref-type [{:keys [type func opt-key opt-value source target-property property-value]}]
+  (reset! *substitute* false)
+  (swap! source assoc target-property (func property-value
+                                            (var-by-symbol (-> opt-value
+                                                               mapping-into-ns)))))
 
-(defmethod map-property-disp :default [{:keys [type conf conf-value source-entity target-property source-property-value]}]
-  (swap! source-entity assoc target-property source-property-value))
+(defmethod apply-mapping-opts :default [{:keys [type func opt-key opt-value source target-property property-value]}]
+  (swap! source assoc target-property property-value))
 
-(defn- map-property [type temp-source target-property value with]
-  (doseq [with-key (keys with)]
-     (map-property-disp {
-                         :type type
-                         :conf with-key
-                         :conf-value (get with with-key)
-                         :source-entity temp-source
-                         :target-property target-property
-                         :source-property-value value})
-    ))
-
-
-;;mapping of entity should allow to provide id-lookup property which
-;;should be defined at runtime. mapping should aslo determine if only
-;;one unique property has been passed when merging.
-(defmulti map-entity (fn ([source mapping] (type source))
-                         ([source] (type source))))
+(defn- map-property [mapping-func type from-property to-property source mapping-opts]
+  (let [property-value (from-property source)]
+    (def ^:dynamic *substitute* (atom true))
+    (binding [*substitute* (atom true)]
+      (doseq [mapping-opt (keys mapping-opts)]
+        (apply-mapping-opts {:type type
+                             :func mapping-func
+                             :opt-key mapping-opt
+                             :opt-value (mapping-opt mapping-opts)
+                             :source source
+                             :target-property to-property
+                             :property-value property-value}))
+      (if (and (entity? property-value)
+               @*substitute*)
+        (swap! source assoc to-property (mapping-func property-value))
+        (swap! source assoc to-property property-value))))
+  (swap! source dissoc from-property))
 
 (defn- has? [property mapping]
   (when (not (contains? mapping property))
@@ -224,27 +229,56 @@
                     {:property property
                      :mapping mapping}))))
 
+(defn- delete-db-meta [source]
+  (swap! source dissoc :db/id :entity/type))
 
-(defmethod map-entity (type {})
+(defn- add-db-meta [source-atom mapping]
+  (swap! source-atom assoc :db/id (make-temp-id))
+  (swap! source-atom assoc :entity/type (db-mapping-type (:type mapping))))
+
+(defn- do-mapping [source-atom entity-type mapping-rules mapping-func]
+  (let [source-props (keys @source-atom)]
+     (doall (map #(do (has? % mapping-rules)
+                      (map-property mapping-func
+                                    entity-type
+                                    %
+                                    (:to-property (% mapping-rules))
+                                    source-atom
+                                    (:mapping-opts (% mapping-rules)))) source-props))))
+
+(defmulti clj->db (fn ([source mapping] (type source))
+                      ([source] (type source))))
+
+(defmethod clj->db (type {})
   ([source mapping]
-   (let [source-props (-> (keys source) set (disj :db/id :entity/type))
-         target-props (if (reverse-mapping? source) (:rev-mapping mapping) (:mapping mapping))
+   (let [mapping-rules (:mapping mapping)
          temp-source (atom source)]
-     (doall (map #(do  (has? % target-props)
-                       (map-property (:type mapping)
-                                     temp-source
-                                     (:to-property (% target-props))
-                                     (% source)
-                                     (:mapping-opts (% target-props)))
-                       (swap! temp-source dissoc %)) source-props))
-     (swap! temp-source assoc :db/id (make-temp-id)) ; for nested object this is not needed.
-     (swap! temp-source assoc :entity/type (db-mapping-type (:type mapping)))
+     (do-mapping temp-source (:type mapping) mapping-rules clj->db)
+     (add-db-meta temp-source mapping)
      @temp-source))
   ([source]
-   (map-entity source (find-mapping source))))
+   (clj->db source (find-mapping source))))
 
-(defmethod map-entity (type [])
+(defmethod clj->db (type [])
   ([source mapping]
-   (mapv #(map-entity % mapping) source))
+   (mapv #(clj->db % mapping) source))
   ([source]
-   (map-entity source (find-mapping (first source))))) ;;Use first entity in the vector to determine mapping.
+   (clj->db source (find-mapping (first source)))))
+
+(defmulti db->clj (fn [source] (type source)))
+
+(defmethod db->clj (type {})
+  ([source mapping]
+   (let [mapping-rules (:rev-mapping mapping)
+         temp-source (atom source)]
+     (do-mapping temp-source (:type mapping) mapping-rules db->clj)
+     (delete-db-meta temp-source)
+     @temp-source))
+  ([source]
+   (db->clj source (find-mapping source))))
+
+(defmethod db->clj (type [])
+  ([source mapping]
+   (mapv #(db->clj % mapping) source))
+  ([source]
+   (db->clj source (find-mapping (first source)))))

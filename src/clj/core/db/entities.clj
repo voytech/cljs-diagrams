@@ -2,30 +2,28 @@
   (:require [datomic.api :as d]
             [clojure.walk :refer [prewalk]]))
 
-; Below mapping should be defined using concise macro defined api as follows:
-; (defentity user
-;   (from :username to :user/name     with {:required true, unique true})
-;   (from :password to :user/password with {:required true})
-;   (from :roles    to :user/roles    with {:required true})
-;   (from :tenant   to :user/tenant   with {:lookup-ref #([:user/name %])})
-;   (from :messages to :user/message  with {:relation {:type 'message}
-;                                           }
+;; (defschema 'login-db
+;;            {:mapping-inference true
+;;             :auto-persist-schema true
+;;             :db-url (mem-db-url)}
+;;     (defentity 'user.login
+;;       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true} custom-fwd-mapping {} custom-rev-mapping {})
+;;       (property name :password  type :db.type/string                            mapping-opts {:required true})
+;;       (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+;;       (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
+;;     (defentity 'tenant.login
+;;       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+;;       (property name :password      type :db.type/string                            mapping-opts {:required true})
+;;       (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+;;       (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+;;       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
 
-; Above defentity is a macro and from is also macro which should be expanded.
-; Entity will add datomic attribute :shared/type representing type of mapping, when pulling entities.
-
-; NEW APPROACH (I THINK MUCH BETTER):
-; (defentity user.info  ;this is a prefix for attribute to define entity
-;   (property name :username   type :db.type/string  with {:required true, unique true})
-;   (property name :roles      type :db.type/ref    cardinality :db.cardinality/many  mapping-opts {:required true})
-;   (property name :tenant     type :db.type/ref    cardinality :db.cardinality/one   mapping-opts {:lookup-ref #([:user.info/name %])})
-;   (property name :messages   type :db.type/ref    cardinality :db.cardinality/many  mapping-opts {:r:elated-type 'message}
-; Approach above will allow to:
-; 1. Perform mapping from service entities into database entities.
-; 2. Perform mapping from database entity into service entities.
-; 3. Create attribute schema from this entity schema.
-; 4. Automatically convert specific properties into lookup refs to establish relation.
-; 5. Persist nested component entities - automatically resolved from service entity
+;; Approach above will allow to:
+;; 1. Perform mapping from service entities into database entities.
+;; 2. Perform mapping from database entity into service entities.
+;; 3. Create attribute schema from this entity schema.
+;; 4. Automatically convert specific properties into lookup refs to establish relation.
+;; 5. Persist nested component entities - automatically resolved from service entity
 
 (declare map-entity
          var-by-symbol
@@ -164,8 +162,8 @@
   (-> symbol resolve var-get))
 
 (defn find-mapping [service-entity]
-  (if (reverse-mapping? service-entity)
-    (->> (name (:entity/type service-entity)) (str "core.db.entities/") symbol (var-by-symbol))
+  (if-let [entity-type (reverse-mapping? service-entity)]
+    (->> (name entity-type) (str "core.db.entities/") symbol (var-by-symbol))
     (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
                      (apply concat)
                      (frequencies))
@@ -187,7 +185,7 @@
 (defn reverse-mapping? [entity]
   (if (isa? (type entity) clojure.lang.PersistentVector)
     (let [entry (first entity)] (reverse-mapping? entry))
-    (contains? entity :entity/type)))
+    (:entity/type entity)))
 
 
 (defmulti apply-mapping-opts :opt-key)
@@ -251,7 +249,7 @@
                                    (:mapping-opts (% mapping-rules)))) source-props))))
 
 (defmulti clj->db (fn ([source mapping] (type source))
-                    ([source] (type source))))
+                      ([source] (type source))))
 
 (defmethod clj->db (type {})
   ([source mapping]
@@ -269,16 +267,19 @@
   ([source]
    (clj->db source (find-mapping (first source)))))
 
-(defmulti db->clj (fn [source] (type source)))
+(defmulti db->clj (fn ([source mapping] (type source))
+                      ([source] (type source))))
 
 (defmethod db->clj (type {})
   ([source mapping]
+   (println "mapping db->clj")
    (let [mapping-rules (:rev-mapping mapping)
          temp-source (atom source)]
-     (do-mapping temp-source (:type mapping) mapping-rules db->clj)
      (delete-db-meta temp-source)
+     (do-mapping temp-source (:type mapping) mapping-rules db->clj)
      @temp-source))
   ([source]
+   (println (str "MAPPING IS" (find-mapping source)))
    (db->clj source (find-mapping source))))
 
 (defmethod db->clj (type [])

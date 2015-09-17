@@ -155,27 +155,27 @@
                              :tenant "Wojtek"}]}]
     (println (clj->db entity-vec))))
 
-;; (deftest test-mapping-forth-and-back-1 []
-;;   (defschema {:mapping-inference true
-;;               :auto-persist-schema true
-;;               :db-url (mem-db-url)}
-;;        (defentity 'user.login
-;;             (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :password  type :db.type/string                            mapping-opts {:required true})
-;;             (property name :roles     type :db.type/ref                               mapping-opts {:required true})
-;;             (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
-;;        (defentity 'tenant.login
-;;             (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :password      type :db.type/string                            mapping-opts {:required true})
-;;             (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
-;;             (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
-;;     (let [entity-vec {:username "Wojtek"
-;;                       :password "adasd"
-;;                       :dburl    "localhost:432"}
-;;           db (clj->db entity-vec)
-;;           clj (db->clj db)]
-;;     (println "Mapping forth ========================================")
-;;     (println db)
-;;     (println "Mapping back  ========================================")
-;;     (println clj)))
+(deftest test-mapping-forth-and-back-simple []
+  (defschema {:mapping-inference true
+              :auto-persist-schema true
+              :db-url (mem-db-url)}
+       (defentity 'user.login
+            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password  type :db.type/string                            mapping-opts {:required true})
+            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
+       (defentity 'tenant.login
+            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :password      type :db.type/string                            mapping-opts {:required true})
+            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+            (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
+    (let [entity-vec {:username "Wojtek"
+                      :password "adasd"
+                      :dburl    "localhost:432"}
+          db (clj->db entity-vec)
+          clj (db->clj db)]
+    (println "Mapping forth ========================================")
+    (println db)
+    (println "Mapping back  ========================================")
+    (println clj)))

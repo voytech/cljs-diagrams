@@ -47,12 +47,12 @@
 
 (defn make-temp-id []
   (let [partition (or (:db-partition mapping-opts)
-                       DEFAULT_PARTITION)]
+                      DEFAULT_PARTITION)]
     (d/tempid partition)
     ))
 
 (defn- connect []
-   (d/connect (:db-url mapping-opts)))
+  (d/connect (:db-url mapping-opts)))
 
 (defn- initialize-database []
   (println "Initializing database...")
@@ -67,15 +67,13 @@
 
 (defn- mapping-enum [entity-name]
   [{:db/id (d/tempid :db.part/user),
-    :db/ident (db-mapping-type entity-name)
-    ;:db/cardinality :db.cardinality/one
-    }])
+    :db/ident (db-mapping-type entity-name)}])
 
 (defn var-by-symbol [symbol]
   (-> symbol resolve var-get))
 
 (defn inject-def [ns var-name value]
- (intern ns var-name value))
+  (intern ns var-name value))
 
 (defn make-var [symbol val]
   (intern 'core.db.entities symbol val))
@@ -92,7 +90,7 @@
        var-get))
 
 (defn get-frequencies []
-   (var-by-symbol 'core.db.entities/entities-frequencies))
+  (var-by-symbol 'core.db.entities/entities-frequencies))
 
 
 (defn- create-db-property [property-def]
@@ -118,7 +116,7 @@
 (defn- decode-args [args]
   (let [partitioned (partition 2 args)]
     (->> (doall (mapv (fn [p] (do-check (first p) (last p))
-                              {(keyword (first p)), (last p)}) partitioned))
+                        {(keyword (first p)), (last p)}) partitioned))
          (apply merge))))
 
 (defmacro property [& args]
@@ -131,9 +129,7 @@
       (do (append-schema (create-db-property property-def))
           {(:name decoded)
            (dissoc (assoc decoded :to-property to-property) :name)})
-      {to-property {:to-property prop-name}
-                    ;(dissoc (assoc decoded :to-property prop-name) :name)
-      })))
+      {to-property {:to-property prop-name}})))
 
 (defn concat-into [& items]
   (into [] (apply concat items)))
@@ -142,30 +138,27 @@
   (d/transact (connect) (mapping-enum  (eval entity-name)))
   (make-var 'curr-entity-name (eval entity-name))
   (let [entity-var (var-get (intern 'core.db.entities (eval entity-name)
-                                      {:type (eval entity-name)
-                                       :mapping (do (make-var 'flag false)
-                                                    (apply merge (mapv #(eval %) rules)))
-                                       :rev-mapping (do (make-var 'flag true)
-                                                        (apply merge (mapv #(eval %) rules)))
-                                       }
-                                      ))]
-      (when (:mapping-inference mapping-opts)
-        (let [prop-map (apply merge (mapv (fn [k] {k [(:type entity-var)]}) (-> entity-var :mapping (keys))))]
-          (def entities-frequencies (merge-with concat-into entities-frequencies prop-map)))))
+                                    {:type (eval entity-name)
+                                     :mapping (do (make-var 'flag false)
+                                                  (apply merge (mapv #(eval %) rules)))
+                                     :rev-mapping (do (make-var 'flag true)
+                                                      (apply merge (mapv #(eval %) rules)))}))]
+    (when (:mapping-inference mapping-opts)
+      (let [prop-map (apply merge (mapv (fn [k] {k [(:type entity-var)]}) (-> entity-var :mapping (keys))))]
+        (alter-var-root #'entities-frequencies (fn [o] (merge-with concat-into entities-frequencies prop-map))))))
   (del-var 'curr-entity-name)
   (del-var 'flag)
-  identity
-  )
+  identity)
 
 (defmacro defschema [opts & defentities]
   (let [options (eval opts)]
-    (def ^:dynamic mapping-opts options)) ;do alter-var-root
+    (alter-var-root #'mapping-opts (fn [o] options)))
   (initialize-database)
   (d/transact (connect) [ENTITY_TYPE_ATTRIB])
   (eval defentities)
   (when (:auto-persist-schema mapping-opts)
     (persist-schema)
-     identity))
+    identity))
 
 (defn mapping-by-symbol [symbol]
   (-> symbol resolve var-get))
@@ -185,8 +178,7 @@
            name
            (str "core.db.entities/")
            symbol
-           (var-by-symbol))
-      )))
+           (var-by-symbol)))))
 
 (defn- entity? [entity]
   (or (isa? (type entity) clojure.lang.PersistentVector)
@@ -214,7 +206,7 @@
   (swap! source assoc target-property property-value))
 
 (defn- map-property [mapping-func type from-property to-property source mapping-opts]
-  (let [property-value (from-property source)]
+  (let [property-value (from-property @source)]
     (make-var 'do-mapping? true)
     (doseq [mapping-opt (keys mapping-opts)]
       (apply-mapping-opts {:type type
@@ -246,16 +238,16 @@
 
 (defn- do-mapping [source-atom entity-type mapping-rules mapping-func]
   (let [source-props (keys @source-atom)]
-     (doall (map #(do (has? % mapping-rules)
-                      (map-property mapping-func
-                                    entity-type
-                                    %
-                                    (:to-property (% mapping-rules))
-                                    source-atom
-                                    (:mapping-opts (% mapping-rules)))) source-props))))
+    (doall (map #(do (has? % mapping-rules)
+                     (map-property mapping-func
+                                   entity-type
+                                   %
+                                   (:to-property (% mapping-rules))
+                                   source-atom
+                                   (:mapping-opts (% mapping-rules)))) source-props))))
 
 (defmulti clj->db (fn ([source mapping] (type source))
-                      ([source] (type source))))
+                    ([source] (type source))))
 
 (defmethod clj->db (type {})
   ([source mapping]

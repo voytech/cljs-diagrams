@@ -8,8 +8,8 @@
   (str (:db-url (load-configuration "resources/schema/properties.edn")) "/testing"))
 
 (defn- mem-db-url []
- (println (:db-url (load-configuration "resources/schema/test_properties.edn")))
- (:db-url (load-configuration "resources/schema/test_properties.edn")))
+  (println (:db-url (load-configuration "resources/schema/test_properties.edn")))
+  (:db-url (load-configuration "resources/schema/test_properties.edn")))
 
 (defn- init-in-memory-db []
   (initialize-database (mem-db-url) (load-file "resources/schema/public_schema.edn")))
@@ -24,88 +24,87 @@
   (defschema {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
-       (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-            (property name :password  type :db.type/string                            mapping-opts {:required true})
-            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
-            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
-       (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-            (property name :password      type :db.type/string                            mapping-opts {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+      (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
   (is (= :user.login/username (find-property-named :user.login/username (mem-db-url))))
   (is (= :user.login/password (find-property-named :user.login/password (mem-db-url))))
   (is (= :user.login/roles (find-property-named :user.login/roles (mem-db-url))))
   (is (= :user.login/tenant (find-property-named :user.login/tenant (mem-db-url))))
+  (println (get-frequencies))
   (is (not (nil? (get-frequencies)))))
 
 (deftest test-resolve-mapping
   (defschema {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
-       (defentity 'user.login
-            (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-            (property name :password  type :db.type/string                            mapping-opts {:required true})
-            (property name :roles     type :db.type/ref                               mapping-opts {:required true})
-            (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
-       (defentity 'tenant.login
-            (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-            (property name :password      type :db.type/string                            mapping-opts {:required true})
-            (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-            (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+      (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
 
   (let [entity {:username "Wojtek"
                 :password "sdakdshd"
                 :dburl    "localhost:432"}]
-    (println (find-mapping entity))
     (is (= 'tenant.login (-> (find-mapping entity)
                              (:type))))))
 
-;; (deftest test-cannot-resolve-mapping
-;;  (init {:mapping-inference true
-;;          :auto-persist-schema true
-;;          :db-url (mem-db-url)}
-;;        (defentity 'user.login
-;;             (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :password  type :db.type/string                            mapping-opts {:required true})
-;;             (property name :roles     type :db.type/ref                               mapping-opts {:required true})
-;;             (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
-;;        (defentity 'tenant.login
-;;             (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :password      type :db.type/string                            mapping-opts {:required true})
-;;             (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
-;;   (let [entity {:username "Wojtek"
-;;                 :password "asdjkhasd"}]
-;;      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-;;                            #"Cannot determine mapping. At least two mappings with same frequency"
-;;                            (find-mapping entity)))
-;;     ))
+(deftest test-cannot-resolve-mapping
+  (defschema {:mapping-inference true
+              :auto-persist-schema true
+              :db-url (mem-db-url)}
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+      (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
+  (let [entity {:username "Wojtek"
+                :password "asdjkhasd"}]
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                          #"Cannot determine mapping. At least two mappings with same frequency"
+                          (find-mapping entity)))))
 
-;; (deftest test-map-entity-via-mapping-def
-;;  (init {:mapping-inference true
-;;          :auto-persist-schema true
-;;          :db-url (mem-db-url)}
-;;       (defentity 'user.login
-;;             (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :password  type :db.type/string                            mapping-opts {:required true})
-;;             (property name :roles     type :db.type/ref                               mapping-opts {:required true})
-;;             (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
-;;        (defentity 'tenant.login
-;;             (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :password      type :db.type/string                            mapping-opts {:required true})
-;;             (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;             (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
-;;   (let [entity {:username "Wojtek"
-;;                 :password "sdasdjhg"
-;;                 :dburl    "localhost:432"}
-;;         entity1 {:username "wojciech"
-;;                  :password "tdsadsa"
-;;                  :tenant "empik-photo"}]
-;;     (println (map-entity entity))
-;;     (println (map-entity entity1))
-;;     ))
+(deftest test-map-entity-via-mapping-def
+  (defschema {:mapping-inference true
+              :auto-persist-schema true
+              :db-url (mem-db-url)}
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+      (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
+  (let [entity {:username "Wojtek"
+                :password "sdasdjhg"
+                :dburl    "localhost:432"}
+        entity1 {:username "wojciech"
+                 :password "tdsadsa"
+                 :tenant "empik-photo"}]
+    ;(println (clj->db entity))
+    ;(println (clj->db entity1))
+    ))
 
 ;; (deftest test-map-entity-vec-via-mapping-def
 

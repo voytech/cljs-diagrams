@@ -198,11 +198,14 @@
 
 (defmethod apply-mapping-opts :ref-type [{:keys [type func opt-key opt-value source target-property property-value]}]
   (make-var 'do-mapping? false)
-  (swap! source assoc target-property (func property-value
-                                            (var-by-symbol (-> opt-value
-                                                               mapping-into-ns)))))
+  (let [old (get-var 'do-mapping?)]
+    (swap! source assoc target-property (func property-value
+                                        (var-by-symbol (-> opt-value
+                                                           mapping-into-ns))))
+    (make-var 'do-mapping? old)))
 
 (defmethod apply-mapping-opts :default [{:keys [type func opt-key opt-value source target-property property-value]}]
+  (make-var 'do-mapping? false)
   (swap! source assoc target-property property-value))
 
 (defn- map-property [mapping-func type from-property to-property source mapping-opts]
@@ -216,7 +219,8 @@
                            :source source
                            :target-property to-property
                            :property-value property-value}))
-    (when (get-var 'do-mapping?)
+    (println (str "Value of do-mapping? " from-property ", " to-property " " (get-var 'do-mapping?)))
+    (when (= true (get-var 'do-mapping?))
       (if (entity? property-value)
         (swap! source assoc to-property (mapping-func property-value))
         (swap! source assoc to-property property-value)))

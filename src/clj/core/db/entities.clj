@@ -46,14 +46,12 @@
 (defn make-temp-id []
   (let [partition (or (:db-partition mapping-opts)
                       DEFAULT_PARTITION)]
-    (d/tempid partition)
-    ))
+    (d/tempid partition)))
 
 (defn- connect []
   (d/connect (:db-url mapping-opts)))
 
 (defn- initialize-database []
-  (println "Initializing database...")
   (let [connection-string (:db-url mapping-opts)]
     (d/create-database connection-string)))
 

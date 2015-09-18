@@ -27,6 +27,7 @@
 
 (declare map-entity
          var-by-symbol
+         get-var
          reverse-mapping?)
 
 (def DEFAULT_PARTITION :db.part/user)
@@ -39,20 +40,34 @@
    :db/doc "Entity level shema attribute - name of entity"
    :db.install/_attribute :db.part/db})
 
-(def ^:dynamic mapping-opts {})
+;(def ^:dynamic mapping-opts {})
 (def ^:dynamic entities-frequencies {})
-(def ^:dynamic schema [])
+(def ^:dynamic schema {})
+
+(defn get-var [symb]
+  (->> symb
+       name
+       (str "core.db.entities/")
+       symbol
+       resolve
+       var-get))
+
+(defn get-schema [name]
+  (get-in schema [(keyword name)]))
+
+(defn current-schema-name []
+  (get-var 'curr-schema))
+
+(defn current-schema []
+  (get-schema (get-var 'curr-schema)))
 
 (defn make-temp-id []
-  (let [partition (or (:db-partition mapping-opts)
+  (let [partition (or (-> (current-schema) :mapping-opts :db-partition)
                       DEFAULT_PARTITION)]
     (d/tempid partition)))
 
-(defn- connect []
-  (d/connect (:db-url mapping-opts)))
-
 (defn- initialize-database []
-  (let [connection-string (:db-url mapping-opts)]
+  (let [connection-string (-> (current-schema) :mapping-opts :db-partition)]
     (d/create-database connection-string)))
 
 (defn mapping-into-ns [mapping-symbol]
@@ -77,17 +92,8 @@
 (defn del-var [symb]
   (ns-unmap 'core.db.entities symb))
 
-(defn get-var [symb]
-  (->> symb
-       name
-       (str "core.db.entities/")
-       symbol
-       resolve
-       var-get))
-
 (defn get-frequencies []
   (var-by-symbol 'core.db.entities/entities-frequencies))
-
 
 (defn- create-db-property [property-def]
   (-> {:db/id (d/tempid :db.part/db)
@@ -99,10 +105,11 @@
       (merge (if-let [card  (:cardinality property-def)] {:db/cardinality card} {:db/cardinality :db.cardinality/one}))))
 
 (defn- append-schema [next-db-property]
-  (def schema (conj schema next-db-property)))
+  (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data] (conj (or (:data current-schema) []) next-db-property)))))
 
-(defn persist-schema []
-  (d/transact (connect) schema))
+(defn persist-schema [name url]
+  (when-let [schema-data (:data (get-schema name))]
+    (d/transact (d/connect (or url (-> (get-schema name) :mapping-opts :db-url))) schema-data)))
 
 (defn- do-check [key val]
   (when-not (and (symbol? key)
@@ -132,7 +139,7 @@
                 distinct)))
 
 (defmacro defentity [entity-name & rules]
-  (d/transact (connect) (mapping-enum  (eval entity-name)))
+  (d/transact (d/connect (-> (current-schema) :mapping-opts :db-url)) (mapping-enum  (eval entity-name)))
   (make-var 'curr-entity-name (eval entity-name))
   (let [entity-var (var-get (intern 'core.db.entities (eval entity-name)
                                     {:type (eval entity-name)
@@ -140,22 +147,24 @@
                                                   (apply merge (mapv #(eval %) rules)))
                                      :rev-mapping (do (make-var 'flag true)
                                                       (apply merge (mapv #(eval %) rules)))}))]
-    (when (:mapping-inference mapping-opts)
+    (when (-> (current-schema) :mapping-opts :mapping-inference)
       (let [prop-map (apply merge (mapv (fn [k] {k [(:type entity-var)]}) (-> entity-var :mapping (keys))))]
         (alter-var-root #'entities-frequencies (fn [o] (merge-with concat-into entities-frequencies prop-map))))))
   (del-var 'curr-entity-name)
   (del-var 'flag)
   identity)
 
-(defmacro defschema [opts & defentities]
-  (let [options (eval opts)]
-    (alter-var-root #'mapping-opts (fn [o] options)))
-  (initialize-database)
-  (d/transact (connect) [ENTITY_TYPE_ATTRIB])
-  (eval defentities)
-  (when (:auto-persist-schema mapping-opts)
-    (persist-schema)
-    identity))
+(defmacro defschema [n opts & defentities]
+  (let [options (eval opts)
+        name (eval n)]
+    (alter-var-root #'schema (fn [o] {(keyword name) {:mapping-opts options}}))
+    (make-var 'curr-schema name)
+    (initialize-database)
+    (d/transact (d/connect (-> (get-schema name) :mapping-opts :db-url)) [ENTITY_TYPE_ATTRIB])
+    (eval defentities)
+    (when (-> (get-schema name) :mapping-opts :auto-persist-schema)
+      (persist-schema name)
+      identity)))
 
 (defn mapping-by-symbol [symbol]
   (-> symbol resolve var-get))

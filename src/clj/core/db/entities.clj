@@ -162,32 +162,32 @@
 (defn mapping-by-symbol [symbol]
   (-> symbol resolve var-get))
 
-(defn find-mapping [service-entity]
-  (if-let [entity-type (reverse-mapping? service-entity)]
-    (->> (name entity-type) (str "core.db.entities/") symbol (var-by-symbol))
-    (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
-                     (apply concat)
-                     (frequencies))
-          freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
-          max-val (apply max (mapv #(get freqs %) (keys freqs)))
-          max-entries (filter #(= max-val (:v %)) freqs-vec)]
-      (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
-      (->> (first max-entries)
-           :k
-           name
-           (str "core.db.entities/")
-           symbol
-           (var-by-symbol)))))
-
-;TODO when vector this doesnt have to be entity !!!!
-(defn- entity? [entity]
-  (or (isa? (type entity) clojure.lang.PersistentVector)
-      (isa? (type entity) clojure.lang.PersistentArrayMap)))
+(defn- entity-less? [clj]
+  (if (vector? clj) (entity-less? (first clj))
+      (not (map? clj))))
 
 (defn reverse-mapping? [entity]
   (if (isa? (type entity) clojure.lang.PersistentVector)
     (let [entry (first entity)] (reverse-mapping? entry))
     (:entity/type entity)))
+
+(defn find-mapping [service-entity]
+  (when-not (entity-less? service-entity)
+    (if-let [entity-type (reverse-mapping? service-entity)]
+      (->> (name entity-type) (str "core.db.entities/") symbol (var-by-symbol))
+      (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
+                       (apply concat)
+                       (frequencies))
+            freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
+            max-val (apply max (mapv #(get freqs %) (keys freqs)))
+            max-entries (filter #(= max-val (:v %)) freqs-vec)]
+        (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
+        (->> (first max-entries)
+             :k
+             name
+             (str "core.db.entities/")
+             symbol
+             (var-by-symbol))))))
 
 
 (defmulti apply-mapping-opts :opt-key)
@@ -220,7 +220,8 @@
                            :target-property to-property
                            :property-value property-value}))
     (when (= true (get-var 'do-mapping?))
-      (if (entity? property-value)
+      (if (or (map? property-value)
+              (vector? property-value))
         (swap! source assoc to-property (mapping-func property-value))
         (swap! source assoc to-property property-value)))
     (del-var 'do-mapping?))
@@ -254,31 +255,38 @@
 
 (defmethod clj->db (type {})
   ([source mapping]
-   (let [mapping-rules (:mapping mapping)
-         temp-source (atom source)]
-     (do-mapping temp-source (:type mapping) mapping-rules clj->db)
-     (add-db-meta temp-source mapping)
-     @temp-source))
+   (if mapping
+     (let [mapping-rules (:mapping mapping)
+           temp-source (atom source)]
+       (do-mapping temp-source (:type mapping) mapping-rules clj->db)
+       (add-db-meta temp-source mapping)
+       @temp-source)
+     source))
   ([source]
    (clj->db source (find-mapping source))))
 
-;;TODO: Handle mapping of collection of non entities. e.g. collection of vectors.
 (defmethod clj->db (type [])
   ([source mapping]
    (mapv #(clj->db % mapping) source))
   ([source]
    (clj->db source (find-mapping (first source)))))
 
+(defmethod clj->db :default
+  ([source mapping] source)
+  ([source] source))
+
 (defmulti db->clj (fn ([source mapping] (type source))
                       ([source] (type source))))
 
 (defmethod db->clj (type {})
   ([source mapping]
-   (let [mapping-rules (:rev-mapping mapping)
-         temp-source (atom source)]
-     (delete-db-meta temp-source)
-     (do-mapping temp-source (:type mapping) mapping-rules db->clj)
-     @temp-source))
+   (if mapping
+     (let [mapping-rules (:rev-mapping mapping)
+           temp-source (atom source)]
+       (delete-db-meta temp-source)
+       (do-mapping temp-source (:type mapping) mapping-rules db->clj)
+       @temp-source)
+     source))
   ([source]
    (db->clj source (find-mapping source))))
 
@@ -288,3 +296,7 @@
    (mapv #(db->clj % mapping) source))
   ([source]
    (db->clj source (find-mapping (first source)))))
+
+(defmethod db->clj :default
+  ([source mapping] source)
+  ([source] source))

@@ -130,7 +130,8 @@
       {to-property {:to-property prop-name}})))
 
 (defn concat-into [& items]
-  (into [] (apply concat items)))
+  (into []  (-> (apply concat items)
+                distinct)))
 
 (defmacro defentity [entity-name & rules]
   (d/transact (connect) (mapping-enum  (eval entity-name)))
@@ -178,6 +179,7 @@
            symbol
            (var-by-symbol)))))
 
+;TODO when vector this doesnt have to be entity !!!!
 (defn- entity? [entity]
   (or (isa? (type entity) clojure.lang.PersistentVector)
       (isa? (type entity) clojure.lang.PersistentArrayMap)))
@@ -217,7 +219,6 @@
                            :source source
                            :target-property to-property
                            :property-value property-value}))
-    (println (str "Value of do-mapping? " from-property ", " to-property " " (get-var 'do-mapping?)))
     (when (= true (get-var 'do-mapping?))
       (if (entity? property-value)
         (swap! source assoc to-property (mapping-func property-value))
@@ -261,6 +262,7 @@
   ([source]
    (clj->db source (find-mapping source))))
 
+;;TODO: Handle mapping of collection of non entities. e.g. collection of vectors.
 (defmethod clj->db (type [])
   ([source mapping]
    (mapv #(clj->db % mapping) source))
@@ -272,16 +274,15 @@
 
 (defmethod db->clj (type {})
   ([source mapping]
-   (println "mapping db->clj")
    (let [mapping-rules (:rev-mapping mapping)
          temp-source (atom source)]
      (delete-db-meta temp-source)
      (do-mapping temp-source (:type mapping) mapping-rules db->clj)
      @temp-source))
   ([source]
-   (println (str "MAPPING IS" (find-mapping source)))
    (db->clj source (find-mapping source))))
 
+;;TODO: Handle mapping of collection of non entities. e.g. collection of vectors.
 (defmethod db->clj (type [])
   ([source mapping]
    (mapv #(db->clj % mapping) source))

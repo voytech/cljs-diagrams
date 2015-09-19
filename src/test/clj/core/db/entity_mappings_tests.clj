@@ -216,3 +216,36 @@
     (is (= "adasd" (:password clj)))
     (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:roles clj)))
     (is (= nil (:entity/type clj)))))
+
+
+(deftest test-mapping-with-mapping-hooks[]
+  (defschema 'test-mapping-non-entity-colls
+             {:mapping-inference true
+              :auto-persist-schema true
+              :db-url (mem-db-url)}
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref)
+      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:user.login/username property-value])))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
+  (let [entity-vec {:username "Wojtek"
+                    :password "adasd"
+                    :tenant "empik"
+                    :roles [:core.auth.roles/USER :core.auth.roles/TENANT]}
+        db (clj->db entity-vec)
+        clj (db->clj db)]
+    (is (= "Wojtek" (:user.login/username db)))
+    (is (= "adasd" (:user.login/password db)))
+    (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:user.login/roles db)))
+    (is (= :user.login (:entity/type db)))
+    (is (= [:user.login/username "empik"] (:user.login/tenant db)))
+    (is (= "Wojtek" (:username clj)))
+    (is (= "adasd" (:password clj)))
+    (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:roles clj)))
+    (is (= nil (:entity/type clj)))))

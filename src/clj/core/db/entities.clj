@@ -114,7 +114,7 @@
 
 (defn- do-check [key val]
   (when-not (and (symbol? key)
-                 (contains? #{'name 'type 'cardinality 'mapping-opts 'index 'unique 'component?} key))
+                 (contains? #{'name 'type 'cardinality 'mapping-opts 'mapping-hook 'reverse-mapping-hook 'index 'unique 'component?} key))
     (throw (IllegalArgumentException. (str "Wrong description of rule (" first "," val ")")))))
 
 (defn- decode-args [args]
@@ -129,11 +129,12 @@
         entity-name (name (get-var 'curr-entity-name))
         to-property (keyword (str entity-name "/" (name (or (:to-property decoded) prop-name))))
         property-def (assoc decoded :to-property to-property)]
-    (if (not (get-var 'flag))
+    (if (not (get-var 'reverse))
       (do (append-schema (create-db-property property-def))
           {(:name decoded)
            (dissoc (assoc decoded :to-property to-property) :name)})
-      {to-property {:to-property prop-name}})))
+      {to-property (merge {:to-property prop-name}
+                          (when-let [hook (:reverse-mapping-hook decoded)] {:mapping-hook hook}))})))
 
 (defn concat-into [& items]
   (into []  (-> (apply concat items)
@@ -144,15 +145,15 @@
   (make-var 'curr-entity-name (eval entity-name))
   (let [entity-var (var-get (intern 'core.db.entities (eval entity-name)
                                     {:type (eval entity-name)
-                                     :mapping (do (make-var 'flag false)
+                                     :mapping (do (make-var 'reverse false)
                                                   (apply merge (mapv #(eval %) rules)))
-                                     :rev-mapping (do (make-var 'flag true)
+                                     :rev-mapping (do (make-var 'reverse true)
                                                       (apply merge (mapv #(eval %) rules)))}))]
     (when (-> (current-schema) :mapping-opts :mapping-inference)
       (let [prop-map (apply merge (mapv (fn [k] {k [(:type entity-var)]}) (-> entity-var :mapping (keys))))]
         (alter-var-root #'entities-frequencies (fn [o] (merge-with concat-into entities-frequencies prop-map))))))
   (del-var 'curr-entity-name)
-  (del-var 'flag)
+  (del-var 'reverse)
   identity)
 
 (defmacro defschema [n opts & defentities]
@@ -216,23 +217,26 @@
   (make-var 'do-mapping? false)
   (swap! source assoc target-property property-value))
 
-(defn- map-property [mapping-func type from-property to-property source mapping-opts]
-  (let [property-value (from-property @source)]
-    (make-var 'do-mapping? true)
-    (doseq [mapping-opt (keys mapping-opts)]
-      (apply-mapping-opts {:type type
-                           :func mapping-func
-                           :opt-key mapping-opt
-                           :opt-value (mapping-opt mapping-opts)
-                           :source source
-                           :target-property to-property
-                           :property-value property-value}))
-    (when (= true (get-var 'do-mapping?))
-      (if (or (map? property-value)
-              (vector? property-value))
-        (swap! source assoc to-property (mapping-func property-value))
-        (swap! source assoc to-property property-value)))
-    (del-var 'do-mapping?))
+(defn- map-property [mapping-func type from-property to-property source mapping-rules]
+  (let [property-value (from-property @source)
+        mapping-opts (:mapping-opts mapping-rules)]
+    (if-let [mapping-hook (:mapping-hook mapping-rules)]
+      (swap! source assoc to-property (mapping-hook property-value))
+      (do (make-var 'do-mapping? true)
+          (doseq [mapping-opt (keys mapping-opts)]
+            (apply-mapping-opts {:type type
+                                 :func mapping-func
+                                 :opt-key mapping-opt
+                                 :opt-value (mapping-opt mapping-opts)
+                                 :source source
+                                 :target-property to-property
+                                 :property-value property-value}))
+          (when (= true (get-var 'do-mapping?))
+            (if (or (map? property-value)
+                    (vector? property-value))
+              (swap! source assoc to-property (mapping-func property-value))
+              (swap! source assoc to-property property-value)))
+          (del-var 'do-mapping?))))
   (swap! source dissoc from-property))
 
 (defn- has? [property mapping]
@@ -256,7 +260,7 @@
                                    %
                                    (:to-property (% mapping-rules))
                                    source-atom
-                                   (:mapping-opts (% mapping-rules)))) source-props))))
+                                   (% mapping-rules))) source-props))))
 
 (defmulti clj->db (fn ([source mapping] (type source))
                       ([source] (type source))))

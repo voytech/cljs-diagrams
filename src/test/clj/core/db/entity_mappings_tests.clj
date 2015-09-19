@@ -27,7 +27,8 @@
        (some k)))
 
 (deftest test-defentity-macro
-  (defschema {:mapping-inference true
+  (defschema 'test-defentity-macro
+             {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
     (defentity 'user.login
@@ -47,7 +48,8 @@
   (is (not (nil? (get-frequencies)))))
 
 (deftest test-resolve-mapping
-  (defschema {:mapping-inference true
+  (defschema 'test-resolve-mapping
+             {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
     (defentity 'user.login
@@ -68,7 +70,8 @@
                              (:type))))))
 
 (deftest test-cannot-resolve-mapping
-  (defschema {:mapping-inference true
+  (defschema 'test-cannot-resolve-mapping
+             {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
     (defentity 'user.login
@@ -90,7 +93,8 @@
                           (find-mapping entity)))))
 
 (deftest test-mapping-lookup-ref []
-  (defschema {:mapping-inference true
+  (defschema 'test-mapping-lookup-ref
+             {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
     (defentity 'user.login
@@ -108,7 +112,8 @@
       (is (= :user.login (:entity/type db))))))
 
 (deftest test-mapping-forth-and-back-simple []
-  (defschema {:mapping-inference true
+  (defschema 'test-mapping-forth-and-back-simple
+             {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
        (defentity 'user.login
@@ -136,7 +141,8 @@
       (is (= "localhost:432" (:dburl clj)))))
 
 (deftest test-mapping-forth-and-back-compound[]
-  (defschema {:mapping-inference true
+  (defschema 'test-mapping-forth-and-back-compound
+             {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
     (defentity 'user.login
@@ -155,14 +161,10 @@
                     :dburl    "localhost:432"
                     :users [{:username "Jack"
                              :password "Jack1"
-                             :roles "USER"
-                             ;:tenant "Wojtek" ;; Here schema uses lookup-ref - as long as no transaction lookup is not resolved so we cannot map it.
-                             }
+                             :roles "USER"}
                             {:username "tedd"
                              :password "tedd1"
-                             :roles "USER"
-                             ;:tenant "Wojtek"
-                             }]}
+                             :roles "USER"}]}
         db (clj->db entity-vec)
         clj (db->clj db)]
       (is (= "Wojtek" (:tenant.login/username db)))
@@ -186,7 +188,8 @@
       (is (= "USER" (get-in clj [:users 1 :roles])))))
 
 (deftest test-mapping-non-entity-colls []
-  (defschema {:mapping-inference true
+  (defschema 'test-mapping-non-entity-colls
+             {:mapping-inference true
               :auto-persist-schema true
               :db-url (mem-db-url)}
     (defentity 'user.login

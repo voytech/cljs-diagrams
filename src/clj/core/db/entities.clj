@@ -18,10 +18,10 @@
 ;;       (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
 ;;       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
 
-;; Approach above will allow to:
+;; Features :
 ;; 1. Perform mapping from service entities into database entities.
-;; 2. Perform mapping from database entity into service entities.
-;; 3. Create attribute schema from this entity schema.
+;; 2. Perform mapping back from database entity into service entities.
+;; 3. Create datomic attribute schema from this entity schema.
 ;; 4. Automatically convert specific properties into lookup refs to establish relation.
 ;; 5. Persist nested component entities - automatically resolved from service entity
 
@@ -40,7 +40,6 @@
    :db/doc "Entity level shema attribute - name of entity"
    :db.install/_attribute :db.part/db})
 
-;(def ^:dynamic mapping-opts {})
 (def ^:dynamic entities-frequencies {})
 (def ^:dynamic schema {})
 
@@ -67,7 +66,7 @@
     (d/tempid partition)))
 
 (defn- initialize-database []
-  (let [connection-string (-> (current-schema) :mapping-opts :db-partition)]
+  (let [connection-string (-> (current-schema) :mapping-opts :db-url)]
     (d/create-database connection-string)))
 
 (defn mapping-into-ns [mapping-symbol]
@@ -105,11 +104,13 @@
       (merge (if-let [card  (:cardinality property-def)] {:db/cardinality card} {:db/cardinality :db.cardinality/one}))))
 
 (defn- append-schema [next-db-property]
-  (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data] (conj (or (:data current-schema) []) next-db-property)))))
+  (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data] (conj (or (:data (current-schema)) []) next-db-property)))))
 
-(defn persist-schema [name url]
-  (when-let [schema-data (:data (get-schema name))]
-    (d/transact (d/connect (or url (-> (get-schema name) :mapping-opts :db-url))) schema-data)))
+(defn persist-schema
+  ([name url]
+   (when-let [schema-data (:data (get-schema name))]
+     (d/transact (d/connect (or url (-> (get-schema name) :mapping-opts :db-url))) schema-data)))
+  ([name] (persist-schema name nil)))
 
 (defn- do-check [key val]
   (when-not (and (symbol? key)
@@ -156,7 +157,7 @@
 
 (defmacro defschema [n opts & defentities]
   (let [options (eval opts)
-        name (eval n)]
+        name (name (eval n))] ;; canonical representation should be string. No matter if on input there is string symbol or keyword it would be string here.
     (alter-var-root #'schema (fn [o] {(keyword name) {:mapping-opts options}}))
     (make-var 'curr-schema name)
     (initialize-database)

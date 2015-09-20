@@ -312,3 +312,33 @@
   (is (= :tenant.login/dburl (find-property-named :tenant.login/dburl (mem-db-url))))
   (is (= :tenant.login/users (find-property-named :tenant.login/users (mem-db-url))))
   (is (= :tenant.login/organization (find-property-named :tenant.login/organization (mem-db-url)))))
+
+(deftest test-persist-entity []
+(defschema 'test-persist-entity
+             {:mapping-inference true
+              :auto-persist-schema false
+              :db-url (mem-db-url)}
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref)
+      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:user.login/username property-value])))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
+  (persist-schema 'test-persist-schema)
+  (let [user {:username "Wojciech"
+              :password "Password123"
+              :dburl "voytech-print"
+              :organization "voytech-print"}
+        db-entity (clj->db user)]
+    (d/transact (d/connect (mem-db-url)) [db-entity])
+    (let [db (d/db (d/connect (mem-db-url)))
+          result (d/q '[:find (pull ?p [*])
+                        :in $ ?name
+                        :where [?p :tenant.login/username ?name]] db "Wojciech")]
+      (println (str "result: " result))
+      )))

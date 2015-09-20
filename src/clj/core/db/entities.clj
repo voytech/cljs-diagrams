@@ -72,12 +72,9 @@
 (defn mapping-into-ns [mapping-symbol]
   (symbol (str "core.db.entities/" (name mapping-symbol))))
 
-(defn db-mapping-type [mapping-type]
-  (keyword (name mapping-type)))
-
-(defn- mapping-enum [entity-name]
-  [{:db/id (d/tempid :db.part/user),
-    :db/ident (db-mapping-type entity-name)}])
+(defn- entity-type-enum [entity-name]
+  {:db/id (d/tempid :db.part/user),
+   :db/ident (keyword (name entity-name))})
 
 (defn var-by-symbol [symbol]
   (-> symbol resolve var-get))
@@ -105,6 +102,9 @@
 
 (defn- append-schema [next-db-property]
   (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data] (conj (or (:data (current-schema)) []) next-db-property)))))
+
+;; (defn- append-data [prereq-data]
+;;   (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data-ext] (conj (or (:data-ext (current-schema)) []) prereq-data)))))
 
 (defn persist-schema
   ([name url]
@@ -141,7 +141,7 @@
                 distinct)))
 
 (defmacro defentity [entity-name & rules]
-  (d/transact (d/connect (-> (current-schema) :mapping-opts :db-url)) (mapping-enum  (eval entity-name)))
+  (append-schema (entity-type-enum (eval entity-name)))
   (make-var 'curr-entity-name (eval entity-name))
   (let [entity-var (var-get (intern 'core.db.entities (eval entity-name)
                                     {:type (eval entity-name)
@@ -159,14 +159,18 @@
 (defmacro defschema [n opts & defentities]
   (let [options (eval opts)
         name (name (eval n))] ;; canonical representation should be string. No matter if on input there is string symbol or keyword it would be string here.
+    (when (and (-> options :db-drop)
+               (-> options :db-url))
+      (d/delete-database (-> options :db-url)))
     (alter-var-root #'schema (fn [o] {(keyword name) {:mapping-opts options}}))
     (make-var 'curr-schema name)
-    (initialize-database)
-    (d/transact (d/connect (-> (get-schema name) :mapping-opts :db-url)) [ENTITY_TYPE_ATTRIB])
     (eval defentities)
-    (when (-> (get-schema name) :mapping-opts :auto-persist-schema)
-      (persist-schema name)
-      identity)))
+    (when (and (-> options :auto-persist-schema)
+               (-> options :db-url))
+      (initialize-database)
+      (d/transact (d/connect (-> options :db-url)) [ENTITY_TYPE_ATTRIB])
+      (persist-schema name))
+    identity))
 
 (defn mapping-by-symbol [symbol]
   (-> symbol resolve var-get))
@@ -250,7 +254,7 @@
 
 (defn- add-db-meta [source-atom mapping]
   (swap! source-atom assoc :db/id (make-temp-id))
-  (swap! source-atom assoc :entity/type (db-mapping-type (:type mapping))))
+  (swap! source-atom assoc :entity/type (keyword (name (:type mapping)))))
 
 (defn- do-mapping [source-atom entity-type mapping-rules mapping-func]
   (let [source-props (keys @source-atom)]

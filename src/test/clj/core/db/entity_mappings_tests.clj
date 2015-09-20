@@ -29,7 +29,25 @@
 (deftest test-defentity-macro
   (defschema 'test-defentity-macro
              {:mapping-inference true
+              :auto-persist-schema false
+              :db-url (mem-db-url)}
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref                               mapping-opts {:required true})
+      (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref #([:user.login/username %])}))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
+  (is (not (nil? (get-frequencies)))))
+
+(deftest test-defentity-macro-lazy-schema
+  (defschema 'test-defentity-macro
+             {:mapping-inference true
               :auto-persist-schema true
+              :db-drop true
               :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -45,12 +63,14 @@
   (is (= :user.login/password (find-property-named :user.login/password (mem-db-url))))
   (is (= :user.login/roles (find-property-named :user.login/roles (mem-db-url))))
   (is (= :user.login/tenant (find-property-named :user.login/tenant (mem-db-url))))
+  (is (= :entity/type (find-property-named :entity/type (mem-db-url))))
   (is (not (nil? (get-frequencies)))))
+
 
 (deftest test-resolve-mapping
   (defschema 'test-resolve-mapping
              {:mapping-inference true
-              :auto-persist-schema true
+              :auto-persist-schema false
               :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -72,7 +92,7 @@
 (deftest test-cannot-resolve-mapping
   (defschema 'test-cannot-resolve-mapping
              {:mapping-inference true
-              :auto-persist-schema true
+              :auto-persist-schema false
               :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -95,7 +115,7 @@
 (deftest test-mapping-lookup-ref []
   (defschema 'test-mapping-lookup-ref
              {:mapping-inference true
-              :auto-persist-schema true
+              :auto-persist-schema false
               :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -114,7 +134,7 @@
 (deftest test-mapping-forth-and-back-simple []
   (defschema 'test-mapping-forth-and-back-simple
              {:mapping-inference true
-              :auto-persist-schema true
+              :auto-persist-schema false
               :db-url (mem-db-url)}
        (defentity 'user.login
             (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -143,7 +163,7 @@
 (deftest test-mapping-forth-and-back-compound[]
   (defschema 'test-mapping-forth-and-back-compound
              {:mapping-inference true
-              :auto-persist-schema true
+              :auto-persist-schema false
               :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -190,7 +210,7 @@
 (deftest test-mapping-non-entity-colls []
   (defschema 'test-mapping-non-entity-colls
              {:mapping-inference true
-              :auto-persist-schema true
+              :auto-persist-schema false
               :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -221,7 +241,7 @@
 (deftest test-mapping-with-mapping-hooks[]
   (defschema 'test-mapping-non-entity-colls
              {:mapping-inference true
-              :auto-persist-schema true
+              :auto-persist-schema false
               :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})

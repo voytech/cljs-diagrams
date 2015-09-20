@@ -8,7 +8,6 @@
   (str (:db-url (load-configuration "resources/schema/properties.edn")) "/testing"))
 
 (defn- mem-db-url []
-  (println (:db-url (load-configuration "resources/schema/test_properties.edn")))
   (:db-url (load-configuration "resources/schema/test_properties.edn")))
 
 (defn- init-in-memory-db []
@@ -41,6 +40,22 @@
       (property name :password      type :db.type/string                            mapping-opts {:required true})
       (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required true})))
+  (let  [user-login (get-var 'user.login)
+         tenant-login (get-var 'tenant.login)]
+    (is (= 'user.login (:type user-login)))
+    (is (= :db.type/string (-> user-login :mapping :username :type)))
+    (is (= :db.unique/identity (-> user-login :mapping :username :unique)))
+    (is (= :user.login/username (-> user-login :mapping :username :to-property)))
+    (is (= :db.type/string (-> user-login :mapping :password :type)))
+    (is (= :user.login/password (-> user-login :mapping :password :to-property)))
+    (is (= :db.type/ref (-> user-login :mapping :roles :type)))
+    (is (= :user.login/roles (-> user-login :mapping :roles :to-property)))
+    (is (= :db.type/ref (-> user-login :mapping :tenant :type)))
+    (is (= :user.login/tenant (-> user-login :mapping :tenant :to-property))))
+  (let [this-schema (-> schema :test-defentity-macro)]
+    (println (keys schema))
+    (println (-> this-schema :data))
+    (println (-> this-schema :mapping-opts)))
   (is (not (nil? (get-frequencies)))))
 
 (deftest test-defentity-macro-lazy-schema

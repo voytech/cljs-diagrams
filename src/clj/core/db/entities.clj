@@ -129,7 +129,7 @@
         entity-name (name (get-var 'curr-entity-name))
         to-property (keyword (str entity-name "/" (name (or (:to-property decoded) prop-name))))
         property-def (assoc decoded :to-property to-property)]
-    (if (not (get-var 'reverse))
+    (if-not (get-var 'reversed-mapping)
       (do (append-schema (create-db-property property-def))
           {(:name decoded)
            (dissoc (assoc decoded :to-property to-property) :name)})
@@ -145,15 +145,15 @@
   (make-var 'curr-entity-name (eval entity-name))
   (let [entity-var (var-get (intern 'core.db.entities (eval entity-name)
                                     {:type (eval entity-name)
-                                     :mapping (do (make-var 'reverse false)
+                                     :mapping (do (make-var 'reversed-mapping false)
                                                   (apply merge (mapv #(eval %) rules)))
-                                     :rev-mapping (do (make-var 'reverse true)
+                                     :rev-mapping (do (make-var 'reversed-mapping true)
                                                       (apply merge (mapv #(eval %) rules)))}))]
     (when (-> (current-schema) :mapping-opts :mapping-inference)
       (let [prop-map (apply merge (mapv (fn [k] {k [(:type entity-var)]}) (-> entity-var :mapping (keys))))]
         (alter-var-root #'entities-frequencies (fn [o] (merge-with concat-into entities-frequencies prop-map))))))
   (del-var 'curr-entity-name)
-  (del-var 'reverse)
+  (del-var 'reversed-mapping)
   identity)
 
 (defmacro defschema [n opts & defentities]
@@ -162,13 +162,13 @@
     (when (and (-> options :db-drop)
                (-> options :db-url))
       (d/delete-database (-> options :db-url)))
-    (alter-var-root #'schema (fn [o] {(keyword name) {:mapping-opts options}}))
+    (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword name)] {:mapping-opts options})))
     (make-var 'curr-schema name)
+    (append-schema ENTITY_TYPE_ATTRIB)
     (eval defentities)
     (when (and (-> options :auto-persist-schema)
                (-> options :db-url))
       (initialize-database)
-      (d/transact (d/connect (-> options :db-url)) [ENTITY_TYPE_ATTRIB])
       (persist-schema name))
     identity))
 

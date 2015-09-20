@@ -61,12 +61,12 @@
   (get-schema (get-var 'curr-schema)))
 
 (defn make-temp-id []
-  (let [partition (or (-> (current-schema) :mapping-opts :db-partition)
+  (let [partition (or (-> (current-schema) :schema-opts :db-partition)
                       DEFAULT_PARTITION)]
     (d/tempid partition)))
 
 (defn- initialize-database []
-  (let [connection-string (-> (current-schema) :mapping-opts :db-url)]
+  (let [connection-string (-> (current-schema) :schema-opts :db-url)]
     (d/create-database connection-string)))
 
 (defn mapping-into-ns [mapping-symbol]
@@ -109,7 +109,7 @@
 (defn persist-schema
   ([name url]
    (when-let [schema-data (:data (get-schema name))]
-     (d/transact (d/connect (or url (-> (get-schema name) :mapping-opts :db-url))) schema-data)))
+     (d/transact (d/connect (or url (-> (get-schema name) :schema-opts :db-url))) schema-data)))
   ([name] (persist-schema name nil)))
 
 (defn- do-check [key val]
@@ -149,7 +149,7 @@
                                                   (apply merge (mapv #(eval %) rules)))
                                      :rev-mapping (do (make-var 'reversed-mapping true)
                                                       (apply merge (mapv #(eval %) rules)))}))]
-    (when (-> (current-schema) :mapping-opts :mapping-inference)
+    (when (-> (current-schema) :schema-opts :mapping-inference)
       (let [prop-map (apply merge (mapv (fn [k] {k [(:type entity-var)]}) (-> entity-var :mapping (keys))))]
         (alter-var-root #'entities-frequencies (fn [o] (merge-with concat-into entities-frequencies prop-map))))))
   (del-var 'curr-entity-name)
@@ -162,7 +162,7 @@
     (when (and (-> options :db-drop)
                (-> options :db-url))
       (d/delete-database (-> options :db-url)))
-    (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword name)] {:mapping-opts options})))
+    (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword name)] {:schema-opts options})))
     (make-var 'curr-schema name)
     (append-schema ENTITY_TYPE_ATTRIB)
     (eval defentities)

@@ -53,13 +53,14 @@
     (is (= :db.type/ref (-> user-login :mapping :tenant :type)))
     (is (= :user.login/tenant (-> user-login :mapping :tenant :to-property))))
   (let [this-schema (-> schema :test-defentity-macro)]
-    (println (keys schema))
-    (println (-> this-schema :data))
-    (println (-> this-schema :mapping-opts)))
+    (is (= true (-> this-schema :schema-opts :mapping-inference)))
+    (is (= false (-> this-schema :schema-opts :auto-persist-schema)))
+    (is (= (mem-db-url) (-> this-schema :schema-opts :db-url))))
   (is (not (nil? (get-frequencies)))))
 
+
 (deftest test-defentity-macro-lazy-schema
-  (defschema 'test-defentity-macro
+  (defschema 'test-defentity-macro-lazy-schema
              {:mapping-inference true
               :auto-persist-schema true
               :db-drop true
@@ -284,3 +285,30 @@
     (is (= "adasd" (:password clj)))
     (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:roles clj)))
     (is (= nil (:entity/type clj)))))
+
+(deftest test-persist-schema []
+  (defschema 'test-persist-schema
+             {:mapping-inference true
+              :auto-persist-schema false
+              :db-url (mem-db-url)}
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref)
+      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:user.login/username property-value])))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
+  (persist-schema 'test-persist-schema)
+  (is (= :entity/type (find-property-named :entity/type (mem-db-url))))
+  (is (= :user.login/username (find-property-named :user.login/username (mem-db-url))))
+  (is (= :user.login/password (find-property-named :user.login/password (mem-db-url))))
+  (is (= :user.login/roles (find-property-named :user.login/roles (mem-db-url))))
+  (is (= :tenant.login/username (find-property-named :tenant.login/username (mem-db-url))))
+  (is (= :tenant.login/password (find-property-named :tenant.login/password (mem-db-url))))
+  (is (= :tenant.login/dburl (find-property-named :tenant.login/dburl (mem-db-url))))
+  (is (= :tenant.login/users (find-property-named :tenant.login/users (mem-db-url))))
+  (is (= :tenant.login/organization (find-property-named :tenant.login/organization (mem-db-url)))))

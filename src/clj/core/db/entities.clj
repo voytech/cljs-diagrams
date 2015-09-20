@@ -179,8 +179,13 @@
   (if (vector? clj) (entity-less? (first clj))
       (not (map? clj))))
 
+(defn- resolve-entity-type [entity-type]
+  (if (map? entity-type)
+    (:db/ident entity-type)
+    entity-type))
+
 (defn reverse-mapping? [entity]
-  (if (isa? (type entity) clojure.lang.PersistentVector)
+  (if (vector? entity)
     (let [entry (first entity)] (reverse-mapping? entry))
     (:entity/type entity)))
 

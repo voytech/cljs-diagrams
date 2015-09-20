@@ -339,10 +339,11 @@
               :tenant "Wojciech"}
         db-tenant (clj->db tenant)
         db-user (clj->db user)]
-    (d/transact (d/connect (mem-db-url)) [db-tenant])
-    (d/transact (d/connect (mem-db-url)) [db-user]))
+    (let [connection (d/connect (mem-db-url))]
+      (d/transact connection [db-tenant])
+      (d/transact connection [db-user])))
     (let [db (d/db (d/connect (mem-db-url)))
-          result (d/q '[:find (pull ?p [* {:entity/type [:db/ident]}])
+          result (d/q '[:find (pull ?p [* {:user.login/tenant [*]}])
                         :in $ ?name
                         :where [?p :user.login/username ?name]] db "Jan")]
       (println (str "result: " result))

@@ -263,7 +263,7 @@
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
       (property name :roles     type :db.type/ref)
-      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:user.login/username property-value])))
+      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:tenant.login/username property-value])))
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password      type :db.type/string                            mapping-opts {:required true})
@@ -280,7 +280,7 @@
     (is (= "adasd" (:user.login/password db)))
     (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:user.login/roles db)))
     (is (= :user.login (:entity/type db)))
-    (is (= [:user.login/username "empik"] (:user.login/tenant db)))
+    (is (= [:tenant.login/username "empik"] (:user.login/tenant db)))
     (is (= "Wojtek" (:username clj)))
     (is (= "adasd" (:password clj)))
     (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:roles clj)))
@@ -322,7 +322,7 @@
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
       (property name :roles     type :db.type/ref)
-      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:user.login/username property-value])))
+      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:tenant.login/username property-value])))
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password      type :db.type/string                            mapping-opts {:required true})
@@ -330,15 +330,20 @@
       (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
   (persist-schema 'test-persist-schema)
-  (let [user {:username "Wojciech"
-              :password "Password123"
-              :dburl "voytech-print"
-              :organization "voytech-print"}
-        db-entity (clj->db user)]
-    (d/transact (d/connect (mem-db-url)) [db-entity])
+  (let [tenant {:username "Wojciech"
+                :password "Password123"
+                :dburl "voytech-print"
+                :organization "voytech-print"}
+        user {:username "Jan"
+              :password "Passwd1"
+              :tenant "Wojciech"}
+        db-tenant (clj->db tenant)
+        db-user (clj->db user)]
+    (d/transact (d/connect (mem-db-url)) [db-tenant])
+    (d/transact (d/connect (mem-db-url)) [db-user]))
     (let [db (d/db (d/connect (mem-db-url)))
           result (d/q '[:find (pull ?p [* {:entity/type [:db/ident]}])
                         :in $ ?name
-                        :where [?p :tenant.login/username ?name]] db "Wojciech")]
+                        :where [?p :user.login/username ?name]] db "Jan")]
       (println (str "result: " result))
-      )))
+      ))

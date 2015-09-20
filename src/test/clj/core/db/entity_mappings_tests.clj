@@ -337,7 +337,7 @@
         db-entity (clj->db user)]
     (d/transact (d/connect (mem-db-url)) [db-entity])
     (let [db (d/db (d/connect (mem-db-url)))
-          result (d/q '[:find (pull ?p [*])
+          result (d/q '[:find (pull ?p [* {:entity/type [:db/ident]}])
                         :in $ ?name
                         :where [?p :tenant.login/username ?name]] db "Wojciech")]
       (println (str "result: " result))

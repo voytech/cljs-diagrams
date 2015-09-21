@@ -1,6 +1,6 @@
 (ns core.db.entities
   (:require [datomic.api :as d]
-            [clojure.walk :refer [prewalk]]))
+            [clojure.walk :refer [postwalk]]))
 
 ;; (defschema 'login-db
 ;;            {:mapping-inference true
@@ -74,7 +74,8 @@
 
 (defn- entity-type-enum [entity-name]
   {:db/id (d/tempid :db.part/user),
-   :db/ident (keyword (name entity-name))})
+   :db/ident (keyword (name entity-name))
+   :db/doc "entity-type"})
 
 (defn var-by-symbol [symbol]
   (-> symbol resolve var-get))
@@ -105,6 +106,16 @@
 
 ;; (defn- append-data [prereq-data]
 ;;   (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data-ext] (conj (or (:data-ext (current-schema)) []) prereq-data)))))
+
+(defn entity-types
+  ([name url]
+   (when-let [schema-data (:data (get-schema name))]
+     (let [db (d/db (d/connect (or url (-> (get-schema name) :schema-opts :db-url))))]
+       (apply merge (mapv (fn [e] {(keyword (str (:db/id (first e)))),
+                                   (:db/ident (first e))}) (d/q '[:find (pull ?p [*])
+                                                                  :in $
+                                                                  :where [?p :db/doc "entity-type"]] db))))))
+  ([name] (entity-types name nil)))
 
 (defn persist-schema
   ([name url]
@@ -181,13 +192,14 @@
 
 (defn- resolve-entity-type [entity-type]
   (if (map? entity-type)
-    (:db/ident entity-type)
+    (or (:db/ident entity-type)
+        (:db/id entity-type))
     entity-type))
 
 (defn reverse-mapping? [entity]
   (if (vector? entity)
     (let [entry (first entity)] (reverse-mapping? entry))
-    (:entity/type entity)))
+    (resolve-entity-type (:entity/type entity))))
 
 (defn find-mapping [service-entity]
   (when-not (entity-less? service-entity)
@@ -316,7 +328,7 @@
   ([source mapping]
    (mapv #(db->clj % mapping) source))
   ([source]
-   (db->clj source (find-mapping (first source)))))
+   (db->clj source (find-mapping (first source))))) ;;This is wrong assumption. What about when we tries to map a vector of entities with different types ?
 
 (defmethod db->clj :default
   ([source mapping] source)

@@ -314,10 +314,10 @@
   (is (= :tenant.login/organization (find-property-named :tenant.login/organization (mem-db-url)))))
 
 (deftest test-persist-entity []
-(defschema 'test-persist-entity
-             {:mapping-inference true
-              :auto-persist-schema false
-              :db-url (mem-db-url)}
+  (defschema 'test-persist-entity
+    {:mapping-inference true
+     :auto-persist-schema false
+     :db-url (mem-db-url)}
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
@@ -341,10 +341,27 @@
         db-user (clj->db user)]
     (let [connection (d/connect (mem-db-url))]
       (d/transact connection [db-tenant])
-      (d/transact connection [db-user])))
-    (let [db (d/db (d/connect (mem-db-url)))
-          result (d/q '[:find (pull ?p [* {:user.login/tenant [*]}])
-                        :in $ ?name
-                        :where [?p :user.login/username ?name]] db "Jan")]
-      (println (str "result: " result))
-      ))
+      (d/transact connection [db-user])
+      (let [result (d/q '[:find (pull ?p [*])
+                          :in $ ?name
+                          :where [?p :user.login/username ?name]] (d/db connection) "Jan")]
+        (println (str "result: " result))))))
+
+(deftest test-entity-types []
+  (defschema 'test-entity-types
+    {:mapping-inference true
+     :auto-persist-schema false
+     :db-url (mem-db-url)}
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref)
+      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:tenant.login/username property-value])))
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
+  (persist-schema 'test-entity-types)
+  (println (entity-types 'test-entity-types (mem-db-url))))

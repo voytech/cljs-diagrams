@@ -167,7 +167,7 @@
                       :password "adasd"
                       :dburl    "localhost:432"}
           db (clj->db entity-vec)
-          clj (db->clj db)]
+          clj (db->clj db (mem-db-url))]
       (is (= "Wojtek" (:tenant.login/username db)))
       (is (= "adasd" (:tenant.login/password db)))
       (is (= "localhost:432" (:tenant.login/dburl db)))
@@ -202,7 +202,7 @@
                              :password "tedd1"
                              :roles "USER"}]}
         db (clj->db entity-vec)
-        clj (db->clj db)]
+        clj (db->clj db (mem-db-url))]
       (is (= "Wojtek" (:tenant.login/username db)))
       (is (= "adasd" (:tenant.login/password db)))
       (is (= "localhost:432" (:tenant.login/dburl db)))
@@ -232,7 +232,10 @@
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
       (property name :roles     type :db.type/ref)
-      (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:tenant.login/username v])}))
+      (property name :tenant
+                type :db.type/ref
+                mapping-opts {:lookup-ref (fn [v] [:tenant.login/username v])}
+                reverse-mapping-hook (fn [property-value] (d/pull (d/db (d/connect (mem-db-url))) '[:tenant.login/username] (:db/id property-value)))))
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password      type :db.type/string                            mapping-opts {:required true})
@@ -243,7 +246,7 @@
                     :password "adasd"
                     :roles [:core.auth.roles/USER :core.auth.roles/TENANT]}
         db (clj->db entity-vec)
-        clj (db->clj db)]
+        clj (db->clj db (mem-db-url))]
     (is (= "Wojtek" (:user.login/username db)))
     (is (= "adasd" (:user.login/password db)))
     (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:user.login/roles db)))
@@ -263,7 +266,10 @@
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
       (property name :roles     type :db.type/ref)
-      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:tenant.login/username property-value])))
+      (property name :tenant
+                type :db.type/ref
+                mapping-hook (fn [property-value] [:tenant.login/username property-value])
+                reverse-mapping-hook (fn [property-value] (d/pull (d/db (d/connect (mem-db-url))) '[:tenant.login/username] (:db/id property-value)))))
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password      type :db.type/string                            mapping-opts {:required true})
@@ -275,7 +281,7 @@
                     :tenant "empik"
                     :roles [:core.auth.roles/USER :core.auth.roles/TENANT]}
         db (clj->db entity-vec)
-        clj (db->clj db)]
+        clj (db->clj db (mem-db-url))]
     (is (= "Wojtek" (:user.login/username db)))
     (is (= "adasd" (:user.login/password db)))
     (is (= [:core.auth.roles/USER :core.auth.roles/TENANT] (:user.login/roles db)))
@@ -295,7 +301,11 @@
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
       (property name :roles     type :db.type/ref)
-      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:user.login/username property-value])))
+      (property name :tenant
+                type :db.type/ref
+                mapping-hook (fn [property-value] [:user.login/username property-value])
+                reverse-mapping-hook (fn [property-value]
+                                       (d/pull (d/db (d/connect *db-url*)) '[:tenant.login/username] (:db/id property-value)))))
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password      type :db.type/string                            mapping-opts {:required true})
@@ -322,14 +332,20 @@
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
       (property name :roles     type :db.type/ref)
-      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:tenant.login/username property-value])))
+      (property name :tenant
+                type :db.type/ref
+                mapping-hook (fn [property-value] [:tenant.login/username property-value])
+                reverse-mapping-hook (fn [property-value]
+                                       (-> (d/pull (d/db (d/connect *db-url*)) '[:tenant.login/username] (:db/id property-value))
+                                           :tenant.login/username))
+                ))
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password      type :db.type/string                            mapping-opts {:required true})
       (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
-  (persist-schema 'test-persist-schema)
+  (persist-schema 'test-persist-entity (mem-db-url))
   (let [tenant {:username "Wojciech"
                 :password "Password123"
                 :dburl "voytech-print"
@@ -347,9 +363,6 @@
                           :where [?p :user.login/username ?name]] (d/db connection) "Jan")]
         (println (str "result: " result))
         (println (str "mapped: " (db->clj result (mem-db-url))))
-        ;; (binding [*db-url* (mem-db-url)]
-        ;;   (println (persisted-entity-type result)))
-                                        ; (println (str "mapped: " (db->clj result (mem-db-url))))
         ))))
 
 (deftest test-entity-types []
@@ -361,7 +374,13 @@
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})
       (property name :roles     type :db.type/ref)
-      (property name :tenant    type :db.type/ref                               mapping-hook (fn [property-value] [:tenant.login/username property-value])))
+      (property name :tenant
+                type :db.type/ref
+                mapping-hook (fn [property-value] [:tenant.login/username property-value])
+                reverse-mapping-hook (fn [property-value]
+                                       (-> (d/pull (d/db (d/connect *db-url*)) '[:tenant.login/username] (:db/id property-value))
+                                           :tenant.login/username))))
+
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password      type :db.type/string                            mapping-opts {:required true})

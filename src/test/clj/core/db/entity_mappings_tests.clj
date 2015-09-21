@@ -345,7 +345,12 @@
       (let [result (d/q '[:find (pull ?p [*])
                           :in $ ?name
                           :where [?p :user.login/username ?name]] (d/db connection) "Jan")]
-        (println (str "result: " result))))))
+        (println (str "result: " result))
+        (println (str "mapped: " (db->clj result (mem-db-url))))
+        ;; (binding [*db-url* (mem-db-url)]
+        ;;   (println (persisted-entity-type result)))
+                                        ; (println (str "mapped: " (db->clj result (mem-db-url))))
+        ))))
 
 (deftest test-entity-types []
   (defschema 'test-entity-types
@@ -364,4 +369,5 @@
       (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
   (persist-schema 'test-entity-types)
-  (println (entity-types 'test-entity-types (mem-db-url))))
+  ;(println (entity-types 'test-entity-types (mem-db-url)))
+  )

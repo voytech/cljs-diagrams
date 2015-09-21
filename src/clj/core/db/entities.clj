@@ -28,7 +28,7 @@
 (declare map-entity
          var-by-symbol
          get-var
-         reverse-mapping?)
+         persisted-entity-type)
 
 (def DEFAULT_PARTITION :db.part/user)
 
@@ -42,6 +42,7 @@
 
 (def ^:dynamic entities-frequencies {})
 (def ^:dynamic schema {})
+(def ^:dynamic *db-url* "")
 
 (defn get-var [symb]
   (->> symb
@@ -106,16 +107,6 @@
 
 ;; (defn- append-data [prereq-data]
 ;;   (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data-ext] (conj (or (:data-ext (current-schema)) []) prereq-data)))))
-
-(defn entity-types
-  ([name url]
-   (when-let [schema-data (:data (get-schema name))]
-     (let [db (d/db (d/connect (or url (-> (get-schema name) :schema-opts :db-url))))]
-       (apply merge (mapv (fn [e] {(keyword (str (:db/id (first e)))),
-                                   (:db/ident (first e))}) (d/q '[:find (pull ?p [*])
-                                                                  :in $
-                                                                  :where [?p :db/doc "entity-type"]] db))))))
-  ([name] (entity-types name nil)))
 
 (defn persist-schema
   ([name url]
@@ -190,34 +181,49 @@
   (if (vector? clj) (entity-less? (first clj))
       (not (map? clj))))
 
+(defn- entity-types [url]
+  (when url
+    (let [db (d/db (d/connect url))]
+      (apply merge (mapv (fn [e] {(keyword (str (:db/id (first e)))),
+                                  (:db/ident (first e))}) (d/q '[:find (pull ?p [*])
+                                                                 :in $
+                                                                 :where [?p :db/doc "entity-type"]] db))))))
+
+(def lookup-entity-types (memoize entity-types))
+
 (defn- resolve-entity-type [entity-type]
   (if (map? entity-type)
     (or (:db/ident entity-type)
-        (:db/id entity-type))
+        (when-let [db-id (:db/id entity-type)]
+          (when *db-url*
+            (-> (lookup-entity-types *db-url*)
+                ((keyword (str db-id)))))))
     entity-type))
 
-(defn reverse-mapping? [entity]
+(defn persisted-entity-type [entity]
   (if (vector? entity)
-    (let [entry (first entity)] (reverse-mapping? entry))
-    (resolve-entity-type (:entity/type entity))))
+    (let [entry (first entity)] (persisted-entity-type entry))
+    (when-let [entity-type-val (:entity/type entity)]
+      (resolve-entity-type entity-type-val))))
 
 (defn find-mapping [service-entity]
   (when-not (entity-less? service-entity)
-    (if-let [entity-type (reverse-mapping? service-entity)]
+    (if-let [entity-type (persisted-entity-type service-entity)]
       (->> (name entity-type) (str "core.db.entities/") symbol (var-by-symbol))
       (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
                        (apply concat)
-                       (frequencies))
-            freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
-            max-val (apply max (mapv #(get freqs %) (keys freqs)))
-            max-entries (filter #(= max-val (:v %)) freqs-vec)]
-        (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
-        (->> (first max-entries)
-             :k
-             name
-             (str "core.db.entities/")
-             symbol
-             (var-by-symbol))))))
+                       (frequencies))]
+        (when (< 0 (count (keys freqs)))
+          (let [freqs-vec (mapv (fn [k] {:k k, :v (get freqs k)}) (keys freqs))
+                max-val (apply max (mapv #(get freqs %) (keys freqs)))
+                max-entries (filter #(= max-val (:v %)) freqs-vec)]
+            (when (< 1 (count max-entries)) (throw (ex-info "Cannot determine mapping. At least two mappings with same frequency" {:entries max-entries})))
+            (->> (first max-entries)
+                 :k
+                 name
+                 (str "core.db.entities/")
+                 symbol
+                 (var-by-symbol))))))))
 
 
 (defmulti apply-mapping-opts :opt-key)
@@ -302,34 +308,37 @@
   ([source mapping]
    (mapv #(clj->db % mapping) source))
   ([source]
-   (clj->db source (find-mapping (first source)))))
+   (mapv #(clj->db %) source);;(clj->db source (find-mapping (first source)))
+   ))
 
 (defmethod clj->db :default
   ([source mapping] source)
   ([source] source))
 
-(defmulti db->clj (fn ([source mapping] (type source))
+(defmulti db->clj (fn ([source url] (type source))
                       ([source] (type source))))
 
 (defmethod db->clj (type {})
-  ([source mapping]
-   (if mapping
-     (let [mapping-rules (:rev-mapping mapping)
-           temp-source (atom source)]
-       (delete-db-meta temp-source)
-       (do-mapping temp-source (:type mapping) mapping-rules db->clj)
-       @temp-source)
-     source))
+  ([source url]
+   (binding [*db-url* url]
+     (if-let [mapping (find-mapping source)]
+       (let [mapping-rules (:rev-mapping mapping)
+             temp-source (atom source)]
+         (delete-db-meta temp-source)
+         (do-mapping temp-source (:type mapping) mapping-rules db->clj)
+         @temp-source)
+       source)))
   ([source]
-   (db->clj source (find-mapping source))))
+   (db->clj source *db-url*)))
+
 
 ;;TODO: Handle mapping of collection of non entities. e.g. collection of vectors.
 (defmethod db->clj (type [])
-  ([source mapping]
-   (mapv #(db->clj % mapping) source))
+  ([source url]
+   (mapv #(db->clj % url) source))
   ([source]
-   (db->clj source (find-mapping (first source))))) ;;This is wrong assumption. What about when we tries to map a vector of entities with different types ?
+   (mapv #(db->clj %) source))) ;;This is wrong assumption. What about when we tries to map a vector of entities with different types ?
 
 (defmethod db->clj :default
-  ([source mapping] source)
+  ([source url] source)
   ([source] source))

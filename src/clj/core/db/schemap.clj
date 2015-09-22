@@ -305,8 +305,7 @@
   ([source mapping]
    (mapv #(clj->db % mapping) source))
   ([source]
-   (mapv #(clj->db %) source);;(clj->db source (find-mapping (first source)))
-   ))
+   (mapv #(clj->db %) source)))
 
 (defmethod clj->db :default
   ([source mapping] source)

@@ -1,6 +1,7 @@
 (ns core.db.entity-mappings-tests
   (:require [clojure.test :refer :all]
             [core.db.schemap :refer :all]
+            [core.db.schemap-hooks :refer :all]
             [core.db.manager :refer :all]
             [datomic.api :as d]))
 
@@ -335,9 +336,7 @@
       (property name :tenant
                 type :db.type/ref
                 mapping-hook (fn [property-value] [:tenant.login/username property-value])
-                reverse-mapping-hook (fn [property-value]
-                                       (-> (d/pull (d/db (d/connect *db-url*)) '[:tenant.login/username] (:db/id property-value))
-                                           :tenant.login/username))
+                reverse-mapping-hook (pull-property-hook :tenant.login/username)
                 ))
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -378,9 +377,7 @@
       (property name :tenant
                 type :db.type/ref
                 mapping-hook (fn [property-value] [:tenant.login/username property-value])
-                reverse-mapping-hook (fn [property-value]
-                                       (-> (d/pull (d/db (d/connect *db-url*)) '[:tenant.login/username] (:db/id property-value))
-                                           :tenant.login/username))))
+                reverse-mapping-hook (pull-property-hook :tenant.login/username)))
 
     (defentity 'tenant.login
       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})

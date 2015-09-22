@@ -1,6 +1,6 @@
 (ns core.db.entity-mappings-tests
   (:require [clojure.test :refer :all]
-            [core.db.entities :refer :all]
+            [core.db.schemap :refer :all]
             [core.db.manager :refer :all]
             [datomic.api :as d]))
 
@@ -360,10 +360,11 @@
       (d/transact connection [db-user])
       (let [result (d/q '[:find (pull ?p [*])
                           :in $ ?name
-                          :where [?p :user.login/username ?name]] (d/db connection) "Jan")]
-        (println (str "result: " result))
-        (println (str "mapped: " (db->clj result (mem-db-url))))
-        ))))
+                          :where [?p :user.login/username ?name]] (d/db connection) "Jan")
+            service-entity (ffirst (db->clj result (mem-db-url)))]
+        (is (= "Jan" (-> service-entity :username)))
+        (is (= "Passwd1" (-> service-entity :password)))
+        (is (= "Wojciech" (-> service-entity :tenant)))))))
 
 (deftest test-entity-types []
   (defschema 'test-entity-types

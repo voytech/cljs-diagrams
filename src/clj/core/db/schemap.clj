@@ -1,4 +1,4 @@
-(ns core.db.entities
+(ns core.db.schemap
   (:require [datomic.api :as d]
             [clojure.walk :refer [postwalk]]))
 
@@ -31,7 +31,7 @@
          persisted-entity-type)
 
 (def DEFAULT_PARTITION :db.part/user)
-
+(def ^:private THIS_NS "core.db.schemap")
 (def ENTITY_TYPE_ATTRIB
   {:db/id #db/id[:db.part/db]
    :db/ident :entity/type
@@ -47,7 +47,7 @@
 (defn get-var [symb]
   (->> symb
        name
-       (str "core.db.entities/")
+       (str THIS_NS "/")
        symbol
        resolve
        var-get))
@@ -71,7 +71,7 @@
     (d/create-database connection-string)))
 
 (defn mapping-into-ns [mapping-symbol]
-  (symbol (str "core.db.entities/" (name mapping-symbol))))
+  (symbol (str THIS_NS "/" (name mapping-symbol))))
 
 (defn- entity-type-enum [entity-name]
   {:db/id (d/tempid :db.part/user),
@@ -84,14 +84,14 @@
 (defn inject-def [ns var-name value]
   (intern ns var-name value))
 
-(defn make-var [symbol val]
-  (intern 'core.db.entities symbol val))
+(defn make-var [symb val]
+  (intern (symbol THIS_NS) symb val))
 
 (defn del-var [symb]
-  (ns-unmap 'core.db.entities symb))
+  (ns-unmap (symbol THIS_NS) symb))
 
 (defn get-frequencies []
-  (var-by-symbol 'core.db.entities/entities-frequencies))
+  (var-by-symbol (symbol (str THIS_NS "/entities-frequencies"))))
 
 (defn- create-db-property [property-def]
   (-> {:db/id (d/tempid :db.part/db)
@@ -104,9 +104,6 @@
 
 (defn- append-schema [next-db-property]
   (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data] (conj (or (:data (current-schema)) []) next-db-property)))))
-
-;; (defn- append-data [prereq-data]
-;;   (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword (current-schema-name)) :data-ext] (conj (or (:data-ext (current-schema)) []) prereq-data)))))
 
 (defn persist-schema
   ([name url]
@@ -145,7 +142,7 @@
 (defmacro defentity [entity-name & rules]
   (append-schema (entity-type-enum (eval entity-name)))
   (make-var 'curr-entity-name (eval entity-name))
-  (let [entity-var (var-get (intern 'core.db.entities (eval entity-name)
+  (let [entity-var (var-get (intern (symbol THIS_NS) (eval entity-name)
                                     {:type (eval entity-name)
                                      :mapping (do (make-var 'reversed-mapping false)
                                                   (apply merge (mapv #(eval %) rules)))
@@ -209,7 +206,7 @@
 (defn find-mapping [service-entity]
   (when-not (entity-less? service-entity)
     (if-let [entity-type (persisted-entity-type service-entity)]
-      (->> (name entity-type) (str "core.db.entities/") symbol (var-by-symbol))
+      (->> (name entity-type) (str THIS_NS "/") symbol (var-by-symbol))
       (let [freqs (->> (mapv #(get entities-frequencies %) (keys service-entity))
                        (apply concat)
                        (frequencies))]
@@ -221,7 +218,7 @@
             (->> (first max-entries)
                  :k
                  name
-                 (str "core.db.entities/")
+                 (str THIS_NS "/")
                  symbol
                  (var-by-symbol))))))))
 

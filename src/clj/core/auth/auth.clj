@@ -27,7 +27,7 @@
 
 (def global-unauthorized-handler
   (fn [req] {:status 403 :body (clj->cljson { :description "Unauthorized"
-                                              :reason "Not suffucient priviledges"
+                                              :reason "Not sufficient priviledges"
                                               :identity (friend/current-authentication)})})
 )
 

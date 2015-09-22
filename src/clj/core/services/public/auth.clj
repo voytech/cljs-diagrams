@@ -1,10 +1,18 @@
 (ns core.services.public.auth
   (:require [tailrecursion.castra :refer [defrpc ex error *session*]]
-            [cemerick.friend :refer [authenticated *identity*]]))
+            [cemerick.friend :refer [authenticated *identity*]]
+            [impl.db.schema :refer :all]
+            [datomic.api :refer d]))
 
-(defrpc register [user passwd email]
-  (println (str *identity*))
-  (println (str "User: " user ", Ema" email ", Password " passwd)))
+(defn exists? [username]
+  )
+
+(defrpc register [{:keys [username password email] :as reg-payload}]
+  (when-let [connection (d/connect *shared-db*)]
+    (if (d/transact connection (clj->db (req-payload)))
+      {:result :OK}
+      {:result :FAIL})))
+
 
 (defrpc logout []
   (println "Logged out!"))

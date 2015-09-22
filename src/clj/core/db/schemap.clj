@@ -78,6 +78,7 @@
    :db/ident (keyword (name entity-name))
    :db/doc "entity-type"})
 
+
 (defn var-by-symbol [symbol]
   (-> symbol resolve var-get))
 
@@ -121,6 +122,13 @@
     (->> (doall (mapv (fn [p] (do-check (first p) (last p))
                         {(keyword (first p)), (last p)}) partitioned))
          (apply merge))))
+
+(defmacro defenum [n]
+  (let [name_v (eval n)]
+    (append-schema {:db/id (d/tempid :db.part/user)
+                    :db/ident (keyword (name name_v))
+                    :db/doc "enum"}))
+  identity)
 
 (defmacro property [& args]
   (let [decoded (decode-args args)

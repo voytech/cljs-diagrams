@@ -33,7 +33,7 @@
 (def DEFAULT_PARTITION :db.part/user)
 (def ^:private THIS_NS "core.db.schemap")
 (def ENTITY_TYPE_ATTRIB
-  {:db/id #db/id[:db.part/db]
+  {:db/id (d/tempid :db.part/db)                           ;#db/id[:db.part/db]
    :db/ident :entity/type
    :db/valueType :db.type/ref
    :db/cardinality :db.cardinality/one
@@ -124,11 +124,10 @@
          (apply merge))))
 
 (defmacro defenum [n]
-  (let [name_v (eval n)]
-    (append-schema {:db/id (d/tempid :db.part/user)
-                    :db/ident (keyword (name name_v))
-                    :db/doc "enum"}))
-  identity)
+  (append-schema {:db/id (d/tempid :db.part/user)
+                  :db/ident (eval n)
+                  :db/doc "enum"})
+   identity)
 
 (defmacro property [& args]
   (let [decoded (decode-args args)
@@ -172,7 +171,9 @@
     (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword name)] {:schema-opts options})))
     (make-var 'curr-schema name)
     (append-schema ENTITY_TYPE_ATTRIB)
-    (eval defentities)
+    ;(doseq [deff defentities] (eval deff))
+    (doall (map #(eval %) defentities))
+    ;(eval defentities)
     (when (and (-> options :auto-persist-schema)
                (-> options :db-url))
       (initialize-database)

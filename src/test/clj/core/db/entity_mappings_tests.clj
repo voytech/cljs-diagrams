@@ -31,8 +31,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -69,8 +67,6 @@
               :auto-persist-schema true
               :db-drop true
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -95,8 +91,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -120,8 +114,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -146,8 +138,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -168,8 +158,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-       (defenum :core.auth.roles/TENANT)
-       (defenum :core.auth.roles/USER)
 
        (defentity 'user.login
             (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -200,8 +188,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -250,8 +236,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -287,8 +271,6 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
 
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
@@ -325,6 +307,7 @@
              {:mapping-inference true
               :auto-persist-schema false
               :db-url (mem-db-url)}
+
     (defenum :core.auth.roles/TENANT)
     (defenum :core.auth.roles/USER)
 
@@ -361,8 +344,6 @@
     {:mapping-inference true
      :auto-persist-schema false
      :db-url (mem-db-url)}
-    (defenum :core.auth.roles/TENANT)
-    (defenum :core.auth.roles/USER)
     (defentity 'user.login
       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
       (property name :password  type :db.type/string                            mapping-opts {:required true})

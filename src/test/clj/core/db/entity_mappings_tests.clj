@@ -380,6 +380,52 @@
         (is (= "Passwd1" (-> service-entity :password)))
         (is (= "Wojciech" (-> service-entity :tenant)))))))
 
+(deftest test-clipping-entity []
+  (defschema 'test-entity-types
+    {:mapping-inference true
+     :auto-persist-schema false
+     :db-url (mem-db-url)}
+    (defenum :core.auth.roles/TENANT)
+    (defenum :core.auth.roles/USER)
+    (defentity 'user.login
+      (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password  type :db.type/string                            mapping-opts {:required true})
+      (property name :roles     type :db.type/ref)
+      (property name :tenant
+                type :db.type/ref
+                mapping-hook (fn [property-value] [:tenant.login/username property-value])
+                reverse-mapping-hook (pull-property-hook :tenant.login/username)))
+
+    (defentity 'tenant.login
+      (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :password      type :db.type/string                            mapping-opts {:required true})
+      (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
+      (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
+  (persist-schema 'test-clipping-entity)
+  (let [tenant {:username "Wojciech"
+                :password "Password123"
+                :dburl "voytech-print"
+                :organization "voytech-print"
+                :some-strange-param "This should be CLIPPED"}
+        user {:username "Jan"
+              :password "Passwd1"
+              :tenant "Wojciech"
+              :some-strange-param-2 "This should be CLIPPED to"}
+        db-tenant (clip tenant)
+        db-user (clip user)]
+    (is (= "Jan" (-> db-user :username)))
+    (is (= "Passwd1" (-> db-user :password)))
+    (is (= "Wojciech" (-> db-user :tenant)))
+    (is (nil? (-> db-user :some-strange-param-2)))
+    (is (= "Wojciech" (-> db-tenant :username)))
+    (is (= "Password123" (-> db-tenant :password)))
+    (is (= "voytech-print" (-> db-tenant :dburl)))
+    (is (= "voytech-print" (-> db-tenant :organization)))
+    (is (nil? (-> db-tenant :some-strange-param)))
+
+    ))
+
 (deftest test-entity-types []
   (defschema 'test-entity-types
     {:mapping-inference true

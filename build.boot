@@ -115,11 +115,13 @@
   "Run clojure tests"
   []
   (comp (test :namespaces #{'core.db.entity-mappings-tests
-                            'core.db.manager-tests})))
+                            'core.db.manager-tests
+                            'impl.services.auth-service-tests})))
 
 (deftask continous-tests-clj []
   (comp (watch)
-        (test :namespaces #{'core.db.entity-mappings-tests})))
+        (test :namespaces #{'core.db.entity-mappings-tests
+                            'impl.services.auth-service-tests})))
 
 (task-options!
  serve {

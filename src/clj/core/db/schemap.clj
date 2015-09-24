@@ -231,6 +231,7 @@
                  symbol
                  (var-by-symbol))))))))
 
+(def ^:private find-mapping-memoized (memoize find-mapping))
 
 (defmulti apply-mapping-opts :opt-key)
 
@@ -272,6 +273,7 @@
           (del-var 'do-mapping?))))
   (swap! source dissoc from-property))
 
+
 (defn- has? [property mapping]
   (when (not (contains? mapping property))
     (throw (ex-info "Mapping error. Source property doesn't contain corresponding mapping rule!"
@@ -280,6 +282,15 @@
 
 (defn- delete-db-meta [source]
   (swap! source dissoc :db/id :entity/type))
+
+(defn clip [source]
+  (if (vector? source)
+    (doall (map #(clip %) source))
+    (when-let [mapping (find-mapping-memoized source)]
+      (let [properties (-> mapping :mapping keys set)]
+        (->> (remove #(contains? properties %) (keys source))
+             (apply dissoc source))))))
+
 
 (defn- add-db-meta [source-atom mapping]
   (swap! source-atom assoc :db/id (make-temp-id))

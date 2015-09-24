@@ -3,7 +3,7 @@
             [core.db.manager :refer :all]
             [core.db.schemap-hooks :refer :all]))
 
-(def  *shared-db* (str (:db-url (load-configuration "resources/schema/properties.edn")) "/SHARED"))
+(def ^:dynamic *shared-db* (str (:db-url (load-configuration "resources/schema/properties.edn")) "/SHARED"))
 
 (defschema 'shared
     {:mapping-inference true
@@ -20,7 +20,7 @@
       (property name :identity    type :db.type/string)
       (property name :external-id type :db.type/uuid)
       (property name :licence     type :db.type/ref)
-      (property name :role        type :db.type/ref    mapping-hook (fn [v] [:db/ident v]))
+      (property name :role        type :db.type/ref    mapping-hook (fn [v] [:db/ident v]) reverse-mapping-hook (pull-property-hook :db/ident))
       (property name :tenant      type :db.type/ref    mapping-hook (fn [v] [:user.login/username v])
                 reverse-mapping-hook (pull-property-hook :user.login/username)))
 

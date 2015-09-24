@@ -171,7 +171,6 @@
     (alter-var-root #'schema (fn [o] (assoc-in schema [(keyword name)] {:schema-opts options})))
     (make-var 'curr-schema name)
     (append-schema ENTITY_TYPE_ATTRIB)
-    ;(doseq [deff defentities] (eval deff))
     (doall (map #(eval %) defentities))
     ;(eval defentities)
     (when (and (-> options :auto-persist-schema)
@@ -276,7 +275,7 @@
 
 (defn- has? [property mapping]
   (when (not (contains? mapping property))
-    (throw (ex-info "Mapping error. Source property doesn't contain corresponding mapping rule!"
+    (throw (ex-info (str "Mapping error. Source property (" property ") doesn't contain corresponding mapping rule!")
                     {:property property
                      :mapping mapping}))))
 

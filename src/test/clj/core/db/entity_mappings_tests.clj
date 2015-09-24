@@ -422,9 +422,7 @@
     (is (= "Password123" (-> db-tenant :password)))
     (is (= "voytech-print" (-> db-tenant :dburl)))
     (is (= "voytech-print" (-> db-tenant :organization)))
-    (is (nil? (-> db-tenant :some-strange-param)))
-
-    ))
+    (is (nil? (-> db-tenant :some-strange-param)))))
 
 (deftest test-entity-types []
   (defschema 'test-entity-types

@@ -27,12 +27,13 @@
                   [ring/ring                       "1.3.2"]
                   [ring/ring-core                  "1.3.2"]
                   [ring/ring-jetty-adapter         "1.3.2"]
-                  ;[ring.middleware.logger "0.5.0"]
-                  [cljsjs/fabric "1.5.0-0"]
-                  [cljsjs/jquery "2.1.4-0"]
-                  [cljsjs/jquery-ui "1.11.3-1"]
+                  [ring/ring-mock                  "0.3.0"]
+                  ;[ring.middleware.logger         "0.5.0"]
+                  [cljsjs/fabric                   "1.5.0-0"]
+                  [cljsjs/jquery                   "2.1.4-0"]
+                  [cljsjs/jquery-ui                "1.11.3-1"]
                   [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
-                  [acyclic/squiggly-clojure "0.1.3-SNAPSHOT"]  ; Possible junk!. Just testing.
+                  [acyclic/squiggly-clojure        "0.1.3-SNAPSHOT"]
                   [voytech/boot-clojurescript.test "0.1.0-SNAPSHOT"]]
   :out-path       "resources/public"
   :target-path    "resources/public"

@@ -1,5 +1,5 @@
 (ns core.services.public.auth
-  (:require [tailrecursion.castra :refer [defrpc ex error *session*]]
+  (:require [tailrecursion.castra :refer [defrpc ex error *session* *request*]]
             [cemerick.friend :refer [authenticated *identity*]]
             [impl.db.schema :refer :all]
             [core.db.schemap :refer :all]
@@ -25,24 +25,24 @@
 (defn cp-property [source target property]
   (assoc target property (property source)))
 
-(defn prepare-entity [payload property]
-  (-> payload clip (with-squuid property)))
-
+; generalize this kind of call. Create  (persist (-> payload clip (with-squuid :external-id)) #(find-by-username % :username))
 (defn do-register [{:keys [username password re-password] :as payload}]
   (when-let [connection (d/connect *shared-db*)]
-    (if (d/transact connection [(-> (prepare-entity payload :external-id) clj->db)])
+    (if (d/transact connection [(-> payload clip (with-squuid :external-id) clj->db)])
       (when-let [dbval (d/db connection)]
         (if-let [fromdb (find-by-username dbval username)]
-          (do
-            (db->clj fromdb *shared-db*))
+          (-> (db->clj fromdb *shared-db*)
+              ffirst
+              (dissoc :external-id))
           (failure payload)))
       (failure payload))))
 
 (defrpc register [{:keys [username password re-password] :as payload}]
-  {:rpc/pre [(not (exists? username))
-             (not= password re-password)]}
+  ;; {:rpc/pre [(not (exists? username))
+  ;;            (not= password re-password)]}
   (do-register payload))
 
+(defrpc create-tenant [payload])
 
 (defrpc logout []
   (println "Logged out!"))

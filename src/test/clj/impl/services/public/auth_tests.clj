@@ -1,4 +1,4 @@
-(ns impl.services.auth-service-tests
+(ns impl.services.public.auth-tests
   (:require [core.services.public.auth :refer :all]
             [app :refer [app-handler]]
             [impl.services.test-helpers :refer :all]

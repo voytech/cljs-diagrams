@@ -117,12 +117,12 @@
   []
   (comp (test :namespaces #{'core.db.entity-mappings-tests
                             'core.db.manager-tests
-                            'impl.services.auth-service-tests})))
+                            'impl.services.public.auth-tests})))
 
 (deftask continous-tests-clj []
   (comp (watch)
         (test :namespaces #{;;'core.db.entity-mappings-tests
-                            'impl.services.auth-service-tests})))
+                            'impl.services.public.auth-tests})))
 
 (task-options!
  serve {

@@ -308,7 +308,7 @@
 (defmulti clj->db (fn ([source mapping] (type source))
                       ([source] (type source))))
 
-(defmethod clj->db (type {})
+(defmethod clj->db java.util.Map
   ([source mapping]
    (if mapping
      (let [mapping-rules (:mapping mapping)
@@ -320,7 +320,7 @@
   ([source]
    (clj->db source (find-mapping source))))
 
-(defmethod clj->db (type [])
+(defmethod clj->db java.util.List
   ([source mapping]
    (mapv #(clj->db % mapping) source))
   ([source]
@@ -328,12 +328,12 @@
 
 (defmethod clj->db :default
   ([source mapping] source)
-  ([source] source))
+  ([source]  source))
 
 (defmulti db->clj (fn ([source url] (type source))
                       ([source] (type source))))
 
-(defmethod db->clj (type {})
+(defmethod db->clj java.util.Map
   ([source url]
    (binding [*db-url* url]
      (if-let [mapping (find-mapping source)]
@@ -348,7 +348,7 @@
 
 
 ;;TODO: Handle mapping of collection of non entities. e.g. collection of vectors.
-(defmethod db->clj (type [])
+(defmethod db->clj java.util.List
   ([source url]
    (mapv #(db->clj % url) source))
   ([source]

@@ -5,7 +5,9 @@
             [clojure.test :refer :all]
             [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
             [ring.mock.request :as mock]
-            [impl.db.schema :refer :all]))
+            [impl.db.schema :refer :all]
+            [datomic.api :as d]
+            [core.services.base :refer :all]))
 
 (deftest test-register-rpc
   (let [payload {:username "Wojciech"
@@ -20,3 +22,5 @@
                                                             :identity "voytech"})))
            {:status  200
             :body payload}))))
+
+(deftest test-create-tenant-rpc)

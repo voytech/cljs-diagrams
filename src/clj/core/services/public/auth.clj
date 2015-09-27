@@ -2,7 +2,7 @@
   (:require [tailrecursion.castra :refer [defrpc ex error *session* *request*]]
             [cemerick.friend :refer [authenticated *identity*]]
             [impl.db.schema :refer :all]
-            [core.db.schemap :refer :all]
+            [core.services.base :refer :all]
             [datomic.api :as d]))
 
 (defn find-by-username [db value]
@@ -25,24 +25,20 @@
 (defn cp-property [source target property]
   (assoc target property (property source)))
 
-; generalize this kind of call. Create  (persist (-> payload clip (with-squuid :external-id)) #(find-by-username % :username))
 (defn do-register [{:keys [username password re-password] :as payload}]
-  (when-let [connection (d/connect *shared-db*)]
-    (if (d/transact connection [(-> payload clip (with-squuid :external-id) clj->db)])
-      (when-let [dbval (d/db connection)]
-        (if-let [fromdb (find-by-username dbval username)]
-          (-> (db->clj fromdb *shared-db*)
-              ffirst
-              (dissoc :external-id))
-          (failure payload)))
-      (failure payload))))
+  (println (map? payload))
+  (binding [*database-url* *shared-db*]
+    (-> payload
+        (with-squuid :external-id)
+        (store-entity))))
 
 (defrpc register [{:keys [username password re-password] :as payload}]
   ;; {:rpc/pre [(not (exists? username))
   ;;            (not= password re-password)]}
   (do-register payload))
 
-(defrpc create-tenant [payload])
+(defrpc create-tenant [payload]
+  )
 
 (defrpc logout []
   (println "Logged out!"))

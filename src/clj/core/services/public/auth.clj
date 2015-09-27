@@ -25,17 +25,15 @@
 (defn cp-property [source target property]
   (assoc target property (property source)))
 
-(defn do-register [{:keys [username password re-password] :as payload}]
-  (println (map? payload))
+(defrpc register [{:keys [username password re-password] :as payload}]
+  ;; {:rpc/pre [(not (exists? username))
+  ;;           (not= password re-password)]}
   (binding [*database-url* *shared-db*]
     (-> payload
         (with-squuid :external-id)
-        (store-entity))))
-
-(defrpc register [{:keys [username password re-password] :as payload}]
-  ;; {:rpc/pre [(not (exists? username))
-  ;;            (not= password re-password)]}
-  (do-register payload))
+        store-entity
+        load-entity
+        (dissoc :external-id :password))))
 
 (defrpc create-tenant [payload]
   )

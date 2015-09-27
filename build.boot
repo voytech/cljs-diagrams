@@ -121,8 +121,9 @@
 
 (deftask continous-tests-clj []
   (comp (watch)
-        (test :namespaces #{;;'core.db.entity-mappings-tests
-                            'impl.services.public.auth-tests})))
+        (test :namespaces #{;core.db.entity-mappings-tests
+                            'impl.services.public.auth-tests
+                            })))
 
 (task-options!
  serve {

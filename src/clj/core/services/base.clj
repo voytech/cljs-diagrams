@@ -1,7 +1,6 @@
 (ns core.services.base
   (:require [core.db.schemap :refer :all]
-            [datomic.api :as d]
-            ))
+            [datomic.api :as d]))
 
 (def ^:dynamic *database-url*)
 
@@ -20,6 +19,6 @@
 
 (defn load-entity [id]
   (when-let [connection (d/connect *database-url*)]
-    (if-let [dbentity (d/entity (d/db connection) id)]
-      (db->clj dbentity)
+    (if-let [dbentity (d/pull (d/db connection) '[*] id)]
+      (db->clj dbentity *database-url*)
       (failed id))))

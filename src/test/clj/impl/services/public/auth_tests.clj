@@ -11,16 +11,13 @@
 
 (deftest test-register-rpc
   (let [payload {:username "Wojciech"
-                 :password "987654321"
+                 :password "UUUZDDD"
                  :role :core.auth.roles/TENANT
                  :identity "voytech"}]
     (is (= (parse-resp ((app-handler abspath) (mock-castra "/app/public"
                                                            'core.services.public.auth/register
-                                                           {:username "Wojciech"
-                                                            :password "987654321"
-                                                            :role :core.auth.roles/TENANT
-                                                            :identity "voytech"})))
+                                                           payload)))
            {:status  200
-            :body payload}))))
+            :body (dissoc payload :password)}))))
 
 (deftest test-create-tenant-rpc)

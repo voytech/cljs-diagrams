@@ -5,6 +5,8 @@
 
 (def ^:dynamic *shared-db* (str (:db-url (load-configuration "resources/schema/properties.edn")) "/SHARED"))
 
+(defn db-url [name] (str (:db-url (load-configuration "resources/schema/properties.edn")) "/" name))
+
 (defschema 'shared
     {:mapping-inference true
      :auto-persist-schema true
@@ -34,7 +36,7 @@
    :auto-persist-schema false}
 
   (defentity 'user.details
-    (property name :nickname    type :db.type/string unique :db.unique/identity)
+    (property name :username    type :db.type/string unique :db.unique/identity)
     (property name :firstname   type :db.type/string)
     (property name :lastname    type :db.type/string)
     (property name :email       type :db.type/string)

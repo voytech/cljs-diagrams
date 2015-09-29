@@ -16,7 +16,7 @@
   (router/def-route "#/register" (register))
   (router/def-route "#/login"    (login))
   (router/route)
-  (router/goto-page "#/login")
+  (router/goto-page "#/register")
   (println "Initialized")
 )
 

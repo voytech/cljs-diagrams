@@ -2,23 +2,27 @@
   (:require [core.api.auth :as a]))
 
 (defelem register []
- (div :id "register-page" :class "container-fluid col-md-12 row"
-      (div :id "inner" :class "col-md-offset-4 col-md-3"
-           (div :id "logo" :class "logo text-center" "PHOTO COLLAGE BETA" )
-           (hr  :id "separator" :class "separator")
-           (div :id "register-centered" :class "center-block"
-                (form :on-submit #(a/register! (val-id "username") (val-id "password") (val-id "email"))
-                 (div :class "form-group"
-                      (label :for "username" "Enter Username")
-                      (input :class "form-control input-sm" :type "text" :id "username"))
-                 (div :class "form-group"
-                      (label :for "password" "Enter password")
-                      (input :class "form-control input-sm" :type "password" :id "password"))
-                 (div :class "form-group"
-                      (label :for "repeat-password" "Repeat password")
-                      (input :class "form-control input-sm" :type "password" :id "repeat-password"))
-                 (div :class "form-group"
-                      (label :for "email" "Enter email")
-                      (input :class "form-control input-sm" :type "email" :id "email"))
-                 (hr  :id "separator" :class "separator")
-                 (button :type "submit" :class "btn btn-primary" "Register"))))))
+  (div :id "register-page" :class "container-fluid col-md-12 row"
+       (div :id "inner" :class "col-md-offset-4 col-md-3"
+            (div :id "logo" :class "logo text-center" "PHOTO COLLAGE BETA" )
+            (hr  :id "separator" :class "separator")
+            (div :id "register-centered" :class "center-block"
+                 (form :on-submit #(a/register! {:username (val-id "username")
+                                                 :password (val-id "password")
+                                                 :re-password (val-id "repeat-password")
+                                                 :role :core.auth.roles/TENANT
+                                                 :identity (val-id "username")})
+                       (div :class "form-group"
+                            (label :for "username" "Enter Username")
+                            (input :class "form-control input-sm" :type "text" :id "username"))
+                       (div :class "form-group"
+                            (label :for "password" "Enter password")
+                            (input :class "form-control input-sm" :type "password" :id "password"))
+                       (div :class "form-group"
+                            (label :for "repeat-password" "Repeat password")
+                            (input :class "form-control input-sm" :type "password" :id "repeat-password"))
+                       (div :class "form-group"
+                            (label :for "email" "Enter email")
+                            (input :class "form-control input-sm" :type "email" :id "email"))
+                       (hr  :id "separator" :class "separator")
+                       (button :type "submit" :class "btn btn-primary" "Register"))))))

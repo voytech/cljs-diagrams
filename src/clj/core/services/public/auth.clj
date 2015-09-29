@@ -31,17 +31,20 @@
   (assoc target property (property source)))
 
 (defrpc not-exists [username]
-  (if-not (nil? (load-entity [:user.login/username username] *shared-db*))
+  (if-not (nil? (:username (load-entity [:user.login/username username] *shared-db*)))
     (throw (ex error (ex ::already-exists)))
     true))
+
+(defn user-query [username qualified-prop db]
+  (-> (load-entity [qualified-prop username] *shared-db*)
+                   (dissoc :external-id :password :re-password)))
 
 (defrpc register [{:keys [username password re-password] :as payload}]
   {:rpc/pre [(not-exists username)
              (if-not (= password re-password)
                (throw (ex error (ex ::mismatch)))
                true)]
-   :rpc/query [(-> (load-entity [:user.login/username username] *shared-db*)
-                   (dissoc :external-id :password :re-password))]}
+   :rpc/query [(user-query username :user.login/username *shared-db*)]}
   (binding [*database-url* *shared-db*]
     (-> payload
         (with-squuid :external-id)
@@ -51,10 +54,13 @@
 ;tenant is assumed to be logged in. Also this method should be in
 ;tenat secured endpoint.
 (defrpc create-tenant [{:keys [username] :as payload}]
-  (let [user-data (load-entity [:user.login/username username *shared-db*])
-        dburl (db-url (:identity user-data))
+  {:rpc/query [(user-query username :user.login/username *shared-db*)]}
+  (let [user-data (load-entity [:user.login/username username] *shared-db*)
+        dburl (db-url (or (:identity user-data)
+                          (:username user-data)))
         uuid  (:external-id user-data)
         tenant-info (assoc payload :external-id uuid)]
+    (println (str "tenant-info " tenant-info))
     (binding [*database-url* dburl]
       (when (d/create-database dburl)
         (persist-schema 'tenant dburl)

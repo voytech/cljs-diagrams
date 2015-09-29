@@ -43,6 +43,4 @@
                                                            'core.services.public.auth/create-tenant
                                                            details)))
            {:status 200
-            :body (dissoc details :external-id)}))))
-
-(deftest test-create-tenant-rpc)
+            :body (dissoc payload :password :re-password)}))))

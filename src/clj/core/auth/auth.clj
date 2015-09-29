@@ -6,24 +6,22 @@
             [cemerick.friend.workflows :as cfw]
             [compojure.core    :refer :all]
             [cemerick.friend :as friend]
-            [core.auth.roles :refer :all])
+            [core.auth.roles :refer :all]
+            [core.services.public.auth :refer [authenticate]])
   )
 
 
 (defn username-passwd-auth? [request]
-  (let [[username password] (cljson->clj (rur/body-string request))]
+  (let [[username password] (cljson->clj (-> request :headers (get "Authentication")))]
     (if (and (not (nil? username))
              (not (nil? password)))
-      {:username username
-       :password password}
-      false))
-    )
+      {:username username, :password password}
+      false)))
 
 (def global-credential-fn
   (fn [{:keys [username password]}]
-      {:username username
-       :roles [:core.auth.roles/USER]
-       }))
+    (when-let [auth (authenticate username password)]
+      (assoc auth :roles [(:role auth)]))))
 
 (def global-unauthorized-handler
   (fn [req] {:status 403 :body (clj->cljson { :description "Unauthorized"
@@ -49,11 +47,9 @@ Note that this workflow is out of the scope of castra RPC handler.
 "
   [& {:keys [credential-fn realm] :as basic-config}]
   (fn [req]
-    (println (:uri req))
     (when (re-find #"/login" (:uri req))
       (when-let [user-data (username-passwd-auth? req)]
-        (-> (credential-fn {:username (:username user-data)
-                            :password (:password user-data)})
+        (-> (credential-fn user-data)
             (cfw/make-auth {:cemerick.friend/workflow :castra
                             :cemerick.friend/redirect-on-auth? false}))))
     ))

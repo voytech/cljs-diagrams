@@ -39,6 +39,9 @@
   (-> (load-entity [qualified-prop username] *shared-db*)
                    (dissoc :external-id :password :re-password)))
 
+(defn authenticate [username password]
+  (user-query username :user.login/username *shared-db*))
+
 (defrpc register [{:keys [username password re-password] :as payload}]
   {:rpc/pre [(not-exists username)
              (if-not (= password re-password)

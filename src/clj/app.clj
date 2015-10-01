@@ -28,10 +28,10 @@
 
 (def app-handler (fn [path] (-> (apply routes
                                        (concat
-                                        [(POST "/login" [] logged-in-handler)]
+                                        [(POST "/app/login" [] logged-in-handler)]
                                         (restricted-castra-routes [{:namespace 'core.services.tenant
                                                                     :roles [:core.auth.roles/TENANT]
-                                                                    :path "/tenant"}
+                                                                    :path "/app/tenant"}
                                                                    {:namespace 'core.services.user
                                                                     :roles [:core.auth.roles/USER]
                                                                     :path "/app/secured"}

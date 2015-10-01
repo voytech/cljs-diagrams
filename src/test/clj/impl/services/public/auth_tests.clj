@@ -44,3 +44,9 @@
                                                            details)))
            {:status 200
             :body (dissoc payload :password :re-password)}))))
+
+(deftest test-login
+  (let [request (mock-login "/app/login" "Wojciech" "UUUZDDD")
+        response ((app-handler abspath) request)]
+
+    (println (str "response: " (response-session response)))))

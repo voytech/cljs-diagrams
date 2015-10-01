@@ -12,7 +12,7 @@
 
 
 (defn username-passwd-auth? [request]
-  (let [[username password] (cljson->clj (-> request :headers (get "Authentication")))]
+  (let [[username password] (cljson->clj (-> request :headers (get "authentication")))]
     (if (and (not (nil? username))
              (not (nil? password)))
       {:username username, :password password}

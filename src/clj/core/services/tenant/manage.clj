@@ -13,7 +13,6 @@
                           (:username user-data)))
         uuid  (:external-id user-data)
         tenant-info (assoc payload :external-id uuid)]
-    (println (str "tenant-info " tenant-info))
     (binding [*database-url* dburl]
       (when (d/create-database dburl)
         (persist-schema 'tenant dburl)

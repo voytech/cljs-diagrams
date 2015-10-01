@@ -52,34 +52,6 @@
                                 (wrap-nested-params)
                                 (wrap-params))))
 
-(defn start [port path namespace join]
-  (reset! server (->
-                  (apply routes
-                         (concat
-                          [(POST "/login" [] logged-in-handler)]
-                          (restricted-castra-routes [{:namespace 'core.services.tenant
-                                                      :roles [:core.auth.roles/TENANT]}
-                                                     {:namespace 'core.services.user
-                                                      :roles [:core.auth.roles/USER]}
-                                                     {:namespace 'core.services.public ;Empty vector indicates not authorized access.
-                                                      :roles []}])))
-
-                  (friend/authenticate {:unauthorized-handler    global-unauthorized-handler
-                                        :unauthenticated-handler global-unauthenticated-handler
-                                        :allow-anon? true
-                                        :workflows [(username-password-authentication-workflow
-                                                    :credential-fn global-credential-fn)
-                                                    ]})
-                  (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
-                  (wrap-file  (or path public-path))
-                  (wrap-index (or path public-path))
-                  (wrap-file-info)
-                  (wrap-keyword-params)
-                  (wrap-nested-params)
-                  (wrap-params)
-                 ; (logger/wrap-with-logger)
-                  (run-jetty {:join? join :port port})))
+(defn start [port path join]
+  (reset! server (run-jetty (app-handler path) {:join? join :port port}))
   (reset! running true))
-
-(defn run-app [port path]
-  (start port path 'core.api true))

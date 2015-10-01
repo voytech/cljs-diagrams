@@ -65,20 +65,18 @@
   '[boot.core          :as boot]
   '[boot-clojurescript.test.tasks :refer :all]
   '[tailrecursion.castra.handler :as h :refer [castra]]
-  '[app :refer [run-app start running]]
+  '[app :refer [start running]]
   )
 
 
-(deftask start-server-task [n namespace   SYM  [sym]  "The castra handler(s) to serve."
-                     d docroot       PATH str  "The directory to serve."
-                     p port          PORT int  "The port to listen on. (Default: 8000)"
-                     j join          JOIN bool "Wait for server."]
+(deftask start-server-task [d docroot       PATH str  "The directory to serve."
+                            p port          PORT int  "The port to listen on. (Default: 8000)"
+                            j join          JOIN bool "Wait for server."]
   (let [join? (or join false)
         port! (or port 8080)
         path  (or docroot "resources/public" )]
     (boot/with-pre-wrap fileset
-      ;verify if it is running then just skip.
-      (when (not @running) (start port! path namespace join?))
+      (when (not @running) (start port! path join?))
       fileset)))
 
 (deftask continous
@@ -101,8 +99,7 @@
         (reload)
         (cljs-repl)
         (cljs :source-map true :optimizations :none)
-        (start-server-task :namespace ['core.api 'core.services.tenant.templates-service]
-                           :port 3000
+        (start-server-task :port 3000
                            :join false)))
 
 ;;This task should give also reload and cljs-repl

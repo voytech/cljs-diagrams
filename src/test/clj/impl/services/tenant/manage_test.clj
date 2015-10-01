@@ -29,8 +29,8 @@
                                                            payload)))
            {:status  200
             :body (dissoc payload :password :re-password)}))
-    (is (= (parse-resp ((app-handler abspath) (mock-castra "/app/tenant"
-                                                           'core.services.public.auth/create-tenant
-                                                           details)))
-           {:status 200
-            :body (dissoc payload :password :re-password)}))))
+    (is (= (-> (parse-resp ((app-handler abspath) (mock-castra "/app/tenant"
+                                                               'core.services.tenant.manage/create-tenant
+                                                               details)))
+               :status)
+           401))))

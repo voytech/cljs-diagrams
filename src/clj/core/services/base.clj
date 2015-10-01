@@ -1,5 +1,6 @@
 (ns core.services.base
   (:require [core.db.schemap :refer :all]
+            [impl.db.schema :refer :all]
             [datomic.api :as d]))
 
 (def ^:dynamic *database-url*)
@@ -26,3 +27,7 @@
        (db->clj dbentity dburl)
        (failed id))))
   ([id] (load-entity id *database-url*)))
+
+(defn user-query [username qualified-prop db]
+  (-> (load-entity [qualified-prop username] *shared-db*)
+                   (dissoc :external-id :password :re-password)))

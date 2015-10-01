@@ -123,6 +123,7 @@
   (comp (watch)
         (test :namespaces #{;core.db.entity-mappings-tests
                             'impl.services.public.auth-tests
+                            'impl.services.tenant.manage-test
                             })))
 
 (task-options!

@@ -1,8 +1,19 @@
 (ns impl.services.test-helpers
   (:require [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
+            [core.db.schemap :refer [persist-schema]]
+            [datomic.api :as d]
             [ring.mock.request :as mock]))
 
 (def abspath "/home/voytech/programming/github/photo-collage/resources")
+
+(defn reload-db [name url]
+  (d/delete-database url)
+  (let [f (future (Thread/sleep 70000)
+                  (when-let [res (d/create-database url)]
+                    (println (str "create-db " res))
+                    (when-let [connection (d/connect url)]
+                      (persist-schema name url))))]
+    @f))
 
 (defn mock-castra [path q-func payload]
   (-> (mock/request :post path)
@@ -28,11 +39,7 @@
       (get "Set-Cookie")
       (first)))
 
-(defn ensure-session [request session-value]
-  (-> request
-      assoc-in [:headers "cookie"] session-value))
-
-(defmacro with-session [username password & body]
-  `(let [response# (impl.services.test-helpers/mock-login "/app/login" ~username ~password)
-         session# (impl.services.test-helpers/response-session response#)]
-     ))
+(defn session-aware-request [username password request]
+  (let [response (mock-login "/app/login" username password)
+        session (response-session response)
+        ensured (mock/header request "cookie" session)]))

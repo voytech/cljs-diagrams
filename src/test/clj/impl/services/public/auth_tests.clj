@@ -11,15 +11,6 @@
             [core.services.base :refer :all]))
 
 ;;Ugly retracting and recreating database for test purposes.
-(defn- reload-db [name url]
-  (d/delete-database url)
-  (let [f (future (Thread/sleep 70000)
-                  (when-let [res (d/create-database url)]
-                    (println (str "create-db " res))
-                    (when-let [connection (d/connect url)]
-                      (persist-schema name url))))]
-    @f))
-
 (deftest test-register-rpc
   (reload-db 'shared *shared-db*)
   (let [payload {:username "Wojciech"
@@ -38,15 +29,9 @@
                                                            'core.services.public.auth/register
                                                            payload)))
            {:status  200
-            :body (dissoc payload :password :re-password)}))
-    (is (= (parse-resp ((app-handler abspath) (mock-castra "/app/public"
-                                                           'core.services.public.auth/create-tenant
-                                                           details)))
-           {:status 200
             :body (dissoc payload :password :re-password)}))))
 
 (deftest test-login
   (let [request (mock-login "/app/login" "Wojciech" "UUUZDDD")
         response ((app-handler abspath) request)]
-
-    (println (str "response: " (response-session response)))))
+    (is (not (nil? (response-session response))))))

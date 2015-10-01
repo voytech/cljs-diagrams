@@ -8,27 +8,10 @@
             [datomic.api :as d]))
 
 (extend-ex ::already-exists c/exception {:status 500} "User already exists")
-(extend-ex ::mismatch c/exception {:status 500} "Passwords doesnt match")
-
-(defn find-by-username [db value]
-  (d/q '[:find (pull ?p [*])
-         :in $ ?v
-         :where [?p :user.login/username ?v]] db value))
-
-(defn exists? [username]
-  (when-let [exist (find-by-username (d/db (d/connect *shared-db*)) username)]
-    (throw (ex "User already registered." username))))
-
-(defn failure [input]
-  (throw (ex "Could not process input!" input)))
-
-(defn do-login [username password])
+(extend-ex ::mismatch c/exception {:status 500} "Passwords does not match")
 
 (defn with-squuid [payload property]
   (assoc payload property (d/squuid)))
-
-(defn cp-property [source target property]
-  (assoc target property (property source)))
 
 (defrpc not-exists [username]
   (if-not (nil? (:username (load-entity [:user.login/username username] *shared-db*)))

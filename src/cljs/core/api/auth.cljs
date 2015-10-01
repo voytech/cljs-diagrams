@@ -14,16 +14,16 @@
                           register-result
                           error
                           loading
-                          ["/core/services/public"]))
+                          ["/app/public"]))
 
 (def logout!    (mkremote 'core.services.public.auth/logout
                           logout-result
                           error
                           loading
-                          ["/core/services/public"]))
+                          ["/app/public"]))
 
 (defn login [username password]
-  (async "/login" `[~username ~password]
+  (async "/app/login" `[~username ~password]
          #(reset! login-result %) ;success handler
          #(reset! error %) ;error handler
          #() ;run always

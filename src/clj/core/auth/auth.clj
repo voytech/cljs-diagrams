@@ -31,12 +31,12 @@
 
 (def global-unauthenticated-handler
   (fn [req] {:status 401 :body (clj->cljson { :description "Unauthenticated"
-                                              :reason "User is not authenticated"
+                                              :reason "User is not authenticated."
                                               :identity (friend/current-authentication)})})
 )
 
 (def logged-in-handler
-  (fn [req] {:status 200 :body (clj->cljson { :description "You are authenticated"
+  (fn [req] {:status 200 :body (clj->cljson { :description "Authenticated succesfully"
                                               :reason "Successful login"
                                               :identity (friend/current-authentication)})}))
 

@@ -1,0 +1,13 @@
+(ns ui.components.nav-bar
+  (:require [utils.dom.dom-utils :as dom]))
+
+(defelem nav-bar [{:keys [id logo brand-txt items]}]
+  (nav :id id :class "navbar navbar-default"
+       (div :class "container-fluid"
+            (div :class "navbar-header"
+                 (a :class "navbar-brand" brand-txt))
+            (div :id "navbar" :class "navbar-collapse collapse"
+                 (ul :class "nav navbar-nav navbar-right"
+                     (doall (map #(li (a :class "navbar-link"
+                                         :on-click (:action %)
+                                         (:title %))) (vals items))))))))

@@ -5,6 +5,7 @@
     [ui.pages.admin :refer [admin]]
     [ui.pages.register :refer [register]]
     [ui.pages.login :refer [login]]
+    [ui.components.nav-bar :refer [nav-bar]]
     [utils.canvas-popups :as popups]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
@@ -13,8 +14,8 @@
   (router/set-container-id "main-container" )
   (router/def-route "#/main"     (main))
   (router/def-route "#/admin"    (admin))
-  (router/def-route "#/register" (register))
-  (router/def-route "#/login"    (login))
+  (router/def-route "#/register" (register :form-title "Enter all mandatory information in order to create account."))
+  (router/def-route "#/login"    (login :form-title "Please provide username and password"))
   (router/route)
   (router/goto-page "#/register")
   (println "Initialized")
@@ -29,6 +30,14 @@
    (script :src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"))
 
   (body
-   (div :id "main-container" )))
+   (nav-bar {:id "nb"
+             :brand-txt "Photo Collage"
+             :items {:login {:action #(println %)
+                             :title "Login"}
+                     :logout {:action #(println %)
+                              :title "Logout"}
+                     :register {:action #(println %)
+                                :title "Register"}}})
+   (div :id "main-container")))
 
 (start)

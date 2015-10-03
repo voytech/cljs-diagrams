@@ -1,22 +1,20 @@
 (ns ui.pages.login
   (:require [core.router.router :as r]
-            [core.api.auth :as a]))
+            [impl.api.public.auth :as a]))
 
-(defelem login[]
+(defelem login [{:keys [form-title]}]
  (div :id "login-page" :class "container-fluid col-md-12 row"
-      (div :id "inner" :class "col-md-offset-4 col-md-3"
-           (div :id "logo" :class "logo text-center" "PHOTO COLLAGE BETA" )
+      (div :id "inner" :class "col-md-offset-3 col-md-6"
+           (div :id "logo" :class "logo text-center title" form-title)
            (hr  :id "separator" :class "separator")
            (div :id "login-centered" :class "center-block"
-                (form :on-submit #(a/login (val-id "username") (val-id "password"))
+                (form :class "col-md-offset-2 col-md-8 form-horizontal"
+                      :on-submit #(a/login (val-id "username") (val-id "password"))
                  (div :class "form-group"
-                      (label :for "username" "Enter Username")
-                      (input :class "form-control input-sm" :type "text" :id "username"))
+                      (label :class "col-md-4 control-label" :for "username" "Enter Username")
+                      (div :class "col-md-8" (input :class "form-control" :type "text" :id "username")))
                  (div :class "form-group"
-                      (label :for "password" "Enter password")
-                      (input :class "form-control input-sm" :type "password" :id "password"))
+                      (label :class "col-md-4 control-label" :for "password" "Enter password")
+                      (div :class "col-md-8" (input :class "form-control input-sm" :type "password" :id "password")))
                  (hr  :id "separator" :class "separator")
-                 (button :type "submit" :class "btn btn-primary" "Login")
-                 (text " - or - ")
-                 (a :href "javascript:void(0)" :on-click #(r/goto-page "#/register")
-                    (text "Register")))))))
+                 (button :type "submit" :class "btn btn-primary pull-right" "Login"))))))

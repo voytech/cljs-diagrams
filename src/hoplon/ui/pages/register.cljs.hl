@@ -1,29 +1,38 @@
 (ns ui.pages.register
-  (:require [core.api.auth :as a]))
+  (:require [impl.api.public.auth :as a])
+  (:require [core.api.rpc-wrap :as r]))
 
+(cell= (when-let [username (:username r/register-resp)]
+         (println (str "Tenant: " username " was registered in public db."))))
+;(cell= (println a/register-resp))
 
-(defelem register []
+(defelem register [{:keys [form-title]}]
   (div :id "register-page" :class "container-fluid col-md-12 row"
-       (div :id "inner" :class "col-md-offset-4 col-md-3"
-            (div :id "logo" :class "logo text-center" "PHOTO COLLAGE BETA" )
+       (div :id "inner" :class "col-md-offset-3 col-md-6"
+            (div :id "logo" :class "logo text-center title" form-title)
             (hr  :id "separator" :class "separator")
             (div :id "register-centered" :class "center-block"
-                 (form :on-submit #(a/register! {:username (val-id "username")
+                 (form :class "col-md-offset-2 col-md-8 form-horizontal"
+                       :on-submit #(a/register  {:username (val-id "username")
                                                  :password (val-id "password")
                                                  :re-password (val-id "repeat-password")
                                                  :role :core.auth.roles/TENANT
                                                  :identity (val-id "username")})
                        (div :class "form-group"
-                            (label :for "username" "Enter Username")
-                            (input :class "form-control input-sm" :type "text" :id "username"))
+                            (label :class "col-md-4 control-label" :for "username" "Enter Username")
+                            (div :class "col-md-8"
+                                 (input :class "form-control" :type "text" :id "username")))
                        (div :class "form-group"
-                            (label :for "password" "Enter password")
-                            (input :class "form-control input-sm" :type "password" :id "password"))
+                            (label :class "col-md-4 control-label" :for "password" "Enter password")
+                            (div :class "col-md-8"
+                                 (input :class "form-control" :type "password" :id "password")))
                        (div :class "form-group"
-                            (label :for "repeat-password" "Repeat password")
-                            (input :class "form-control input-sm" :type "password" :id "repeat-password"))
+                            (label :class "col-md-4 control-label" :for "repeat-password" "Repeat password")
+                            (div :class "col-md-8"
+                                 (input :class "form-control" :type "password" :id "repeat-password")))
                        (div :class "form-group"
-                            (label :for "email" "Enter email")
-                            (input :class "form-control input-sm" :type "email" :id "email"))
+                            (label :class "col-md-4 control-label" :for "email" "Enter email")
+                            (div :class "col-md-8"
+                                 (input :class "form-control" :type "email" :id "email")))
                        (hr  :id "separator" :class "separator")
-                       (button :type "submit" :class "btn btn-primary" "Register"))))))
+                       (button :type "submit" :class "btn btn-primary pull-right" "Register"))))))

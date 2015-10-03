@@ -269,3 +269,8 @@ h1 {
 .tag .selected{
   background-color: #337ab7;
 }
+
+.title {
+  font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size : 18px;
+}

@@ -1,7 +1,6 @@
 (ns impl.api.public.auth
  (:require [tailrecursion.castra  :as c :refer [mkremote async jq-ajax]]
            [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
-           [core.api.rpc-wrap :refer [on-error on-success]]
            [tailrecursion.javelin :as j :refer [cell]])
  (:require-macros
     [tailrecursion.javelin :refer [defc defc= cell=]]))
@@ -13,8 +12,8 @@
 (defc loading [])
 
 (def register  (mkremote 'core.services.public.auth/register
-                          register-resp;(on-success :register) ;;register-resp
-                          (on-error :register) ;;error
+                          register-resp
+                          error
                           loading
                           ["/app/public"]))
 
@@ -45,6 +44,6 @@
            nil
            {"authentication" (clj->cljson [username password])
             "Accept"          "application/json"}
-           #(reset! (on-success :login) %)               ;success handler
-           #(reset! (on-error :login) %)               ;error handler
+           #((do (println (str "resp " %)) (reset! login-resp (cljson->clj %))))
+           #(reset! error (cljson->clj %))
            #()))

@@ -1,10 +1,10 @@
 (ns ui.pages.register
   (:require [impl.api.public.auth :as a])
-  (:require [core.api.rpc-wrap :as r]))
+  (:require [core.api.flows :refer [flow]]))
 
-(cell= (when-let [username (:username r/register-resp)]
-         (println (str "Tenant: " username " was registered in public db."))))
-;(cell= (println a/register-resp))
+(flow a/register-resp #(:username %) #(do (println "Got registration response.")
+                                          (a/login (:username %)
+                                                   (val-id "password"))))
 
 (defelem register [{:keys [form-title]}]
   (div :id "register-page" :class "container-fluid col-md-12 row"

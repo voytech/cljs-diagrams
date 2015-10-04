@@ -3,4 +3,4 @@
   (:require-macros [tailrecursion.javelin :refer [cell=]]))
 
 (defn flow [cel precond action]
-  (cell= (when (precond cel) (action))))
+  (cell= (when (precond cel) (action cel))))

@@ -1,6 +1,10 @@
 (ns ui.pages.login
   (:require [core.router.router :as r]
-            [impl.api.public.auth :as a]))
+            [impl.api.public.auth :as a]
+            [core.api.flows :refer [flow]]))
+
+(flow a/login-resp #(:identity %) #(do (println "Got login response.")
+                                       (r/goto-page "#/register2step")))
 
 (defelem login [{:keys [form-title]}]
  (div :id "login-page" :class "container-fluid col-md-12 row"

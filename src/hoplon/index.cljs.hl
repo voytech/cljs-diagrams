@@ -4,6 +4,7 @@
     [ui.pages.main :refer [main]]
     [ui.pages.admin :refer [admin]]
     [ui.pages.register :refer [register]]
+    [ui.pages.register2step :refer [register2step]]
     [ui.pages.login :refer [login]]
     [ui.components.nav-bar :refer [nav-bar]]
     [utils.canvas-popups :as popups]
@@ -15,6 +16,7 @@
   (router/def-route "#/main"     (main))
   (router/def-route "#/admin"    (admin))
   (router/def-route "#/register" (register :form-title "Enter all mandatory information in order to create account."))
+  (router/def-route "#/register2step" (register2step :form-title "Finalize account setup!"))
   (router/def-route "#/login"    (login :form-title "Please provide username and password"))
   (router/route)
   (router/goto-page "#/register")

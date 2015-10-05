@@ -2,14 +2,18 @@
   (:require [utils.dom.dom-utils :as dom]
             [clojure.set :refer [difference]]))
 
-(defc navbar-links [])
+(defc right-navbar-links [])
+(defc left-navbar-links [])
 
-(defn navbar-add [links]
-  (swap! navbar-links concat links))
+(defn navbar-add
+  ([links]
+   (swap! right-navbar-links concat links))
+  ([links cel]
+   (swap! cel concat links)))
 
 (defn navbar-delete [links]
-  (when-let [diff (remove #(contains? links (:id %)) @navbar-links)]
-    (reset! navbar-links diff)))
+  (when-let [diff (remove #(contains? links (:id %)) @right-navbar-links)]
+    (reset! right-navbar-links diff)))
 
 (defn- widget? [entry]
   (not (nil? (:widget entry))))
@@ -27,5 +31,7 @@
             (div :class "navbar-header"
                  (a :class "navbar-brand" brand-txt))
             (div :id "navbar" :class "navbar-collapse collapse"
+                 (ul :class "nav navbar-nav navbar-left"
+                     (cell= (doall (map #(render-entry %) left-navbar-links))))
                  (ul :class "nav navbar-nav navbar-right"
-                     (cell= (doall (map #(render-entry %) navbar-links))))))))
+                     (cell= (doall (map #(render-entry %) right-navbar-links))))))))

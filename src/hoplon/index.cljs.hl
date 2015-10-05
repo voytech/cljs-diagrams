@@ -6,7 +6,7 @@
     [ui.pages.register :refer [register]]
     [ui.pages.register2step :refer [register2step]]
     [ui.pages.login :refer [login]]
-    [ui.components.nav-bar :refer [nav-bar]]
+    [ui.components.nav-bar :refer [nav-bar navbar-add]]
     [utils.canvas-popups :as popups]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
@@ -23,6 +23,9 @@
   (println "Initialized")
 )
 
+(navbar-add [{:id "login" :title "Login" :action #(router/goto-page "#/login")}
+             {:id "register" :title "Register" :action #(router/goto-page "#/register")}])
+
 (html
   (head
    (link :href "css/bootstrap.inc.css" :rel "stylesheet" )
@@ -32,14 +35,8 @@
    (script :src "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"))
 
   (body
-   (nav-bar {:id "nb"
-             :brand-txt "Photo Collage"
-             :items {:login {:action #(println %)
-                             :title "Login"}
-                     :logout {:action #(println %)
-                              :title "Logout"}
-                     :register {:action #(println %)
-                                :title "Register"}}})
+   (nav-bar {:id "navbar-container"
+             :brand-txt "Photo Collage"})
    (div :id "main-container")))
 
 (start)

@@ -5,13 +5,13 @@
   (:require-macros
    [tailrecursion.javelin :refer [defc defc= cell=]]))
 
-(defc register2step-resp {})
-(defc submit-licence-resp {})
+(defc register2step-state {})
+(defc submit-licence-state {})
 (defc error nil)
 (defc loading [])
 
 (def register2step  (mkremote 'core.services.tenant.manage/create-tenant
-                              register2step-resp
+                              register2step-state
                               error
                               loading
                               ["/app/tenant"]))

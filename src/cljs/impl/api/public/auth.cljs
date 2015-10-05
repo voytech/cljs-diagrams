@@ -5,38 +5,29 @@
  (:require-macros
     [tailrecursion.javelin :refer [defc defc= cell=]]))
 
-(defc register-resp {})
-(defc logout-resp {})
-(defc login-resp {})
+(defc register-state {})
+(defc logout-state {})
+(defc login-state {})
 (defc error nil)
 (defc loading [])
 
+(defn login-has-identity [state]
+  (:identity state))
+
+(defn register-check []
+  )
+
 (def register  (mkremote 'core.services.public.auth/register
-                          register-resp
+                          register-state
                           error
                           loading
                           ["/app/public"]))
 
 (def logout    (mkremote 'core.services.public.auth/logout
-                          logout-resp
+                          logout-state
                           error
                           loading
                           ["/app/public"]))
-
-;; (defn jq-ajax [async? url data headers done fail always]
-;;   (.. js/jQuery
-;;     (ajax (clj->js {"async"       async?
-;;                     "contentType" "application/json"
-;;                     "data"        data
-;;                     "dataType"    "text"
-;;                     "headers"     headers
-;;                     "processData" false
-;;                     "type"        "POST"
-;;                     "url"         url}))
-;;     (done (fn [_ _ x] (done (aget x "responseText"))))
-;;     (fail (fn [x _ _] (fail (aget x "responseText"))))
-;;     (always (fn [_ _] (always)))))
-
 
 (defn login [username password]
   (jq-ajax false
@@ -44,6 +35,6 @@
            nil
            {"authentication" (clj->cljson [username password])
             "Accept"          "application/json"}
-           #((do (println (str "resp " %)) (reset! login-resp (cljson->clj %))))
+           #(reset! login-state (cljson->clj %))
            #(reset! error (cljson->clj %))
            #()))

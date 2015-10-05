@@ -1,13 +1,31 @@
 (ns ui.components.nav-bar
-  (:require [utils.dom.dom-utils :as dom]))
+  (:require [utils.dom.dom-utils :as dom]
+            [clojure.set :refer [difference]]))
 
-(defelem nav-bar [{:keys [id logo brand-txt items]}]
+(defc navbar-links [])
+
+(defn navbar-add [links]
+  (swap! navbar-links concat links))
+
+(defn navbar-delete [links]
+  (when-let [diff (remove #(contains? links (:id %)) @navbar-links)]
+    (reset! navbar-links diff)))
+
+(defn- widget? [entry]
+  (not (nil? (:widget entry))))
+
+(defn- render-entry [entry]
+  (if (widget? entry)
+    (:widget entry)
+    (li (a :class "navbar-link"
+           :on-click (:action entry)
+           (:title entry)))))
+
+(defelem nav-bar [{:keys [id logo brand-txt]}]
   (nav :id id :class "navbar navbar-default"
        (div :class "container-fluid"
             (div :class "navbar-header"
                  (a :class "navbar-brand" brand-txt))
             (div :id "navbar" :class "navbar-collapse collapse"
                  (ul :class "nav navbar-nav navbar-right"
-                     (doall (map #(li (a :class "navbar-link"
-                                         :on-click (:action %)
-                                         (:title %))) (vals items))))))))
+                     (cell= (doall (map #(render-entry %) navbar-links))))))))

@@ -16,8 +16,7 @@
 (defn def-route
   ([route page] (swap! routes assoc-in [route] page))
   ([route container element]
-     (swap! routes assoc-in [route container] element))
-  )
+     (swap! routes assoc-in [route container] element)))
 
 (defn- transition-valid [route]
   (let [lst (last (s/split route #"/"))

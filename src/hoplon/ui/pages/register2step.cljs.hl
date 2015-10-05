@@ -2,7 +2,7 @@
   (:require [impl.api.tenant.manage :as a])
   (:require [core.api.flows :refer [flow]]))
 
-(flow a/register2step-resp #(:username %) #(do (println "Tenant complete.")))
+(flow a/register2step-state #(:username %) #(do (println "Tenant complete.")))
 
 (defelem register2step [{:keys [form-title]}]
   (div :id "register-page" :class "container-fluid col-md-12 row"
@@ -11,17 +11,13 @@
             (hr  :id "separator" :class "separator")
             (div :id "register-centered" :class "center-block"
                  (form :class "col-md-offset-2 col-md-8 form-horizontal"
-                       :on-submit #(a/register2step  {:username (val-id "username")
+                       :on-submit #(a/register2step  {:username (:username @a/register-state)
                                                       :firstname (val-id "firstname")
                                                       :lastname (val-id "lastname")
                                                       :email (val-id "email")
                                                       :address-line-1 (val-id "address1")
                                                       :address-line-2 (val-id "address2")
                                                       :address-line-3 (val-id "address3")})
-                       (div :class "form-group"
-                            (label :class "col-md-4 control-label" :for "username" "Enter Username")
-                            (div :class "col-md-8"
-                                 (input :class "form-control" :type "text" :id "username")))
                        (div :class "form-group"
                             (label :class "col-md-4 control-label" :for "firstname" "Enter firstname")
                             (div :class "col-md-8"

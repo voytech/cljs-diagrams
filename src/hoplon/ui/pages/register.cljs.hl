@@ -2,9 +2,9 @@
   (:require [impl.api.public.auth :as a])
   (:require [core.api.flows :refer [flow]]))
 
-(flow a/register-resp #(:username %) #(do (println "Got registration response.")
-                                          (a/login (:username %)
-                                                   (val-id "password"))))
+(flow a/register-state #(:username %) #(do (println "Got registration response.")
+                                           (a/login (:username %)
+                                                    (val-id "password"))))
 
 (defelem register [{:keys [form-title]}]
   (div :id "register-page" :class "container-fluid col-md-12 row"

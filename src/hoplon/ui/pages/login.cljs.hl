@@ -1,10 +1,16 @@
 (ns ui.pages.login
   (:require [core.router.router :as r]
             [impl.api.public.auth :as a]
-            [core.api.flows :refer [flow]]))
+            [core.api.flows :refer [flow]]
+            [ui.components.nav-bar :refer [navbar-delete navbar-add]]
+            [ui.components.login-widget :refer [login-widget]]))
 
-(flow a/login-resp #(:identity %) #(do (println "Got login response.")
-                                       (r/goto-page "#/register2step")))
+(flow a/login-state a/login-has-identity (fn [state] (do (println "Got login response.")
+                                                         (dosync
+                                                          (navbar-add [{:id "auth" :widget (login-widget (:identity state))}])
+                                                          (navbar-delete #{"login"})
+                                                          (navbar-add [{:id "logout" :title "Logout" :action #(r/goto-page "#/login")}]))
+                                                         (r/goto-page "#/register2step"))))
 
 (defelem login [{:keys [form-title]}]
  (div :id "login-page" :class "container-fluid col-md-12 row"

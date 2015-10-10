@@ -12,25 +12,26 @@
 
 (deftest test-register-rpc
   (reload-db 'shared *shared-db*)
-  (let [payload {:username "Wojciech"
+  (let [payload {:username "Adrien"
                  :password "UUUZDDD"
                  :re-password "UUUZDDD"
                  :role :core.auth.roles/TENANT
-                 :identity "voytech"}
-        details {:username (-> payload :username)
-                 :firstname (-> payload :username)
-                 :lastname "Maka"
-                 :email "wojmak@gmail.com"
-                 :address-line-1 "Piaseski"
-                 :address-line-2 "ul. Gen GrochaWiejskiego"
-                 :address-line-3 "12/13"}]
-    (is (= (parse-resp ((app-handler abspath) (mock-castra "/app/public"
-                                                           'core.services.public.auth/register
-                                                           payload)))
-           {:status  200
-            :body (dissoc payload :password :re-password)}))
-    (is (= (-> (parse-resp ((app-handler abspath) (mock-castra "/app/tenant"
-                                                               'core.services.tenant.manage/create-tenant
-                                                               details)))
-               :status)
-           401))))
+                 :identity "adrien"}
+        details {:firstname "Adrien"
+                 :lastname "Monk"
+                 :email "adrien.monk@police.com"
+                 :address-line-1 "San Francisco."}]
+    (let [response ((app-handler abspath) (mock-castra "/app/public"
+                                                       'core.services.public.auth/register
+                                                       payload))
+          body (parse-resp response)]
+      (println (str "session id 1:" (response-session response)))
+      (println (str "response 1:" body))
+      (let [response-2 ((app-handler abspath) (with-session
+                                                (mock-castra "/app/tenant"
+                                                             'core.services.tenant.manage/create-tenant
+                                                             details)
+                                                (response-session response)))
+            body-2 (parse-resp response-2)]
+        (println (str "session id 2: " (response-session response-2)))
+        (println (str "response 2: " body-2))))))

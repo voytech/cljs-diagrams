@@ -23,8 +23,7 @@
             (hr  :id "separator" :class "separator")
             (div :id "register-centered" :class "center-block"
                  (form :class "col-md-offset-2 col-md-8 form-horizontal"
-                       :on-submit #(m/register2step  {:username (:username @a/register-state)
-                                                      :firstname (val-id "firstname")
+                       :on-submit #(m/register2step  {:firstname (val-id "firstname")
                                                       :lastname (val-id "lastname")
                                                       :email (val-id "email")
                                                       :address-line-1 (val-id "address1")

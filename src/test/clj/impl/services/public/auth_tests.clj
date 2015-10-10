@@ -13,23 +13,17 @@
 ;;Ugly retracting and recreating database for test purposes.
 (deftest test-register-rpc
   (reload-db 'shared *shared-db*)
-  (let [payload {:username "Wojciech"
+  (let [payload {:username "Adrien"
                  :password "UUUZDDD"
                  :re-password "UUUZDDD"
                  :role :core.auth.roles/TENANT
-                 :identity "voytech"}
-        details {:username (-> payload :username)
-                 :firstname (-> payload :username)
-                 :lastname "Maka"
-                 :email "wojmak@gmail.com"
-                 :address-line-1 "Piaseski"
-                 :address-line-2 "ul. Gen GrochaWiejskiego"
-                 :address-line-3 "12/13"}]
-    (is (= (parse-resp ((app-handler abspath) (mock-castra "/app/public"
-                                                           'core.services.public.auth/register
-                                                           payload)))
-           {:status  200
-            :body (dissoc payload :password :re-password)}))))
+                 :identity "adrien"}]
+    (let [response ((app-handler abspath) (mock-castra "/app/public"
+                                                       'core.services.public.auth/register
+                                                       payload))
+          body (parse-resp response)]
+      (println (str "session id 1:" (response-session response)))
+      (println (str "response 1:" body)))))
 
 (deftest test-login
   (let [request (mock-login "/app/login" "Wojciech" "UUUZDDD")

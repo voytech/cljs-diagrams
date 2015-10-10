@@ -3,10 +3,14 @@
             [core.db.manager :refer :all]
             [core.db.schemap-hooks :refer :all]))
 
-(def ^:dynamic *shared-db* (str (:db-url (load-configuration "resources/schema/properties.edn")) "/SHARED"))
+(def TESTCONF "resources/schema/test_properties.edn")
+(def DEVCONF "resources/schema/properties.edn")
+
+(def ^:dynamic *conf-file* DEVCONF)
+(def ^:dynamic *shared-db* (str (:db-url (load-configuration *conf-file*)) "/SHARED"))
 
 (defn db-url
-  ([] (str (:db-url (load-configuration "resources/schema/properties.edn")) "/"))
+  ([] (str (:db-url (load-configuration *conf-file*)) "/"))
   ([name] (str (db-url) name)))
 
 (defschema 'shared

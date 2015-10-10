@@ -39,7 +39,5 @@
       (get "Set-Cookie")
       (first)))
 
-(defn session-aware-request [username password request]
-  (let [response (mock-login "/app/login" username password)
-        session (response-session response)
-        ensured (mock/header request "cookie" session)]))
+(defn with-session [request sessionid]
+  (mock/header request "cookie" sessionid))

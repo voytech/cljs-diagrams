@@ -5,7 +5,9 @@
 
 (def ^:dynamic *shared-db* (str (:db-url (load-configuration "resources/schema/properties.edn")) "/SHARED"))
 
-(defn db-url [name] (str (:db-url (load-configuration "resources/schema/properties.edn")) "/" name))
+(defn db-url
+  ([] (str (:db-url (load-configuration "resources/schema/properties.edn")) "/"))
+  ([name] (str (db-url) name)))
 
 (defschema 'shared
     {:mapping-inference true

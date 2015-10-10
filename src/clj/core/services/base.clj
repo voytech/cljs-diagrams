@@ -29,5 +29,10 @@
   ([id] (load-entity id *database-url*)))
 
 (defn user-query [username qualified-prop db]
-  (-> (load-entity [qualified-prop username] *shared-db*)
-                   (dissoc :external-id :password :re-password)))
+  (when-let [user (-> (load-entity [qualified-prop username] *shared-db*)
+                      (dissoc :external-id :password :re-password))]
+    (let [ident (or (:identity user) (:username user))
+          dburl (db-url ident)]
+      (if (some #{ident} (d/get-database-names (str (db-url) "*")))
+        (assoc user :initialized? true)
+        user))))

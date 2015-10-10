@@ -1,20 +1,20 @@
 (ns ui.pages.register2step
   (:require [impl.api.tenant.manage :as m]
             [core.router.router :as r]
-            [ui.components.nav-bar :refer [navbar-add right-navbar-links navbar-delete]]
+            [ui.components.nav-bar :refer [navbar-add left-navbar-links navbar-delete]]
             [impl.api.public.auth :as a]
             [core.api.flows :refer [flow]]))
 
 (defn- rebuild-navbar []
   (dosync
-   (navbar-add [{:id "customize" :title "Customize" :action #(r/goto-page "#/login")}] right-navbar-links)
-   (navbar-add [{:id "customers" :title "Customers" :action #(r/goto-page "#/login")}] right-navbar-links)
-   (navbar-add [{:id "orders" :title "Orders" :action #(r/goto-page "#/login")}] right-navbar-links)
-   (navbar-add [{:id "messages" :title "Messages" :action #(r/goto-page "#/login")}] right-navbar-links)
-   (navbar-add [{:id "account" :title "Account" :action #(r/goto-page "#/login")}] right-navbar-links)))
+   (navbar-add [{:id "customize" :title "Customize" :action #(r/goto-page "#/login")}] left-navbar-links)
+   (navbar-add [{:id "customers" :title "Customers" :action #(r/goto-page "#/login")}] left-navbar-links)
+   (navbar-add [{:id "orders" :title "Orders" :action #(r/goto-page "#/login")}] left-navbar-links)
+   (navbar-add [{:id "messages" :title "Messages" :action #(r/goto-page "#/login")}] left-navbar-links)
+   (navbar-add [{:id "account" :title "Account" :action #(r/goto-page "#/login")}] left-navbar-links)))
 
-(flow m/register2step-state a/login-has-identity #(do (r/goto-page "#/admin")
-                                                      (rebuild-navbar)))
+(flow m/tenant-application-state a/login-has-identity #(do (r/goto-page "#/admin")
+                                                           (rebuild-navbar)))
 
 (defelem register2step [{:keys [form-title]}]
   (div :id "register-page" :class "container-fluid col-md-12 row"

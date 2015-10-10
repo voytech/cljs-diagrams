@@ -25,13 +25,13 @@
            :on-click (:action entry)
            (:title entry)))))
 
-(defelem nav-bar [{:keys [id logo brand-txt]}]
+(defelem nav-bar [{:keys [id logo brand-txt links-cell]}]
   (nav :id id :class "navbar navbar-default"
        (div :class "container-fluid"
             (div :class "navbar-header"
                  (a :class "navbar-brand" brand-txt))
             (div :id "navbar" :class "navbar-collapse collapse"
-                 (ul :class "nav navbar-nav navbar-left"
+                 (ul :class "nav nav-pills navbar-nav navbar-left"
                      (cell= (doall (map #(render-entry %) left-navbar-links))))
                  (ul :class "nav navbar-nav navbar-right"
                      (cell= (doall (map #(render-entry %) right-navbar-links))))))))

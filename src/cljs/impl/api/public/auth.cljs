@@ -5,17 +5,28 @@
  (:require-macros
     [tailrecursion.javelin :refer [defc defc= cell=]]))
 
+;;consider moving below state machine instrumentations into cljs/impl/states/
+;;AUTH STATES:
 (defc register-state {})
 (defc logout-state {})
 (defc login-state {})
 (defc error nil)
 (defc loading [])
 
-(defn login-has-identity [state]
-  (:identity state))
+;;STATE QUERIES:
+(defn logged-in?[]
+  (:identity login-state))
 
-(defn register-check []
-  )
+(defn tenant-login? []
+  (= (-> login-state :identity :role) :core.auth.roles/TENANT))
+
+(defn tenant-initialized? []
+  (when (tenant-login?)
+    (-> login-state :identity :initialized?)))
+
+
+
+
 
 (def register  (mkremote 'core.services.public.auth/register
                           register-state

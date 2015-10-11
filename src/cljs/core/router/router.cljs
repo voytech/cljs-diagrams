@@ -39,6 +39,7 @@
         elements (get @routes location)
         g-container (or (dom/by-id @container-id) nil)
         transition-ok (transition-valid location)]
+    (println (str "container " g-container))
     (when (and (not (nil? elements)) (= true transition-ok))
       (if (map? elements)
         (doseq [key (keys elements)]

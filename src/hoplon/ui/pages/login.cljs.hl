@@ -3,30 +3,7 @@
             [impl.api.public.auth :as a]
             [impl.api.tenant.manage :as t]
             [core.api.flows :refer [flow]]
-            [ui.components.nav-bar :refer [navbar-delete navbar-add]]
             [ui.components.login-widget :refer [login-widget]]))
-
-(defn authenticate-navbar []
-  (dosync
-   (navbar-delete #{"login"})
-   (navbar-add [{:id "auth" :widget (login-widget (:identity a/login-state))},
-                {:id "logout" :title "Logout" :action #(r/goto-page "#/login")}])))
-
-(defn unauthenticate-navbar []
-  (dosync
-   (navbar-delete #{"logout","auth"})
-   (navbar-add [{:id "login" :title "Login" :action #(r/goto-page "#/login")},
-                {:id "register" :title "Register" :action #(r/goto-page "#/register")}])))
-
-(cell= (if (a/login-has-identity a/login-state)
-         (do
-           (authenticate-navbar)
-           (if (empty? t/tenant-application-state)
-             (r/goto-page "#/register2step")
-             (r/goto-page "#/admin")))
-         (do
-           (unauthenticate-navbar)
-           (r/goto-page "#/login"))))
 
 (defelem login [{:keys [form-title]}]
  (div :id "login-page" :class "container-fluid col-md-12 row"

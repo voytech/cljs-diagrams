@@ -7,7 +7,6 @@
 
 ;;consider moving below state machine instrumentations into cljs/impl/states/
 ;;AUTH STATES:
-(defc register-state {})
 (defc logout-state {})
 (defc login-state {})
 (defc error nil)
@@ -15,7 +14,7 @@
 
 ;;STATE QUERIES:
 (defn logged-in?[]
-  (:identity login-state))
+  #(not (nil? (:identity login-state))))
 
 (defn tenant-login? []
   (= (-> login-state :identity :role) :core.auth.roles/TENANT))
@@ -29,7 +28,7 @@
 
 
 (def register  (mkremote 'core.services.public.auth/register
-                          register-state
+                          login-state
                           error
                           loading
                           ["/app/public"]))

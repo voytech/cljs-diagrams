@@ -1,12 +1,14 @@
 (page "index.html"
   (:require
     [core.router.router :as router]
+    [impl.api.public.auth :as a]
     [ui.pages.main :refer [main]]
     [ui.pages.admin :refer [admin]]
     [ui.pages.register :refer [register]]
     [ui.pages.register2step :refer [register2step]]
+    [impl.states.auth-states :as as]
     [ui.pages.login :refer [login]]
-    [ui.components.nav-bar :refer [nav-bar navbar-add]]
+    [ui.components.nav-bar :refer [nav-bar]]
     [utils.canvas-popups :as popups]
     [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
@@ -23,9 +25,6 @@
   (println "Initialized")
 )
 
-(navbar-add [{:id "login" :title "Login" :action #(router/goto-page "#/login")}
-             {:id "register" :title "Register" :action #(router/goto-page "#/register")}])
-
 (html
   (head
    (link :href "css/bootstrap.inc.css" :rel "stylesheet" )
@@ -36,7 +35,9 @@
 
   (body
    (nav-bar {:id "navbar-container"
-             :brand-txt "Photo Collage"})
+             :brand-txt "Photo Collage"
+             :left-side-links as/left-side-links
+             :right-side-links as/right-side-links})
    (div :id "main-container")))
 
 (start)

@@ -2,18 +2,18 @@
   (:require [utils.dom.dom-utils :as dom]
             [clojure.set :refer [difference]]))
 
-(defc right-navbar-links [])
-(defc left-navbar-links [])
+;; (defc right-navbar-links [])
+;; (defc left-navbar-links [])
 
-(defn navbar-add
-  ([links]
-   (swap! right-navbar-links concat links))
-  ([links cel]
-   (swap! cel concat links)))
+;; (defn navbar-add
+;;   ([links]
+;;    (swap! right-navbar-links concat links))
+;;   ([links cel]
+;;    (swap! cel concat links)))
 
-(defn navbar-delete [links]
-  (when-let [diff (remove #(contains? links (:id %)) @right-navbar-links)]
-    (reset! right-navbar-links diff)))
+;; (defn navbar-delete [links]
+;;   (when-let [diff (remove #(contains? links (:id %)) @right-navbar-links)]
+;;     (reset! right-navbar-links diff)))
 
 (defn- widget? [entry]
   (not (nil? (:widget entry))))
@@ -25,13 +25,13 @@
            :on-click (:action entry)
            (:title entry)))))
 
-(defelem nav-bar [{:keys [id logo brand-txt links-cell]}]
+(defelem nav-bar [{:keys [id logo brand-txt left-side-links right-side-links]}]
   (nav :id id :class "navbar navbar-default"
        (div :class "container-fluid"
             (div :class "navbar-header"
                  (a :class "navbar-brand" brand-txt))
             (div :id "navbar" :class "navbar-collapse collapse"
-                 (ul :class "nav nav-pills navbar-nav navbar-left"
-                     (cell= (doall (map #(render-entry %) left-navbar-links))))
+                 (ul :class "nav navbar-nav navbar-left"
+                     (cell= (doall (map #(render-entry %) left-side-links))))
                  (ul :class "nav navbar-nav navbar-right"
-                     (cell= (doall (map #(render-entry %) right-navbar-links))))))))
+                     (cell= (doall (map #(render-entry %) right-side-links))))))))

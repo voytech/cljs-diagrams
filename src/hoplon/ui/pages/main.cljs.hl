@@ -14,7 +14,6 @@
                            (tab :name "Photos" (photos-view))
                            (tab :name "Tools" (tools-view))
                            (tab :name "Templates" (div (text "Tempaltes here!")))
-                           (tab :name "Settings" (settings))
-                           ))
+                           (tab :name "Settings" (settings))))
 
        (div :id "workspace" (workspace))))

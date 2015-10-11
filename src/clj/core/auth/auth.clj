@@ -24,21 +24,21 @@
       (assoc auth :roles [(:role auth)]))))
 
 (def global-unauthorized-handler
-  (fn [req] {:status 403 :body (clj->cljson { :description "Unauthorized"
-                                              :reason "Not sufficient priviledges"
-                                              :identity (friend/current-authentication)})})
+  (fn [req] {:status 403 :body (clj->cljson (merge {:description "Unauthorized"
+                                                    :reason "Not sufficient priviledges"}
+                                                   (friend/current-authentication)))})
 )
 
 (def global-unauthenticated-handler
-  (fn [req] {:status 401 :body (clj->cljson { :description "Unauthenticated"
-                                              :reason "User is not authenticated."
-                                              :identity (friend/current-authentication)})})
+  (fn [req] {:status 401 :body (clj->cljson (merge {:description "Unauthenticated"
+                                                    :reason "User is not authenticated."}
+                                                   (friend/current-authentication)))})
 )
 
 (def logged-in-handler
-  (fn [req] {:status 200 :body (clj->cljson { :description "Authenticated succesfully"
-                                              :reason "Successful login"
-                                              :identity (friend/current-authentication)})}))
+  (fn [req] {:status 200 :body (clj->cljson (merge {:description "Authenticated succesfully"
+                                                    :reason "Successful login"}
+                                                   (friend/current-authentication)))}))
 
 ;; ONLY tests.
 (defn username-password-authentication-workflow

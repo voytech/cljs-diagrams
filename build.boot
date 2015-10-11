@@ -16,6 +16,7 @@
                   [tailrecursion/javelin           "3.8.0"];old 3.7.2 new 3.8.0
                   [tailrecursion/cljson            "1.0.7"]
                   [tailrecursion/castra            "2.2.2"]
+                  [alandipert/storage-atom         "1.2.4"]
                   [io.hoplon.vendor/jquery         "2.1.1-0"]
                   [com.cemerick/clojurescript.test "0.3.3"]
                   [com.cemerick/friend             "0.2.1"]
@@ -28,7 +29,6 @@
                   [ring/ring-core                  "1.3.2"]
                   [ring/ring-jetty-adapter         "1.3.2"]
                   [ring/ring-mock                  "0.3.0"]
-                  ;[ring.middleware.logger         "0.5.0"]
                   [cljsjs/fabric                   "1.5.0-0"]
                   [cljsjs/jquery                   "2.1.4-0"]
                   [cljsjs/jquery-ui                "1.11.3-1"]

@@ -19,7 +19,7 @@
 
 (defn- authenticated-navbar []
   (dosync
-   (reset! right-side-links [{:id "auth" :widget (login-widget (:identity a/login-state))}
+   (reset! right-side-links [{:id "auth" :widget (login-widget {:user a/login-state})}
                              {:id "logout" :title "Logout" :action #(router/goto-page "#/logout")}])
    (reset! left-side-links [])))
 
@@ -53,29 +53,28 @@
            (and (not (nil? (:identity a/login-state)))
                 (= (-> a/login-state :role) :core.auth.roles/TENANT)
                 (not (:initialized? a/login-state)))
-           (do (println "goto register2step")
-               (router/goto-page "#/register2step")
+           (do (router/goto-page "#/register2step")
                (authenticated-navbar))
 
            (and (not (nil? (:identity a/login-state)))
                 (= (-> a/login-state :role) :core.auth.roles/TENANT)
                 (:initialized? a/login-state))
-           (do (println "goto admin")
+           (do (println (.getItem js/localStorage ":login-state"))
                (router/goto-page "#/admin")
                (tenant-navbar))
 
            (and (not (nil? (:identity a/login-state)))
                 (= (-> a/login-state :role) :core.auth.roles/USER))
-           (do (println "goto main")
+           (do (println (.getItem js/localStorage ":login-state"))
                (router/goto-page "#/main")
                (authenticated-navbar))
 
            (nil? (:identity a/login-state))
-           (do (println "goto register")
+           (do (println (.getItem js/localStorage ":login-state"))
                (router/goto-page "#/register")
-               (unauthenticated-navbar))))
-  )
+               (unauthenticated-navbar)))))
 
+(println (str "local storage:" (.getItem js/localStorage ":login-state")))
 (html
   (head
    (link :href "css/bootstrap.inc.css" :rel "stylesheet" )

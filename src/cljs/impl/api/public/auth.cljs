@@ -1,17 +1,18 @@
 (ns impl.api.public.auth
  (:require [tailrecursion.castra  :as c :refer [mkremote async jq-ajax]]
            [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
-           [tailrecursion.javelin :as j :refer [cell]])
+           [tailrecursion.javelin :as j :refer [cell]]
+           [alandipert.storage-atom :refer [local-storage]])
  (:require-macros
     [tailrecursion.javelin :refer [defc defc= cell=]]))
 
 ;;consider moving below state machine instrumentations into cljs/impl/states/
 ;;AUTH STATES:
 (defc logout-state {})
-(defc login-state {})
+;(defc login-state {})
 (defc error nil)
 (defc loading [])
-
+(def login-state (local-storage (cell {}) :login-state))
 ;;STATE QUERIES:
 (defn logged-in?[]
   #(not (nil? (:identity login-state))))

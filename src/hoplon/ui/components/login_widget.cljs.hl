@@ -1,4 +1,4 @@
 (ns ui.components.login-widget)
 
-(defelem login-widget [{:keys [identity]}]
-  (li (a :class "navbar-link" (str "Hi , " identity " !"))))
+(defelem login-widget [{:keys [user]}]
+  (cell= (li (a :class "navbar-link" (str "Hi , " (:username user) " !")))))

@@ -28,6 +28,7 @@
                   [ring/ring                       "1.3.2"]
                   [ring/ring-core                  "1.3.2"]
                   [ring/ring-jetty-adapter         "1.3.2"]
+                  [ring/ring-session-timeout       "0.1.0"]
                   [ring/ring-mock                  "0.3.0"]
                   [cljsjs/fabric                   "1.5.0-0"]
                   [cljsjs/jquery                   "2.1.4-0"]

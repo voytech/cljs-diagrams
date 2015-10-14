@@ -9,28 +9,14 @@
 ;;consider moving below state machine instrumentations into cljs/impl/states/
 ;;AUTH STATES:
 (defc logout-state {})
-;(defc login-state {})
+(defc login-state {})
 (defc error nil)
 (defc loading [])
-(def login-state (local-storage (cell {}) :login-state))
-;;STATE QUERIES:
-(defn logged-in?[]
-  #(not (nil? (:identity login-state))))
-
-(defn tenant-login? []
-  (= (-> login-state :identity :role) :core.auth.roles/TENANT))
-
-(defn tenant-initialized? []
-  (when (tenant-login?)
-    (-> login-state :identity :initialized?)))
-
-
-
-
+;(def login-state (local-storage (cell {}) :login-state))
 
 (def register  (mkremote 'core.services.public.auth/register
                           login-state
-                          error
+                          login-state
                           loading
                           ["/app/public"]))
 
@@ -47,5 +33,14 @@
            {"authentication" (clj->cljson [username password])
             "Accept"          "application/json"}
            #(reset! login-state (cljson->clj %))
-           #(reset! error (cljson->clj %))
+           #(reset! login-state (cljson->clj %))
+           #()))
+
+(defn is-login []
+  (jq-ajax false
+           "/app/is_login"
+           nil
+           {"Accept" "application/json"}
+           #(reset! login-state (cljson->clj %))
+           #(reset! login-state (cljson->clj %))
            #()))

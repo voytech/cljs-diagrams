@@ -1,6 +1,8 @@
 (ns core.services.base
   (:require [core.db.schemap :refer :all]
             [impl.db.schema :refer :all]
+            [tailrecursion.castra :as c :refer [*session* *request* ]]
+            [cemerick.friend.workflows :as cfw]
             [datomic.api :as d]))
 
 (def ^:dynamic *database-url*)
@@ -36,3 +38,10 @@
       (if (some #{ident} (d/get-database-names (str (db-url) "*")))
         (assoc user :initialized? true)
         user))))
+
+(defn friend-refresh-session [auth]
+  (let [f-auth  (-> (assoc auth :roles [(:role auth)])
+                    (cfw/make-auth {:cemerick.friend/workflow :castra
+                                    :cemerick.friend/redirect-on-auth? false}))]
+    (swap! *session* assoc-in [:cemerick.friend/identity :authentications (:identity f-auth)] f-auth)
+    (swap! *session* assoc-in [:cemerick.friend/identity :current] (:identity f-auth))))

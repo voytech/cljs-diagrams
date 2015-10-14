@@ -39,7 +39,15 @@
   (fn [req] {:status 200 :body (clj->cljson (merge {:description "Authenticated succesfully"
                                                     :reason "Successful login"}
                                                    (friend/current-authentication)))}))
+(def is-logged-handler
+  (fn [req] (friend/authenticated (do {:status 200 :body (clj->cljson (merge {:description "Authenticated succesfully"
+                                                                              :reason "Successful login"}
+                                                                             (friend/current-authentication)))}))))
 
+(def timeout-response
+  {:status 401 :body (clj->cljson (merge {:description "Timeout"
+                                          :reason "Timeout"}
+                                          (friend/current-authentication)))})
 ;; ONLY tests.
 (defn username-password-authentication-workflow
 "This workflow provides standard username password authentication for application

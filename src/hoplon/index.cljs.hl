@@ -40,6 +40,8 @@
 
 (defn initialize []
   (println "Initializing application...")
+  (println "Checking authentication....")
+  (a/is-login)
   (router/set-container-id "main-container")
   (router/def-route "#/main"     (main))
   (router/def-route "#/admin"    (admin))
@@ -47,7 +49,7 @@
   (router/def-route "#/register2step" (register2step :form-title "Finalize account setup!"))
   (router/def-route "#/login"    (login :form-title "Please provide username and password"))
   (router/route)
-  (println "Initialized")
+  (println "Hash-tag routes initialized...")
 
   (cell= (cond
            (and (not (nil? (:identity a/login-state)))
@@ -72,7 +74,8 @@
            (nil? (:identity a/login-state))
            (do (println (.getItem js/localStorage ":login-state"))
                (router/goto-page "#/register")
-               (unauthenticated-navbar)))))
+               (unauthenticated-navbar))))
+  (println "Authentication state transitions initialized..."))
 
 (println (str "local storage:" (.getItem js/localStorage ":login-state")))
 (html

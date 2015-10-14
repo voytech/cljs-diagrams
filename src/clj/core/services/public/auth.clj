@@ -22,14 +22,6 @@
 (defn authenticate [username password]
   (user-query username :user.login/username *shared-db*))
 
-;;TODO: Think if it is possible to make it via more public API of friend.
-(defn friend-auth-support [auth]
-  (let [f-auth  (-> (assoc auth :roles [(:role auth)])
-                    (cfw/make-auth {:cemerick.friend/workflow :castra
-                                    :cemerick.friend/redirect-on-auth? false}))]
-    (swap! *session* assoc-in [:cemerick.friend/identity :authentications (:identity f-auth)] f-auth)
-    (swap! *session* assoc-in [:cemerick.friend/identity :current] (:identity f-auth))))
-
 (defrpc register [{:keys [username password re-password] :as payload}]
   {:rpc/pre [(not-exists username)
              (if-not (= password re-password)
@@ -41,7 +33,7 @@
                       (with-squuid :external-id)
                       store-entity)]
       (-> (authenticate username password)
-          (friend-auth-support)))))
+          (friend-refresh-session)))))
 
 (defrpc logout []
   (println "Logged out!"))

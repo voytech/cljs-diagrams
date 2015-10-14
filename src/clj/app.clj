@@ -3,6 +3,7 @@
    [ring.adapter.jetty               :refer [run-jetty]]
    [ring.middleware.resource         :refer [wrap-resource]]
    [ring.middleware.session          :refer [wrap-session]]
+   [ring.middleware.session-timeout  :refer [wrap-idle-session-timeout]]
    [ring.middleware.session.cookie   :refer [cookie-store]]
    [ring.middleware.file             :refer [wrap-file]]
    [ring.middleware.file-info        :refer [wrap-file-info]]
@@ -15,6 +16,8 @@
                                              global-unauthorized-handler
                                              global-unauthenticated-handler
                                              logged-in-handler
+                                             is-logged-handler
+                                             timeout-response
                                              username-password-authentication-workflow]]
    [cemerick.friend                  :as friend]
    [compojure.core :refer :all]
@@ -28,6 +31,7 @@
 
 (def app-handler (fn [path] (-> (apply routes
                                        (concat
+                                        [(POST "/app/is_login" [] is-logged-handler)]
                                         [(POST "/app/login" [] logged-in-handler)]
                                         (restricted-castra-routes [{:namespace 'core.services.tenant
                                                                     :roles [:core.auth.roles/TENANT]
@@ -44,6 +48,7 @@
                                                       :allow-anon? true
                                                       :workflows [(username-password-authentication-workflow
                                                                    :credential-fn global-credential-fn)]})
+                                (wrap-idle-session-timeout {:timeout 60 :timeout-response timeout-response})
                                 (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
                                 (wrap-file  (or path public-path))
                                 (wrap-index (or path public-path))

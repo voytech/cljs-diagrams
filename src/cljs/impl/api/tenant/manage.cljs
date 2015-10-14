@@ -11,6 +11,6 @@
 
 (def register2step  (mkremote 'core.services.tenant.manage/create-tenant
                               a/login-state
-                              error
+                              a/login-state
                               loading
                               ["/app/tenant"]))

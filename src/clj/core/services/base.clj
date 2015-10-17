@@ -32,7 +32,7 @@
 
 (defn user-query [username qualified-prop db]
   (when-let [user (-> (load-entity [qualified-prop username] *shared-db*)
-                      (dissoc :external-id :password :re-password))]
+                      (dissoc :password :re-password))]
     (let [ident (or (:identity user) (:username user))
           dburl (db-url ident)]
       (if (some #{ident} (d/get-database-names (str (db-url) "*")))

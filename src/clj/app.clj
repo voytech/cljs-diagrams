@@ -23,9 +23,11 @@
    [compojure.core :refer :all]
    [compojure.route :as route]
    [core.auth.roles :refer :all]
+   [conf :refer :all]
    ))
 
 (def public-path "resources/public")
+(def resource-path (:resource-path (load-configuration "resources/schema/properties.edn")))
 (def server (atom nil))
 (def running (atom false))
 
@@ -42,7 +44,8 @@
                                                                    {:namespace 'core.services.public ;Empty vector indicates not authorized access.
                                                                     :roles []
                                                                     :path "/app/public"}])))
-
+                                (wrap-file resource-path)
+                                ;;(restrict-file-resources) ;;If it is resource file request - decompose file path and check if resource exist for given user.
                                 (friend/authenticate {:unauthorized-handler    global-unauthorized-handler
                                                       :unauthenticated-handler global-unauthenticated-handler
                                                       :allow-anon? true

@@ -39,9 +39,13 @@
         (assoc user :initialized? true)
         user))))
 
-(defn friend-refresh-session [auth]
-  (let [f-auth  (-> (assoc auth :roles [(:role auth)])
-                    (cfw/make-auth {:cemerick.friend/workflow :castra
-                                    :cemerick.friend/redirect-on-auth? false}))]
-    (swap! *session* assoc-in [:cemerick.friend/identity :authentications (:identity f-auth)] f-auth)
-    (swap! *session* assoc-in [:cemerick.friend/identity :current] (:identity f-auth))))
+(defn friend-refresh-session
+  ([auth]
+   (let [f-auth  (-> (assoc auth :roles [(:role auth)])
+                     (cfw/make-auth {:cemerick.friend/workflow :castra
+                                     :cemerick.friend/redirect-on-auth? false}))]
+     (swap! *session* assoc-in [:cemerick.friend/identity :authentications (:identity f-auth)] f-auth)
+     (swap! *session* assoc-in [:cemerick.friend/identity :current] (:identity f-auth))))
+  ([username qualified-prop db]
+   (-> (user-query username qualified-prop db)
+       (friend-refresh-session))))

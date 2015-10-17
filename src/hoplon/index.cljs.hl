@@ -73,7 +73,7 @@
 
            (nil? (:identity a/login-state))
            (do (println (.getItem js/localStorage ":login-state"))
-               (router/goto-page "#/register")
+               (router/goto-page "#/login")
                (unauthenticated-navbar))))
   (println "Authentication state transitions initialized..."))
 

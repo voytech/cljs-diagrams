@@ -11,7 +11,7 @@
   (:username (friend/current-authentication)))
 
 (defrpc create-tenant [{:keys [firstname lastname email address-line-1 address-line-2 address-line-3] :as payload}]
-  {:rpc/query [(user-query (session-username) :user.login/username *shared-db*)]}
+  {:rpc/query [(friend-refresh-session (session-username) :user.login/username *shared-db*)]}
   (let [user-data (load-entity [:user.login/username (session-username)] *shared-db*)
         dburl (db-url (or (:identity user-data)
                           (:username user-data)))

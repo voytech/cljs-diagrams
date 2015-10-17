@@ -51,6 +51,18 @@
     (property name :address-line-3 type :db.type/string)
     (property name :external-id type :db.type/uuid))
 
+  (defentity 'resource.category
+    (property name :name type :db.type/string unique :db.unique/identity)
+    (property name :description type :db.type/string))
+
+  (defentity 'resource.file
+    (property name :filename type :db.type/string unique :db.unique/identity)
+    (property name :content-type :db.type/string)
+    (property name :id type :db.type/string unique :db.unique/identity)
+    (property name :category type :db.type/ref mapping-hook (fn [v] [:resource.category/name v]) reverse-mapping-hook (pull-property-hook :resource.category/name))
+    (property name :path type :db.type/string)
+    (property name :data type :db.type/bytes))
+
   (defentity 'organization.details
     (property name :name type :db.type/string)
     (property name :logo type :db.type/ref)))

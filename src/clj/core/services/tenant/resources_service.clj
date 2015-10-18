@@ -6,6 +6,7 @@
             [cemerick.friend :as friend]
             [tailrecursion.extype :refer [defex extend-ex]]
             [datomic.api :as d]
+            [clojure.java.io :as cjo]
             [conf :as cf]))
 
 (defrpc make-category [data]
@@ -18,9 +19,9 @@
 
 (defn- fs-save [filename data]
   (let [abs-filename (str (:resource-path cf/configuration)
-                          filename)])
-  (make-parents abs-filename)
-  (spit abs-filename data))
+                          filename)]
+    (cjo/make-parents abs-filename)
+    (spit abs-filename data)))
 
 (defrpc put-resource [data]
   (let [ident (friend/current-authentication)
@@ -35,6 +36,6 @@
                         store-entity)]
         (fs-save (str path "/" (:filename data)) (:data data))))))
 
-(defrcp all-resources [])
+(defrpc all-resources [])
 
 (defrpc resources-by-type [type])

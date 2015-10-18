@@ -1,10 +1,15 @@
 (ns impl.services.test-helpers
   (:require [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
             [core.db.schemap :refer [persist-schema]]
+            [impl.db.schema :refer [db-url]]
             [datomic.api :as d]
             [ring.mock.request :as mock]))
 
 (def abspath "/home/voytech/programming/github/photo-collage/resources")
+
+(defn drop-all []
+  (doseq [dbname (d/get-database-names (str (db-url) "*"))]
+    (d/delete-database (str (db-url) dbname))))
 
 (defn reload-db [name url]
   (d/delete-database url)

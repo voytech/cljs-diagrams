@@ -57,11 +57,10 @@
 
   (defentity 'resource.file
     (property name :filename type :db.type/string unique :db.unique/identity)
-    (property name :content-type :db.type/string)
+    (property name :content-type type :db.type/string)
     (property name :category type :db.type/ref mapping-hook (fn [v] [:resource.category/name v]) reverse-mapping-hook (pull-property-hook :resource.category/name))
     (property name :path type :db.type/string)
-    (property name :owner type :db.type/ref mapping-hook (fn [v] [:user.details/external-id v]) reverse-mapping-hook (pull-property-hook :user.details/external-id))
-    (property name :data type :db.type/bytes))
+    (property name :owner type :db.type/ref mapping-hook (fn [v] [:user.details/external-id v]) reverse-mapping-hook (pull-property-hook :user.details/external-id)))
 
   (defentity 'organization.details
     (property name :name type :db.type/string)

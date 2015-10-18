@@ -16,6 +16,9 @@
   (rs/make-category {:name "clipart" :description "Clipart is a small picture widget to be placed somewhere"})
   (rs/make-category {:name "photo" :description "Photo."}))
 
+(defn initialize-tenant-space []
+  (create-resource-categories))
+
 (defrpc create-tenant [{:keys [firstname lastname email address-line-1 address-line-2 address-line-3] :as payload}]
   {:rpc/query [(friend-refresh-session (session-username) :user.login/username *shared-db*)]}
   (println "create tenant")
@@ -30,6 +33,6 @@
         (println "initializing tenant schema...")
         (persist-schema 'tenant dburl)
         (println "tenant schema initialized...")
-        (create-resource-categories)
+        (initialize-tenant-space)
         (-> tenant-info
             store-entity)))))

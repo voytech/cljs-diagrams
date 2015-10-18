@@ -28,13 +28,15 @@
         username (:username ident)
         path (fs-path username (:category data))
         external-id (:external-id ident)]
+    (println (str "creating resource: " path "/" (:filename data)))
     (binding [*database-url* (db-url (or (:identity ident) username))]
       (when-let [id (-> data
-                        assoc :owner external-id
-                        assoc :path path
-                        dissoc :data
+                        (assoc :owner external-id)
+                        (assoc :path path)
+                        (dissoc :data)
                         store-entity)]
-        (fs-save (str path "/" (:filename data)) (:data data))))))
+        (fs-save (str path "/" (:filename data)) (:data data))
+        {:resource-created true}))))
 
 (defrpc all-resources [])
 

@@ -49,7 +49,7 @@
     (property name :address-line-1 type :db.type/string)
     (property name :address-line-2 type :db.type/string)
     (property name :address-line-3 type :db.type/string)
-    (property name :external-id type :db.type/uuid))
+    (property name :external-id type :db.type/uuid unique :db.unique/identity))
 
   (defentity 'resource.category
     (property name :name type :db.type/string unique :db.unique/identity)
@@ -60,7 +60,8 @@
     (property name :content-type type :db.type/string)
     (property name :category type :db.type/ref mapping-hook (fn [v] [:resource.category/name v]) reverse-mapping-hook (pull-property-hook :resource.category/name))
     (property name :path type :db.type/string)
-    (property name :owner type :db.type/ref mapping-hook (fn [v] [:user.details/external-id v]) reverse-mapping-hook (pull-property-hook :user.details/external-id)))
+    (property name :owner type :db.type/ref mapping-hook (fn [v] [:user.details/external-id v]) reverse-mapping-hook (pull-property-hook :user.details/external-id))
+    )
 
   (defentity 'organization.details
     (property name :name type :db.type/string)

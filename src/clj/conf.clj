@@ -1,6 +1,6 @@
-(ns conf
-  )
+(ns conf)
 
+(def CONF_FILE "resources/schema/properties.edn")
 (def configuration {})
 
 

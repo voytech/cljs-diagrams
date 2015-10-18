@@ -12,14 +12,14 @@
 
 (deftest test-register-rpc
   (reload-db 'shared *shared-db*)
-  (let [payload {:username "Adrien"
+  (let [payload {:username "Adrian"
                  :password "UUUZDDD"
                  :re-password "UUUZDDD"
                  :role :core.auth.roles/TENANT
-                 :identity "adrien"}
-        details {:firstname "Adrien"
+                 :identity "adrian"}
+        details {:firstname "Adrian"
                  :lastname "Monk"
-                 :email "adrien.monk@police.com"
+                 :email "adrian.monk@police.com"
                  :address-line-1 "San Francisco."}]
     (let [response ((app-handler abspath) (mock-castra "/app/public"
                                                        'core.services.public.auth/register

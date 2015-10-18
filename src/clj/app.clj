@@ -11,6 +11,7 @@
    [ring.middleware.params           :refer [wrap-params]]
    [ring.middleware.nested-params    :refer [wrap-nested-params]]
    [ring.middleware.keyword-params   :refer [wrap-keyword-params]]
+   [ring.middleware.stacktrace       :refer [wrap-stacktrace]]
    [core.auth.castra-endpoints       :refer [restricted-castra-routes]]
    [core.auth.auth                   :refer [global-credential-fn
                                              global-unauthorized-handler
@@ -30,6 +31,8 @@
 (def resource-path (:resource-path (load-configuration "resources/schema/properties.edn")))
 (def server (atom nil))
 (def running (atom false))
+
+(load-configuration CONF_FILE)
 
 (def app-handler (fn [path] (-> (apply routes
                                        (concat
@@ -58,7 +61,8 @@
                                 (wrap-file-info)
                                 (wrap-keyword-params)
                                 (wrap-nested-params)
-                                (wrap-params))))
+                                (wrap-params)
+                                (wrap-stacktrace))))
 
 (defn start [port path join]
   (reset! server (run-jetty (app-handler path) {:join? join :port port}))

@@ -5,17 +5,22 @@
             [impl.db.schema :refer :all]
             [cemerick.friend :as friend]
             [tailrecursion.extype :refer [defex extend-ex]]
-            [datomic.api :as d]))
+            [datomic.api :as d]
+            [conf :as cf]))
 
 (defrpc make-category [data]
-  (store-entity data))
+  (let [ident (friend/current-authentication)]
+    (binding [*database-url* (db-url (or (:identity ident) (:username ident)))]
+      (store-entity data))))
 
 (defn- fs-path [username cat]
   (str username "/" cat))
 
 (defn- fs-save [filename data]
-  (make-parents filename)
-  (spit filename data))
+  (let [abs-filename (str (:resource-path cf/configuration)
+                          filename)])
+  (make-parents abs-filename)
+  (spit abs-filename data))
 
 (defrpc put-resource [data]
   (let [ident (friend/current-authentication)
@@ -26,6 +31,7 @@
       (when-let [id (-> data
                         assoc :owner external-id
                         assoc :path path
+                        dissoc :data
                         store-entity)]
         (fs-save (str path "/" (:filename data)) (:data data))))))
 

@@ -30,6 +30,7 @@
                   [ring/ring-jetty-adapter         "1.3.2"]
                   [ring/ring-session-timeout       "0.1.0"]
                   [ring/ring-mock                  "0.3.0"]
+                  [ring/ring-devel                 "1.4.0"]
                   [cljsjs/fabric                   "1.5.0-0"]
                   [cljsjs/jquery                   "2.1.4-0"]
                   [cljsjs/jquery-ui                "1.11.3-1"]
@@ -113,8 +114,8 @@
 (deftask tests-clj
   "Run clojure tests"
   []
-  (comp (test :namespaces #{'core.db.entity-mappings-tests
-                            'core.db.manager-tests
+  (comp (test :namespaces #{;'core.db.entity-mappings-tests
+                            'impl.services.tenant.manage-test
                             'impl.services.public.auth-tests})))
 
 (deftask continous-tests-clj []

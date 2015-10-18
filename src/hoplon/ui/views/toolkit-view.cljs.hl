@@ -1,6 +1,7 @@
 (ns ui.views.toolkit-view
   (:require
             [core.project.project-resources :as res]
+            [impl.api.tenant.resource-api :as ra]
             [ui.components.photo :as photo ]
             [core.tools.tools-impl :refer [photo-tool
                                            text-tool
@@ -19,7 +20,11 @@
     (println (str "creating resource library for" type))
     (div :id id
      (photo/photo-loader :class "image-loader"
-                         :callback #(do (println (str "call on: " id " type " type ))
+                         :callback #(do (println (str "filename " (:name %) " content-type " (:type %)))
+                                        (ra/put-resource {:category "background"
+                                                          :filename (:name %)
+                                                          :content-type (:type %)
+                                                          :data (:content %)})
                                         (res/add-resource type %)))
      (toolbox/tool-box :list (prepare-tools type tool-func))))
 

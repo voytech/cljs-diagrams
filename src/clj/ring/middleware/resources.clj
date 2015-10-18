@@ -1,4 +1,4 @@
-(ns ring.middleware.resource
+(ns ring.middleware.resources
    (:require [ring.util.codec :as codec]
             [ring.util.response :as response]
             [ring.util.request :as request]

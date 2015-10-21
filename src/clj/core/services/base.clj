@@ -2,10 +2,31 @@
   (:require [core.db.schemap :refer :all]
             [impl.db.schema :refer :all]
             [tailrecursion.castra :as c :refer [*session* *request* ]]
+            [cemerick.friend :as friend]
             [cemerick.friend.workflows :as cfw]
             [datomic.api :as d]))
 
 (def ^:dynamic *database-url*)
+(declare user-query)
+
+(defn query-by-property
+  ([property value]
+   (let [matches (if value (if (string? value) (str "\"" value "\"") (str value)) "?val")
+         query-str (str "[:find (pull ?e [*]) :in $ :where [?e " (str property) (if value (str )) " " matches " ]]")
+         result (d/q query-str (d/db (d/connect *database-url*)))]
+     (println query-str)
+     (db->clj result *database-url*)))
+  ([property] (query-by-property property nil)))
+
+(defn tenant-db-url []
+  (let [current-auth (friend/current-authentication)
+        is-tenant (= (:role current-auth) :core.auth.roles/TENANT)
+        tenant (:tenant current-auth)
+        ident (or (:identity current-auth) (:username current-auth))]
+    (if is-tenant
+      (db-url ident)
+      (when-let [tenant (user-query tenant :user.login/username *shared-db*)]
+        (db-url (or (:identity tenant) (:username tenant)))))))
 
 (defn failed [input]
   (throw (ex-info "Could not process input!" input)))

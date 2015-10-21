@@ -2,6 +2,7 @@
   (:require
    [ring.adapter.jetty               :refer [run-jetty]]
    [ring.middleware.resource         :refer [wrap-resource]]
+   [ring.middleware.resources        :refer [restrict-file-resources]]
    [ring.middleware.session          :refer [wrap-session]]
    [ring.middleware.session-timeout  :refer [wrap-idle-session-timeout]]
    [ring.middleware.session.cookie   :refer [cookie-store]]
@@ -48,7 +49,7 @@
                                                                     :roles []
                                                                     :path "/app/public"}])))
                                 (wrap-file resource-path)
-                                ;;(restrict-file-resources) ;;If it is resource file request - decompose file path and check if resource exist for given user.
+                                (restrict-file-resources global-unauthorized-handler)
                                 (friend/authenticate {:unauthorized-handler    global-unauthorized-handler
                                                       :unauthenticated-handler global-unauthenticated-handler
                                                       :allow-anon? true

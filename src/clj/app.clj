@@ -55,7 +55,7 @@
                                                       :allow-anon? true
                                                       :workflows [(username-password-authentication-workflow
                                                                    :credential-fn global-credential-fn)]})
-                                (wrap-idle-session-timeout {:timeout 60 :timeout-response timeout-response})
+                                (wrap-idle-session-timeout {:timeout 300 :timeout-response timeout-response})
                                 (wrap-session {:store (cookie-store {:key "a 16-byte secret"})})
                                 (wrap-file  (or path public-path))
                                 (wrap-index (or path public-path))

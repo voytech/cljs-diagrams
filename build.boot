@@ -31,6 +31,7 @@
                   [ring/ring-session-timeout       "0.1.0"]
                   [ring/ring-mock                  "0.3.0"]
                   [ring/ring-devel                 "1.4.0"]
+                  [ring/ring-codec                 "1.0.0"]
                   [cljsjs/fabric                   "1.5.0-0"]
                   [cljsjs/jquery                   "2.1.4-0"]
                   [cljsjs/jquery-ui                "1.11.3-1"]

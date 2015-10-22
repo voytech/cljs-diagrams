@@ -7,10 +7,22 @@
    [tailrecursion.javelin :refer [defc defc= cell=]]))
 
 (defc result {})
+
+(defc backgrounds [])
+(defc cliparts [])
+(defc photos [])
+(defc resources {:background backgrounds
+                 :clipart cliparts
+                 :photo photos})
 (defc loading [])
 
 (def put-resource (mkremote 'core.services.tenant.resources-service/put-resource
-                              a/result
-                              a/result
+                              result
+                              result
                               loading
                               ["/app/tenant"]))
+
+(def get-resources (mkremote 'core.services.tenant.resources-service/get-resources
+                             resources
+                             resources
+                             ["/app/tenant"]))

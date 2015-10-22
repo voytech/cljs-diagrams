@@ -7,6 +7,7 @@
             [tailrecursion.extype :refer [defex extend-ex]]
             [datomic.api :as d]
             [clojure.java.io :as cjo]
+            [ring.util.codec :as b64]
             [conf :as cf]))
 
 (defrpc make-category [data]
@@ -24,7 +25,11 @@
 (defn- fs-save [filename data]
   (let [abs-filename (str (:resource-path cf/configuration) filename)]
     (cjo/make-parents abs-filename)
-    (spit abs-filename data)))
+    (with-open [out (clojure.java.io/output-stream (clojure.java.io/file abs-filename))]
+      (.write out data))))
+
+(defn- decode [data]
+  (b64/base64-decode (last (clojure.string/split data #","))))
 
 (defrpc put-resource [data]
   (let [ident (friend/current-authentication)
@@ -37,7 +42,7 @@
                         (assoc :path path)
                         (dissoc :data)
                         store-entity)]
-        (fs-save (str path "/" (:filename data)) (:data data))
+        (fs-save (str path "/" (:filename data)) (decode (:data data)))
         {:resource-created true}))))
 
 (defrpc all-resources []

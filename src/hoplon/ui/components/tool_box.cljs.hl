@@ -10,23 +10,18 @@
   (div :class "thumbs-container"
        (if (cell? list)
          (cell= (map #(tool-view %) list))
-         (map #(tool-view %) list))
-   ))
+         (map #(tool-view %) list))))
 
 (defn img-src [icon]
   icon)
 
 (defelem tool-view [{:keys [name desc type icon func-ctor] :as tool}]
- (div :class "photo-thumbnail"
-      :draggable "true"
-      :style (str "background-image :url(" icon ");"
-                  "background-repeat:no-repeat;"
-                  "background-size:contain;"
-                  "background-position:center;")
-      :dragstart #(dnd/set-dnd-data % "tool-data" (:uid tool) "move")
-   ;; (img :class "photo"
-   ;;      :id name
-   ;;      :src (img-src icon)
-   ;;      )
-  (div :class "tool-title"
-     (str name))))
+  (div :class "photo-thumbnail"
+       :draggable "true"
+       :style (str "background-image :url(" icon ");"
+                   "background-repeat:no-repeat;"
+                   "background-size:contain;"
+                   "background-position:center;")
+       :dragstart #(dnd/set-dnd-data % "tool-data" (:uid tool) "move")
+       (div :class "tool-title"
+            (str name))))

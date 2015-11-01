@@ -12,8 +12,8 @@
 
 ;ADD MEMOIZE to this function.
 (defn- prepare-tools [resource-type tool-func]
-  (cell= (let [rsrcs (resource-type res/resources)]
-           (map tool-func (vals rsrcs))
+  (cell= (let [rsrcs (resource-type ra/resources)]
+           (map tool-func rsrcs)
            )))
 
 (defelem resource-library [{:keys [id type tool-func]}]
@@ -21,37 +21,36 @@
     (div :id id
      (photo/photo-loader :class "image-loader"
                          :callback #(do (println (str "filename " (:name %) " content-type " (:type %)))
-                                        (ra/put-resource {:category "background"
+                                        (ra/put-resource {:category (name type)
                                                           :filename (:name %)
                                                           :content-type (:type %)
                                                           :data (:content %)})
-                                        ;;(res/add-resource type %)
                                         ))
      (toolbox/tool-box :list (prepare-tools type tool-func))
      ))
 
 (defelem photos-view []
   (resource-library :id "photos-lib"
-                    :type res/PHOTO
-                    :tool-func #(photo-tool (:name %)
-                                            (:type %)
-                                            (:content %)
-                                            res/PHOTO)))
+                    :type :photo
+                    :tool-func #(photo-tool (:filename %)
+                                            (:content-type %)
+                                            (str (:path %) "/" (:filename %))
+                                            :photo)))
 
 (defelem cliparts-view []
   (resource-library :id "cliparts-lib"
-                    :type res/CLIPART
-                    :tool-func #(photo-tool (:name %)
-                                            (:type %)
-                                            (:content %)
-                                             res/CLIPART)))
+                    :type :clipart
+                    :tool-func #(photo-tool (:filename %)
+                                            (:content-type %)
+                                            (str (:path %) "/" (:filename %))
+                                             :clipart)))
 
 (defelem backgrounds-view []
    (resource-library :id "backgrounds-lib"
-                    :type res/BACKGROUND
-                    :tool-func #(background-tool (:name %)
-                                                 (:type %)
-                                                 (:content %))))
+                    :type :background
+                    :tool-func #(background-tool (:filename %)
+                                                 (:content-type %)
+                                                 (str (:path %) "/" (:filename %)))))
 
 (defelem templates-view-header []
   (div (text "Templates")))

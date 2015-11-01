@@ -2,23 +2,23 @@
   (:require [core.tools.tool :as tool]
             [utils.dom.dom-utils :refer [by-id]]
             [core.entities.entities-impl :as entities]
-            [core.project.project-resources :as res]
+            [impl.api.tenant.resource-api :as ra]
             [tailrecursion.hoplon :refer [img]]
             [core.project.project :as canvas]))
 
 (defn photo-tool [name desc icon res-type]
   (tool/create-tool name desc "photo" icon (fn [src ctx]
-                                             (let [resource (res/find-resource (:name src) res-type)]
+                                             (let [resource (ra/get-resource (:name src) res-type)]
                                                (-> (entities/create-image-entity
-                                                    (img :src (:content resource))
+                                                    (img :src (str (:path resource) "/" (:filename resource)))
                                                     ctx)
                                                    (canvas/add-entity))))))
 
 (defn background-tool [name desc icon]
   (tool/create-tool name desc "background" icon  (fn [src ctx]
-                                                   (let [resource (res/find-resource (:name src) res/BACKGROUND)]
+                                                   (let [resource (ra/get-resource (:name src) :background)]
                                                      (-> (entities/create-background-entity
-                                                          (img :src (:content resource))
+                                                          (img :src (str (:path resource) "/" (:filename resource)))
                                                           ctx)
                                                          (canvas/set-background))))))
 

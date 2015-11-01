@@ -32,6 +32,7 @@
   (b64/base64-decode (last (clojure.string/split data #","))))
 
 (defrpc put-resource [data]
+  {:rpc/query [(load-entity [:resource.file/filename (:filename data)] (tenant-db-url))]}
   (let [ident (friend/current-authentication)
         username (:username ident)
         path (fs-path username (:category data))

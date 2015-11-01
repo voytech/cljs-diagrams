@@ -7,14 +7,22 @@
    [tailrecursion.javelin :refer [defc defc= cell=]]))
 
 (defc result {})
+(defc resources-response [])
+(defc resources {:background []
+                 :clipart []
+                 :photo []})
 
-(defc backgrounds [])
-(defc cliparts [])
-(defc photos [])
-(defc resources {:background backgrounds
-                 :clipart cliparts
-                 :photo photos})
 (defc loading [])
+
+(defn- append-resource [resource]
+  (let [cat-kw (keyword (:category resource))]
+     (swap! resources assoc cat-kw (conj (or (-> @resources cat-kw) []) resource))))
+
+(cell= (doseq [resource resources-response]
+         (append-resource resource)))
+
+(cell= (when (:filename result)
+         (append-resource result)))
 
 (def put-resource (mkremote 'core.services.tenant.resources-service/put-resource
                               result
@@ -23,6 +31,13 @@
                               ["/app/tenant"]))
 
 (def get-resources (mkremote 'core.services.tenant.resources-service/get-resources
-                             resources
-                             resources
+                             resources-response
+                             resources-response
                              ["/app/tenant"]))
+
+(defn resource-server-path [resource]
+  (str (:path resource) "/" (:filename resource)))
+
+(defn get-resource [name type]
+  (let [tres (type @resources)]
+    (first (filter #(= name (:filename %)) tres))))

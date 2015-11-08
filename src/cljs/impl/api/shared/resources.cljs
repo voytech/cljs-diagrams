@@ -1,4 +1,4 @@
-(ns impl.api.tenant.resource-api
+(ns impl.api.shared.resources
   (:require [tailrecursion.castra  :as c :refer [mkremote async jq-ajax]]
             [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
             [tailrecursion.javelin :as j :refer [cell]]
@@ -24,16 +24,16 @@
 (cell= (when (:filename result)
          (append-resource result)))
 
-(def put-resource (mkremote 'core.services.tenant.resources-service/put-resource
+(def put-resource (mkremote 'core.services.shared.resources-service/put-resource
                               result
                               result
                               loading
-                              ["/app/tenant"]))
+                              ["/app/shared"]))
 
-(def get-resources (mkremote 'core.services.tenant.resources-service/get-resources
+(def get-resources (mkremote 'core.services.shared.resources-service/get-resources
                              resources-response
                              resources-response
-                             ["/app/tenant"]))
+                             ["/app/shared"]))
 
 (defn resource-server-path [resource]
   (str (:path resource) "/" (:filename resource)))

@@ -6,7 +6,7 @@
 (defn by-id [id] (.getElementById js/document id))
 
 (defn console-log [obj] (.log js/window.console obj))
-
+(defn console-log-clj [obj] (.log js/window.console (.stringify js/JSON (clj->js obj))))
 (defn wait-on-element [id callback]
   (if (nil? (by-id id))
     (.setTimeout js/window wait-on-element 50 id callback)

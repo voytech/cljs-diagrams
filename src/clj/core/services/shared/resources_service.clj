@@ -1,4 +1,4 @@
-(ns core.services.tenant.resources-service
+(ns core.services.shared.resources-service
   (:require [core.services.base :refer :all]
             [tailrecursion.castra :as c :refer [defrpc ex error *session* *request* ]]
             [core.db.schemap :refer [persist-schema db->clj]]
@@ -37,7 +37,7 @@
         username (:username ident)
         path (fs-path username (:category data))
         external-id (:external-id ident)]
-    (binding [*database-url* (db-url (or (:identity ident) username))]
+    (binding [*database-url* (tenant-db-url)]
       (when-let [id (-> data
                         (assoc :owner external-id)
                         (assoc :path path)

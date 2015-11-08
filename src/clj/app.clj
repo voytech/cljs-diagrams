@@ -44,7 +44,10 @@
                                                                     :path "/app/tenant"}
                                                                    {:namespace 'core.services.user
                                                                     :roles [:core.auth.roles/USER]
-                                                                    :path "/app/secured"}
+                                                                    :path "/app/user"}
+                                                                   {:namespace 'core.services.shared
+                                                                    :roles [:core.auth.roles/TENANT :core.auth.roles/USER]
+                                                                    :path "/app/shared"}
                                                                    {:namespace 'core.services.public ;Empty vector indicates not authorized access.
                                                                     :roles []
                                                                     :path "/app/public"}])))

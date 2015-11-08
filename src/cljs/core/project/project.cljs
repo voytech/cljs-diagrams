@@ -313,7 +313,6 @@
   (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
         tool-obj (t/by-id tool-id)]
-    (println (str "Invoking action for tool : " (:name tool-obj) " of type " (:type tool-obj) " " context))
     ((:func-ctor tool-obj) tool-obj context))
 )
 

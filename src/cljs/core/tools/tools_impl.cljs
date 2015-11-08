@@ -2,24 +2,20 @@
   (:require [core.tools.tool :as tool]
             [utils.dom.dom-utils :refer [by-id]]
             [core.entities.entities-impl :as entities]
-            [impl.api.tenant.resource-api :as ra]
+            [impl.api.shared.resources :as ra]
             [tailrecursion.hoplon :refer [img]]
             [core.project.project :as canvas]))
 
 (defn photo-tool [name desc icon res-type]
-  (tool/create-tool name desc "photo" icon (fn [src ctx]
-                                             (let [resource (ra/get-resource (:name src) res-type)]
-                                               (-> (entities/create-image-entity
-                                                    (img :src (str (:path resource) "/" (:filename resource)))
-                                                    ctx)
+  (tool/create-tool name desc "photo" icon (fn [tool ctx]
+                                             (let [resource (ra/get-resource (:name tool) res-type)]
+                                               (-> (entities/create-image-entity (img :src (ra/resource-server-path resource)) ctx)
                                                    (canvas/add-entity))))))
 
 (defn background-tool [name desc icon]
-  (tool/create-tool name desc "background" icon  (fn [src ctx]
-                                                   (let [resource (ra/get-resource (:name src) :background)]
-                                                     (-> (entities/create-background-entity
-                                                          (img :src (str (:path resource) "/" (:filename resource)))
-                                                          ctx)
+  (tool/create-tool name desc "background" icon  (fn [tool ctx]
+                                                   (let [resource (ra/get-resource (:name tool) :background)]
+                                                     (-> (entities/create-background-entity (img :src (ra/resource-server-path resource)) ctx)
                                                          (canvas/set-background))))))
 
 (defn slot-tool []
@@ -27,7 +23,7 @@
                     "Insert other elements to fit placeholder"
                     "placeholder"
                     icon
-                    (fn [src ctx]
+                    (fn [tool ctx]
                       (-> (entities/create-slot-entity ctx)
                           (canvas/add-entity)))))
 
@@ -36,6 +32,6 @@
                     "Drag and write a text here."
                     "text"
                     icon
-                    (fn [src ctx]
+                    (fn [tool ctx]
                       (-> (entities/create-text-entity "Enter text..." ctx)
                           (canvas/add-entity)))))

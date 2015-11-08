@@ -4,9 +4,7 @@
 (def tools (atom {}))
 
 (defn uuid []
-  (-> u/make-random-uuid u/uuid-string)
-  ;(.uuid js/Math 10 16)
-  )
+  (-> (u/make-random-uuid) (u/uuid-string)))
 
 
 (defrecord Tool [uid

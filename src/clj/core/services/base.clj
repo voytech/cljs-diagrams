@@ -56,9 +56,10 @@
                       (dissoc :password :re-password))]
     (let [ident (or (:identity user) (:username user))
           dburl (db-url ident)]
-      (if (some #{ident} (d/get-database-names (str (db-url) "*")))
-        (assoc user :initialized? true)
-        user))))
+      (if (= (:role user) :core.auth.roles/TENANT)
+        (if (some #{ident} (d/get-database-names (str (db-url) "*")))
+          (assoc user :initialized? true)
+          user)))))
 
 (defn friend-refresh-session
   ([auth]

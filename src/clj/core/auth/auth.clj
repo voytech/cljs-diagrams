@@ -25,18 +25,21 @@
 
 (def global-unauthorized-handler
   (fn [req] {:status 403 :body (clj->cljson (merge {:description "Unauthorized"
+                                                    :status :unauthorized
                                                     :reason "Not sufficient priviledges"}
                                                    (friend/current-authentication)))})
 )
 
 (def global-unauthenticated-handler
   (fn [req] {:status 401 :body (clj->cljson (merge {:description "Unauthenticated"
+                                                    :status :unauthenticated
                                                     :reason "User is not authenticated."}
                                                    (friend/current-authentication)))})
 )
 
 (def logged-in-handler
   (fn [req] {:status 200 :body (clj->cljson (merge {:description "Authenticated succesfully"
+                                                    :status :unauthenticated
                                                     :reason "Successful login"}
                                                    (friend/current-authentication)))}))
 (def is-logged-handler
@@ -46,6 +49,7 @@
 
 (def timeout-response
   {:status 401 :body (clj->cljson (merge {:description "Timeout"
+                                          :status :unauthenticated
                                           :reason "Timeout"}
                                           (friend/current-authentication)))})
 ;; ONLY tests.

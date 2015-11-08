@@ -1,5 +1,6 @@
 (ns core.router.router
   (:require [utils.dom.dom-utils :as dom]
+            [tailrecursion.hoplon :refer [by-id append-child replace-children!]]
             [clojure.string :as s]))
 
 (def ^:private routes (atom {}))
@@ -27,9 +28,12 @@
     (not (nil? (.first (dom/j-query-attr "data-route" previous))))))
 
 (defn- inject-route-target [route container target]
-  (dom/remove-childs container)
-  (dom/attr target "data-route" route)
-  (dom/append-child container target))
+  ;;(dom/remove-childs container)
+  ;;(dom/attr target "data-route" route)
+  (replace-children! container (target))
+  ;;(append-child container target)
+  )
+
 ; TODO IMPORTANT!!!
 ; Check what happens with all associated with page dom data which is about to be replaced.
 ; All associated js objects should be garbage collected.

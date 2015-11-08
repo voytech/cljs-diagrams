@@ -12,7 +12,9 @@
 (defc login-state {})
 (defc error nil)
 (defc loading [])
-;(def login-state (local-storage (cell {}) :login-state))
+
+(defn reset-login-state []
+  (swap! login-state dissoc :identity))
 
 (def register  (mkremote 'core.services.public.auth/register
                           login-state
@@ -27,6 +29,7 @@
                           ["/app/public"]))
 
 (defn login [username password]
+  (println (str "authenticating with " username " " password))
   (jq-ajax false
            "/app/login"
            nil

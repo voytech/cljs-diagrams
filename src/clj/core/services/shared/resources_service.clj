@@ -18,7 +18,6 @@
   (binding [*database-url* (tenant-db-url)]
     (query-by-property :resource.category/name)))
 
-
 (defn- fs-path [username cat]
   (str username "/" cat))
 

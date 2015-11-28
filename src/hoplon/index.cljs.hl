@@ -6,7 +6,6 @@
     [ui.pages.admin :refer [admin]]
     [ui.pages.register :refer [register]]
     [ui.pages.register2step :refer [register2step]]
-    ;[impl.states.auth-states :as as]
     [ui.pages.login :refer [login]]
     [ui.components.nav-bar :refer [nav-bar]]
     [ui.components.login-widget :refer [login-widget]]

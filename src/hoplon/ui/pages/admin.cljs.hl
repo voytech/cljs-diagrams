@@ -14,13 +14,18 @@
    [ui.components.main-menu :refer [main-menu MenuItem]]
    [ui.components.accordion :refer [accordion entry entry-title entry-body]]
    [utils.canvas-popups :as popups]
+   [utils.dom.dom-utils :as dom]
+   [impl.api.shared.resources :as ra]
    [hoplon.twitter.bootstrap :as b :refer [container tab tabs]]))
 
-(init-templates)
+(dom/wait-on-element "admin-content"  (fn []
+                                        (println "admin-content attached...")
+                                        (init-templates)
+                                        (ra/all-resources)))
 
 (defelem admin[]
   (div :id "container"
-      (div :id "content"
+      (div :id "admin-content"
           (div :id "library"
                  (accordion
                   (entry
@@ -31,7 +36,7 @@
                     (entry-body  (cliparts-view)))
                   (entry
                     (entry-title "Backgrounds")
-                    (entry-body  (backgrounds-view)))
+                   (entry-body  (backgrounds-view)))
                   (entry
                     (entry-title "Printing")
                     (entry-body  "body2"))

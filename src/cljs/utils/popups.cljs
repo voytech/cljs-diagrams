@@ -5,11 +5,10 @@
 (def popups (atom {}))
 
 (defn make-popup [id parent-id popup]
-  (println (str "Adding popup..." id popup))
   (let [popup-rec (p/default-popup id popup)]
     (swap! popups assoc id popup-rec)
-    (dom/wait-on-element parent-id  (fn [] (p/attach popup-rec parent-id)
-                                      ))))
+    (dom/wait-on-element parent-id
+                         (fn [] (p/attach popup-rec parent-id)))))
 
 (defn detach-all []
   (doseq [popup (vals @popups)]

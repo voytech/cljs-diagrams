@@ -17,7 +17,6 @@
            (map tool-func rsrcs))))
 
 (defelem resource-library [{:keys [id type tool-func]}]
-    (println (str "creating resource library for" type))
     (div :id id
      (photo/photo-loader :class "image-loader"
                          :callback #(do (println (str "filename " (:name %) " content-type " (:type %)))

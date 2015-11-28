@@ -2,22 +2,6 @@
   (:require [datomic.api :as d]
             [clojure.walk :refer [postwalk]]))
 
-;; (defschema 'login-db
-;;            {:mapping-inference true
-;;             :auto-persist-schema true
-;;             :db-url (mem-db-url)}
-;;     (defentity 'user.login
-;;       (property name :username  type :db.type/string unique :db.unique/identity mapping-opts {:required true} custom-fwd-mapping {} custom-rev-mapping {})
-;;       (property name :password  type :db.type/string                            mapping-opts {:required true})
-;;       (property name :roles     type :db.type/ref                               mapping-opts {:required true})
-;;       (property name :tenant    type :db.type/ref                               mapping-opts {:lookup-ref (fn [v] [:user.login/username v])}))
-;;     (defentity 'tenant.login
-;;       (property name :username      type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;       (property name :password      type :db.type/string                            mapping-opts {:required true})
-;;       (property name :dburl         type :db.type/string unique :db.unique/identity mapping-opts {:required true})
-;;       (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
-;;       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
-
 ;; Features :
 ;; 1. Perform mapping from service entities into database entities.
 ;; 2. Perform mapping back from database entity into service entities.

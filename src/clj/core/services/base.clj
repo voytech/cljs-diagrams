@@ -13,8 +13,7 @@
   ([property value]
    (let [matches (if value (if (string? value) (str "\"" value "\"") (str value)) "?val")
          query-str (str "[:find (pull ?e [*]) :in $ :where [?e " (str property) (if value (str )) " " matches " ]]")
-         result (d/q query-str (d/db (d/connect *database-url*)))]
-     (println query-str)
+         result (flatten (d/q query-str (d/db (d/connect *database-url*))))]
      (db->clj result *database-url*)))
   ([property] (query-by-property property nil)))
 

@@ -20,12 +20,10 @@
                     2. The drag source comes from desktop (Use FileApi to load image)"
    [event]
    (.preventDefault event)
-   (dnd/dispatch-drop-event event)
-)
+   (dnd/dispatch-drop-event event))
 
 (dom/wait-on-element "canvas-wrapper"  (fn [] (canvas-sheet/initialize-workspace)
-                                              (.addEventListener (dom/by-id "workspace-inner") "contextmenu"  #(.preventDefault %))
-                                                                                        ))
+                                              (.addEventListener (dom/by-id "workspace-inner") "contextmenu"  #(.preventDefault %))))
 
 (defelem workspace []
   (div :id "workspace-inner"
@@ -46,5 +44,4 @@
                                           (cell= (do (let [change canvas-sheet/last-change]
                                                        (page-thumb %)))))))
        (div :id "popups-holder"
-            :style "position:relative;"))
-)
+            :style "position:relative;")))

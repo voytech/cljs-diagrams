@@ -2,6 +2,7 @@
   (:require [tailrecursion.castra  :as c :refer [mkremote async jq-ajax]]
             [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
             [tailrecursion.javelin :as j :refer [cell]]
+            [utils.dom.dom-utils :as dom]
             [impl.api.public.auth :as a])
   (:require-macros
    [tailrecursion.javelin :refer [defc defc= cell=]]))
@@ -13,22 +14,20 @@
                  :photo []})
 
 (defc loading [])
+(defc error {})
 
 (defn- append-resource [resource]
   (let [cat-kw (keyword (:category resource))]
      (swap! resources assoc cat-kw (conj (or (-> @resources cat-kw) []) resource))))
 
-(defc error {})
-
 (cell= (doseq [resource resources-response]
+         (dom/console-log-clj resources-response)
          (append-resource resource)))
 
 (cell= (if (:filename result)
-         (append-resource result)
-         (println "Hmmmmmmmm...! No filename returned !?")))
+         (append-resource result)))
 
 (cell= (when-let [status (:status error)]
-         (println (str "status: " status))
          (if (= status :unauthenticated) (a/reset-login-state))))
 
 (def put-resource (mkremote 'core.services.shared.resources-service/put-resource
@@ -38,6 +37,12 @@
                               ["/app/shared"]))
 
 (def get-resources (mkremote 'core.services.shared.resources-service/get-resources
+                             resources-response
+                             error
+                             loading
+                             ["/app/shared"]))
+
+(def all-resources (mkremote 'core.services.shared.resources-service/all-resources
                              resources-response
                              error
                              loading

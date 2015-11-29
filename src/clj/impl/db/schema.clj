@@ -32,6 +32,16 @@
       (property name :tenant      type :db.type/ref    mapping-hook (fn [v] [:user.login/username v])
                 reverse-mapping-hook (pull-property-hook :user.login/username)))
 
+    (defentity 'resource.category
+      (property name :name type :db.type/string unique :db.unique/identity)
+      (property name :description type :db.type/string))
+
+    (defentity 'resource.file
+      (property name :filename type :db.type/string unique :db.unique/identity)
+      (property name :content-type type :db.type/string)
+      (property name :category type :db.type/ref mapping-hook (fn [v] [:resource.category/name v]) reverse-mapping-hook (pull-property-hook :resource.category/name))
+      (property name :path type :db.type/string))
+
     (defentity 'app.licence
       (property name :name type :db.type/string unique :db.unique/identity)
       (property name :monthly-fee  type :db.type/float)
@@ -60,8 +70,7 @@
     (property name :content-type type :db.type/string)
     (property name :category type :db.type/ref mapping-hook (fn [v] [:resource.category/name v]) reverse-mapping-hook (pull-property-hook :resource.category/name))
     (property name :path type :db.type/string)
-    (property name :owner type :db.type/ref mapping-hook (fn [v] [:user.details/external-id v]) reverse-mapping-hook (pull-property-hook :user.details/external-id))
-    )
+    (property name :owner type :db.type/ref mapping-hook (fn [v] [:user.details/external-id v]) reverse-mapping-hook (pull-property-hook :user.details/external-id)))
 
   (defentity 'organization.details
     (property name :name type :db.type/string)

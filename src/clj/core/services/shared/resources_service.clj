@@ -10,18 +10,20 @@
             [ring.util.codec :as b64]
             [conf :as cf]))
 
-(defrpc make-category [data]
-  (binding [*database-url* (tenant-db-url)]
+(defrpc make-category [dburl data]
+  (binding [*database-url* dburl]
     (store-entity data)))
 
 (defrpc all-categories []
   (binding [*database-url* (tenant-db-url)]
     (query-by-property :resource.category/name)))
 
-(defn- fs-path [username cat]
-  (str username "/" cat))
+(defn- resource-path [username meta]
+  (if (nil? username)
+    (str "SHARED/" (:category meta))
+    (str username "/" (:category meta))))
 
-(defn- fs-save [filename data]
+(defn- create-resource-data [filename data]
   (let [abs-filename (str (:resource-path cf/configuration) filename)]
     (cjo/make-parents abs-filename)
     (with-open [out (clojure.java.io/output-stream (clojure.java.io/file abs-filename))]
@@ -30,28 +32,44 @@
 (defn- decode [data]
   (b64/base64-decode (last (clojure.string/split data #","))))
 
-(defrpc put-resource [data]
-  {:rpc/query [(load-entity [:resource.file/filename (:filename data)] (tenant-db-url))]}
+(defn put-resource-meta [meta]
   (let [ident (friend/current-authentication)
         username (:username ident)
-        path (fs-path username (:category data))
-        external-id (:external-id ident)]
-    (binding [*database-url* (tenant-db-url)]
-      (when-let [id (-> data
-                        (assoc :owner external-id)
-                        (assoc :path path)
-                        (dissoc :data)
-                        store-entity)]
-        (fs-save (str path "/" (:filename data)) (decode (:data data)))
-        {:resource-created true}))))
+        uid (:external-id ident)
+        path (resource-path username meta)
+        db (if (nil? uid) *shared-db* (tenant-db-url))]
+    (binding [*database-url* db]
+      (when-let [resource (-> (if (nil? uid) meta (assoc meta :owner uid))
+                              (assoc :path path)
+                              (dissoc :data))]
+        (if-let [id (store-entity resource)]
+          (assoc resource :id id)
+          nil)))))
 
-(defrpc all-resources []
-  (binding [*database-url* (tenant-db-url)]
+(defrpc put-resource [data]
+  {:rpc/query [(load-entity [:resource.file/filename (:filename data)] (tenant-db-url))]}
+  (when-let [meta (put-resource-meta data)]
+    (create-resource-data (str (:path meta) "/" (:filename meta)) (decode (:data data)))))
+
+(defn all-resources [dburl]
+  (binding [*database-url* dburl]
     (query-by-property :resource.file/filename)))
 
-(defrpc get-resources [category]
-  (binding [*database-url* (tenant-db-url)]
+(defn get-resources [dburl category]
+  (binding [*database-url* dburl]
     (query-by-property :resource.file/category [:resource.category/name category])))
+
+(defrpc all-shared-resources []
+  (all-resources *shared-db*))
+
+(defrpc get-shared-resources [category]
+  (get-resources *shared-db*))
+
+(defrpc all-user-resources []
+  (all-resources (tenant-db-url)))
+
+(defrpc get-user-resources [category]
+  (get-resources (tenant-db-url)))
 
 (defrpc get-resources-page [category {:keys [page-nr page-size] :as paging-opts}]
   )

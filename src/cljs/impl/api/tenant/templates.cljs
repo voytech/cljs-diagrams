@@ -1,6 +1,11 @@
-(ns core.tenant.api.templates-api
+(ns impl.api.tenant.templates
   (:require [tailrecursion.castra  :as c :refer [mkremote]]
-            [tailrecursion.javelin :as j :refer [cell]])
+            [tailrecursion.javelin :as j :refer [cell]]
+            [core.project.settings :refer [settings!]]
+            [core.project.project-services :refer [serialize-project-data
+                                                   deserialize-project-data
+                                                   cleanup-project-data]]
+            [utils.dom.dom-utils :as dom])
   (:require-macros
    [tailrecursion.javelin :refer [defc defc= cell=]]))
 

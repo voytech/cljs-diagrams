@@ -12,9 +12,7 @@
           ident (some identity ((juxt :identity :username) (friend/current-authentication)))]
       (when-not (empty? path)
         (let [path-ident (first (str/split path #"/"))]
-          (println (str "serving : " path))
-          (println (str "Serving user " path-ident " content for ... " ident))
-          (when-not (= path-ident ident)
+          (when-not (or (= path-ident ident) (= path-ident "SHARED")) ;;generalize, pass which directory should have unauthorized access somewhere in params
             (unauthorized request)))))))
 
 (defn restrict-file-resources [handler unauthorized]

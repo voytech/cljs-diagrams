@@ -25,6 +25,9 @@
    [compojure.core :refer :all]
    [compojure.route :as route]
    [core.auth.roles :refer :all]
+   [impl.db.schema :refer :all]
+   [core.services.base :refer [store-entity]]
+   [core.services.shared.resources-service :refer [make-category]]
    [conf :refer :all]
    ))
 
@@ -34,6 +37,18 @@
 (def running (atom false))
 
 (load-configuration CONF_FILE)
+
+(defn initialize-db []
+   (make-category *shared-db* {:name "background" :description "Canvas backgrounds"})
+   (make-category *shared-db* {:name "clipart" :description "Clipart is a small picture widget to be placed somewhere"})
+   (make-category *shared-db* {:name "photo" :description "Photo."})
+   (doseq [res-file (filter #(not (.isDirectory %)) (file-seq (clojure.java.io/file (str resource-path "SHARED"))))]
+     (let [cat (last (clojure.string/split (.getParent res-file) #"/"))
+           meta {:filename (.getName res-file)
+                 :category cat
+                 :path (str "SHARED/" cat)}]
+       (println meta)
+       (store-entity meta *shared-db*))))
 
 (def app-handler (fn [path] (-> (apply routes
                                        (concat
@@ -69,5 +84,6 @@
                                 (wrap-stacktrace))))
 
 (defn start [port path join]
+  (initialize-db)
   (reset! server (run-jetty (app-handler path) {:join? join :port port}))
   (reset! running true))

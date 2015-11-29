@@ -4,16 +4,11 @@
             [core.project.project-services :refer [serialize-project-data
                                                    deserialize-project-data
                                                    cleanup-project-data]]
-            [core.tenant.api.templates-api :as api]
             [utils.dom.dom-utils :as dom]
             )
   (:require-macros [tailrecursion.javelin :refer [cell= dosync]]))
 
-(def ^:private DEFAULT_NAME "Enter name")
-(def ^:private DEFAULT_DESCRIPTION "Enter description")
-
 (def all-templates (cell []))
-;;TODO:Cells below will be loaded from castra backend.
 ;;project-templates changes only when adding new template/ when paging.
 (def project-templates (cell []))
 (def current-template-index (atom -1))

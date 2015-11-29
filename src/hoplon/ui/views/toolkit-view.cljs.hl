@@ -1,6 +1,5 @@
 (ns ui.views.toolkit-view
   (:require
-            [core.project.project-resources :as res]
             [impl.api.shared.resources :as ra]
             [ui.components.photo :as photo ]
             [core.tools.tools-impl :refer [photo-tool

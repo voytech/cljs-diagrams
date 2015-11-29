@@ -21,7 +21,8 @@
 (dom/wait-on-element "admin-content"  (fn []
                                         (println "admin-content attached...")
                                         (init-templates)
-                                        (ra/all-resources)))
+                                        (ra/all-shared-resources)
+                                        (ra/all-user-resources)))
 
 (defelem admin[]
   (div :id "container"

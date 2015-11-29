@@ -36,13 +36,25 @@
                               loading
                               ["/app/shared"]))
 
-(def get-resources (mkremote 'core.services.shared.resources-service/get-resources
+(def get-shared-resources (mkremote 'core.services.shared.resources-service/get-shared-resources
                              resources-response
                              error
                              loading
                              ["/app/shared"]))
 
-(def all-resources (mkremote 'core.services.shared.resources-service/all-resources
+(def all-shared-resources (mkremote 'core.services.shared.resources-service/all-shared-resources
+                             resources-response
+                             error
+                             loading
+                             ["/app/shared"]))
+
+(def get-user-resources (mkremote 'core.services.shared.resources-service/get-user-resources
+                             resources-response
+                             error
+                             loading
+                             ["/app/shared"]))
+
+(def all-user-resources (mkremote 'core.services.shared.resources-service/all-user-resources
                              resources-response
                              error
                              loading

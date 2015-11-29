@@ -12,9 +12,10 @@
   (:username (friend/current-authentication)))
 
 (defn create-resource-categories []
-  (rs/make-category {:name "background" :description "Canvas backgrounds"})
-  (rs/make-category {:name "clipart" :description "Clipart is a small picture widget to be placed somewhere"})
-  (rs/make-category {:name "photo" :description "Photo."}))
+  (let [url (tenant-db-url)]
+    (rs/make-category url {:name "background" :description "Canvas backgrounds"})
+    (rs/make-category url {:name "clipart" :description "Clipart is a small picture widget to be placed somewhere"})
+    (rs/make-category url {:name "photo" :description "Photo."})))
 
 (defn initialize-tenant-space []
   (create-resource-categories))

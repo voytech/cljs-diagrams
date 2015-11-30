@@ -21,7 +21,6 @@
      (swap! resources assoc cat-kw (conj (or (-> @resources cat-kw) []) resource))))
 
 (cell= (doseq [resource resources-response]
-         (dom/console-log-clj resources-response)
          (append-resource resource)))
 
 (cell= (if (:filename result)

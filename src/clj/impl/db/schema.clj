@@ -51,6 +51,13 @@
   {:mapping-inference true
    :auto-persist-schema false}
 
+  (defenum :project.template.format/A6)
+  (defenum :project.template.format/A5)
+  (defenum :project.template.format/A4)
+  (defenum :project.template.format/A3)
+  (defenum :project.template.format/A2)
+  (defenum :project.template.format/A1)
+
   (defentity 'user.details
     (property name :username    type :db.type/string unique :db.unique/identity)
     (property name :firstname   type :db.type/string)
@@ -74,4 +81,15 @@
 
   (defentity 'organization.details
     (property name :name type :db.type/string)
-    (property name :logo type :db.type/ref)))
+    (property name :logo type :db.type/ref))
+
+  (defentity 'project.template
+    (property name :name type :db.type/string unique :db.unique/identity)
+    (property name :info type :db.type/string)
+    (property name :page-count type :db.type/long)
+    (property name :fixed-count type :db.type/boolean)
+    (property name :max-page-count type :db.type/long)
+    (property name :format type :db.type/ref mapping-hook (fn [v] [:db/ident v]) reverse-mapping-hook (pull-property-hook :db/ident))
+    (property name :custom-format? type :db.type/boolean)
+    (property name :notes type :db.type/string))
+  )

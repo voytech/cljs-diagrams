@@ -32,6 +32,14 @@
 (defn- decode [data]
   (b64/base64-decode (last (clojure.string/split data #","))))
 
+(defn synchronize-shared-resources []
+  (doseq [res-file (filter #(not (.isDirectory %)) (file-seq (clojure.java.io/file (str (:resource-path cf/configuration) "SHARED"))))]
+     (let [cat (last (clojure.string/split (.getParent res-file) #"/"))
+           meta {:filename (.getName res-file)
+                 :category cat
+                 :path (str "SHARED/" cat)}]
+       (store-entity meta *shared-db*))))
+
 (defn put-resource-meta [meta]
   (let [ident (friend/current-authentication)
         username (:username ident)
@@ -70,6 +78,3 @@
 
 (defrpc get-user-resources [category]
   (get-resources (tenant-db-url)))
-
-(defrpc get-resources-page [category {:keys [page-nr page-size] :as paging-opts}]
-  )

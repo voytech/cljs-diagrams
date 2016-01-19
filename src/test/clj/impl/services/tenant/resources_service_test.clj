@@ -25,23 +25,10 @@
                   :content-type "text/html"
                   :category "background"}]
 
-    (let [response ((app-handler abspath) (mock-castra "/app/public"
-                                                       'core.services.public.auth/register
-                                                       payload))
-          body (parse-resp response)]
-      (println (str "response 1:" body))
-      (let [response-2 ((app-handler abspath) (with-session
-                                                (mock-castra "/app/tenant"
-                                                             'core.services.tenant.manage/create-tenant
-                                                             details)
-                                                (response-session response)))
-            body-2 (parse-resp response-2)]
-        (println (str "response 2: " body-2))
-        (let [response-3 ((app-handler abspath) (with-session
-                                                  (mock-castra "/app/tenant"
-                                                               'core.services.tenant.resources-service/put-resource
-                                                               resource)
-                                                  (response-session response-2)))
-              body-3 (parse-resp response-3)]
-          (println (str "response 3: " body-3)))
-        ))))
+
+    (let [response (->>
+                    (castra-request "/app/public" 'core.services.public.auth/register payload)
+                    (response-session)
+                    (castra-request "/app/tenant" 'core.services.tenant.manage/create-tenant details)
+                    (response-session)
+                    (castra-request "/app/shared" 'core.services.shared.resources-service/put-resource resource))])))

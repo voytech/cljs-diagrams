@@ -10,21 +10,6 @@
             [datomic.api :as d]
             [core.services.base :refer :all]))
 
-;; (defn castra-request
-;;   ([endpoint qualified-rpc payload sessionid]
-;;    (let [mock-castra-def (mock-castra endpoint qualified-rpc payload)
-;;          response ((app-handler abspath) (if (not (nil? sessionid))
-;;                                            (with-session
-;;                                              mock-castra-def
-;;                                              sessionid)
-;;                                            mock-castra-def))
-;;          clj-resp (parse-resp response)]
-;;      (is (= (:status clj-resp) 200))
-;;      (println (str "Response: " clj-resp))
-;;      response))
-;;   ([endpoint qualified-rpc payload]
-;;    (castra-request endpoint qualified-rpc payload nil)))
-
 (deftest test-create-template
   (let [payload {:username "Test001"
                  :password "UUUZDDD"

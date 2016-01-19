@@ -19,11 +19,9 @@
      (let [event (.-e event-wrapper)
            crd   (cet/client-coords event)]
        (when (= (.-which event) bttn)
-         (println (pp/get-popup popup-id))
          (p/show-at (pp/get-popup popup-id) (:x crd) (:y crd)))))
   ([src popup-id]
      (let [crd (doc-pos {:x (.-left src) :y (.-top src)})]
-         (println (pp/get-popup popup-id))
          (p/show-at (pp/get-popup popup-id) (:x crd) (:y crd)))))
 
 (defn create-image-entity [data params]

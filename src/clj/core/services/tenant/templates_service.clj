@@ -14,32 +14,34 @@
 
 (defrpc create-template []
   (let [template (default-template)]
-    (when-let [id (store-entity template)]
-      (assoc template :id id))))
+    (binding [*database-url* (tenant-db-url)]
+      (when-let [id (store-entity template)]
+        (assoc template :id id)))))
 
 (defrpc save-template [template-data]
-  (when-let [id (store-entity template-data)]
-    (assoc template :id id)))
+  (binding [*database-url* (tenant-db-url)]
+    (when-let [id (store-entity template-data)]
+      (assoc template-data :id id))))
 
-(defn- update-property [keyval]
+(defrpc update-property [keyval]
   {:rpc/query [(load-entity [:project.template/name (:name keyval)] (tenant-db-url))]}
-  (when-let [id (store-entity {:name (:name keyval),
-                               (:key kayval) (:value keyval)})]
-    {:id id}))
+  (binding [*database-url* (tenant-db-url)]
+    (when-let [id (store-entity {:name (:name keyval),
+                                 (:key keyval) (:value keyval)})]
+      {:id id})))
 
 (defn get-property
   ([name property]
      ))
 
-(defn load-template [name]
+(defrpc get-template [name]
   {:rpc/query [(load-entity [:project.template/name (:name name)] (tenant-db-url))]})
 
-(defn all-template-names []
-  )
+(defn all-template-names [])
 
-(defn all-templates []
+(defn all-templates [{:keys [page-nr items-per-page] :as paging-info}]
   (binding [*database-url* (tenant-db-url)]
     (query-by-property :project.template/name)))
 
 (defrpc get-templates [paging-info]
-  {:rpc/query [(all-templates)]})
+  {:rpc/query [(all-templates paging-info)]})

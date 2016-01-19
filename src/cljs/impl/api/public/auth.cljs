@@ -6,7 +6,6 @@
  (:require-macros
     [tailrecursion.javelin :refer [defc defc= cell=]]))
 
-;;consider moving below state machine instrumentations into cljs/impl/states/
 ;;AUTH STATES:
 (defc logout-state {})
 (defc login-state {})
@@ -29,7 +28,6 @@
                           ["/app/public"]))
 
 (defn login [username password]
-  (println (str "authenticating with " username " " password))
   (jq-ajax false
            "/app/login"
            nil

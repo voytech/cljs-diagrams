@@ -1,17 +1,26 @@
 (ns ui.views.tenant.templates
-  (:require [core.tenant.project-template :refer [update-property
-                                                  get-property
-                                                  get-template
-                                                  templates
-                                                  init-templates
-                                                  add-empty-template
-                                                  project-templates
-                                                  current-template
-                                                  current-template-value
-                                                  load-template
-                                                  save-template
-                                                  change-page
-                                                  ]]
+  (:require ;; [core.tenant.project-template :refer [update-property
+            ;;                                       get-property
+            ;;                                       get-template
+            ;;                                       templates
+            ;;                                       init-templates
+            ;;                                       add-empty-template
+            ;;                                       project-templates
+            ;;                                       current-template
+            ;;                                       current-template-value
+            ;;                                       load-template
+            ;;                                       save-template
+            ;;                                       change-page
+            ;;                                       ]]
+            [impl.api.tenant.templates :refer [update-property
+                                               get-property
+                                               current-template
+                                               save-template!
+                                               create-template!
+                                               get-template!
+                                               get-templates!
+                                               change-page
+                                               templates]]
             [clojure.set :refer [union]]
             [ui.components.combo-box :refer [combo-box]]
             [ui.components.paged-list :refer [paged-list]]))
@@ -24,7 +33,7 @@
    (button :class "btn btn-default pull-right btn-xs "
            :type "button"
            :click #(do (.stopPropagation %)
-                       (add-empty-template))
+                       (create-template!))
            (span :class "glyphicon glyphicon-plus"))))
 
 (defelem counter [{:keys [property title]}]
@@ -51,6 +60,9 @@
                                                 :margin-02m true
                                                 }) name
         (span :class "glyphicon glyphicon-remove")))
+
+(defn current-template-value [property]
+  (property @current-template))
 
 (defelem tag-bag [{:keys [title s-property t-property source-data]}]
   (div (div :class "row"
@@ -92,7 +104,7 @@
                                    (span :class "glyphicon glyphicon-info-sign"))
                            (button :class "btn btn-default"
                                    :type "button"
-                                   :click #(load-template name)
+                                   :click #(get-template! name)
                                    (span :class "glyphicon glyphicon-open")))))
            (div :class (cell=  {:panel-body true
                                 :panel-collapse true
@@ -135,29 +147,28 @@
 
 (defelem template-edit []
   (div :class (cell= {:hidden (nil? current-template)})
-   (println (str "creating element template-edit"))
    (div :class "panel panel-default"
         (div :class "panel-heading"
              (div :class "input-group input-group-sm"
                   (input
                    :class "form-control"
                    :type "text"
-                   :on-change #(update-property :name @% )
+                   :on-change #(update-property :name @%)
                    :value (get-property :name))
                   (span :class "input-group-btn"
                         (button :class "btn btn-default"
                                 :type "button"
-                                :click #(save-template)
+                                :click #(save-template! @current-template)
                                 (span :class "glyphicon glyphicon-save")))))
         (div :class  (cell= {:panel-body true
                              :panel-collapse true
                              :collapse false})
              (div :class "row"
-                  (counter :title    "Page count"
+                  (counter :title "Page count"
                            :property :page-count ))
              (div :class "hdiv")
              (div :class "row"
-                  (counter :title    "Max Pages"
+                  (counter :title "Max Pages"
                            :property :max-page-count ))
              (div :class "hdiv")
              (div :class "row"
@@ -176,14 +187,6 @@
                              :type "checkbox"
                              :value (get-property :custom-format?)
                              :click #(do (update-property :custom-format? (neg-prop :custom-format?)) true)))))
-             (div :class "row"
-                  (div :class "col-md-12"
-                       (span :style "white-space: nowrap;" "Client notes")
-                       (div :class "pull-right"
-                            (input
-                             :type "checkbox"
-                             :value (get-property :client-requests?)
-                             :click #(do (update-property :client-requests? (neg-prop :client-requests?)) true)))))
 
              (div :class "hdiv")
              (tag-bag :title "Available page formats"
@@ -200,7 +203,8 @@
   (div :id "templates"
        (div :id "template-edit"
             (template-edit))
-       (div :id "templates-grid"
-           (paged-list :nodes-per-page 3
-                       :to-element #(template-view :name (:name %))
-                       :change-page-func change-page))))
+       ;; (div :id "templates-grid"
+       ;;     (paged-list :nodes-per-page 3
+       ;;                 :to-element #(template-view :name (:name %))
+       ;;                 :change-page-func change-page))
+       ))

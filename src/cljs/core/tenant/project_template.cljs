@@ -128,15 +128,11 @@
    (when (check-page pagenr items-per-page)
      (let [start  (* (- pagenr 1) items-per-page)
            end  (+ start items-per-page)
-           subv (subvec @all-templates start end)
-           ]
-       (println (str "change page : " pagenr ", " start ", " end))
+           subv (subvec @all-templates start end)]
        (reset! project-templates subv)
        subv)))
 
 (defn init-templates []
-  (when (empty? @project-templates)
-    (dotimes [n 20] (add-empty-template)))
 
   (cell= (when (not (nil? current-template))
            (let [pcount (:page-count current-template)]

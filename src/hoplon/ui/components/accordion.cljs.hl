@@ -16,8 +16,7 @@
   (let [new-state (not (get @states-cel index))]
     (dosync (doall (map-indexed #(swap! states-cel assoc %1 (if (= index %1)
                                                               new-state
-                                                              false)) @states-cel)))
-    ))
+                                                              false)) @states-cel)))))
 
 ;Private DOM nodes created using functions
 

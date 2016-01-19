@@ -6,7 +6,7 @@
                                   backgrounds-view
                                   templates-view
                                   templates-view-header]]
-   [core.tenant.project-template :refer [init-templates]]
+   [impl.api.tenant.templates :refer [init-templates]]
    [ui.views.canvas :refer [workspace]]
    [ui.views.settings :refer [settings]]
    [ui.views.editing  :refer [editing]]

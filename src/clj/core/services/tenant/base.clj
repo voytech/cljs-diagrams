@@ -4,6 +4,5 @@
             [core.db.schemap :refer [persist-schema]]
             [impl.db.schema :refer :all]
             [cemerick.friend :as friend]
-            [core.services.tenant.resources-service :as rs]
             [tailrecursion.extype :refer [defex extend-ex]]
             [datomic.api :as d]))

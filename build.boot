@@ -115,7 +115,7 @@
 (deftask tests-clj
   "Run clojure tests"
   []
-  (comp (test :namespaces #{'impl.services.tenant.resources-service-test
+  (comp (test :namespaces #{'impl.services.tenant.templates-test
                             })))
 
 (deftask continous-tests-clj []
@@ -127,6 +127,4 @@
                             })))
 
 (task-options!
- serve {
-        :dir "resources/public"
-        })
+ serve {:dir "resources/public"})

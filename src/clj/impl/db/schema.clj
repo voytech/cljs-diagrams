@@ -6,8 +6,11 @@
 (def TESTCONF "resources/schema/test_properties.edn")
 (def DEVCONF "resources/schema/properties.edn")
 
-(def ^:dynamic *conf-file* DEVCONF)
+(def ^:dynamic *conf-file* (if-let [profile (System/getenv "PHOTO_COLLAGE_PROPERTIES")]
+                             (str "resources/schema/" profile ".edn") DEVCONF))
 (def ^:dynamic *shared-db* (str (:db-url (load-configuration *conf-file*)) "/SHARED"))
+
+(println (str "Configuration file:" *conf-file*))
 
 (defn db-url
   ([] (str (:db-url (load-configuration *conf-file*)) "/"))
@@ -90,6 +93,7 @@
     (property name :fixed-count type :db.type/boolean)
     (property name :max-page-count type :db.type/long)
     (property name :format type :db.type/ref mapping-hook (fn [v] [:db/ident v]) reverse-mapping-hook (pull-property-hook :db/ident))
+    (property name :page-formats type :db.type/ref cardinality :db.cardinality/many)
     (property name :custom-format? type :db.type/boolean)
     (property name :notes type :db.type/string))
   )

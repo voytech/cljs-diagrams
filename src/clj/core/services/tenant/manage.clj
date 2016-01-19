@@ -4,7 +4,8 @@
             [core.db.schemap :refer [persist-schema]]
             [impl.db.schema :refer :all]
             [cemerick.friend :as friend]
-            [core.services.tenant.resources-service :as rs]
+            [core.services.tenant.templates-service :as ts]
+            [core.services.shared.resources-service :as rs]
             [tailrecursion.extype :refer [defex extend-ex]]
             [datomic.api :as d]))
 
@@ -18,7 +19,8 @@
     (rs/make-category url {:name "photo" :description "Photo."})))
 
 (defn initialize-tenant-space []
-  (create-resource-categories))
+  (create-resource-categories)
+  (ts/create-template))
 
 (defrpc create-tenant [{:keys [firstname lastname email address-line-1 address-line-2 address-line-3] :as payload}]
   {:rpc/query [(friend-refresh-session (session-username) :user.login/username *shared-db*)]}

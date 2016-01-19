@@ -10,32 +10,7 @@
             [datomic.api :as d]
             [core.services.base :refer :all]))
 
-;; (defn make-request-with [server url rpc-method data verify-response callnext]
-;;   (let [srvr (or server (app-handler abspath))
-;;         response (srvr mock-castra url rpc-method data)]
-;;         (verify-response response)
-;;         (callnext)))
-
-;; (defn create-tenant-func [])
-;; (deftest test-create-user-resources-1
-;;   (reload-db 'shared *shared-db*)
-;;   (make-request-with (app-handler abspath)
-;;                      "/app/public"
-;;                      'core.services.public.auth/register
-;;                      {:username "Adrian"
-;;                       :password "Adrian"
-;;                       :re-password "Adrian"
-;;                       :role :core.auth.roles/TENANT
-;;                       :identity "adrian"}
-;;                      (fn [response] (println "registered"))
-;;                      (create-tenant-func {:firstname "Adrian"
-;;                                           :lastname "Monk"
-;;                                           :email "adrian.monk@police.com"}
-;;                                          )
-;;                      ))
-
 (deftest test-create-user-resources
-  (reload-db 'shared *shared-db*)
   (let [payload {:username "Adrian"
                  :password "UUUZDDD"
                  :re-password "UUUZDDD"

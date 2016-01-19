@@ -1,1 +1,2 @@
-{:db-url "datomic:mem://testing"}
+{:db-url "datomic:mem:/",
+ :resource-path "/home/voytech/www/public/photo_collage/"}

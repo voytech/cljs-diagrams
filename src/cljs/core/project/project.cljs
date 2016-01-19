@@ -273,10 +273,8 @@
   (or differs (= 0 actual-num)))
 
 (defn manage-settings [settings]
-  (dom/console-log "manage-settings")
   (let [{:keys [differs actual-num target-num multi-page] :as diff} (paging-states-diff settings)]
     (when (re-page? diff)
-        (dom/console-log "re-paging...")
         (let [orphans-count    (- actual-num target-num)
               orphans-index    (- actual-num orphans-count)
               max-cnt          (max actual-num target-num)]
@@ -313,20 +311,17 @@
   (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
         tool-obj (t/by-id tool-id)]
-    ((:func-ctor tool-obj) tool-obj context))
-)
+    ((:func-ctor tool-obj) tool-obj context)))
 
 (defmethod dnd/dispatch-drop-event "imgid" [event]
   {:data (dom/by-id (dnd/get-dnd-data event "imgid"))
    :params (dnd/event-layer-coords event)
-   :type "dom"}
-)
+   :type "dom"})
 
 (defmethod dnd/dispatch-drop-event "text/html" [event]
  {:data (dnd/get-dnd-data event "text/html")
   :params (dnd/event-layer-coords event)
-  :type "dom"}
-)
+  :type "dom"})
 
 ;;
 ;;API methods !

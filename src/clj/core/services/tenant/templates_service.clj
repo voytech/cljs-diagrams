@@ -2,8 +2,8 @@
   (:require [tailrecursion.castra :refer [defrpc ex error *session*]]
             [core.services.base :refer :all]))
 
-(defn- default-template []
-  {:name (str (java.util.UUID/randomUUID))
+(defn- default-template [name]
+  {:name name
    :info "This is a template"
    :page-count 4
    :fixed-page-count false
@@ -12,10 +12,11 @@
    :custom-format? false
    :notes "More description on this template goes here."})
 
-(defrpc create-template []
-  (let [template (default-template)]
+(defrpc create-template [name]
+  (let [template (default-template name)]
     (binding [*database-url* (tenant-db-url)]
       (when-let [id (store-entity template)]
+        (println (str "saved template" id))
         (assoc template :id id)))))
 
 (defrpc save-template [template-data]
@@ -35,7 +36,7 @@
      ))
 
 (defrpc get-template [name]
-  {:rpc/query [(load-entity [:project.template/name (:name name)] (tenant-db-url))]})
+  (load-entity [:project.template/name name] (tenant-db-url)))
 
 (defn all-template-names [])
 
@@ -44,4 +45,4 @@
     (query-by-property :project.template/name)))
 
 (defrpc get-templates [paging-info]
-  {:rpc/query [(all-templates paging-info)]})
+  (all-templates paging-info))

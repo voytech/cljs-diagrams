@@ -1,18 +1,5 @@
 (ns ui.views.tenant.templates
-  (:require ;; [core.tenant.project-template :refer [update-property
-            ;;                                       get-property
-            ;;                                       get-template
-            ;;                                       templates
-            ;;                                       init-templates
-            ;;                                       add-empty-template
-            ;;                                       project-templates
-            ;;                                       current-template
-            ;;                                       current-template-value
-            ;;                                       load-template
-            ;;                                       save-template
-            ;;                                       change-page
-            ;;                                       ]]
-            [impl.api.tenant.templates :refer [update-property
+  (:require [impl.api.tenant.templates :refer [update-property
                                                get-property
                                                current-template
                                                save-template!
@@ -23,7 +10,8 @@
                                                templates]]
             [clojure.set :refer [union]]
             [ui.components.combo-box :refer [combo-box]]
-            [ui.components.paged-list :refer [paged-list]]))
+            [ui.components.paged-list :refer [paged-list]]
+            [ui.components.hoplon-grid :refer [hoplon-grid]]))
 
 (defn- neg-prop [prop]
   (not (current-template-value prop)))
@@ -33,7 +21,7 @@
    (button :class "btn btn-default pull-right btn-xs "
            :type "button"
            :click #(do (.stopPropagation %)
-                       (create-template!))
+                       (create-template! "template"))
            (span :class "glyphicon glyphicon-plus"))))
 
 (defelem counter [{:keys [property title]}]
@@ -85,68 +73,19 @@
                                    :active? (fn [] (= % (t-property current-template)))) items)))))))
 
 (defelem template-view [{:keys [name]}]
-  (div
-   (println (str "creating element template-view: " name))
-   (div
-    (let [show-info (cell false)]
-      (div :class "panel panel-default"
-           (div :class "panel-heading"
-                (div :class "input-group input-group-sm"
-                     (input
-                      :class "form-control"
-                      :type  "text"
-                      :readonly true
-                      :value (get-property name :name))
-                     (span :class "input-group-btn"
-                           (button :class "btn btn-default"
-                                   :type "button"
-                                   :click #(reset! show-info (not @show-info))
-                                   (span :class "glyphicon glyphicon-info-sign"))
-                           (button :class "btn btn-default"
-                                   :type "button"
-                                   :click #(get-template! name)
-                                   (span :class "glyphicon glyphicon-open")))))
-           (div :class (cell=  {:panel-body true
-                                :panel-collapse true
-                                :collapse (not show-info)})
-                (div :class "row col-md-12"
-                     (let [pcount (get-property name :page-count)]
-                       (div (text "Page count : ~{pcount}"))))
-                (div :class "row col-md-12"
-                     (let [pmcount (get-property name :max-page-count)]
-                       (div (text "Max page count : ~{pmcount}"))))
-                (div :class "row"
-                     (div :class "col-md-12"
-                          (span :style "white-space: nowrap;" "Fixed page count")
-                          (div :class "pull-right"
-                               (input
-                                :type "checkbox"
-                                :value (get-property name :fixed-page-count)))))
-                (div :class "row"
-                     (div :class "col-md-12"
-                          (span :style "white-space: nowrap;" "Custom format")
-                          (div :class "pull-right"
-                               (input
-                                :type "checkbox"
-                                :value (get-property name :custom-format?)))))
-                (div :class "row"
-                     (div :class "col-md-12"
-                          (span :style "white-space: nowrap;" "Client notes")
-                          (div :class "pull-right"
-                               (input
-                                :type "checkbox"
-                                :value (get-property name :client-requests?)))))
-                (div :class "hdiv")
-                (div
-                 ;; (cell= (let [page-formats (seq (:page-formats get-property name :page-formats))]
-                 ;;          (println page-formats)
-                 ;;          (doall (map #(tag :name %) page-formats))))
-                 )
-                )
-           )))))
+  (div :class "panel panel-default" :style "margin-top:2px"
+       (div :class "panel-heading"
+            (div :class "input-group input-group-sm"
+                 (div :style "vertical-align:middle"
+                      (text (get-property name :name)))
+                 (span :class "input-group-btn"
+                       (button :class "btn btn-default"
+                               :type "button"
+                               :click #(get-template! name)
+                               (span :class "glyphicon glyphicon-open")))))))
 
 (defelem template-edit []
-  (div :class (cell= {:hidden (nil? current-template)})
+  (div :class (cell= {:hidden (empty? current-template)})
    (div :class "panel panel-default"
         (div :class "panel-heading"
              (div :class "input-group input-group-sm"
@@ -199,12 +138,22 @@
              )
         )))
 
+(defelem load-tmpl-plug [{:keys [row]}]
+  (span :class "input-group-btn"
+        (button :class "btn btn-default"
+                :type "button"
+                :click #(get-template! (:name row))
+                (span :class "glyphicon glyphicon-open"))))
+
 (defelem templates-view []
   (div :id "templates"
        (div :id "template-edit"
             (template-edit))
-       ;; (div :id "templates-grid"
-       ;;     (paged-list :nodes-per-page 3
-       ;;                 :to-element #(template-view :name (:name %))
-       ;;                 :change-page-func change-page))
-       ))
+       (div :id "templates-grid" :style "margin-top:2px"
+            (hoplon-grid :schema {:name {:title "Template Name"}
+                                  :info {:title "Description"}
+                                  :load {:title "Select"
+                                         :cell-plugin load-tmpl-plug}}
+                         :data-cell templates
+                         :paging-opts {:page-size 2,:page-nr 1}
+                         :change-page-func change-page))))

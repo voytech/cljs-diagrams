@@ -50,6 +50,9 @@
 (defn with-session [request sessionid]
   (mock/header request "cookie" sessionid))
 
+(defn auth-request [path username password]
+  ((app-handler abspath) (mock-login path username password)))
+
 (defn castra-request
   ([endpoint qualified-rpc payload sessionid]
    (let [mock-castra-def (mock-castra endpoint qualified-rpc payload)

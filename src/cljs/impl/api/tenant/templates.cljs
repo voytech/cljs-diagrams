@@ -9,17 +9,17 @@
   (:require-macros
    [tailrecursion.javelin :refer [defc defc= cell=]]))
 
-(defc templates {})
+(defc templates [])
 (defc state {})
 (defc error nil)
 (defc loading [])
 (defc current-template {})
 
-(def save-template! (mkremote 'core.services.tenant.templates-service/save-template current-template error loading ["/core/services/tenant"]))
-(def create-template! (mkremote 'core.services.tenant.templates-service/create-template current-template error loading ["/core/services/tenant"]))
-(def update-template-property! (mkremote 'core.services.tenant.templates-service/update-property current-template error loading ["/core/services/tenant"]))
-(def get-template! (mkremote 'core.services.tenant.templates-service/get-template current-template error loading ["/core/services/tenant"]))
-(def get-templates! (mkremote 'core.services.tenant.templates-service/get-templates templates error loading ["/core/services/tenant"]))
+(def save-template! (mkremote 'core.services.tenant.templates-service/save-template current-template error loading ["/app/tenant"]))
+(def create-template! (mkremote 'core.services.tenant.templates-service/create-template current-template error loading ["/app/tenant"]))
+(def update-template-property! (mkremote 'core.services.tenant.templates-service/update-property current-template error loading ["/app/tenant"]))
+(def get-template! (mkremote 'core.services.tenant.templates-service/get-template current-template error loading ["/app/tenant"]))
+(def get-templates! (mkremote 'core.services.tenant.templates-service/get-templates templates error loading ["/app/tenant"]))
 
 (defn- index-of [coll v]
   (let [i (count (take-while #(not= v %) coll))]
@@ -33,17 +33,8 @@
 (defn- template-index-of [name]
   (index-of @templates (by-name name)))
 
-(defn init-templates []
-  (cell= (when (not (nil? current-template))
-           (let [pcount (:page-count current-template)]
-             (settings! pcount :pages :count))))
-  (cell= (when (not (nil? current-template))
-           (let [format (:current-format current-template)]
-             (settings! format :page-format)))))
-
-
 (defn change-page [{:keys [page-nr items-per-page] :as paging-info}]
-   (get-templates! paging-info))
+  (get-templates! paging-info))
 
 (defn- update-property [property value]
   (when (not (nil? @current-template))
@@ -54,5 +45,14 @@
   ([property] (cell= (when (not (nil? current-template))
                    (property current-template))))
   ([name property]
-     (cell= (let [ind (template-index-of name)]
-              (get-in templates [ind property])))))
+     (let [ind (template-index-of name)]
+          (get-in @templates [ind property]))))
+
+(defn init-templates []
+  (get-templates! {})
+  (cell= (when (not (nil? current-template))
+           (let [pcount (:page-count current-template)]
+             (settings! pcount :pages :count))))
+  (cell= (when (not (nil? current-template))
+           (let [format (:current-format current-template)]
+             (settings! format :page-format)))))

@@ -1,0 +1,35 @@
+(ns ui.components.hoplon-grid)
+
+;; Paged list introduces paging logic to list containg of any elements.
+;; provider provides elements to be placed in list for selected page.
+(defn- cell-plug-in [row schema prop]
+  (when-let [plugin (-> schema prop :cell-plugin)]
+    (plugin :row row)))
+
+(defn- do-row [row props schema]
+  (tr (doall (map #(td (or
+                        (% row)
+                        (cell-plug-in row schema %))) props))))
+
+(defelem hoplon-grid [{:keys [schema
+                              data-cell
+                              paging-opts
+                              change-page-func
+                              ]}]
+  (div (let [page-nr (cell 1)
+             hasmore (atom true)
+             props (keys schema)]
+        (div
+          (table :class "table table-condensed table-hover table-bordered"
+            (thead (tr (doall (map #(th (:title (% schema))) props))))
+            (tbody (cell= (doall (map #(do-row % props schema) data-cell)))))
+          (div :class "row center-block"
+               (div :class "btn-group center-block"
+                    (button :type "button"
+                            :class "btn bn-default btn-xs"
+                            :click #(when (> @page-nr 0) (swap! page-nr dec))
+                            (span :class "glyphicon glyphicon-arrow-left"))
+                    (button :type "button"
+                            :class "btn btn-default btn-xs"
+                            :click #(when (= true @hasmore) (swap! page-nr inc))
+                            (span :class "glyphicon glyphicon-arrow-right"))))))))

@@ -84,7 +84,7 @@
                                :click #(get-template! name)
                                (span :class "glyphicon glyphicon-open")))))))
 
-(defelem template-edit []
+(defelem template-edit [{:keys [row]}]
   (div :class (cell= {:hidden (empty? current-template)})
    (div :class "panel panel-default"
         (div :class "panel-heading"
@@ -140,26 +140,24 @@
         )))
 
 (defelem load-tmpl-plug [{:keys [row]}]
-  (span :class "input-group-btn"
-        (button :class "btn btn-default"
-                :type "button"
-                :click #(get-template! (:name row))
-                (span :class "glyphicon glyphicon-open"))))
+  (button :class "btn btn-default btn-small"
+          :type "button"
+          :click #(get-template! (:name row))
+          (span :class "glyphicon glyphicon-open")))
 
 (defelem view-template [{:keys [row]}]
-  (div (:name row))
-  )
+  (div (:info row)))
 
 (defelem templates-view []
   (div :id "templates"
-       (div :id "template-edit"
-            (template-edit))
+       ;; (div :id "template-edit"
+       ;;      (template-edit))
        (div :id "templates-grid" :style "margin-top:2px"
             (hoplon-grid :schema {:name {:title "Template Name"}
-                                  :info {:title "Description"}
                                   :load {:title "Select"
                                          :cell-plugin load-tmpl-plug}}
-                         :row-plugin view-template
+                         :row-plugin {:view template-edit
+                                      :activate #(get-template! (:name %))}
                          :data-cell templates
                          :paging-opts {:page-size 2,:page-nr 1}
                          :change-page-func change-page))))

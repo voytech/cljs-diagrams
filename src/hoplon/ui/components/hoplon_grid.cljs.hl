@@ -8,14 +8,17 @@
 
 (defn- do-row [row props schema row-plugin]
   (let [display (cell false)]
-    [(tr :click #(reset! display (not @display))
+    [(tr :click #(do
+                   (when (not (nil? (:activate row-plugin)))
+                     ((:activate row-plugin) row))
+                   (reset! display (not @display)))
          (doall (map #(td (or
                             (cell-plug-in row schema %)
                             (% row))) props)))
      (when (not (nil? row-plugin))
        (tr :class (cell= {:hidden (not display)})
         (td :colspan 100
-            (row-plugin :row row))))]))
+            ((:view row-plugin) :row row))))]))
 
 (defelem hoplon-grid [{:keys [schema
                               row-plugin

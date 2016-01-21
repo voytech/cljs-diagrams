@@ -88,7 +88,7 @@
   (div :class (cell= {:hidden (empty? current-template)})
    (div :class "panel panel-default"
         (div :class "panel-heading"
-             (div :class "input-group input-group-sm"
+             (div :class "input-group"
                   (input
                    :class "form-control"
                    :type "text"
@@ -118,6 +118,7 @@
                              :type "checkbox"
                              :value (get-property :fixed-page-count)
                              :click #(do (update-property :fixed-page-count (neg-prop :fixed-page-count)) true)))))
+             (div :class "hdiv")
              (div :class "row"
                   (div :class "col-md-12"
                        (span :style "white-space: nowrap;" "Custom format")
@@ -145,6 +146,10 @@
                 :click #(get-template! (:name row))
                 (span :class "glyphicon glyphicon-open"))))
 
+(defelem view-template [{:keys [row]}]
+  (div (:name row))
+  )
+
 (defelem templates-view []
   (div :id "templates"
        (div :id "template-edit"
@@ -154,6 +159,7 @@
                                   :info {:title "Description"}
                                   :load {:title "Select"
                                          :cell-plugin load-tmpl-plug}}
+                         :row-plugin view-template
                          :data-cell templates
                          :paging-opts {:page-size 2,:page-nr 1}
                          :change-page-func change-page))))

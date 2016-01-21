@@ -6,12 +6,19 @@
   (when-let [plugin (-> schema prop :cell-plugin)]
     (plugin :row row)))
 
-(defn- do-row [row props schema]
-  (tr (doall (map #(td (or
-                        (% row)
-                        (cell-plug-in row schema %))) props))))
+(defn- do-row [row props schema row-plugin]
+  (let [display (cell false)]
+    [(tr :click #(reset! display (not @display))
+         (doall (map #(td (or
+                            (cell-plug-in row schema %)
+                            (% row))) props)))
+     (when (not (nil? row-plugin))
+       (tr :class (cell= {:hidden (not display)})
+        (td :colspan 100
+            (row-plugin :row row))))]))
 
 (defelem hoplon-grid [{:keys [schema
+                              row-plugin
                               data-cell
                               paging-opts
                               change-page-func
@@ -20,9 +27,9 @@
              hasmore (atom true)
              props (keys schema)]
         (div
-          (table :class "table table-condensed table-hover table-bordered"
+          (table :class "hoplon-grid table table-condensed table-hover table-bordered"
             (thead (tr (doall (map #(th (:title (% schema))) props))))
-            (tbody (cell= (doall (map #(do-row % props schema) data-cell)))))
+            (tbody (cell= (doall (map #(do-row % props schema row-plugin) data-cell)))))
           (div :class "row center-block"
                (div :class "btn-group center-block"
                     (button :type "button"

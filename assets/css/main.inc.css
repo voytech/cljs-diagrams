@@ -236,7 +236,6 @@ h1 {
 .input-xs {
   height: 30px;
   padding: 0px 0px;
-  font-size: 12px;
   line-height: 1.0;
   border-radius: 0px;
   text-align:center;
@@ -273,4 +272,12 @@ h1 {
 .title {
   font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size : 18px;
+}
+
+.hoplon-grid {
+
+}
+
+.hoplon-grid > tbody > tr >td {
+  vertical-align:middle
 }

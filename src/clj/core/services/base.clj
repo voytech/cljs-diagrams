@@ -9,6 +9,12 @@
 (def ^:dynamic *database-url*)
 (declare user-query)
 
+(defmacro limit
+  ([coll start-from quantity]
+   `(take ~quantity (drop ~start-from ~coll)))
+  ([coll quantity]
+   `(limit ~coll 0 ~quantity)))
+
 (defn query-by-property
   ([property value]
    (let [matches (if value (if (string? value) (str "\"" value "\"") (str value)) "?val")

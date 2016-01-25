@@ -1,4 +1,5 @@
-(ns ui.components.hoplon-grid)
+(ns ui.components.hoplon-grid
+  (:require [utils.dom.dom-utils :refer [j-query-id]]))
 
 ;; Paged list introduces paging logic to list containg of any elements.
 ;; provider provides elements to be placed in list for selected page.
@@ -6,8 +7,13 @@
   (when-let [plugin (-> schema prop :cell-plugin)]
     (plugin :row row)))
 
-(defn- do-row [row props schema row-plugin]
+(defn- row-plug-in [row-plugin row idx display]
+  (when display
+    (.append (j-query-id (str "row-plugin-" idx)) ((:view row-plugin) :row row))))
+
+(defn- do-row [row-idx row props schema row-plugin]
   (let [display (cell false)]
+    (cell= (row-plug-in row-plugin row row-idx display))
     [(tr :click #(do
                    (when (not (nil? (:activate row-plugin)))
                      ((:activate row-plugin) row))
@@ -15,10 +21,10 @@
          (doall (map #(td (or
                             (cell-plug-in row schema %)
                             (% row))) props)))
-     (when (not (nil? row-plugin))
-       (tr :class (cell= {:hidden (not display)})
-        (td :colspan 100
-            ((:view row-plugin) :row row))))]))
+     (tr :class (cell= {:hidden (not display)})
+         (td :id (str "row-plugin-" row-idx)
+             :colspan 100
+           ))]))
 
 (defelem hoplon-grid [{:keys [schema
                               row-plugin
@@ -32,7 +38,7 @@
         (div
           (table :class "hoplon-grid table table-condensed table-hover table-bordered"
             (thead (tr (doall (map #(th (:title (% schema))) props))))
-            (tbody (cell= (doall (map #(do-row % props schema row-plugin) data-cell)))))
+            (tbody (cell= (doall (map-indexed #(do-row %1 %2 props schema row-plugin) data-cell)))))
           (div :class "row center-block"
                (div :class "btn-group center-block"
                     (button :type "button"

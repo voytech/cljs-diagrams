@@ -2,29 +2,21 @@
  (:require [tailrecursion.castra  :as c :refer [mkremote async jq-ajax]]
            [tailrecursion.cljson  :as e :refer [cljson->clj clj->cljson]]
            [tailrecursion.javelin :as j :refer [cell]]
-           [alandipert.storage-atom :refer [local-storage]])
+           [alandipert.storage-atom :refer [local-storage]]
+           [core.api.base :as a])
  (:require-macros
     [tailrecursion.javelin :refer [defc defc= cell=]]))
 
-;;AUTH STATES:
-(defc logout-state {})
-(defc login-state {})
-(defc error nil)
-(defc loading [])
-
-(defn reset-login-state []
-  (swap! login-state dissoc :identity))
-
 (def register  (mkremote 'core.services.public.auth/register
-                          login-state
-                          login-state
-                          loading
+                          a/authentication
+                          a/authentication
+                          a/loading
                           ["/app/public"]))
 
 (def logout    (mkremote 'core.services.public.auth/logout
-                          logout-state
-                          error
-                          loading
+                          a/authentication
+                          a/error
+                          a/loading
                           ["/app/public"]))
 
 (defn login [username password]
@@ -33,8 +25,8 @@
            nil
            {"authentication" (clj->cljson [username password])
             "Accept"          "application/json"}
-           #(reset! login-state (cljson->clj %))
-           #(reset! login-state (cljson->clj %))
+           #(reset! a/authentication (cljson->clj %))
+           #(reset! a/authentication (cljson->clj %))
            #()))
 
 (defn is-login []
@@ -42,6 +34,6 @@
            "/app/is_login"
            nil
            {"Accept" "application/json"}
-           #(reset! login-state (cljson->clj %))
-           #(reset! login-state (cljson->clj %))
+           #(reset! a/authentication (cljson->clj %))
+           #(reset! a/authentication (cljson->clj %))
            #()))

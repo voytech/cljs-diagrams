@@ -5,21 +5,20 @@
             [core.project.project-services :refer [serialize-project-data
                                                    deserialize-project-data
                                                    cleanup-project-data]]
-            [utils.dom.dom-utils :as dom])
+            [utils.dom.dom-utils :as dom]
+            [core.api.base :as a])
   (:require-macros
    [tailrecursion.javelin :refer [defc defc= cell=]]))
 
 (defc templates [])
 (defc state {})
-(defc error nil)
-(defc loading [])
 (defc current-template {})
 
-(def save-template! (mkremote 'core.services.tenant.templates-service/save-template current-template error loading ["/app/tenant"]))
-(def create-template! (mkremote 'core.services.tenant.templates-service/create-template current-template error loading ["/app/tenant"]))
-(def update-template-property! (mkremote 'core.services.tenant.templates-service/update-property current-template error loading ["/app/tenant"]))
-(def get-template! (mkremote 'core.services.tenant.templates-service/get-template current-template error loading ["/app/tenant"]))
-(def get-templates! (mkremote 'core.services.tenant.templates-service/get-templates templates error loading ["/app/tenant"]))
+(def save-template! (mkremote 'core.services.tenant.templates-service/save-template current-template a/error a/loading ["/app/tenant"]))
+(def create-template! (mkremote 'core.services.tenant.templates-service/create-template current-template a/error a/loading ["/app/tenant"]))
+(def update-template-property! (mkremote 'core.services.tenant.templates-service/update-property current-template a/error a/loading ["/app/tenant"]))
+(def get-template! (mkremote 'core.services.tenant.templates-service/get-template current-template a/error a/loading ["/app/tenant"]))
+(def get-templates! (mkremote 'core.services.tenant.templates-service/get-templates templates a/error a/loading ["/app/tenant"]))
 
 (defn- index-of [coll v]
   (let [i (count (take-while #(not= v %) coll))]

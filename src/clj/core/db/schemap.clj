@@ -8,7 +8,9 @@
 ;; 3. Create datomic attribute schema from this entity schema.
 ;; 4. Automatically convert specific properties into lookup refs to establish relation.
 ;; 5. Persist nested component entities - automatically resolved from service entity
-
+;; 6. TODO:
+;;    - pull api using service-entity not db-entity notation.
+;;    -
 (declare map-entity
          var-by-symbol
          get-var
@@ -234,11 +236,14 @@
   (make-var 'do-mapping? false)
   (swap! source assoc target-property property-value))
 
+;;Need to handle cardinality:many properly.
 (defn- map-property [mapping-func type from-property to-property source mapping-rules]
   (let [property-value (from-property @source)
         mapping-opts (:mapping-opts mapping-rules)]
     (if-let [mapping-hook (:mapping-hook mapping-rules)]
-      (swap! source assoc to-property (mapping-hook property-value))
+      (swap! source assoc to-property (if (vector? property-value)
+                                        (mapv mapping-hook property-value)
+                                        (mapping-hook property-value)))
       (do (make-var 'do-mapping? true)
           (doseq [mapping-opt (keys mapping-opts)]
             (apply-mapping-opts {:type type
@@ -326,10 +331,11 @@
          (delete-db-meta temp-source)
          (do-mapping temp-source (:type mapping) mapping-rules db->clj)
          @temp-source)
-       source)))
+       (do
+         (println "Mapping not found!")
+         source))))
   ([source]
    (db->clj source *db-url*)))
-
 
 ;;TODO: Handle mapping of collection of non entities. e.g. collection of vectors.
 (defmethod db->clj java.util.List
@@ -341,3 +347,17 @@
 (defmethod db->clj :default
   ([source url] source)
   ([source] source))
+
+;; Commented due to incorrect syntax in when-let macro (two bindings provided)
+;; But this should be used as a pull expression wrapper.
+
+;; (defn pull-x [query-sym]
+;;   (when-let [find-val (second query-sym)]
+;;     (when-let [pull-key (first find-val)
+;;                pull-def (last find-val)
+;;                mid (drop-last (drop find-val))]
+;;       (if (= (name pull-key) "pull")
+;;         (let modified-query (-> mid
+;;                                 (conj pull-key)
+;;                                 (concat (cons {:entity/type [:db/ident]} pull-def)))
+;;              (assoc query-sym :find modified-query))))))

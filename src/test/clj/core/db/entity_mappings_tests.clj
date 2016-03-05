@@ -447,3 +447,42 @@
       (property name :users         type :db.type/ref                               mapping-opts {:ref-type 'user.login})
       (property name :organization  type :db.type/string unique :db.unique/identity mapping-opts {:required false})))
   (persist-schema 'test-entity-types))
+
+(deftest test-entity-cardinality-many-persistence []
+  (defschema 'cardinality-many
+    {:mapping-inference true
+     :auto-persist-schema false
+     :db-url (mem-db-url)}
+    (defenum :some.enum/ENUM0)
+    (defenum :some.enum/ENUM1)
+    (defenum :some.enum/ENUM2)
+    (defenum :some.enum/ENUM3)
+    (defenum :some.enum/ENUM4)
+
+    (defentity 'enums.many
+      (property name :name type :db.type/string unique :db.unique/identity mapping-opts {:required true})
+      (property name :enums
+                type :db.type/ref
+                cardinality :db.cardinality/many
+                ;mapping-hook (fn [v] [:db/ident v])
+                reverse-mapping-hook (extract-or-pull-property-hook :db/ident)
+                )))
+  (persist-schema 'cardinality-many)
+  (let [tst {:name  "name"
+             :enums [:some.enum/ENUM0 :some.enum/ENUM1 :some.enum/ENUM2]
+             }]
+    (let [connection (d/connect (mem-db-url))
+          dbent (clj->db tst)]
+      (println "Mapped enums.many entity:")
+      (println dbent)
+      (d/transact connection [dbent])
+      (let [result (d/q '[:find (pull ?p [{:entity/type [:db/ident]} :enums.many/name {:enums.many/enums [:db/ident]}])
+                           :in $ ?name
+                           :where [?p :enums.many/name ?name]] (d/db connection) "name")
+            service-back (db->clj (ffirst result) (mem-db-url))]
+        (println "Entity:")
+        (println result)
+        (println "Service back:")
+        (println service-back)
+        )
+      )))

@@ -9,6 +9,9 @@
    :fixed-page-count false
    :max-page-count 4
    :format :project.template.format/A4
+   :page-formats [:project.template.format/A1 :project.template.format/A2
+                  :project.template.format/A3 :project.template.format/A4
+                  :project.template.format/A5 :project.template.format/A6]
    :custom-format? false
    :notes "More description on this template goes here."})
 

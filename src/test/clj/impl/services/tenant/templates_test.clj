@@ -29,6 +29,12 @@
 
 (use-fixtures :once tenant-session-fixture)
 
+(deftest test-initialize-template
+  (let [response (->>
+                  (auth-request "/app/login" "Test001" "UUUZDDD")
+                  (response-session)
+                  (castra-request "/app/tenant" 'core.services.tenant.templates-service/create-template "A sample template!"))]))
+
 (deftest test-create-new-template
   (let [template {:name "New template"
                   :info "This is a new template"
@@ -61,6 +67,9 @@
                     (castra-request "/app/tenant" 'core.services.tenant.templates-service/save-template template)
                     (response-session)
                     (castra-request "/app/tenant" 'core.services.tenant.templates-service/save-template new-template))])))
+
+
+;;(deftest test-add-template-with-multi-formats)
 
 (deftest test-query-all-templates
   (let [name "template"]

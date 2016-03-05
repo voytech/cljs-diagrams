@@ -20,7 +20,7 @@
 
 (defn initialize-tenant-space []
   (create-resource-categories)
-  (ts/create-template))
+  (ts/create-template "Sample Template 01"))
 
 (defrpc create-tenant [{:keys [firstname lastname email address-line-1 address-line-2 address-line-3] :as payload}]
   {:rpc/query [(friend-refresh-session (session-username) :user.login/username *shared-db*)]}

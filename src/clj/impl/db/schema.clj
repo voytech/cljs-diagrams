@@ -93,7 +93,8 @@
     (property name :fixed-count type :db.type/boolean)
     (property name :max-page-count type :db.type/long)
     (property name :format type :db.type/ref mapping-hook (fn [v] [:db/ident v]) reverse-mapping-hook (pull-property-hook :db/ident))
-    (property name :page-formats type :db.type/ref cardinality :db.cardinality/many)
+    (property name :page-formats type :db.type/ref cardinality :db.cardinality/many
+              reverse-mapping-hook (extract-or-pull-property-hook :db/ident))
     (property name :custom-format? type :db.type/boolean)
     (property name :notes type :db.type/string))
   )

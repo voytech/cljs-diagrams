@@ -115,7 +115,8 @@
 (deftask tests-clj
   "Run clojure tests"
   []
-  (comp (test :namespaces #{;'impl.services.tenant.manage-test
+  (comp (test :namespaces #{;'core.db.entity-mappings-tests
+                            ;'impl.services.tenant.manage-test
                             ;'impl.services.tenant.resources-service-test
                             'impl.services.tenant.templates-test
                             })))

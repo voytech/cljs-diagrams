@@ -1,7 +1,0 @@
-(ns ui.components.context-menu
-  (:require )
-  (:require-macros [tailrecursion.javelin :refer [cell= dosync]]
-                   ))
-
-(defelem menu [{:keys [visible ]}]
-  (div :class "popup hidden"))

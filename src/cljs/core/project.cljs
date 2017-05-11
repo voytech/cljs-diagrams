@@ -73,11 +73,12 @@
   ;;  (.setZoom canvas @zoom))
   (reg-delegator id))
 
-(defn dispose-page [domid]
+(defn remove-page [domid]
   (let [page (proj-page-by-id domid)
         canvas (:canvas page)]
        (.clear canvas)
-       (.dispose canvas)))
+       (.dispose canvas))
+  (swap! project update-in [:pages] dissoc (keyword domid)))
 
 (defn add-page []
   (let [cnt (-> @project :pages keys count)

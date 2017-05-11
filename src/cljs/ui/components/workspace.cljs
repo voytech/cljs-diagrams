@@ -34,7 +34,7 @@
         (for [page (vals (:pages @project)) idx (range (count (keys (:pages @project))))]
           ^{:key idx}
           [FabricCanvas (str "page-" idx)]))]
-    [:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) (fn [id] (p/select-page id)) (fn [] (p/add-page))]]
+    [:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) p/select-page p/add-page p/remove-page]]
     [:div {:id "zoom-control"
            :class "zoom-control-div"}
       [:div {:class "pull-right"} "History controls"]

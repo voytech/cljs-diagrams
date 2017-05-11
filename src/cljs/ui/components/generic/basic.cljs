@@ -16,18 +16,19 @@
        (:view (first (filter #(= @active (:name %)) childs)))])))
 
 (defn PageThumb [id]
- (let [canvas-page (-> @p/project :pages (keyword id) :canvas)]
-   (fn []
-     (when (not (nil? canvas-page))
-       [:img {:class "img-thumbnail"
-              :id (str "thumb-" id)
-              :src (.toDataURL canvas-page)}]))))
+  [:div
+    (let [canvas-page (get-in @p/project [:pages (keyword id) :canvas])]
+      (when (not (nil? canvas-page))
+        [:img {:class "img-thumbnail"
+               :id (str "thumb-" id)
+               :src (.toDataURL canvas-page)}]))])
 
-(defn DynamicPagination [pages change-page new-page]
+(defn DynamicPagination [pages change-page new-page delete-page]
   [:ul {:class "pagination"}
    (for [page pages]
      ^{:key (:id page)}
      [:li {:class "page-item page-thumb"}
+       [:a {:on-click #(delete-page (:id page))} [:i {:class "fa fa-times" :aria-hidden "true"}]]
        [:a {:class "page-link page-thumb" :on-click #(change-page (:id page))}
          [PageThumb (name (:id page))]]])
    (when (not (nil? new-page))

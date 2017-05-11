@@ -1,5 +1,6 @@
 (ns ui.components.generic.basic
   (:require [reagent.core :as reagent :refer [atom]]
+            [core.project :as p]
             [core.utils.dom :as dom]))
 
 (defn Tabs [& childs]
@@ -15,10 +16,10 @@
        (:view (first (filter #(= @active (:name %)) childs)))])))
 
 (defn PageThumb [id]
- (let [canvas-page (dom/by-id id)]
+ (let [canvas-page (-> @p/project :pages (keyword id) :canvas)]
    (fn []
      (when (not (nil? canvas-page))
-       [:img {:class "page-thumb"
+       [:img {:class "img-thumbnail"
               :id (str "thumb-" id)
               :src (.toDataURL canvas-page)}]))))
 
@@ -31,4 +32,5 @@
          [PageThumb (name (:id page))]]])
    (when (not (nil? new-page))
      [:li {:class "page-item page-thumb"}
-       [:a {:class "page-link page-thumb" :on-click #(new-page)} " + "]])])
+       [:a {:class "page-link page-add" :on-click #(new-page)}
+         [:i {:class "fa fa-2x fa-plus-circle" :aria-hidden "true"}]]])])

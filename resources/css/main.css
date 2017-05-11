@@ -34,21 +34,26 @@ h1 {
   display:inline;
 }
 
-
 li.page-thumb{
-  border-color: darkgray;
+  margin-left: 10px;
+  border-color: lightgray;
+}
+
+a.page-thumb.page-link{
+  border-color: lightgray;
   border-style: solid;
+  padding: 0.2rem !important;
   border-width: 1px 1px 1px 1px;
   max-width:100px !important;
   max-height:100px !important;
 }
 
-a.page-thumb{
-  border-color: darkgray;
-  border-style: solid;
-  border-width: 1px 1px 1px 1px;
-  max-width:100px !important;
-  max-height:100px !important;
+a.page-link.page-add{
+  margin-top:25%;
+  display:inline-block;
+  text-align: center;
+  vertical-align: middle;
+  border:none !important;
 }
 
 img.page-thumb{

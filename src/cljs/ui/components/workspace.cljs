@@ -15,13 +15,14 @@
 
 (def canvas-initializing-wrapper
  (with-meta identity
-   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)))}))
+   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 500 :height 500})}))
 
 (defn FabricCanvas [id]
   (fn []
     [:div {:style {:display (if (= (keyword id) (:current-page-id @project)) "block" "none")}}
       [canvas-initializing-wrapper
         [:canvas {:id id :class "canvas"}]]]))
+
 
 (defn Workspace [class]
   [:div {:id "workspace-inner" :class (:class class)}
@@ -33,7 +34,7 @@
         (for [page (vals (:pages @project)) idx (range (count (keys (:pages @project))))]
           ^{:key idx}
           [FabricCanvas (str "page-" idx)]))]
-    [:div {:id "pagination"} [DynamicPagination (vals (:pages @project)) (fn [id] (p/select-page id)) (fn [] (p/add-page))]]
+    [:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) (fn [id] (p/select-page id)) (fn [] (p/add-page))]]
     [:div {:id "zoom-control"
            :class "zoom-control-div"}
       [:div {:class "pull-right"} "History controls"]

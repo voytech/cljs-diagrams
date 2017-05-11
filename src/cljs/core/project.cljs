@@ -4,6 +4,7 @@
            [cljsjs.fabric]
            [core.utils.dom :as dom]
            [core.utils.dnd :as dnd]
+           [core.entities :as e]
            [core.tools :as t]))
 
 (:require-macros [core.macros :refer [with-page
@@ -22,6 +23,7 @@
 (declare obj-modified)
 (declare obj-editing-start)
 (declare mouse-up)
+(declare reg-delegator)
 
 ;;(defonce page-count (atom 4))
 (defonce project (atom {:page-index 0
@@ -46,11 +48,6 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defn proj-create-page [id]
-  (let [page {:canvas (js/fabric.Canvas. id)
-              :id (assert-keyword id)}]
-    (swap! project assoc-in [:pages (keyword id)] page)))
-
 (defn proj-page-by-id [id]
   (let [keyword-id (assert-keyword id)]
     (get-in @project [:pages keyword-id])))
@@ -60,6 +57,49 @@
     (let [id (get-in @project [:current-page-id])
           keyword-id (assert-keyword id)]
       (get-in @project [:pages keyword-id]))))
+
+(defn initialize-page [id {:keys [width height]}]
+  (dom/console-log (str "Initializing canvas with id [ " id " ]."))
+  (let [page {:canvas (js/fabric.Canvas. id)
+              :id (assert-keyword id)
+              :width width
+              :height height}]
+    (.setWidth (:canvas page) width)
+    (.setHeight (:canvas page) height)
+    (swap! project assoc-in [:pages (keyword id)] page))
+  ;;(let [canvas (:canvas (proj-page-by-id id))]
+  ;;  (do (.setWidth canvas @zoom-page-width)
+  ;;      (.setHeight canvas @zoom-page-height)
+  ;;  (.setZoom canvas @zoom))
+  (reg-delegator id))
+
+(defn dispose-page [domid]
+  (let [page (proj-page-by-id domid)
+        canvas (:canvas page)]
+       (.clear canvas)
+       (.dispose canvas)))
+
+(defn add-page []
+  (let [cnt (-> @project :pages keys count)
+        id (keyword (str "page-" cnt))]
+    (swap! project assoc-in [:pages id] {:canvas nil :id id})))
+
+(defn select-page [maybe-raw-id]
+  (let [id (assert-keyword maybe-raw-id)]
+    (if (not (= (get-in @project [:current-page-id]) id))
+      (do
+        (swap! project assoc-in [:current-page-id] id)
+        true)
+      false)))
+
+(defn cleanup-project-data []
+  (doseq [page (vals (:pages @project))]
+    (->> page :canvas .clear))
+  (reset! project {:page-index -1
+                   :pages {}
+                   :current-page-id nil})
+  (reset! e/entities {})
+  (changed))
 
 (defn snap! [target pos-prop pos-prop-set direction]
   (let  [div  (quot (pos-prop target) (:interval (:snapping @settings))),
@@ -113,9 +153,9 @@
   [idx]
   (let [node (.get (dom/j-query-class "canvas-container") idx)]
      (if (not (nil? node))
-       (.attr (.first (.children (dom/j-query node))) "id") -1))
+       (.attr (.first (.children (dom/j-query node))) "id") -1)))
 
-  (defn id2idx [id])
+(defn id2idx [id]
   (let [c-container (dom/parent (by-id id))]
     (.index (dom/j-query-class "canvas-container") c-container)))
 
@@ -166,68 +206,6 @@
     (if (nil? vec) (swap! event-handlers assoc-in [event] (vector func))
                    (swap! event-handlers assoc-in [event (count vec)] func))))
 
-(defn initialize-page [id]
-  (dom/console-log (str "Initializing canvas with id [ " id " ]."))
-  (proj-create-page id)
-  ;;(let [canvas (:canvas (proj-page-by-id id))]
-  ;;  (do (.setWidth canvas @zoom-page-width)
-  ;;      (.setHeight canvas @zoom-page-height)
-  ;;  (.setZoom canvas @zoom))
-  (reg-delegator id))
-
-(defn dispose-page [domid]
-  (let [page (proj-page-by-id domid)
-        canvas (:canvas page)]
-       (.clear canvas)
-       (.dispose canvas)))
-
-(defn add-page []
-  (let [cnt (-> @project :pages keys count)
-        id (keyword (str "page-" cnt))]
-    (swap! project assoc-in [:pages id] {:canvas nil :id id})))
-
-(defn select-page [maybe-raw-id]
-  (let [id (assert-keyword maybe-raw-id)]
-    (if (not (= (get-in @project [:current-page-id]) id))
-      (do
-        (swap! project assoc-in [:current-page-id] id)
-        true)
-      false)))
-
-(defn- paging-states-diff [settings]
-  (let [dom-pages-cnt    (dom/children-count (by-id "canvas-wrapper"))
-        proj-pages-cnt   (get-in settings [:pages :count])
-        multi-page       (get-in settings [:multi-page])
-        target-num       (if multi-page proj-pages-cnt 1)]
-    {:differs (not (= dom-pages-cnt target-num))
-     :actual-num dom-pages-cnt
-     :target-num target-num
-     :multi-page multi-page}))
-
-(defn- re-page? [{:keys [differs multi-page actual-num] :as diff}]
-  (or differs (= 0 actual-num)))
-
-(defn manage-settings [settings]
-  (let [{:keys [differs actual-num target-num multi-page] :as diff} (paging-states-diff settings)]
-    (when (re-page? diff)
-        (let [orphans-count    (- actual-num target-num)
-              orphans-index    (- actual-num orphans-count)
-              max-cnt          (max actual-num target-num)]
-
-           (doall (map #(cond (< % orphans-index) (create-page (page-id %))
-                              (>= % orphans-index) (remove-page (page-id %))) (range 0 max-cnt))))
-        (if (not  (select-page (get-in @project [:page-index])))
-            (visible-page (get-in @project [:current-page-id]))))))
-
-
-(defn cleanup-project-data []
-  (doseq [page (vals (:pages @project))]
-    (->> page :canvas .clear))
-  (reset! project {:page-index -1
-                   :pages {}
-                   :current-page-id nil})
-  (reset! e/entities {})
-  (changed))
 
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type

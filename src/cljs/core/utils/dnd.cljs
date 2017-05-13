@@ -1,9 +1,12 @@
 (ns core.utils.dnd
   (:require [core.utils.dom :as dom]))
 
-(defn data-transfer [event] (.-dataTransfer (.-originalEvent event)))
-(defn event-layer-coords [event] {:left (.-layerX (.-originalEvent event))
-                                  :top  (.-layerY (.-originalEvent event))})
+(defn data-transfer [event]
+  (js/console.log event)
+  (.-dataTransfer event))
+
+(defn event-layer-coords [event] {:left (.-layerX event)
+                                  :top  (.-layerY event)})
 
 (defn- set-data [event key value]
     (.setData (data-transfer event) key value)

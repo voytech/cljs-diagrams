@@ -26,4 +26,4 @@
   (get @tools id))
 
 (defn by-type [type]
-  (filter #(= type (:type %)) @tools))
+  (filter #(= type (:type %)) (vals @tools)))

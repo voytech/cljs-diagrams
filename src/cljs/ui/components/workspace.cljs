@@ -10,8 +10,9 @@
                     1. The drag source is from the library component (image is dragged)
                     2. The drag source comes from desktop (Use FileApi to load image)"
    [event]
-   (.preventDefault event)
-   (dnd/dispatch-drop-event event))
+   (let [e (.-nativeEvent event)]
+     (.preventDefault e)
+     (dnd/dispatch-drop-event e)))
 
 (def canvas-initializing-wrapper
  (with-meta identity

@@ -1,6 +1,7 @@
 (ns ui.components.tools
   (:require [reagent.core :as reagent :refer [atom]]
             [core.utils.dnd :as dnd]
+            [core.resources :as resources]
             [core.tools :as t :refer [tools]]))
 
 (declare select-files!)
@@ -46,18 +47,21 @@
 (defn ToolView [{:keys [name desc type icon generator] :as tool}]
  [:div {:class "photo-thumbnail"
         :draggable "true"
-        :style (str "background-image :url(" icon ");"
-                    "background-repeat: no-repeat;"
-                    "background-size:contain;"
-                    "background-position:center;")
-        :on-drag-start #(dnd/set-dnd-data % "tool-data" (:uid tool) "move")}
+        :style {:background-image (str "url(" icon ")")
+                :background-repeat "no-repeat"
+                :background-size "contain"
+                :background-position "center"}
+        :on-drag-start #(dnd/set-dnd-data (.-nativeEvent %) "tool-data" (:uid tool) "move")}
       [:div {:class "tool-title"} (str name)]])
 
 (defn ToolBox [tool-type]
   [:div {:class "thumbs-container"}
-    (for [tool (if (nil? tool-type) @tools (t/by-type tool-type))] [ToolView tool])])
+    (for [tool (vals @tools)];;(for [tool (if (nil? tool-type) (vals @tools) (t/by-type tool-type))]
+      [ToolView tool])])
 
 (defn ToolBoxWithUpload [tool-type]
   [:div {:id (str tool-type "-id")}
-    [ImageLoader #(js/console.log (str (:name %) (:type %) (:content %)))]
-    [ToolBox tool-type]])
+    [ImageLoader (fn [e]
+                   (resources/add-resource {:name (:name e) :type (keyword tool-type) :content (:content e)})
+                   (t/create-tool (:name e) "Photos tool" (keyword tool-type) (:content e) nil))]
+    [ToolBox (keyword tool-type)]])

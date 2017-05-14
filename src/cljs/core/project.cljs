@@ -78,7 +78,7 @@
         canvas (:canvas page)]
        (.clear canvas)
        (.dispose canvas))
-  (swap! project update-in [:pages] dissoc (assert-keyword domid)))
+  (swap! project update-in [:pages] dissoc (assert domid)))
 
 (defn add-page []
   (let [cnt (-> @project :pages keys count)

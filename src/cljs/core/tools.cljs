@@ -7,17 +7,21 @@
 (defn uuid []
   (-> (u/make-random-uuid) (u/uuid-string)))
 
-(defrecord Tool [uid name desc type icon generator])
+(defrecord Tool [uid name desc type icon ctor])
 
 (defn create-tool
-  ([name desc type icon generator]
-   (let [tool (Tool. (uuid) name desc type icon generator)]
+  ([name desc type icon ctor]
+   (let [tool (Tool. (uuid) name desc type icon ctor)]
     (swap! tools assoc (:uid tool) tool)
     tool))
-  ([name type generator]
-   (create-tool name "?" type nil generator))
-  ([name desc type generator]
-   (create-tool name desc type nil generator)))
+  ([name type ctor]
+   (create-tool name "?" type nil ctor))
+  ([name desc type ctor]
+   (create-tool name desc type nil ctor)))
+
+(defn invoke-tool [tool context]
+  (let [ctor (:ctor tool)]
+    ((ctor nil) context)))
 
 (defn by-name [name]
   (get @tools name))

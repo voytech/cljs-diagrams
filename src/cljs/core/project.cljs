@@ -216,7 +216,7 @@
   (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
         tool-obj (t/by-id tool-id)]
-    ((:generator tool-obj) tool-obj context)))
+    ((:ctor tool-obj) tool-obj context)))
 
 (defmethod dnd/dispatch-drop-event "imgid" [event]
   {:data (dom/by-id (dnd/get-dnd-data event "imgid"))

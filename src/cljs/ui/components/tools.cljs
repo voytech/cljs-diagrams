@@ -2,6 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [core.utils.dnd :as dnd]
             [core.resources :as resources]
+            [core.toolctors :as ctors]
             [core.tools :as t :refer [tools]]))
 
 (declare select-files!)
@@ -63,5 +64,9 @@
   [:div {:id (str tool-type "-id")}
     [ImageLoader (fn [e]
                    (resources/add-resource {:name (:name e) :type (keyword tool-type) :content (:content e)})
-                   (t/create-tool (:name e) "Photos tool" (keyword tool-type) (:content e) nil))]
+                   (t/create-tool (:name e)
+                                  "Photo tool"
+                                  (keyword tool-type)
+                                  (:content e)
+                                  (ctors/create ctors/image (:name e))))]
     [ToolBox (keyword tool-type)]])

@@ -68,5 +68,5 @@
                                   "Photo tool"
                                   (keyword tool-type)
                                   (:content e)
-                                  (ctors/create ctors/image (:name e))))]
+                                  (ctors/create ctors/image (:content e))))]
     [ToolBox (keyword tool-type)]])

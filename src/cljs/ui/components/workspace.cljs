@@ -11,7 +11,7 @@
                     2. The drag source comes from desktop (Use FileApi to load image)"
    [event]
    (let [e (.-nativeEvent event)]
-     (.preventDefault e)
+     (.preventDefault e)     
      (dnd/dispatch-drop-event e)))
 
 (def canvas-initializing-wrapper

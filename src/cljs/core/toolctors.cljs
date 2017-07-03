@@ -27,7 +27,7 @@
 (defn create [fabric-object data]
   (pipe-toolctor context next
     (let [instance (apply fabric-object [data context])
-          entity (e/create-entity "" instance [])]
+          entity (e/create-entity "" instance)]
       (next-in-chain entity next))))
 
 (defn set-properties [property-map]

@@ -2,7 +2,6 @@
   (:require [core.utils.dom :as dom]))
 
 (defn data-transfer [event]
-  (js/console.log event)
   (.-dataTransfer event))
 
 (defn event-layer-coords [event] {:left (.-layerX event)
@@ -22,7 +21,8 @@
 
 (defn get-dnd-data "Gets dataTransfer dnd event data under given key or selected
                     data type."
-  [event key] (.getData (data-transfer event) key))
+  [event key]
+  (.getData (data-transfer event) key))
 
 (defn get-dnd-files [event]
   (.-files (data-transfer event)))

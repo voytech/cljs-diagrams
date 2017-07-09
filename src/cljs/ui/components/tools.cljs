@@ -57,7 +57,7 @@
 
 (defn ToolBox [tool-type]
   [:div {:class "thumbs-container"}
-    (for [tool (vals @tools)];;(for [tool (if (nil? tool-type) (vals @tools) (t/by-type tool-type))]
+    (for [tool (if (nil? tool-type) (vals @tools) (t/by-type tool-type))]
       [ToolView tool])])
 
 (defn ToolBoxWithUpload [tool-type]

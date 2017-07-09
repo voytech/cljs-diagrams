@@ -1,15 +1,27 @@
 (ns core.toolctors
- (:require [core.entities :as e])
- (:require-macros [core.toolctors-macros :refer [pipe-toolctor]]))
+ (:require [core.entities :as e]))
+
+(def DEFAULT_SIZE_OPTS {:width 100 :height 100})
+(def DEFAULT_FILL {:fill "rgba(255,0,0,0.5)"})
+(def DEFAULT_STROKE {:stroke "#eee" :strokeWidth 5})
+
+;; Below is an interface to js Fabric.js library.
 
 (defn image [data options]
   (if (not (nil? options))
     (js/fabric.Image. data (clj->js options))
     (js/fabric.Image. data)))
 
-;; Below is an interface to js Fabric.js library.
-(defn rect [options])
-(defn line [options])
+(defn rect [options]
+  (let [enriched-opts (merge options DEFAULT_SIZE_OPTS DEFAULT_STROKE)]
+    (js/console.log (clj->js options))
+    (js/fabric.Rect (clj->js enriched-opts))))
+
+(defn line [points options]
+  (let [enriched-opts (merge options DEFAULT_SIZE_OPTS DEFAULT_STROKE)
+        fabric-points (map #(js/fabric.Point. (:x %) (:y %)) points)]
+    (js/fabric.Line fabric-points (clj->js enriched-opts))))
+
 (defn circle [options])
 (defn triangle [options])
 (defn ellipse [options])
@@ -19,22 +31,11 @@
 (defn text [data options])
 (defn path [])
 
-(defn next-in-chain [context next]
-  (if (not (nil? next))
-    (next context)
-    context))
-
-(defn create [fabric-object data]
-  (pipe-toolctor context next
-    (let [instance (apply fabric-object [data context])
-          entity (e/create-entity "" instance)]
-      (next-in-chain entity next))))
-
-(defn set-properties [property-map]
-  (pipe-toolctor context next
-    (let [entity context
-          src (:src entity)]
-      (for [key (keys property-map)]
-        (goog.object/set src (name key) (key property-map)))
-      (refresh entity)
-      (next-in-chain entity next))))
+(defn create
+  ([fabric-object data]
+   (fn [context]
+     (let [instance (apply fabric-object [data context])
+           entity (e/create-entity "" instance)])))
+  ([fabric-object]
+   (fn [context]
+     (e/create-entity "" (-> fabric-object (apply context))))))

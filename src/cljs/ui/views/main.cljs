@@ -3,6 +3,7 @@
             [ui.components.generic.basic :as components]
             [core.utils.dnd :as dnd]
             [ui.components.tools :as tv]
+            [impl.tools :as toolsimpl]
             [ui.components.workspace :as ws :refer [Workspace]]))
 
 ;;FUNCTIONS
@@ -12,8 +13,10 @@
 (defn Library [class]
   [:div {:class (:class class)}
     [components/Tabs {:name "Photos" :view [tv/ToolBoxWithUpload "photos"]}
-                     {:name "Toolbox" :view [:div "Toolbox"]}
+                     {:name "Toolbox" :view [tv/ToolBox :basic-tools]}
+                     {:name "Designer" :view [:div "Designer"]}
                      {:name "Templates" :view [:div "Templates"]}]])
+
 
 (defn Main []
   [:div.container-fluid

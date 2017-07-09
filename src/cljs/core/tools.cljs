@@ -21,7 +21,7 @@
 
 (defn invoke-tool [tool context]
   (let [ctor (:ctor tool)]
-    ((ctor nil) context)))
+    (ctor context)))
 
 (defn by-name [name]
   (get @tools name))

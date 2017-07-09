@@ -11,6 +11,7 @@
                                       with-current-canvas]])
 
 (declare add-item)
+(declare add-entity)
 (declare visible-page)
 (declare id2idx)
 (declare idx2id)
@@ -215,8 +216,10 @@
 (defmethod dnd/dispatch-drop-event "tool-data" [event]
   (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
-        tool-obj (t/by-id tool-id)]   
-    (t/invoke-tool tool-obj context)))
+        tool-obj (t/by-id tool-id)
+        entity (t/invoke-tool tool-obj context)]
+      (add-entity entity)))
+
 
 (defmethod dnd/dispatch-drop-event "imgid" [event]
   {:data (dom/by-id (dnd/get-dnd-data event "imgid"))

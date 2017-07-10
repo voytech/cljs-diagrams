@@ -4,8 +4,9 @@
 (defn data-transfer [event]
   (.-dataTransfer event))
 
-(defn event-layer-coords [event] {:left (.-layerX event)
-                                  :top  (.-layerY event)})
+(defn event-layer-coords [event]
+  {:left (.-layerX event)
+   :top  (.-layerY event)})
 
 (defn- set-data [event key value]
     (.setData (data-transfer event) key value)

@@ -14,13 +14,12 @@
 
 (defn rect [options]
   (let [enriched-opts (merge options DEFAULT_SIZE_OPTS DEFAULT_STROKE)]
-    (js/console.log (clj->js options))
-    (js/fabric.Rect (clj->js enriched-opts))))
+    (js/fabric.Rect. (clj->js enriched-opts))))
 
 (defn line [points options]
   (let [enriched-opts (merge options DEFAULT_SIZE_OPTS DEFAULT_STROKE)
         fabric-points (map #(js/fabric.Point. (:x %) (:y %)) points)]
-    (js/fabric.Line fabric-points (clj->js enriched-opts))))
+    (js/fabric.Line. fabric-points (clj->js enriched-opts))))
 
 (defn circle [options])
 (defn triangle [options])
@@ -34,8 +33,7 @@
 (defn create
   ([fabric-object data]
    (fn [context]
-     (let [instance (apply fabric-object [data context])
-           entity (e/create-entity "" instance)])))
+     (e/create-entity "" (fabric-object data context))))
   ([fabric-object]
    (fn [context]
-     (e/create-entity "" (-> fabric-object (apply context))))))
+     (e/create-entity "" (fabric-object context)))))

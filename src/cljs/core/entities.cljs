@@ -1,6 +1,6 @@
 (ns core.entities
-  (:require [reagent.core :as reagent :refer [atom]]
-            [core.utils.general :as utils :refer [uuid]]))
+  (:require [reagent.core :as reagent :refer [atom]]))
+
 
 (defonce ^:private ID "refId")
 (defonce ^:private PART_ID "refPartId")
@@ -42,8 +42,8 @@
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
   ([type parts]
-   (let [uid (or (js-obj-id (-> parts first :src)) (uuid))
-         entity  (Entity. uid type parts [] [])]
+   (let [uid (str (random-uuid))
+         entity (Entity. uid type parts [] [])]
       (doseq [part parts]
         (.defineProperty js/Object (:src part) ID  (js-obj "value" (:uid entity)
                                                            "writable" true

@@ -15,8 +15,13 @@
     (js/fabric.Image. data)))
 
 (defn rect [options]
-  (let [enriched-opts (merge options DEFAULT_SIZE_OPTS TRANSPARENT_FILL DEFAULT_STROKE RESTRICTED_BEHAVIOUR)]
-    [(e/Part. "body" (js/fabric.Rect. (clj->js enriched-opts))) {}]))
+  (let [enriched-opts (merge options
+                             DEFAULT_SIZE_OPTS
+                             TRANSPARENT_FILL
+                             DEFAULT_STROKE
+                             RESTRICTED_BEHAVIOUR
+                             NO_DEFAULT_CONTROLS)]
+    [(e/Part. "body" (js/fabric.Rect. (clj->js enriched-opts)) {})]))
 
 (defn handle [point]
   (let [options (merge {:left (- (first point) (:radius HANDLER_SMALL))
@@ -24,6 +29,7 @@
                        HANDLER_SMALL
                        NO_DEFAULT_CONTROLS)]
       (js/fabric.Circle. (clj->js options))))
+
 
 (defn connector [points options]
   (let [enriched-opts (merge options DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS)
@@ -34,8 +40,8 @@
         move-connector (fn [handle-name coordX coordY]
                          (fn [e]
                            (when (= (:part e) handle-name)
+                             (js/console.log (:entity e))
                              (let [src (:src e)
-                                   event (:event e)
                                    entity (:entity e)
                                    connector (e/entity-part entity "connector")]
                                 (.set (:src connector) (clj->js {(keyword coordX) (+ (.-left src) 8)

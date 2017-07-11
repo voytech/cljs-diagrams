@@ -155,13 +155,7 @@
 ;;
 (defn- mouse-up [event])
 
-
-(defn- obj-selected [event]
-  (let [target (.-target event)]
-       entity (e/entity-from-src target)
-    (e/refresh @selection_)
-    (reset! selection_ entity)))
-
+(defn- obj-selected [event])
 
 (defn- handle-delegator [key]
   (fn [event]
@@ -199,7 +193,6 @@
     (if (nil? vec) (swap! event-handlers assoc-in [event] (vector func))
                    (swap! event-handlers assoc-in [event (count vec)] func))))
 
-
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------
@@ -210,7 +203,6 @@
         tool-obj (t/by-id tool-id)
         entity (t/invoke-tool tool-obj context)]
       (add-entity entity)))
-
 
 (defmethod dnd/dispatch-drop-event "imgid" [event]
   {:data (dom/by-id (dnd/get-dnd-data event "imgid"))

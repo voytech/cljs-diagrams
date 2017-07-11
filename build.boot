@@ -8,7 +8,7 @@
                  [com.cemerick/piggieback   "0.2.1"      :scope "test"]
                  [org.clojure/tools.nrepl   "0.2.12"     :scope "test"]
                  [weasel                    "0.7.0"      :scope "test"]
-                 [org.clojure/clojurescript "1.9.293"]
+                 [org.clojure/clojurescript "1.9.293"] ;;293 562
                  [crisptrutski/boot-cljs-test "0.3.0" :scope "test"]
                  [reagent "0.6.0"]
                  [binaryage/devtools "0.9.0" :scope "test"]
@@ -16,8 +16,7 @@
                  [powerlaces/boot-cljs-devtools "0.2.0" :scope "test"]
                  [cljsjs/fabric                   "1.5.0-0"]
                  [cljsjs/jquery                   "2.1.4-0"]
-                 [cljsjs/jquery-ui                "1.11.3-1"]
-                 [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]])
+                 [cljsjs/jquery-ui                "1.11.3-1"]])
 
 (require
  '[adzerk.boot-cljs      :refer [cljs]]

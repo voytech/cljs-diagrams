@@ -1,17 +1,15 @@
 (ns core.tools
-  (:require [reagent.core :as reagent :refer [atom]]
-            [cljs-uuid-utils.core :as u]))
+  (:require [reagent.core :as reagent :refer [atom]]))
+
 
 (defonce tools (atom {}))
-
-(defn uuid []
-  (-> (u/make-random-uuid) (u/uuid-string)))
 
 (defrecord Tool [uid name desc type icon ctor])
 
 (defn create-tool
   ([name desc type icon ctor]
-   (let [tool (Tool. (uuid) name desc type icon ctor)]
+   (let [tool (Tool. (str (random-uuid)) name desc type icon ctor)]
+    (js/console.log tool)
     (swap! tools assoc (:uid tool) tool)
     tool))
   ([name type ctor]

@@ -11,12 +11,12 @@
                     2. The drag source comes from desktop (Use FileApi to load image)"
    [event]
    (let [e (.-nativeEvent event)]
-     (.preventDefault e)     
+     (.preventDefault e)
      (dnd/dispatch-drop-event e)))
 
 (def canvas-initializing-wrapper
  (with-meta identity
-   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 500 :height 500})}))
+   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 800 :height 800})}))
 
 (defn FabricCanvas [id]
   (fn []

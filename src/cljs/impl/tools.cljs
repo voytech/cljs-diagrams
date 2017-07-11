@@ -10,4 +10,4 @@
 
 (t/create-tool "Connector"
                :basic-tools
-               (ctors/create ctors/line))
+               (ctors/create ctors/connector [0 0 100 0]))

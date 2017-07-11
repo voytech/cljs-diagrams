@@ -33,16 +33,14 @@
 
 (def last-change (atom 0))
 (def obj-editing (atom false))
-;;(def selection_ (cell (e/create-entity "empty" (js/Object.))))
-;;(def new_ (cell (e/create-entity "empty" (js/Object.))))
 
 (def event-handlers (atom {"object:moving"   [#(do-snap %)]
                                             #(intersection-test % "collide")
-                                            #(obj-editing-start % [:left :top])}
-                         "object:rotating" [#(obj-editing-start % [:angle])]
-                         "object:scaling"  [#(obj-editing-start % [:scaleX :scaleY])]
-                         "object:selected" [#(obj-selected %)]
-                         "mouse:up" [#(mouse-up %) #(intersection-test % "collide-end")]))
+                                            #(obj-editing-start % [:left :top])
+                           "object:rotating" [#(obj-editing-start % [:angle])]
+                           "object:scaling"  [#(obj-editing-start % [:scaleX :scaleY])]
+                           "object:selected" [#(obj-selected %)]
+                           "mouse:up" [#(mouse-up %) #(intersection-test % "collide-end")]}))
 
 (defn- changed [] (reset! last-change (dom/time-now)))
 
@@ -72,6 +70,9 @@
   ;;  (do (.setWidth canvas @zoom-page-width)
   ;;      (.setHeight canvas @zoom-page-height)
   ;;  (.setZoom canvas @zoom))
+
+
+
   (reg-delegator id))
 
 (defn remove-page [domid]
@@ -109,18 +110,13 @@
     (let [neww (* div (:interval (:snapping @settings)))]
       (when (< rest (:attract (:snapping @settings))) (pos-prop-set target neww)))))
 
-(defn do-snap [event]
-  (changed)
-  (when (= true (:enabled (:snapping @settings)))
-    (let [target (.-target event)]
-      (snap! target #(.-left %) #(set! (.-left %) %2) 1)
-      (snap! target #(.-top  %) #(set! (.-top %)  %2) 1))))
+(defn do-snap [event])
 
 
 (defn intersection-test [event funcname]
   (let [trg (.-target event)]
     (when (not (nil? trg))
-      (with-current-canvas as canvas
+      (let [canvas (:canvas (proj-selected-page))]
         (.forEachObject canvas
                         #(when (not (== % trg))
                            (when (or (.intersectsWithObject trg %)
@@ -135,16 +131,9 @@
                                  (not (nil? collide-trge)) (collide-trge trge inte))
                                (.renderAll canvas)))))))))
 
-(defn- obj-editing-start [event properties]
-  (let [trg (.-target event)
-        id (e/js-obj-id trg)]
-    (when (not (= true @obj-editing))
-      (ac/change-properties! id (ac/build-property-map id properties) false)
-      (reset! obj-editing  true))))
+(defn- obj-editing-start [event properties])
 
-(defn- obj-editing-end []
-  (let [id (:uid @selection_)]
-    (reset! obj-editing false)))
+(defn- obj-editing-end [])
 
 (defn page-id [indx]
   (str "page-" indx))
@@ -164,11 +153,7 @@
 ;;
 ;;Input events handlers
 ;;
-(defn- mouse-up [event]
-  (println "mouse - up ")
-  ;;(popups/hide-all)
-  (obj-editing-end)
-  (e/refresh @selection_))
+(defn- mouse-up [event])
 
 
 (defn- obj-selected [event]
@@ -185,6 +170,12 @@
         (func event)))))
 
 (defn- reg-delegator [id]
+  (let [page (:canvas (proj-page-by-id id))]
+    (.on page (js-obj "object:scaling" (fn [e]
+                                        (let [obj (.-target e)
+                                              strokeWidth (/ (.-strokeWidth obj) (/ (+ (.-scaleX obj) (.-scaleY obj)) 2))
+                                              activeObj (.getActiveObject page)]
+                                           (.set activeObj "strokeWidth" 2))))))
   (doall
    (map #(.on (:canvas (proj-page-by-id id)) (js-obj % (handle-delegator %)))
          ["object:moving"
@@ -238,26 +229,26 @@
 ;;A dispatch then should be made on entity type.
 ;;
 
+(defn- enrich-handler [handler]
+  (fn [e]
+    (let [jsobj (.-target e)
+          part (.-refPartId jsobj)
+          entity (e/entity-from-src jsobj)]
+      (handler {:src jsobj :entity entity :part part :event e}))))
+
+(defn- register-handlers [canvas part]
+  (doseq [key (keys (:event-handlers part))]
+    (let [handler (get (:event-handlers part) key)]
+      (.on canvas (js-obj key (enrich-handler handler))))))
+
 (defn add-entity [entity]
   (when (not (instance? e/Entity entity))
     (throw (js/Error. (str entity " is not an core.entities. Entity object"))))
-  (let [src (:src entity)]
-    (if (not (nil? src))
-      (do
-        (.add (:canvas (proj-selected-page)) src)
-        (e/refresh entity)
-        (reset! new_ entity)
-        (changed)))))
-
-
-(defn set-background [entity]
-  (when (not (instance? e/Entity entity))
-    (throw (js/Error. (str entity " is not an core.entities.Entity object"))))
-  (let [src (:src entity)
-        canv (:canvas (proj-selected-page))]
-    (if (not (nil? src))
-      (do
-        (println "Setting background entity.")
-        (.setBackgroundImage (:canvas (proj-selected-page)) src #(.bind (.renderAll canv) canv))
-       ; (e/refresh entity)
-        (changed)))))
+  (let [parts (:parts entity)
+        canvas (:canvas (proj-selected-page))]
+    (doseq [part parts]
+      (let [src (:src part)]
+        (.add canvas src)
+        (register-handlers canvas part)))
+    (.renderAll canvas)
+    (changed)))

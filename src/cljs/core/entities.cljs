@@ -3,6 +3,7 @@
             [core.utils.general :as utils :refer [uuid]]))
 
 (defonce ^:private ID "refId")
+(defonce ^:private PART_ID "refPartId")
 
 (defonce entities (atom {}))
 (defonce paged-entities (atom {}))
@@ -13,29 +14,21 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
+(defrecord Part [name src event-handlers])
+
 (defprotocol IEntity
-  (data [this])
-  (refresh [this])
-  (prop-get  [this property])
-  (prop-set  [this property val]))
+  (add-attribute [this attribute])
+  (connect-to [this entity]))
 
 (defrecord Entity [uid
                    type
-                   src
-                   prop-state
-                   event-handlers]
+                   parts
+                   attributes
+                   relationships]
+
   IEntity
-  (data [this]
-    (jc/data propcel))
-
-  (prop-get [this prop-keyword]
-    (prop-keyword @prop-state))
-
-  (prop-set [this property val]
-    (swap! prop-state assoc-in [prop-keyword] val))
-
-  (refresh [this] ;;
-     (reset! prop-state @(manage-properties src))))
+  (add-attribute [this attribute])
+  (connect-to [this entity]))
 
 (defn properties [jsobj func]
  (let [props (atom [])]
@@ -46,28 +39,22 @@
                              (swap! props conj key))))
    @props))
 
-(defn manage-properties [jsobj]
-  (let [estate (atom {})]
-    (properties jsobj (fn [key val] (swap! estate assoc key val)))
-    estate))
-
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
-  ([type src event-handlers]
-   (let [uid (or (js-obj-id src) (uuid))
-         state (manage-properties src)
-         entity  (Entity. uid type src state event-handlers)]
-     (.defineProperty js/Object src ID  (js-obj "value" (:uid entity)
-                                                "writable" true
-                                                "configurable" true
-                                                "enumerable" true))
-     (when (not (nil? event-handlers))
-       (doseq [key (keys event-handlers)]
-         (when (not (or (= key "collide") (= key "collide-end")))
-           (.on src key (get event-handlers key)))))
-     (swap! entities assoc uid entity)
-     entity))
-  ([type src ] (create-entity type src {})))
+  ([type parts]
+   (let [uid (or (js-obj-id (-> parts first :src)) (uuid))
+         entity  (Entity. uid type parts [] [])]
+      (doseq [part parts]
+        (.defineProperty js/Object (:src part) ID  (js-obj "value" (:uid entity)
+                                                           "writable" true
+                                                           "configurable" true
+                                                           "enumerable" true))
+        (.defineProperty js/Object (:src part) PART_ID  (js-obj "value" (:name part)
+                                                                "writable" true
+                                                                "configurable" true
+                                                                "enumerable" true)))
+      (swap! entities assoc uid entity)
+      entity)))
 
 (defn bind [entity page]
   (let [euids (page @paged-entities)
@@ -85,9 +72,12 @@
       js-obj-id
       entity-by-id))
 
-(defn get-entity-property [entity-id key]
-  (let [entity (entity-by-id entity-id)]
-    (key (data entity))))
+(defn entity-part-name-from-src [src]
+  (.-refPartId src))
+
+(defn entity-part [entity partname]
+  (let [parts (:parts entity)]
+    (first (filter #(= partname (:name %)) parts))))
 
 (def EMPTY (create-entity "empty" (js/Object.)))
 

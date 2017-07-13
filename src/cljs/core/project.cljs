@@ -25,6 +25,7 @@
 (declare obj-editing-start)
 (declare mouse-up)
 (declare reg-delegator)
+(declare register-handlers)
 
 ;;(defonce page-count (atom 4))
 (defonce project (atom {:page-index 0
@@ -57,6 +58,23 @@
           keyword-id (assert-keyword id)]
       (get-in @project [:pages keyword-id]))))
 
+(defn- enrich-handler [handler canvas]
+  (fn [e]
+    (when-let [jsobj (.-target e)]
+       (let [part (.-refPartId jsobj)
+             entity (e/entity-from-src jsobj)]
+        (handler {:src jsobj
+                  :part part
+                  :entity entity
+                  :canvas canvas
+                  :event e})))))
+
+(defn- register-handlers [canvas]
+  (doseq [key (keys @e/events)]
+    (let [handlers (get @e/events key)]
+      (doseq [handler handlers]
+        (.on canvas (js-obj key (enrich-handler handler canvas)))))))
+
 (defn initialize-page [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
   (let [page {:canvas (js/fabric.Canvas. id)
@@ -65,13 +83,12 @@
               :height height}]
     (.setWidth (:canvas page) width)
     (.setHeight (:canvas page) height)
-    (swap! project assoc-in [:pages (keyword id)] page))
+    (swap! project assoc-in [:pages (keyword id)] page)
+    (register-handlers (:canvas page)))
   ;;(let [canvas (:canvas (proj-page-by-id id))]
   ;;  (do (.setWidth canvas @zoom-page-width)
   ;;      (.setHeight canvas @zoom-page-height)
   ;;  (.setZoom canvas @zoom))
-
-
 
   (reg-delegator id))
 
@@ -221,18 +238,6 @@
 ;;A dispatch then should be made on entity type.
 ;;
 
-(defn- enrich-handler [handler]
-  (fn [e]
-    (let [jsobj (.-target e)
-          part (.-refPartId jsobj)
-          entity (e/entity-from-src jsobj)]
-      (handler {:src jsobj :entity entity :part part :event e}))))
-
-(defn- register-handlers [canvas part]
-  (doseq [key (keys (:event-handlers part))]
-    (let [handler (get (:event-handlers part) key)]
-      (.on canvas (js-obj key (enrich-handler handler))))))
-
 (defn add-entity [entity]
   (when (not (instance? e/Entity entity))
     (throw (js/Error. (str entity " is not an core.entities. Entity object"))))
@@ -240,7 +245,6 @@
         canvas (:canvas (proj-selected-page))]
     (doseq [part parts]
       (let [src (:src part)]
-        (.add canvas src)
-        (register-handlers canvas part)))
+        (.add canvas src)))
     (.renderAll canvas)
     (changed)))

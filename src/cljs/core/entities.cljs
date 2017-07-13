@@ -1,12 +1,16 @@
 (ns core.entities
-  (:require [reagent.core :as reagent :refer [atom]]))
+  (:require [reagent.core :as reagent :refer [atom]]
+            [core.utils.general :as utils :refer [make-js-property]]))
 
 
 (defonce ^:private ID "refId")
 (defonce ^:private PART_ID "refPartId")
 
 (defonce entities (atom {}))
+
 (defonce paged-entities (atom {}))
+
+(defonce events (atom {}))
 
 (declare properties)
 (declare js-obj-id)
@@ -14,7 +18,8 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defrecord Part [name src event-handlers])
+
+(defrecord Part [name src])
 
 (defprotocol IEntity
   (add-attribute [this attribute])
@@ -45,14 +50,8 @@
    (let [uid (str (random-uuid))
          entity (Entity. uid type parts [] [])]
       (doseq [part parts]
-        (.defineProperty js/Object (:src part) ID  (js-obj "value" (:uid entity)
-                                                           "writable" true
-                                                           "configurable" true
-                                                           "enumerable" true))
-        (.defineProperty js/Object (:src part) PART_ID  (js-obj "value" (:name part)
-                                                                "writable" true
-                                                                "configurable" true
-                                                                "enumerable" true)))
+        (make-js-property (:src part) ID  (:uid entity))
+        (make-js-property (:src part) PART_ID (:name part)))
       (swap! entities assoc uid entity)
       entity)))
 
@@ -60,6 +59,19 @@
   (let [euids (page @paged-entities)
         uid (:uid entity)]
     (swap! paged-entities assoc-in [page] (if (nil? euids) #{uid} (conj euids uid)))))
+
+(defn connect-entities [src trg end]
+  (let [src-rel (conj (:relationships src) {:end end :entity-id (:uid trg)})
+        trg-rel (conj (:relationships trg) {:end end :entity-id (:uid src)})]
+    (swap! entities assoc-in [(:uid src) :relationships] src-rel)
+    (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
+
+(defn disconnect-entities [src trg]
+  (let [src-rel (filter #(!= (:uid trg) (:entity-id %)) (:relationships src))
+        trg-rel (filter #(!= (:uid src) (:entity-id %)) (:relationships trg))]
+    (swap! entities assoc-in [(:uid src) :relationships] src-rel)
+    (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
+
 
 (defn entity-by-id [id]
   (get @entities id))
@@ -79,6 +91,10 @@
   (let [parts (:parts entity)]
     (first (filter #(= partname (:name %)) parts))))
 
-(def EMPTY (create-entity "empty" (js/Object.)))
-
 (defmulti create-entity-for-type (fn [type data-obj] type))
+
+(defn handle-event [event handler]
+  (let [handlers (get @events event)]
+    (if (not (nil? handlers))
+      (swap! events assoc-in [event] (conj handlers handler))
+      (swap! events assoc-in [event] (vector handler)))))

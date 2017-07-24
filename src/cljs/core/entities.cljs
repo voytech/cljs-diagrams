@@ -93,8 +93,6 @@
 
 (defmulti create-entity-for-type (fn [type data-obj] type))
 
-(defn handle-event [event handler]
-  (let [handlers (get @events event)]
-    (if (not (nil? handlers))
-      (swap! events assoc-in [event] (conj handlers handler))
-      (swap! events assoc-in [event] (vector handler)))))
+(defn handle-event [entity-type part event handler]
+  (when (nil? (get-in @events [entity-type part event]))
+    (swap! events assoc-in [entity-type part event] handler)))

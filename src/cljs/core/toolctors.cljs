@@ -1,5 +1,6 @@
 (ns core.toolctors
- (:require [core.entities :as e]))
+ (:require [core.entities :as e])
+ (:require-macros [core.macros :refer [defentity]]))
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
 (def TRANSPARENT_FILL {:fill "rgb(255,255,255)"})
@@ -69,6 +70,9 @@
           (.set (:src connector) (clj->js {(keyword coordX) (+ (.-left src) 8)
                                            (keyword coordY) (+ (.-top src) 8)}))))))
 
+
+
+
 (e/handle-event "object:moving" (moving-connector "start" "x1" "y1"))
 (e/handle-event "object:moving" (moving-connector "end" "x2" "y2"))
 (e/handle-event "object:moving" (moving-entity "body"))
@@ -93,7 +97,8 @@
       (js/fabric.Rect. (clj->js options))))
 
 
-(defn rect [options]
+(defentity rect data options
+  :drawables
   (let [enriched-opts (merge options
                              DEFAULT_SIZE_OPTS
                              TRANSPARENT_FILL
@@ -104,24 +109,38 @@
         conR    (vector (+ (:left options) (:width DEFAULT_SIZE_OPTS)) (+ (/ (:height DEFAULT_SIZE_OPTS) 2) (:top options)))
         conT    (vector (+ (/ (:width DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
         conB    (vector (+ (/ (:width DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height DEFAULT_SIZE_OPTS)))]
-    [(e/Part. "connector-left" (connector conL :moveable false :display "rect"))
-     (e/Part. "connector-right" (connector conR :moveable false :display "rect"))
-     (e/Part. "connector-top" (connector conT :moveable false :display "rect"))
-     (e/Part. "connector-bottom" (connector conB :moveable false :display "rect"))
-     (e/Part. "body" (js/fabric.Rect. (clj->js enriched-opts)))]))
+    ["connector-left"   (connector conL :moveable false :display "rect")
+     "connector-right"  (connector conR :moveable false :display "rect")
+     "connector-top"    (connector conT :moveable false :display "rect")
+     "connector-bottom" (connector conB :moveable false :display "rect")
+     "body" (js/fabric.Rect. (clj->js enriched-opts))])
+  :behaviours
+    ["body" "object:moving" (moving-entity "body")])
 
 
-(defn connector-line [points options]
+(defentity connector-line data options
+  :drawables
   (let [enriched-opts (merge options DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS)
         offset-x (:left options)
         offset-y (:top options)
-        points-pairs (partition 2 points)
+        points-pairs (partition 2 data)
         points-pairs-offset (map #(vector (+ (first %) offset-x) (+ (last %) offset-y)) points-pairs)
         conS (first points-pairs-offset)
         conE (last points-pairs-offset)]
-    [(e/Part. "connector" (js/fabric.Line. (clj->js (flatten points-pairs-offset)) (clj->js enriched-opts)))
-     (e/Part. "start" (connector conS :moveable true :display "circle"))
-     (e/Part. "end" (connector conE :moveable true :display "circle"))]))
+      ["connector" (js/fabric.Line. (clj->js (flatten points-pairs-offset)) (clj->js enriched-opts))
+       "start"     (connector conS :moveable true :display "circle")
+       "end"       (connector conE :moveable true :display "circle")])
+  :behaviours
+  ["start" "object:moving" (fn [e]
+                             (let [connector (e/entity-part (:entity e) "connector")]
+                              (.set (:src connector) (clj->js {:x1 (+ (.-left src) 8)
+                                                               :y1 (+ (.-top src)  8)}))))
+   "start" "mouse:up" (make-relationship?)
+   "end" "object:moving"  (fn [e]
+                            (let [connector (e/entity-part (:entity e) "connector")]
+                              (.set (:src connector) (clj->js {:x2 (+ (.-left src) 8)
+                                                               :y2 (+ (.-top src)  8)}))))
+   "end" "mouse:up" (make-relationship?)])
 
 (defn circle [options])
 (defn triangle [options])
@@ -133,9 +152,9 @@
 (defn path [])
 
 (defn create
-  ([parts data]
+  ([entity data]
    (fn [context]
-     (e/create-entity "" (parts data context))))
-  ([parts]
+     (entity data context)))
+  ([entity]
    (fn [context]
-     (e/create-entity "" (parts context)))))
+     (entity context))))

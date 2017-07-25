@@ -33,21 +33,17 @@
        (let [~canv-var (:canvas page-var#)] ~@body))))
 
 (defmacro defentity [name data options & body]
-  `(defn ~name [d# o#]
-      (let [~data d#
-            ~options o#
-            components# (into (sorted-map) (partition 2 (vec ~@body)))
-            drawables# (eval (:drawables components#))
-            behaviours# (:behaviours components#)]
-        (js.console/log "asdsad")    
-        (doseq [behaviour# (partition 3 behaviours#)]
-          (let [entity-name# (name ~name)
-                part-name# (first behaviour#)
-                event-type# (second behaviour#)
-                handler# (last behaviour#)])
-          (core.entities/handle-event entity-name#
-                                      part-name#
-                                      event-type#
-                                      (fn [e#] (when (= (:part e#) part-name#) (handler# e#)))))
-        (let [parts# (map #(core.entities/Part. (first %) (last %)) (partition 2 drawables#))]
-          (core.entities/create-entity (name ~name) parts#)))))
+  (let [drawables (second (first body))
+        behaviours (second (last body))]
+   `(defn ~name [~data ~options]
+       (doseq [behaviour# (partition 3 ((fn[] ~behaviours)))]
+         (let [entity-name# (name '~name)
+               part-name# (first behaviour#)
+               event-type# (second behaviour#)
+               handler# (last behaviour#)])
+         (core.entities/handle-event entity-name#
+                                     part-name#
+                                     event-type#
+                                     (fn [e#] (when (= (:part e#) part-name#) (handler# e#)))))
+       (let [parts# (map #(core.entities/Part. (first %) (last %)) (partition 2 ((fn[] ~drawables))))]
+         (core.entities/create-entity (name '~name) parts#)))))

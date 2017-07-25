@@ -58,23 +58,6 @@
           keyword-id (assert-keyword id)]
       (get-in @project [:pages keyword-id]))))
 
-;(defn- enrich-handler [handler canvas]
-;  (fn [e]
-;    (when-let [jsobj (.-target e)]
-;       (let [part (.-refPartId jsobj)
-;             entity (e/entity-from-src jsobj)
-;        (handler {:src jsobj
-;                  :part part
-;                  :entity entity
-;                  :canvas canvas
-;                  :event e))))
-;
-;(defn- register-handlers [canvas]
-;  (doseq [key (keys @e/events)]
-;    (let [handlers (get @e/events key)]
-;      (doseq [handler handlers]
-;        (.on canvas (js-obj key (enrich-handler handler canvas)))))))
-
 (defn- dispatch-events [canvas]
   (doseq [event-type ["object:moving"  "object:rotating"
                       "object:scaling" "object:selected"

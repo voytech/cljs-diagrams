@@ -61,14 +61,13 @@
                   (clj->js {:x2 (+ (.-x2 (:src related-cl)) movementX)
                             :y2  (+ (.-y2 (:src related-cl)) movementY)})))))))))
 
-(defn moving-connector [handle-name coordX coordY]
+(defn moving-connector [coordX coordY]
    (fn [e]
-     (when (= (:part e) handle-name)
-       (let [src (:src e)
-             entity (:entity e)
-             connector (e/entity-part entity "connector")]
-          (.set (:src connector) (clj->js {(keyword coordX) (+ (.-left src) 8)
-                                           (keyword coordY) (+ (.-top src) 8)}))))))
+      (let [src (:src e)
+            entity (:entity e)
+            connector (e/entity-part entity "connector")]
+         (.set (:src connector) (clj->js {(keyword coordX) (+ (.-left src) 8)
+                                          (keyword coordY) (+ (.-top src) 8)})))))
 
 
 
@@ -131,16 +130,10 @@
          "start"     (connector conS :moveable true :display "circle")
          "end"       (connector conE :moveable true :display "circle")]))
   (with-behaviours
-    ["start" "object:moving" (fn [e]
-                               (let [connector (e/entity-part (:entity e) "connector")]
-                                (.set (:src connector) (clj->js {:x1 (+ (.-left src) 8)
-                                                                 :y1 (+ (.-top src)  8)}))))
-     "start" "mouse:up" (make-relationship?)
-     "end" "object:moving"  (fn [e]
-                              (let [connector (e/entity-part (:entity e) "connector")]
-                                (.set (:src connector) (clj->js {:x2 (+ (.-left src) 8)
-                                                                 :y2 (+ (.-top src)  8)}))))
-     "end" "mouse:up" (make-relationship?)]))
+    ["start" "object:moving"  (moving-connector "x1" "y1")
+     "start" "mouse:up"       (make-relationship?)
+     "end" "object:moving"    (moving-connector "x2" "y2")
+     "end" "mouse:up"         (make-relationship?)]))
 
 (defn circle [options])
 (defn triangle [options])

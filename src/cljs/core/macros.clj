@@ -40,10 +40,10 @@
          (let [entity-name# (name '~name)
                part-name# (first behaviour#)
                event-type# (second behaviour#)
-               handler# (last behaviour#)])
-         (core.entities/handle-event entity-name#
-                                     part-name#
-                                     event-type#
-                                     (fn [e#] (when (= (:part e#) part-name#) (handler# e#)))))
+               handler# (last behaviour#)]
+           (core.entities/handle-event entity-name#
+                                       part-name#
+                                       event-type#
+                                       (fn [e#] (when (= (:part e#) part-name#) (handler# e#))))))
        (let [parts# (map #(core.entities/Part. (first %) (last %)) (partition 2 ((fn[] ~drawables))))]
          (core.entities/create-entity (name '~name) parts#)))))

@@ -67,7 +67,7 @@
                                         (when-let [jsobj (.-target e)]
                                           (let [part    (.-refPartId jsobj)
                                                 entity  (e/entity-from-src jsobj)
-                                                handler (get-in @e/events (:type entity) part event-type)]
+                                                handler (get-in @e/events [(:type entity) part event-type])]
                                              (when (not (nil? handler))
                                                (handler {:src jsobj
                                                          :part part

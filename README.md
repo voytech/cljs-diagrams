@@ -6,14 +6,14 @@ A minimal plan is to have following functionalities:
 - defining new attributes and attribute categories.
 - aggregating attributes within entites. Possible entitities attributes categories are : name, description, priority, status.
 - creating relations and making relationships between nodes.
-- aggregating attributes within relations. (e.g. relation-type attribute category instance: relation-type : relies-on | depends-on | is-child-of | happens-after ) 
+- aggregating attributes within relations. (e.g. relation-type attribute category instance: relation-type : relies-on | depends-on | is-child-of | happens-after )
 - in minimal plan appl will not be complianat with UML specs, relations hovewer would be one-directional, bi-directional, and without direction.
 
 ## Dependencies
 
 - java 1.8+
 - [boot][1]
--
+
 
 ## Usage
 

@@ -4,11 +4,15 @@
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
 (def TRANSPARENT_FILL {:fill "rgb(255,255,255)"})
-(def DEFAULT_STROKE {:stroke "#666" :strokeWidth 2})
+(def DEFAULT_STROKE {:stroke "#666" :strokeWidth 1.5})
 (def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false :lockRotation true})
 (def NO_DEFAULT_CONTROLS {:hasControls false :hasBorders false})
 (def INVISIBLE {:visible false})
-(def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "#666" :strokeWidth 2})
+(def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "#666" :strokeWidth 1.5})
+(def DEFAULT_OPTIONS {:highlight-color "red"
+                      :normal-color "#666"
+                      :highlight-width 3
+                      :normal-width 1.5})
 ;; Below is an interface to js Fabric.js library.
 
 (defn image [data options]
@@ -16,13 +20,12 @@
     (js/fabric.Image. data (clj->js options))
     (js/fabric.Image. data)))
 
-(defn highlight [color]
+(defn highlight [bln options]
   (fn [e]
-    (let [src    (:src e)
-          entity (:entity e)
-          part   (:part e)
-          canvas (:canvas e)])
-    (.set src (clj->js {:color color}))))
+    (.set (:src e) (clj->js {:stroke (if bln (:highlight-color options)
+                                             (:normal-color options))
+                             :strokeWidth (if bln (:highlight-width options)
+                                                  (:normal-width options))}))))
 
 (defn overlaying? [src trg]
     (or (.intersectsWithObject src trg)
@@ -76,7 +79,6 @@
             (.set (:src part) (clj->js {:left (+ (.-left (:src part)) movementX)
                                         :top  (+ (.-top (:src part)) movementY)}))
             (.setCoords (:src part))))
-        ;(js/console.log (clj->js entity))
         (doseq [relation (:relationships entity)]
             (let [end (:end relation)
                   related-entity (e/entity-by-id (:entity-id relation))
@@ -197,7 +199,9 @@
        "connector-bottom" (connector conB :moveable false :display "rect" :visibile false)
        "body"             (js/fabric.Rect. (clj->js enriched-opts))]))
   (with-behaviours
-    ["body" "object:moving" (moving-entity "body")]))
+    ["body" "object:moving" (moving-entity "body")
+     "body" "mouse:over" (highlight true DEFAULT_OPTIONS)
+     "body" "mouse:out" (highlight false DEFAULT_OPTIONS)]))
 
 
 (defentity relation data options
@@ -220,6 +224,8 @@
                                                                                                                                            (toggle-connectors (:entity trg) false)
                                                                                                                                            (position-endpoint (:entity src) "start" (.-left (:src trg)) (.-top (:src trg)))))
                                    (for-entity relations-validate))
+     "start" "mouse:over"     (highlight true DEFAULT_OPTIONS)
+     "start" "mouse:out"      (highlight false DEFAULT_OPTIONS)
 
      "end"   "object:moving"  (all (moving-connector "x2" "y2")
                                    (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true))
@@ -227,7 +233,9 @@
      "end"   "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:part src))
                                                                                                                                            (toggle-connectors (:entity trg) false)
                                                                                                                                            (position-endpoint (:entity src) "end" (.-left (:src trg)) (.-top (:src trg)))))
-                                   (for-entity relations-validate))]))
+                                   (for-entity relations-validate))
+     "end" "mouse:over"       (highlight true DEFAULT_OPTIONS)
+     "end" "mouse:out"        (highlight false DEFAULT_OPTIONS)]))
 
 (defn create
   ([entity data]

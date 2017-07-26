@@ -69,11 +69,14 @@
                                                 entity  (e/entity-from-src jsobj)
                                                 handler (get-in @e/events [(:type entity) part event-type])]
                                              (when (not (nil? handler))
+                                               (.setCoords jsobj)
                                                (handler {:src jsobj
                                                          :part part
                                                          :entity entity
                                                          :canvas canvas
-                                                         :event e})))))))))
+                                                         :event e})
+                                               (.renderAll canvas)))))))))
+
 
 (defn initialize-page [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))

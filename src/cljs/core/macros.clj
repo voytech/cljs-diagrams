@@ -32,18 +32,24 @@
      (when (not (nil? page-var#))
        (let [~canv-var (:canvas page-var#)] ~@body))))
 
+(defn transpose-macro [body]
+  (apply merge (map (fn [e] {(keyword (name (first e))) (last e)}) body)))
+
 (defmacro defentity [name data options & body]
-  (let [drawables (second (first body))
-        behaviours (second (last body))]
-   `(defn ~name [~data ~options]
-       (doseq [behaviour# (partition 3 ((fn[] ~behaviours)))]
-         (let [entity-name# (name '~name)
-               part-name# (first behaviour#)
-               event-type# (second behaviour#)
-               handler# (last behaviour#)]
-           (core.entities/handle-event entity-name#
-                                       part-name#
-                                       event-type#
-                                       (fn [e#] (when (= (:part e#) part-name#) (handler# e#))))))
-       (let [parts# (map #(core.entities/Part. (first %) (last %)) (partition 2 ((fn[] ~drawables))))]
-         (core.entities/create-entity (name '~name) parts#)))))
+  (let [transposition (transpose-macro body)]
+    (let [drawables (:with-drawables transposition)
+          behaviours (:with-behaviours transposition)]
+      (when (or (nil? drawables) (nil? behaviours))
+        (throw (Error. "Provide drawables and behaviours definition within entitity definition")))
+     `(defn ~name [~data ~options]
+         (doseq [behaviour# (partition 3 ((fn[] ~behaviours)))]
+           (let [entity-name# (name '~name)
+                 part-name# (first behaviour#)
+                 event-type# (second behaviour#)
+                 handler# (last behaviour#)]
+             (core.entities/handle-event entity-name#
+                                         part-name#
+                                         event-type#
+                                         (fn [e#] (when (= (:part e#) part-name#) (handler# e#))))))
+         (let [parts# (map #(core.entities/Part. (first %) (last %)) (partition 2 ((fn[] ~drawables))))]
+           (core.entities/create-entity (name '~name) parts#))))))

@@ -4,10 +4,10 @@
             [core.toolctors :as ctors]))
 
 
-(t/create-tool "Rectangle"
+(t/create-tool "Rectangle Node"
                :basic-tools
-               (ctors/create ctors/rect))
+               (ctors/create ctors/rectangle-node))
 
-(t/create-tool "Connector"
+(t/create-tool "Relation"
                :basic-tools
-               (ctors/create ctors/connector-line [0 0 100 0]))
+               (ctors/create ctors/relation [0 0 100 0]))

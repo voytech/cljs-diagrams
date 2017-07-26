@@ -16,10 +16,6 @@
     (js/fabric.Image. data (clj->js options))
     (js/fabric.Image. data)))
 
-(defn moving-connector-terminator [terminator-type pointX pointY])
-
-
-
 (defn highlight [color]
   (fn [e]
     (let [src    (:src e)
@@ -28,6 +24,11 @@
           canvas (:canvas e)])
     (.set src (clj->js {:color color}))))
 
+(defn overlaying? [src trg]
+    (or (.intersectsWithObject src trg)
+        (.isContainedWithinObject src trg)
+        (.isContainedWithinObject trg src)))
+
 (defn intersects-any? [parts yes]
   (fn [e]
     (let [src    (:src e)
@@ -35,15 +36,15 @@
           part   (:part e)
           canvas (:canvas e)]
       (when (contains? #{"end" "start"} part)
-        (.forEachObject canvas
-                        #(when (and (not (== % src)) (contains? parts (.-refPartId %)))
-                           (when (.intersectsWithObject src %)
+          (.forEachObject canvas
+                          #(when (and (not (== % src)) (contains? parts (.-refPartId %)))
                              (let [trg %
                                    src-ent (e/entity-from-src src)
                                    trg-ent (e/entity-from-src trg)
                                    src-part (.-refPartId src)
                                    trg-part (.-refPartId trg)]
-                                (yes {:src src :part src-part :entity src-ent} {:src trg :part trg-part :entity trg-ent})))))))))
+                               (when (overlaying? src %)
+                                 (yes {:src src :part src-part :entity src-ent} {:src trg :part trg-part :entity trg-ent})))))))))
 
 (defn intersects? [part_ yes no]
   (fn [e]
@@ -59,22 +60,9 @@
                                  trg-ent (e/entity-from-src trg)
                                  src-part (.-refPartId src)
                                  trg-part (.-refPartId trg)]
-                              (if (.intersectsWithObject src %)
+                              (if (overlaying? src %)
                                 (yes {:src src :part src-part :entity src-ent} {:src trg :part trg-part :entity trg-ent})
                                 (no  {:src src :part src-part :entity src-ent} {:src trg :part trg-part :entity trg-ent})))))))))
-
-
-
-(defn all [ & handlers]
-  (fn [e]
-    (doseq [handler handlers]
-      (handler e))))
-
-(defn toggle-connectors [entity toggle]
-  (doseq [part (:parts entity)]
-    (when (contains? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (:name part))
-      (let [src (:src part)]
-         (.set src (clj->js {:visible toggle :borderColor "#ff0000"}))))))
 
 (defn moving-entity [part-name]
   (fn [e]
@@ -88,6 +76,7 @@
             (.set (:src part) (clj->js {:left (+ (.-left (:src part)) movementX)
                                         :top  (+ (.-top (:src part)) movementY)}))
             (.setCoords (:src part))))
+        ;(js/console.log (clj->js entity))
         (doseq [relation (:relationships entity)]
             (let [end (:end relation)
                   related-entity (e/entity-by-id (:entity-id relation))
@@ -97,13 +86,67 @@
                                                   :top  (+ (.-top (:src related-part)) movementY)}))
               (.setCoords (:src related-part))
               (.set (:src related-cl)
-                (if (= :start end)
+                (if (= "start" end)
                   (clj->js {:x1 (+ (.-x1 (:src related-cl)) movementX)
                             :y1  (+ (.-y1 (:src related-cl)) movementY)})
                   (clj->js {:x2 (+ (.-x2 (:src related-cl)) movementX)
                             :y2  (+ (.-y2 (:src related-cl)) movementY)})))
               (.setCoords (:src related-cl))))))))
 
+
+(defn all [ & handlers]
+  (fn [e]
+    (doseq [handler handlers]
+      (handler e))))
+
+(defn for-entity [f]
+  (fn [e]
+    (let [entity (:entity e)]
+      (f entity))))
+
+(defn relations-validate [entity]
+  (doseq [relation (:relationships entity)]
+    (let [end (:end relation)
+          end-part   (e/entity-part entity end)
+          end-src    (:src end-part)
+          related-entity (e/entity-by-id (:entity-id relation))
+          cnt (count (:parts related-entity))
+          i (atom 0)]
+        (doseq [part (:parts related-entity)]
+          (let [related-part-src (:src part)]
+            (if (not (overlaying? end-src related-part-src))
+              (swap! i inc))))
+        (when (= @i cnt)
+          (e/disconnect-entities entity related-entity)))))
+
+
+(defn align-center [src trg]
+  (let [srcCx   (+ (.-left src) (/ (.-width src) 2))
+        srcCy   (+ (.-top src) (/ (.-width src) 2))
+        trgLeft (- srcCx (/ (.-width trg) 2))
+        trgTop  (- srcCy (/ (.-height trg) 2))]
+      (.set trg (clj->js {:left trgLeft :top trgTop}))
+      (.setCoords trg)))
+
+(defn position-endpoint [entity terminator-end left top]
+  (let [terminator-part   (e/entity-part entity terminator-end)
+        relation-part     (e/entity-part entity "connector")]
+    (.set (:src terminator-part) (clj->js {:left left
+                                           :top  top}))
+    (.setCoords (:src terminator-part))
+    (.set (:src relation-part)
+      (if (= "start" terminator-end)
+        (clj->js {:x1 (+ (.-left (:src terminator-part)) (/ (.-width  (:src terminator-part)) 2))
+                  :y1 (+ (.-top (:src terminator-part)) (/ (.-height (:src terminator-part)) 2))})
+        (clj->js {:x2 (+ (.-left (:src terminator-part)) (/ (.-width  (:src terminator-part)) 2))
+                  :y2 (+ (.-top (:src terminator-part)) (/ (.-height (:src terminator-part)) 2))})))
+    (.setCoords (:src relation-part))))
+
+(defn toggle-connectors [entity toggle]
+  (doseq [part (:parts entity)]
+    (when (contains? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (:name part))
+      (let [src (:src part)]
+         (.set src (clj->js {:visible toggle :borderColor "#ff0000"}))))))
 
 (defn moving-connector [coordX coordY]
    (fn [e]
@@ -170,20 +213,21 @@
          "start"     (connector conS :moveable true :display "circle" :visible true)
          "end"       (connector conE :moveable true :display "circle" :visible true)]))
   (with-behaviours
-    ["start" "object:moving"  (all (moving-connector "x1" "y1") (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true)) (fn [src trg] (toggle-connectors (:entity trg) false))))
-     "start" "mouse:up"       (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/make-relationship (:entity src) (:entity trg) (:part src))))
-     "end"   "object:moving"  (all (moving-connector "x2" "y2") (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true)) (fn [src trg] (toggle-connectors (:entity trg) false))))
-     "end"   "mouse:up"       (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/make-relationship (:entity src) (:entity trg) (:part src))))]))
+    ["start" "object:moving"  (all (moving-connector "x1" "y1")
+                                   (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true))
+                                                       (fn [src trg] (toggle-connectors (:entity trg) false))))
+     "start" "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:part src))
+                                                                                                                                           (toggle-connectors (:entity trg) false)
+                                                                                                                                           (position-endpoint (:entity src) "start" (.-left (:src trg)) (.-top (:src trg)))))
+                                   (for-entity relations-validate))
 
-
-(defn circle [options])
-(defn triangle [options])
-(defn ellipse [options])
-(defn polyline [options])
-(defn polygon [options])
-(defn group [])
-(defn text [data options])
-(defn path [])
+     "end"   "object:moving"  (all (moving-connector "x2" "y2")
+                                   (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true))
+                                                       (fn [src trg] (toggle-connectors (:entity trg) false))))
+     "end"   "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:part src))
+                                                                                                                                           (toggle-connectors (:entity trg) false)
+                                                                                                                                           (position-endpoint (:entity src) "end" (.-left (:src trg)) (.-top (:src trg)))))
+                                   (for-entity relations-validate))]))
 
 (defn create
   ([entity data]

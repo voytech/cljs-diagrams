@@ -1,14 +1,20 @@
 (ns core.toolctors
- (:require [core.entities :as e])
+ (:require [core.entities :as e]
+           [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity]]))
+
+(declare position-endpoint)
+(declare calculate-angle)
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
 (def TRANSPARENT_FILL {:fill "rgb(255,255,255)"})
+(def DEFAULT_FILL {:fill "#666"})
 (def DEFAULT_STROKE {:stroke "#666" :strokeWidth 1.5})
-(def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false :lockRotation true})
+(def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false :lockRotation true :lockScalingX true :lockScalingY true})
 (def NO_DEFAULT_CONTROLS {:hasControls false :hasBorders false})
 (def INVISIBLE {:visible false})
 (def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "#666" :strokeWidth 1.5})
+(def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "#666" :strokeWidth 1.5})
 (def DEFAULT_OPTIONS {:highlight-color "red"
                       :normal-color "#666"
                       :highlight-width 3
@@ -82,19 +88,9 @@
         (doseq [relation (:relationships entity)]
             (let [end (:end relation)
                   related-entity (e/entity-by-id (:entity-id relation))
-                  related-part   (e/entity-part related-entity (name end))
-                  related-cl     (e/entity-part related-entity "connector")]
-              (.set (:src related-part) (clj->js {:left (+ (.-left (:src related-part)) movementX)
-                                                  :top  (+ (.-top (:src related-part)) movementY)}))
-              (.setCoords (:src related-part))
-              (.set (:src related-cl)
-                (if (= "start" end)
-                  (clj->js {:x1 (+ (.-x1 (:src related-cl)) movementX)
-                            :y1  (+ (.-y1 (:src related-cl)) movementY)})
-                  (clj->js {:x2 (+ (.-x2 (:src related-cl)) movementX)
-                            :y2  (+ (.-y2 (:src related-cl)) movementY)})))
-              (.setCoords (:src related-cl))))))))
-
+                  part (e/entity-part related-entity end)]
+                (position-endpoint related-entity end (-> part :src (.-left) (+ movementX))
+                                                      (-> part :src (.-top)  (+ movementY)))))))))
 
 (defn all [ & handlers]
   (fn [e]
@@ -130,9 +126,11 @@
       (.set trg (clj->js {:left trgLeft :top trgTop}))
       (.setCoords trg)))
 
-(defn position-endpoint [entity terminator-end left top]
-  (let [terminator-part   (e/entity-part entity terminator-end)
-        relation-part     (e/entity-part entity "connector")]
+(defn position-endpoint
+  ([entity terminator-end left top]
+   (let [terminator-part   (e/entity-part entity terminator-end)
+         relation-part     (e/entity-part entity "connector")
+         arrow             (e/entity-part entity "arrow")]
     (.set (:src terminator-part) (clj->js {:left left
                                            :top  top}))
     (.setCoords (:src terminator-part))
@@ -142,7 +140,18 @@
                   :y1 (+ (.-top (:src terminator-part)) (/ (.-height (:src terminator-part)) 2))})
         (clj->js {:x2 (+ (.-left (:src terminator-part)) (/ (.-width  (:src terminator-part)) 2))
                   :y2 (+ (.-top (:src terminator-part)) (/ (.-height (:src terminator-part)) 2))})))
-    (.setCoords (:src relation-part))))
+    (.setCoords (:src relation-part))
+
+    (if (= "end" terminator-end)
+      (.set (:src arrow) (clj->js {:left (.-x2 (:src relation-part))
+                                   :top  (.-y2 (:src relation-part))}))
+      (.setCoords (:src arrow)))
+    (let [x1 (-> relation-part :src (.-x1))
+          y1 (-> relation-part :src (.-y1))
+          x2 (-> relation-part :src (.-x2))
+          y2 (-> relation-part :src (.-y2))]
+       (.set (:src arrow) (clj->js {:angle (calculate-angle x1 y1 x2 y2)}))))))
+
 
 (defn toggle-connectors [entity toggle]
   (doseq [part (:parts entity)]
@@ -150,22 +159,20 @@
       (let [src (:src part)]
          (.set src (clj->js {:visible toggle :borderColor "#ff0000"}))))))
 
-(defn moving-connector [coordX coordY]
+(defn moving-endpoint []
    (fn [e]
       (let [src (:src e)
-            entity (:entity e)
-            connector (e/entity-part entity "connector")]
-         (.set (:src connector) (clj->js {(keyword coordX) (+ (.-left src) 8)
-                                          (keyword coordY) (+ (.-top src) 8)}))
-         (.setCoords (:src connector)))))
-
+            endpoint (:part e)
+            entity (:entity e)]
+         (position-endpoint entity endpoint (.-left src) (.-top  src)))))
 
 (defmulti connector (fn [point & {:keys [moveable display visible]}] display))
 
-(defmethod connector "circle" [point & {:keys [moveable display visible]}]
+(defmethod connector "circle" [point & {:keys [moveable display visible opacity]}]
   (let [options (merge {:left (- (first point) (:radius HANDLER_SMALL))
                         :top (- (last point)   (:radius HANDLER_SMALL))
-                        :visible visible}
+                        :visible visible
+                        :opacity opacity}
                        HANDLER_SMALL
                        NO_DEFAULT_CONTROLS)]
       (js/fabric.Circle. (clj->js options))))
@@ -180,6 +187,47 @@
                        NO_DEFAULT_CONTROLS)]
       (js/fabric.Rect. (clj->js options))))
 
+(defn arrow [data options]
+  (let [x1 (+ (:left options))
+        y1 (+ (:top options))
+        x2 (+ (:left options) (first (last (partition 2 data))))
+        y2 (+ (:top options)  (last  (last (partition 2 data))))
+        cX (/ (+ x1 x2) 2)
+        cY (/ (+ y1 y2) 2)
+        deltaX (- x1 cX)
+        deltaY (- y1 cY)]
+      (js/fabric.Triangle. (clj->js (merge {:left (+ x2 deltaX)
+                                            :top (+ y1 deltaY)
+                                            :originX "center"
+                                            :originY "center"
+                                            :angle 90
+                                            :width 20
+                                            :height 20}
+                                           RESTRICTED_BEHAVIOUR
+                                           NO_DEFAULT_CONTROLS
+                                           DEFAULT_STROKE
+                                           DEFAULT_FILL)))))
+
+(defn calculate-angle [x1 y1 x2 y2]
+   (let [PI 3.14
+         x (- x2 x1)
+         y (- y2 y1)
+         angle (if (= x 0)
+                   (if (= y 0)
+                     0
+                     (if (> y 0)
+                       (/ PI 2)
+                       (/ (* PI 3) 2)))
+                   (if (= y 0)
+                      (if (> x 0)
+                          0
+                          PI)
+                      (if (< x 0)
+                        (+ (js/Math.atan (/ y x)) PI)
+                        (if (< y 0)
+                          (+ (js/Math.atan (/ y x)) (* 2 PI))
+                          (js/Math.atan (/ y x))))))]
+      (+ (/ (* angle 180) PI) 90)))
 
 (defentity rectangle-node data options
   (with-drawables
@@ -201,7 +249,7 @@
   (with-behaviours
     ["body" "object:moving" (moving-entity "body")
      "body" "mouse:over" (highlight true DEFAULT_OPTIONS)
-     "body" "mouse:out" (highlight false DEFAULT_OPTIONS)]))
+     "body" "mouse:out"  (highlight false DEFAULT_OPTIONS)]))
 
 
 (defentity relation data options
@@ -214,10 +262,11 @@
           conS (first points-pairs-offset)
           conE (last points-pairs-offset)]
         ["connector" (js/fabric.Line. (clj->js (flatten points-pairs-offset)) (clj->js enriched-opts))
-         "start"     (connector conS :moveable true :display "circle" :visible true)
-         "end"       (connector conE :moveable true :display "circle" :visible true)]))
+         "start"     (connector conS :moveable true :display "circle" :visible true :opacity 1)
+         "arrow"     (arrow data options)
+         "end"       (connector conE :moveable true :display "circle" :visible true :opacity 0)]))
   (with-behaviours
-    ["start" "object:moving"  (all (moving-connector "x1" "y1")
+    ["start" "object:moving"  (all (moving-endpoint)
                                    (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true))
                                                        (fn [src trg] (toggle-connectors (:entity trg) false))))
      "start" "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:part src))
@@ -227,7 +276,7 @@
      "start" "mouse:over"     (highlight true DEFAULT_OPTIONS)
      "start" "mouse:out"      (highlight false DEFAULT_OPTIONS)
 
-     "end"   "object:moving"  (all (moving-connector "x2" "y2")
+     "end"   "object:moving"  (all (moving-endpoint)
                                    (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true))
                                                        (fn [src trg] (toggle-connectors (:entity trg) false))))
      "end"   "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:part src))

@@ -6,8 +6,12 @@ A minimal plan is to have following functionalities:
 - defining new attributes and attribute categories.
 - aggregating attributes within entites. Possible entitities attributes categories are : name, description, priority, status.
 - creating relations and making relationships between nodes.
+- relations would be one-directional, bi-directional, and without direction.
 - aggregating attributes within relations. (e.g. relation-type attribute category instance: relation-type : relies-on | depends-on | is-child-of | happens-after )
-- in minimal plan appl will not be complianat with UML specs, relations hovewer would be one-directional, bi-directional, and without direction.
+- in minimal plan app will not be complianat with UML specs
+- Api for retrieval of data from nodes (retrieveing actual attribute values, narrowing relationships)
+
+
 
 ## Dependencies
 

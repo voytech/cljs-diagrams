@@ -37,19 +37,10 @@
 
 (defmacro defentity [name data options & body]
   (let [transposition (transpose-macro body)]
-    (let [drawables (:with-drawables transposition)
-          behaviours (:with-behaviours transposition)]
-      (when (or (nil? drawables) (nil? behaviours))
+    (let [drawables (:with-drawables transposition)]
+      (when (nil? drawables)
         (throw (Error. "Provide drawables and behaviours definition within entitity definition")))
      `(defn ~name [~data ~options]
-         (doseq [behaviour# (partition 3 ((fn[] ~behaviours)))]
-           (let [entity-name# (name '~name)
-                 drawable-name# (first behaviour#)
-                 event-type# (second behaviour#)
-                 handler# (last behaviour#)]
-             (core.entities/handle-event entity-name#
-                                         drawable-name#
-                                         event-type#
-                                         (fn [e#] (when (= (:drawable e#) drawable-name#) (handler# e#))))))
-         (let [drawables# (mapv #(core.entities/EntityDrawable. (first %) (second %) (last %)) (partition 3 ((fn[] ~drawables))))]
-           (core.entities/create-entity (name '~name) drawables#))))))
+         (let [e# (core.entities/create-entity (name '~name) [])]
+           (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))             
+           (core.entities/entity-by-id (:uid e#)))))))

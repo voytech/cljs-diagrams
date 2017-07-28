@@ -19,7 +19,7 @@
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 
-(defrecord EntityDrawable [name src type])
+(defrecord EntityDrawable [name type src rels])
 
 (defprotocol IEntity
   (add-attribute [this attribute])
@@ -87,6 +87,10 @@
 (defn entity-part-name-from-src [src]
   (.-refPartId src))
 
+(defn update-drawable-characteristic [entity name char value])
+
+(defn remove-drawable-characteristic [entity name char])
+
 (defn get-entity-drawable [entity name]
   (let [drawables (:drawables entity)]
     (first (filter #(= name (:name %)) drawables))))
@@ -95,17 +99,26 @@
   (let [drawables (:drawables entity)]
     (filter #(= name (:name %)) drawables)))
 
-(defn add-entity-drawable [entity & drawables]
-  (js/console.log (clj->js (vec drawables)))
-  (doseq [drawable (vec drawables)]
-    (make-js-property (:src drawable) ID  (:uid entity))
-    (make-js-property (:src drawable) PART_ID (:name drawable))
-    (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
-       (swap! entities assoc-in [(:uid entity) :drawables] drawables))))
-
-
-(defmulti create-entity-for-type (fn [type data-obj] type))
-
 (defn handle-event [entity-type drawable event handler]
   (when (nil? (get-in @events [entity-type drawable event]))
     (swap! events assoc-in [entity-type drawable event] handler)))
+
+(defn add-entity-drawable [entity & drawables]
+  (doseq [drawable_m (vec drawables)]
+    (let [drawable (EntityDrawable. (:name drawable_m)
+                                    (:type drawable_m)
+                                    (:src  drawable_m)
+                                    (:rels drawable_m))]
+      (make-js-property (:src drawable) ID  (:uid entity))
+      (make-js-property (:src drawable) PART_ID (:name drawable))
+      (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
+         (swap! entities assoc-in [(:uid entity) :drawables] drawables)))
+    (when (not (nil? (:behaviours drawable_m)))
+      (doseq [event-type (keys (:behaviours drawable_m))]
+        (handle-event (:type entity)
+                      (:name drawable_m)
+                      event-type
+                      (get (:behaviours drawable_m) event-type))))))
+
+
+(defmulti create-entity-for-type (fn [type data-obj] type))

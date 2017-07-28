@@ -52,6 +52,7 @@
                       "object:scaling" "object:selected"
                       "mouse:down"     "mouse:up"
                       "mouse:over"     "mouse:out"
+                      "mouse:click"
                       "mouse:dbclick"]]
       (.on canvas (js-obj event-type (fn [e]
                                         (when-let [jsobj (.-target e)]

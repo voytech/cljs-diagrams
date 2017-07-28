@@ -125,28 +125,33 @@
   (fn [e]
     (let [entity (:entity e)
           line (e/get-entity-drawable entity (:drawable e))
+          line-start-breakpoint (e/get-entity-drawable entity (:start (:rels line)))
+          line-end-breakpoint   (e/get-entity-drawable entity (:end (:rels line)))
           src  (:src line)
           oeX  (.-x2 src)
           oeY  (.-y2 src)
           eX   (.-layerX (.-e (:event e)))
           eY   (.-layerY (.-e (:event e)))]
-      (.set src (clj->js {:x2 eX :y2 eY}))
-      (.setCoords src)
-      (let [relation-id (str "connector-" (random-uuid))
-            breakpoint-id (str "break-point-" (random-uuid))])
-      (e/add-entity-drawable entity
-        {:name  relation-id
-         :type  :relation
-         :src   (relation-line eX eY oeX oeY CONNECTOR_DEFAULT_OPTIONS)
-         :behaviours {"mouse:down" (break-line)}}
-        {:name  breakpoint-id
-         :type  :breakpoint
-         :src   (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
-         :rels {:end (name line) :start relation-id}
-         :behaviours {"mouse:over"    (highlight true DEFAULT_OPTIONS)
-                      "mouse:out"     (highlight false DEFAULT_OPTIONS)
-                      "object:moving" (moving-endpoint)}})
-      (p/sync-entity (e/entity-by-id (:uid entity))))))
+      (when (= :relation (:type line))
+        (.set src (clj->js {:x2 eX :y2 eY}))
+        (.setCoords src)
+        (let [relation-id   (str (random-uuid))
+              breakpoint-id (str (random-uuid))
+              is-penultimate (= true (:penultimate (:rels line-start-breakpoint)))]
+          (e/add-entity-drawable entity
+            {:name  relation-id
+             :type  :relation
+             :src   (relation-line eX eY oeX oeY CONNECTOR_DEFAULT_OPTIONS)
+             :rels {:start breakpoint-id :end (:name line-end-breakpoint)}
+             :behaviours {"mouse:up" (break-line)}}
+            {:name  breakpoint-id
+             :type  :breakpoint
+             :src   (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
+             :rels {:end (:name line) :start relation-id :penultimate is-penultimate}
+             :behaviours {"mouse:over"    (highlight true DEFAULT_OPTIONS)
+                          "mouse:out"     (highlight false DEFAULT_OPTIONS)
+                          "object:moving" (moving-endpoint)}})
+          (p/sync-entity (e/entity-by-id (:uid entity))))))))
 
 
 (defn all [ & handlers]
@@ -193,6 +198,10 @@
                                      (e/get-entity-drawable entity name)
                                      nil)
          arrow-drawable      (e/get-entity-drawable entity "arrow")]
+    (js/console.log (clj->js entity))
+    (js/console.log endpoint-name)
+    (js/console.log (clj->js starts-relation-drawable))
+    (js/console.log (clj->js ends-relation-drawable))
     (.set (:src endpoint-drawable) (clj->js {:left left
                                              :top  top}))
     (.setCoords (:src endpoint-drawable))
@@ -347,7 +356,7 @@
         [{:name "connector"
           :type :relation
           :src  (relation-line (first conS) (last conS) (first conE) (last conE) enriched-opts)
-          :behaviours {"mouse:down" (break-line)}
+          :behaviours {"mouse:up" (break-line)}
           :rels {:start "start" :end "end"}}
 
          {:name "start"

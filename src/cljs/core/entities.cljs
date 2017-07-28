@@ -19,7 +19,7 @@
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 
-(defrecord Part [name src])
+(defrecord EntityDrawable [name src type])
 
 (defprotocol IEntity
   (add-attribute [this attribute])
@@ -27,7 +27,7 @@
 
 (defrecord Entity [uid
                    type
-                   parts
+                   drawables
                    attributes
                    relationships]
 
@@ -46,12 +46,12 @@
 
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
-  ([type parts]
+  ([type drawables]
    (let [uid (str (random-uuid))
-         entity (Entity. uid type parts [] [])]
-      (doseq [part parts]
-        (make-js-property (:src part) ID  (:uid entity))
-        (make-js-property (:src part) PART_ID (:name part)))
+         entity (Entity. uid type drawables [] [])]
+      (doseq [drawable drawables]
+        (make-js-property (:src drawable) ID  (:uid entity))
+        (make-js-property (:src drawable) PART_ID (:name drawable)))
       (swap! entities assoc uid entity)
       entity)))
 
@@ -87,12 +87,25 @@
 (defn entity-part-name-from-src [src]
   (.-refPartId src))
 
-(defn entity-part [entity partname]
-  (let [parts (:parts entity)]
-    (first (filter #(= partname (:name %)) parts))))
+(defn get-entity-drawable [entity name]
+  (let [drawables (:drawables entity)]
+    (first (filter #(= name (:name %)) drawables))))
+
+(defn get-entity-drawables [entity name]
+  (let [drawables (:drawables entity)]
+    (filter #(= name (:name %)) drawables)))
+
+(defn add-entity-drawable [entity & drawables]
+  (js/console.log (clj->js (vec drawables)))
+  (doseq [drawable (vec drawables)]
+    (make-js-property (:src drawable) ID  (:uid entity))
+    (make-js-property (:src drawable) PART_ID (:name drawable))
+    (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
+       (swap! entities assoc-in [(:uid entity) :drawables] drawables))))
+
 
 (defmulti create-entity-for-type (fn [type data-obj] type))
 
-(defn handle-event [entity-type part event handler]
-  (when (nil? (get-in @events [entity-type part event]))
-    (swap! events assoc-in [entity-type part event] handler)))
+(defn handle-event [entity-type drawable event handler]
+  (when (nil? (get-in @events [entity-type drawable event]))
+    (swap! events assoc-in [entity-type drawable event] handler)))

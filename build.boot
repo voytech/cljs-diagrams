@@ -37,7 +37,7 @@
         (cljs-devtools)
         (dirac)
         (reload)
-        (build))) 
+        (build)))
 
 (deftask production []
   (task-options! cljs {:optimizations :advanced})

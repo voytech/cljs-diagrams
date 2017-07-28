@@ -1,16 +1,24 @@
 (ns core.toolctors
  (:require [core.entities :as e]
+           [core.project :as p]
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity]]))
 
 (declare position-endpoint)
+(declare relation-line)
+(declare endpoint)
 (declare calculate-angle)
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
 (def TRANSPARENT_FILL {:fill "rgb(255,255,255)"})
 (def DEFAULT_FILL {:fill "#666"})
 (def DEFAULT_STROKE {:stroke "#666" :strokeWidth 1.5})
-(def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false :lockRotation true :lockScalingX true :lockScalingY true})
+(def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false
+                           :lockRotation true
+                           :lockScalingX true
+                           :lockScalingY true})
+(def LOCKED_MOVEMENT      {:lockMovementX true
+                           :lockMovementY true})
 (def NO_DEFAULT_CONTROLS {:hasControls false :hasBorders false})
 (def INVISIBLE {:visible false})
 (def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "#666" :strokeWidth 1.5})
@@ -19,7 +27,7 @@
                       :normal-color "#666"
                       :highlight-width 3
                       :normal-width 1.5})
-;; Below is an interface to js Fabric.js library.
+(def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
 
 (defn image [data options]
   (if (not (nil? options))
@@ -33,6 +41,23 @@
                              :strokeWidth (if bln (:highlight-width options)
                                                   (:normal-width options))}))))
 
+(defn is-break-point [x1 y1 x2 y2 bx by]
+  (let [dx (- x2 x1)
+        dy (- y2 y2)
+        l (- (* by dx) (* y1 dx))
+        r (- (* bx dy) (* x1 dy))]
+       (= l r)))
+
+(defn test-break-point []
+  (fn [e]
+    (let [entity (:entity e)
+          start-connector (e/get-entity-drawable entity "start")
+          end-connector (e/get-entity-drawable entity "end")
+          sc-src (:src start-connector)
+          ec-src (:src end-connector)]
+        (js/console.log  (.-e (:event e))))))
+
+
 (defn overlaying? [src trg]
     (or (.intersectsWithObject src trg)
         (.isContainedWithinObject src trg)
@@ -42,7 +67,7 @@
   (fn [e]
     (let [src    (:src e)
           entity (:entity e)
-          part   (:part e)
+          part   (:drawable e)
           canvas (:canvas e)]
       (when (contains? #{"end" "start"} part)
           (.forEachObject canvas
@@ -53,13 +78,13 @@
                                    src-part (.-refPartId src)
                                    trg-part (.-refPartId trg)]
                                (when (overlaying? src %)
-                                 (yes {:src src :part src-part :entity src-ent} {:src trg :part trg-part :entity trg-ent})))))))))
+                                 (yes {:src src :drawable src-part :entity src-ent} {:src trg :drawable trg-part :entity trg-ent})))))))))
 
 (defn intersects? [part_ yes no]
   (fn [e]
     (let [src    (:src e)
           entity (:entity e)
-          part   (:part e)
+          part   (:drawable e)
           canvas (:canvas e)]
       (when (contains? #{"end" "start"} part)
         (.forEachObject canvas
@@ -70,27 +95,49 @@
                                  src-part (.-refPartId src)
                                  trg-part (.-refPartId trg)]
                               (if (overlaying? src %)
-                                (yes {:src src :part src-part :entity src-ent} {:src trg :part trg-part :entity trg-ent})
-                                (no  {:src src :part src-part :entity src-ent} {:src trg :part trg-part :entity trg-ent})))))))))
+                                (yes {:src src :drawable src-part :entity src-ent} {:src trg :drawable trg-part :entity trg-ent})
+                                (no  {:src src :drawable src-part :entity src-ent} {:src trg :drawable trg-part :entity trg-ent})))))))))
 
-(defn moving-entity [part-name]
+(defn moving-entity [drawable-name]
   (fn [e]
-    (when (= (:part e) part-name)
+    (when (= (:drawable e) drawable-name)
       (let [entity (:entity e)
             event (:event e)
             movementX (.-movementX (.-e event))
             movementY (.-movementY (.-e event))]
-        (doseq [part (:parts entity)]
-          (when (not (= (:name part) part-name))
-            (.set (:src part) (clj->js {:left (+ (.-left (:src part)) movementX)
-                                        :top  (+ (.-top (:src part)) movementY)}))
-            (.setCoords (:src part))))
+        (doseq [drawable (:drawables entity)]
+          (when (not (= (:name drawable) drawable-name))
+            (.set (:src drawable) (clj->js {:left (+ (.-left (:src drawable)) movementX)
+                                            :top  (+ (.-top (:src drawable)) movementY)}))
+            (.setCoords (:src drawable))))
         (doseq [relation (:relationships entity)]
             (let [end (:end relation)
                   related-entity (e/entity-by-id (:entity-id relation))
-                  part (e/entity-part related-entity end)]
-                (position-endpoint related-entity end (-> part :src (.-left) (+ movementX))
-                                                      (-> part :src (.-top)  (+ movementY)))))))))
+                  drawable (e/get-entity-drawable related-entity end)]
+                (position-endpoint related-entity end (-> drawable :src (.-left) (+ movementX))
+                                                      (-> drawable :src (.-top)  (+ movementY)))))))))
+
+(defn assert-drawable [event name]
+  (= (name (:drawable event))))
+
+(defn break-line []
+  (fn [e]
+    (let [entity (:entity e)
+          line (e/get-entity-drawable entity (:drawable e))
+          src  (:src line)
+          oeX  (.-x2 src)
+          oeY  (.-y2 src)
+          eX   (.-layerX (.-e (:event e)))
+          eY   (.-layerY (.-e (:event e)))]
+      (.set src (clj->js {:x2 eX :y2 eY}))
+      (.setCoords src)
+      (js/console.log (clj->js entity))
+      (e/add-entity-drawable entity
+        (e/EntityDrawable. "connector"   (relation-line eX eY  oeX  oeY   CONNECTOR_DEFAULT_OPTIONS)  :relation)
+        (e/EntityDrawable. "break-point" (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1) :breakpoint))
+      (js/console.log (clj->js (e/entity-by-id (:uid entity))))
+      (p/sync-entity (e/entity-by-id (:uid entity))))))
+
 
 (defn all [ & handlers]
   (fn [e]
@@ -105,14 +152,14 @@
 (defn relations-validate [entity]
   (doseq [relation (:relationships entity)]
     (let [end (:end relation)
-          end-part   (e/entity-part entity end)
+          end-part   (e/get-entity-drawable entity end)
           end-src    (:src end-part)
           related-entity (e/entity-by-id (:entity-id relation))
-          cnt (count (:parts related-entity))
+          cnt (count (:drawables related-entity))
           i (atom 0)]
-        (doseq [part (:parts related-entity)]
-          (let [related-part-src (:src part)]
-            (if (not (overlaying? end-src related-part-src))
+        (doseq [drawable (:drawables related-entity)]
+          (let [related-d-src (:src drawable)]
+            (if (not (overlaying? end-src related-d-src))  ; use filter instead of doseq here to make it more declaratice
               (swap! i inc))))
         (when (= @i cnt)
           (e/disconnect-entities entity related-entity)))))
@@ -128,9 +175,9 @@
 
 (defn position-endpoint
   ([entity terminator-end left top]
-   (let [terminator-part   (e/entity-part entity terminator-end)
-         relation-part     (e/entity-part entity "connector")
-         arrow             (e/entity-part entity "arrow")]
+   (let [terminator-part   (e/get-entity-drawable entity terminator-end)
+         relation-part     (e/get-entity-drawable entity "connector")
+         arrow             (e/get-entity-drawable entity "arrow")]
     (.set (:src terminator-part) (clj->js {:left left
                                            :top  top}))
     (.setCoords (:src terminator-part))
@@ -153,22 +200,22 @@
        (.set (:src arrow) (clj->js {:angle (calculate-angle x1 y1 x2 y2)}))))))
 
 
-(defn toggle-connectors [entity toggle]
-  (doseq [part (:parts entity)]
-    (when (contains? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (:name part))
-      (let [src (:src part)]
+(defn toggle-endpoints [entity toggle]
+  (doseq [drawable (:drawables entity)]
+    (when (contains? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (:name drawable))
+      (let [src (:src drawable)]
          (.set src (clj->js {:visible toggle :borderColor "#ff0000"}))))))
 
 (defn moving-endpoint []
    (fn [e]
       (let [src (:src e)
-            endpoint (:part e)
+            endpoint (:drawable e)
             entity (:entity e)]
          (position-endpoint entity endpoint (.-left src) (.-top  src)))))
 
-(defmulti connector (fn [point & {:keys [moveable display visible]}] display))
+(defmulti endpoint (fn [point & {:keys [moveable display visible]}] display))
 
-(defmethod connector "circle" [point & {:keys [moveable display visible opacity]}]
+(defmethod endpoint "circle" [point & {:keys [moveable display visible opacity]}]
   (let [options (merge {:left (- (first point) (:radius HANDLER_SMALL))
                         :top (- (last point)   (:radius HANDLER_SMALL))
                         :visible visible
@@ -177,7 +224,7 @@
                        NO_DEFAULT_CONTROLS)]
       (js/fabric.Circle. (clj->js options))))
 
-(defmethod connector "rect" [point & {:keys [moveable display visible]}]
+(defmethod endpoint "rect" [point & {:keys [moveable display visible]}]
   (let [options (merge {:left (- (first point) (:radius HANDLER_SMALL))
                         :top (- (last point)   (:radius HANDLER_SMALL))
                         :width (* 2 (:radius HANDLER_SMALL))
@@ -196,17 +243,21 @@
         cY (/ (+ y1 y2) 2)
         deltaX (- x1 cX)
         deltaY (- y1 cY)]
-      (js/fabric.Triangle. (clj->js (merge {:left (+ x2 deltaX)
+      (js/fabric.Triangle. (clj->js (merge {:left x2
                                             :top (+ y1 deltaY)
                                             :originX "center"
                                             :originY "center"
                                             :angle 90
                                             :width 20
                                             :height 20}
+                                           LOCKED_MOVEMENT
                                            RESTRICTED_BEHAVIOUR
                                            NO_DEFAULT_CONTROLS
                                            DEFAULT_STROKE
                                            DEFAULT_FILL)))))
+
+(defn relation-line [x1 y1 x2 y2 options]
+  (js/fabric.Line. (clj->js [ x1 y1 x2 y2 ])  (clj->js options)))
 
 (defn calculate-angle [x1 y1 x2 y2]
    (let [PI 3.14
@@ -241,15 +292,15 @@
           conR    (vector (+ (:left options) (:width DEFAULT_SIZE_OPTS)) (+ (/ (:height DEFAULT_SIZE_OPTS) 2) (:top options)))
           conT    (vector (+ (/ (:width DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
           conB    (vector (+ (/ (:width DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height DEFAULT_SIZE_OPTS)))]
-      ["connector-left"   (connector conL :moveable false :display "rect" :visibile false)
-       "connector-right"  (connector conR :moveable false :display "rect" :visibile false)
-       "connector-top"    (connector conT :moveable false :display "rect" :visibile false)
-       "connector-bottom" (connector conB :moveable false :display "rect" :visibile false)
-       "body"             (js/fabric.Rect. (clj->js enriched-opts))]))
+      ["connector-left"   (endpoint conL :moveable false :display "rect" :visibile false) :endpoint
+       "connector-right"  (endpoint conR :moveable false :display "rect" :visibile false) :endpoint
+       "connector-top"    (endpoint conT :moveable false :display "rect" :visibile false) :endpoint
+       "connector-bottom" (endpoint conB :moveable false :display "rect" :visibile false) :endpoint
+       "body"             (js/fabric.Rect. (clj->js enriched-opts))                       :main]))
   (with-behaviours
     ["body" "object:moving" (moving-entity "body")
-     "body" "mouse:over" (highlight true DEFAULT_OPTIONS)
-     "body" "mouse:out"  (highlight false DEFAULT_OPTIONS)]))
+     "body" "mouse:over"    (highlight true DEFAULT_OPTIONS)
+     "body" "mouse:out"     (highlight false DEFAULT_OPTIONS)]))
 
 
 (defentity relation data options
@@ -261,30 +312,31 @@
           points-pairs-offset (map #(vector (+ (first %) offset-x) (+ (last %) offset-y)) points-pairs)
           conS (first points-pairs-offset)
           conE (last points-pairs-offset)]
-        ["connector" (js/fabric.Line. (clj->js (flatten points-pairs-offset)) (clj->js enriched-opts))
-         "start"     (connector conS :moveable true :display "circle" :visible true :opacity 1)
-         "arrow"     (arrow data options)
-         "end"       (connector conE :moveable true :display "circle" :visible true :opacity 0)]))
+        ["connector"   (relation-line (first conS) (last conS) (first conE) (last conE) enriched-opts) :relation
+         "start"       (endpoint conS :moveable true :display "circle" :visible true :opacity 1)       :endpoint
+         "arrow"       (arrow data options)                                                            :decorator
+         "end"         (endpoint conE :moveable true :display "circle" :visible true :opacity 0)       :endpoint]))
   (with-behaviours
     ["start" "object:moving"  (all (moving-endpoint)
-                                   (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true))
-                                                       (fn [src trg] (toggle-connectors (:entity trg) false))))
-     "start" "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:part src))
-                                                                                                                                           (toggle-connectors (:entity trg) false)
+                                   (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
+                                                       (fn [src trg] (toggle-endpoints (:entity trg) false))))
+     "start" "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:drawable src))
+                                                                                                                                           (toggle-endpoints (:entity trg) false)
                                                                                                                                            (position-endpoint (:entity src) "start" (.-left (:src trg)) (.-top (:src trg)))))
                                    (for-entity relations-validate))
      "start" "mouse:over"     (highlight true DEFAULT_OPTIONS)
      "start" "mouse:out"      (highlight false DEFAULT_OPTIONS)
 
      "end"   "object:moving"  (all (moving-endpoint)
-                                   (intersects? "body" (fn [src trg] (toggle-connectors (:entity trg) true))
-                                                       (fn [src trg] (toggle-connectors (:entity trg) false))))
-     "end"   "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:part src))
-                                                                                                                                           (toggle-connectors (:entity trg) false)
+                                   (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
+                                                       (fn [src trg] (toggle-endpoints (:entity trg) false))))
+     "end"   "mouse:up"       (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:drawable src))
+                                                                                                                                           (toggle-endpoints (:entity trg) false)
                                                                                                                                            (position-endpoint (:entity src) "end" (.-left (:src trg)) (.-top (:src trg)))))
                                    (for-entity relations-validate))
      "end" "mouse:over"       (highlight true DEFAULT_OPTIONS)
-     "end" "mouse:out"        (highlight false DEFAULT_OPTIONS)]))
+     "end" "mouse:out"        (highlight false DEFAULT_OPTIONS)
+     "connector" "mouse:down" (break-line)]))
 
 (defn create
   ([entity data]

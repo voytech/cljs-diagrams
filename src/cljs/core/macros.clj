@@ -44,12 +44,12 @@
      `(defn ~name [~data ~options]
          (doseq [behaviour# (partition 3 ((fn[] ~behaviours)))]
            (let [entity-name# (name '~name)
-                 part-name# (first behaviour#)
+                 drawable-name# (first behaviour#)
                  event-type# (second behaviour#)
                  handler# (last behaviour#)]
              (core.entities/handle-event entity-name#
-                                         part-name#
+                                         drawable-name#
                                          event-type#
-                                         (fn [e#] (when (= (:part e#) part-name#) (handler# e#))))))
-         (let [parts# (map #(core.entities/Part. (first %) (last %)) (partition 2 ((fn[] ~drawables))))]
-           (core.entities/create-entity (name '~name) parts#))))))
+                                         (fn [e#] (when (= (:drawable e#) drawable-name#) (handler# e#))))))
+         (let [drawables# (mapv #(core.entities/EntityDrawable. (first %) (second %) (last %)) (partition 3 ((fn[] ~drawables))))]
+           (core.entities/create-entity (name '~name) drawables#))))))

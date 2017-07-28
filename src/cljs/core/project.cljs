@@ -11,20 +11,17 @@
                                       with-current-canvas]])
 
 (declare add-item)
-(declare add-entity)
+(declare sync-entity)
 (declare visible-page)
 (declare id2idx)
 (declare idx2id)
 (declare proj-page-by-id)
 (declare proj-selected-page)
 (declare add-event-handler)
-(declare do-snap)
-(declare intersection-test)
 (declare obj-selected)
 (declare obj-modified)
 (declare obj-editing-start)
 (declare mouse-up)
-(declare reg-delegator)
 (declare register-handlers)
 
 ;;(defonce page-count (atom 4))
@@ -34,14 +31,6 @@
 
 (def last-change (atom 0))
 (def obj-editing (atom false))
-
-(def event-handlers (atom {"object:moving"   [#(do-snap %)]
-                                            #(intersection-test % "collide")
-                                            #(obj-editing-start % [:left :top])
-                           "object:rotating" [#(obj-editing-start % [:angle])]
-                           "object:scaling"  [#(obj-editing-start % [:scaleX :scaleY])]
-                           "object:selected" [#(obj-selected %)]
-                           "mouse:up" [#(mouse-up %) #(intersection-test % "collide-end")]}))
 
 (defn- changed [] (reset! last-change (dom/time-now)))
 
@@ -62,16 +51,17 @@
   (doseq [event-type ["object:moving"  "object:rotating"
                       "object:scaling" "object:selected"
                       "mouse:down"     "mouse:up"
-                      "mouse:over"     "mouse:out"]]
+                      "mouse:over"     "mouse:out"
+                      "mouse:dbclick"]]
       (.on canvas (js-obj event-type (fn [e]
                                         (when-let [jsobj (.-target e)]
-                                          (let [part    (.-refPartId jsobj)
+                                          (let [drawable (.-refPartId jsobj)
                                                 entity  (e/entity-from-src jsobj)
-                                                handler (get-in @e/events [(:type entity) part event-type])]
+                                                handler (get-in @e/events [(:type entity) drawable event-type])]
                                              (when (not (nil? handler))
                                                (.setCoords jsobj)
                                                (handler {:src jsobj
-                                                         :part part
+                                                         :drawable drawable
                                                          :entity entity
                                                          :canvas canvas
                                                          :event e})
@@ -87,13 +77,13 @@
     (.setWidth (:canvas page) width)
     (.setHeight (:canvas page) height)
     (swap! project assoc-in [:pages (keyword id)] page)
-    (dispatch-events (:canvas page)))
+    (dispatch-events (:canvas page))))
   ;;(let [canvas (:canvas (proj-page-by-id id))]
   ;;  (do (.setWidth canvas @zoom-page-width)
   ;;      (.setHeight canvas @zoom-page-height)
   ;;  (.setZoom canvas @zoom))
 
-  (reg-delegator id))
+
 
 (defn remove-page [domid]
   (let [page (proj-page-by-id domid)
@@ -130,27 +120,6 @@
     (let [neww (* div (:interval (:snapping @settings)))]
       (when (< rest (:attract (:snapping @settings))) (pos-prop-set target neww)))))
 
-(defn do-snap [event])
-
-
-(defn intersection-test [event funcname]
-  (let [trg (.-target event)]
-    (when (not (nil? trg))
-      (let [canvas (:canvas (proj-selected-page))]
-        (.forEachObject canvas
-                        #(when (not (== % trg))
-                           (when (or (.intersectsWithObject trg %)
-                                     (.isContainedWithinObject trg %)
-                                     (.isContainedWithinObject % trg))
-                             (let [trge (e/entity-from-src trg)
-                                   inte (e/entity-from-src %)
-                                   collide-trge (get (:event-handlers trge) funcname)
-                                   collide-inte (get (:event-handlers inte) funcname)]
-                               (cond
-                                 (not (nil? collide-inte)) (collide-inte inte trge)
-                                 (not (nil? collide-trge)) (collide-trge trge inte))
-                               (.renderAll canvas)))))))))
-
 (defn- obj-editing-start [event properties])
 
 (defn- obj-editing-end [])
@@ -177,28 +146,6 @@
 
 (defn- obj-selected [event])
 
-(defn- handle-delegator [key]
-  (fn [event]
-    (let [vec (get @event-handlers key)]
-      (doseq [func vec]
-        (func event)))))
-
-(defn- reg-delegator [id]
-  (let [page (:canvas (proj-page-by-id id))]
-    (.on page (js-obj "object:scaling" (fn [e]
-                                        (let [obj (.-target e)
-                                              strokeWidth (/ (.-strokeWidth obj) (/ (+ (.-scaleX obj) (.-scaleY obj)) 2))
-                                              activeObj (.getActiveObject page)]
-                                           (.set activeObj "strokeWidth" 2))))))
-  (doall
-   (map #(.on (:canvas (proj-page-by-id id)) (js-obj % (handle-delegator %)))
-         ["object:moving"
-          "object:rotating"
-          "object:scaling"
-          "object:selected"
-          "object:modified"
-          "mouse:down"
-          "mouse:up"])))
 
 (defn- page-event-handlers [id handlers]
   (doseq [entry handlers]
@@ -222,7 +169,7 @@
         context (dnd/event-layer-coords event)
         tool-obj (t/by-id tool-id)
         entity (t/invoke-tool tool-obj context)]
-      (add-entity entity)))
+      (sync-entity entity)))
 
 (defmethod dnd/dispatch-drop-event "imgid" [event]
   {:data (dom/by-id (dnd/get-dnd-data event "imgid"))
@@ -241,13 +188,19 @@
 ;;A dispatch then should be made on entity type.
 ;;
 
-(defn add-entity [entity]
+(defn- contains [canvas src]
+  (let [test (atom false)]
+    (.forEachObject canvas (fn [e] (when (= e src) (reset! test true))))
+    @test))
+
+(defn sync-entity [entity]
   (when (not (instance? e/Entity entity))
     (throw (js/Error. (str entity " is not an core.entities. Entity object"))))
-  (let [parts (:parts entity)
+  (let [drawables (:drawables entity)
         canvas (:canvas (proj-selected-page))]
-    (doseq [part parts]
-      (let [src (:src part)]
-        (.add canvas src)))
+    (doseq [drawable drawables]
+      (let [src (:src drawable)]
+        (when-not (contains canvas src)
+          (.add canvas src))))
     (.renderAll canvas)
     (changed)))

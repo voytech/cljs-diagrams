@@ -16,7 +16,7 @@
 
 (def canvas-initializing-wrapper
  (with-meta identity
-   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 800 :height 800})}))
+   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 1000 :height 1000})}))
 
 (defn FabricCanvas [id]
   (fn []

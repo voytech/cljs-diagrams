@@ -87,9 +87,21 @@
 (defn entity-part-name-from-src [src]
   (.-refPartId src))
 
-(defn update-drawable-characteristic [entity name char value])
+(defn index-of [coll v]
+  (let [i (count (take-while #(not= v %) coll))]
+    (when (or (< i (count coll))
+            (= v (last coll)))
+      i)))
 
-(defn remove-drawable-characteristic [entity name char])
+(defn update-drawable-rel [entity name char value]
+  (let [drawable (get-entity-drawable entity name)
+        i (index-of (:drawables entity) drawable)]
+     (swap! entities assoc-in [(:uid entity) :drawables i :rels char] value)))
+
+(defn remove-drawable-rel [entity name char]
+  (let [drawable (get-entity-drawable entity name)
+        i (index-of (:drawables entity))]
+     (swap! entities update-in [(:uid entity) :drawables i :rels ] dissoc char)))
 
 (defn get-entity-drawable [entity name]
   (let [drawables (:drawables entity)]

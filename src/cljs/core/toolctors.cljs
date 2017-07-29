@@ -151,7 +151,11 @@
              :behaviours {"mouse:over"    (highlight true DEFAULT_OPTIONS)
                           "mouse:out"     (highlight false DEFAULT_OPTIONS)
                           "object:moving" (moving-endpoint)}})
-          (p/sync-entity (e/entity-by-id (:uid entity))))))))
+          (p/sync-entity (e/entity-by-id (:uid entity)))
+          (e/update-drawable-rel entity (:name line) :end breakpoint-id)
+          (e/update-drawable-rel entity (:name line-end-breakpoint) :end relation-id)
+          (when (= true is-penultimate)
+            (e/update-drawable-rel entity (:name line-start-breakpoint) :penultimate false)))))))
 
 
 (defn all [ & handlers]
@@ -198,10 +202,6 @@
                                      (e/get-entity-drawable entity name)
                                      nil)
          arrow-drawable      (e/get-entity-drawable entity "arrow")]
-    (js/console.log (clj->js entity))
-    (js/console.log endpoint-name)
-    (js/console.log (clj->js starts-relation-drawable))
-    (js/console.log (clj->js ends-relation-drawable))
     (.set (:src endpoint-drawable) (clj->js {:left left
                                              :top  top}))
     (.setCoords (:src endpoint-drawable))

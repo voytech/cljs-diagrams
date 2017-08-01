@@ -99,6 +99,31 @@
                                 (yes {:src src :drawable src-part :entity src-ent} {:src trg :drawable trg-part :entity trg-ent})
                                 (no  {:src src :drawable src-part :entity src-ent} {:src trg :drawable trg-part :entity trg-ent})))))))))
 
+
+(defmulti get-related-entitity-drawable (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
+
+(defmulti position-entity-drawable (fn [entity drawable] [(:type entity) (:type drawable)]))
+
+
+(defmethod get-related-entitity-drawable "rectangle-node" [relation]
+  (let [related-entity (e/entity-by-id (:entity-id relation))]
+    (e/get-entity-drawable related-entity "body")))
+
+(defmethod position-entity-drawable [ "rectangle-node" :main ] [entity drawable left top])
+
+(defmethod get-related-entitity-drawable "relation" [relation]
+  (let [related-entity (e/entity-by-id (:entity-id relation))]
+    (e/get-entity-drawable related-entity (:end relation))))
+
+(defmethod position-entity-drawable [ "relation" :endpoint ] [entity drawable left top]
+  (position-endpoint entity (:name drawable) left top))
+
+(defmethod position-entity-drawable [ "relation" :startpoint ] [entity drawable left top]
+  (position-endpoint entity (:name drawable) left top))
+
+(defmethod position-entity-drawable [ "relation" :breakpoint ] [entity drawable left top]
+  (position-endpoint entity (:name drawable) left top))
+
 (defn moving-entity [drawable-name]
   (fn [e]
     (when (= (:drawable e) drawable-name)
@@ -112,11 +137,10 @@
                                             :top  (+ (.-top (:src drawable)) movementY)}))
             (.setCoords (:src drawable))))
         (doseq [relation (:relationships entity)]
-            (let [end (:end relation)
-                  related-entity (e/entity-by-id (:entity-id relation))
-                  drawable (e/get-entity-drawable related-entity end)]
-                (position-endpoint related-entity end (-> drawable :src (.-left) (+ movementX))
-                                                      (-> drawable :src (.-top)  (+ movementY)))))))))
+            (let [related-entity (e/entity-by-id (:entity-id relation))
+                  drawable (get-related-entitity-drawable relation)]
+               (position-entity-drawable related-entity drawable (-> drawable :src (.-left) (+ movementX))
+                                                                 (-> drawable :src (.-top)  (+ movementY)))))))))
 
 (defn assert-drawable [event name]
   (= (name (:drawable event))))

@@ -111,7 +111,7 @@
   (let [drawables (:drawables entity)]
     (filter #(= name (:name %)) drawables)))
 
-(defn handle-event [entity-type drawable event handler]
+(defn- handle-event [entity-type drawable event handler]
   (when (nil? (get-in @events [entity-type drawable event]))
     (swap! events assoc-in [entity-type drawable event] handler)))
 

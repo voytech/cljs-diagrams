@@ -29,6 +29,16 @@
                         :pages {}
                         :current-page-id :page-0}))
 
+(defonce event-store (atom []))
+
+(defn add-event [event]
+  (when (> (count @event-store) 20)
+    (swap! event-store subvec 1))
+  (swap! event-store conj event))
+
+(defn prev-event []
+  (last @event-store))
+
 (def last-change (atom 0))
 (def obj-editing (atom false))
 
@@ -61,12 +71,13 @@
                                                 handler (get-in @e/events [(:type entity) drawable event-type])]
                                              (when (not (nil? handler))
                                                (.setCoords jsobj)
-                                               (handler {:src jsobj
-                                                         :drawable drawable
-                                                         :entity entity
-                                                         :canvas canvas
-                                                         :event e})
+                                               (let [event {:src jsobj      :drawable drawable
+                                                            :entity entity  :canvas canvas
+                                                            :event e        :type event-type}]
+                                                 (handler event)
+                                                 (add-event event))
                                                (.renderAll canvas)))))))))
+
 
 
 (defn initialize-page [id {:keys [width height]}]

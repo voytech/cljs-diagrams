@@ -99,55 +99,124 @@
                                 (yes {:src src :drawable src-part :entity src-ent} {:src trg :drawable trg-part :entity trg-ent})
                                 (no  {:src src :drawable src-part :entity src-ent} {:src trg :drawable trg-part :entity trg-ent})))))))))
 
+(defn- assert-position-context [context]
+  (when-not (or (= context :entity-scope)
+                (= context :relation-scope)
+                (= context :any-scope))
+     (Error. "context must be entity-relation or drawable-relation")))
 
-(defmulti get-related-entitity-drawable (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
+(defn- calculate-offset [drawable left top]
+  {:left (- left (.-left  (:src drawable)))
+   :top  (- top  (.-top   (:src drawable)))})
 
-(defmulti position-entity-drawable (fn [entity drawable] [(:type entity) (:type drawable)]))
+(defn- position [drawable left top]
+  (.set (:src drawable) (clj->js {:left left
+                                  :top  top}))
+  (.setCoords (:src drawable)))
 
+(defmulti get-refered-drawable (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
 
-(defmethod get-related-entitity-drawable "rectangle-node" [relation]
+(defmulti position-entity-drawable (fn [entity drawable context left top]
+                                     (assert-position-context context)
+                                     [(:type entity) (:type drawable) context]))
+
+(defmulti position-entity (fn [entity ref-drawable context left top]
+                            (assert-position-context context)
+                            [(:type entity) context]))
+
+;; ==============================================================================================
+;; Multimethods for RECTANGLE-NODE entity positioning
+;; ==============================================================================================
+
+(defmethod get-refered-drawable "rectangle-node" [relation]
   (let [related-entity (e/entity-by-id (:entity-id relation))]
     (e/get-entity-drawable related-entity "body")))
 
-(defmethod position-entity-drawable [ "rectangle-node" :main ] [entity drawable left top])
+(defmethod position-entity-drawable [ "rectangle-node" :main :entity-scope] [entity drawable context left top]
+  (.set (:src drawable) (clj->js {:left left
+                                  :top  top}))
+  (.setCoords (:src drawable)))
 
-(defmethod get-related-entitity-drawable "relation" [relation]
+(defmethod position-entity-drawable [ "rectangle-node" :endpoint :entity-scope] [entity drawable context left top]
+  (.set (:src drawable) (clj->js {:left left
+                                  :top  top}))
+  (.setCoords (:src drawable)))
+
+(defmethod position-entity ["rectangle-node" :entity-scope] [entity ref-drawable context left top]
+  (let [offset (calculate-offset ref-drawable left top)]
+    (doseq [drawable (:drawables entity)]
+      (.set (:src drawable) (clj->js {:left (+ (.-left (:src drawable)) (:left offset))
+                                      :top  (+ (.-top (:src drawable)) (:top offset))}))
+      (.setCoords (:src drawable)))))
+
+(defmethod position-entity-drawable [ "rectangle-node" :main :relation-scope] [entity drawable context left top])
+
+(defmethod position-entity-drawable [ "rectangle-node" :endpoint :relation-scope] [entity drawable context left top])
+
+(defmethod position-entity ["rectangle-node" :relation-scope] [entity ref-drawable context left top])
+
+;; ==============================================================================================
+;; Multimethods for RELATION entity positioning
+;; ==============================================================================================
+
+(defmethod get-refered-drawable "relation" [relation]
   (let [related-entity (e/entity-by-id (:entity-id relation))]
     (e/get-entity-drawable related-entity (:end relation))))
 
-(defmethod position-entity-drawable [ "relation" :endpoint ] [entity drawable left top]
+(defmethod position-entity-drawable [ "relation" :endpoint   :relation-scope] [entity drawable context left top]
   (position-endpoint entity (:name drawable) left top))
 
-(defmethod position-entity-drawable [ "relation" :startpoint ] [entity drawable left top]
+(defmethod position-entity-drawable [ "relation" :startpoint :relation-scope] [entity drawable context left top]
   (position-endpoint entity (:name drawable) left top))
 
-(defmethod position-entity-drawable [ "relation" :breakpoint ] [entity drawable left top]
+(defmethod position-entity-drawable [ "relation" :breakpoint :relation-scope] [entity drawable context left top]
   (position-endpoint entity (:name drawable) left top))
+
+(defmethod position-entity ["relation" :relation-scope] [entity ref-drawable context left top]
+  (position-entity-drawable entity ref-drawable context left top))
+
+(defmethod position-entity-drawable [ "relation" :endpoint   :entity-scope] [entity drawable context left top]
+  (position-endpoint entity (:name drawable) left top))
+
+(defmethod position-entity-drawable [ "relation" :startpoint :entity-scope] [entity drawable context left top]
+  (position-endpoint entity (:name drawable) left top))
+
+(defmethod position-entity-drawable [ "relation" :breakpoint :entity-scope] [entity drawable context left top]
+  (position-endpoint entity (:name drawable) left top))
+
+(defmethod position-entity-drawable [ "relation" :decorator  :entity-scope] [entity drawable context left top]
+  (position drawable left top))
+
+(defmethod position-entity-drawable [ "relation" :relation  :entity-scope] [entity drawable context left top])
+  
+
+(defmethod position-entity ["relation" :entity-scope] [entity ref-drawable context left top]
+  (let [offset (calculate-offset ref-drawable left top)]
+    (doseq [drawable (:drawables entity)]
+      (position-entity-drawable entity drawable context (+ (.-left (:src drawable)) (:left offset))
+                                                        (+ (.-top  (:src drawable)) (:top offset))))))
 
 (defn moving-entity [drawable-name]
   (fn [e]
     (when (= (:drawable e) drawable-name)
       (let [entity (:entity e)
             event (:event e)
+            ref-drawable (e/get-entity-drawable entity drawable-name)
             movementX (.-movementX (.-e event))
             movementY (.-movementY (.-e event))]
-        (doseq [drawable (:drawables entity)]
-          (when (not (= (:name drawable) drawable-name))
-            (.set (:src drawable) (clj->js {:left (+ (.-left (:src drawable)) movementX)
-                                            :top  (+ (.-top (:src drawable)) movementY)}))
-            (.setCoords (:src drawable))))
+        (position-entity entity ref-drawable :entity-scope (+ (.-left (:src ref-drawable)) movementX)
+                                                           (+ (.-top (:src ref-drawable)) movementY))
         (doseq [relation (:relationships entity)]
             (let [related-entity (e/entity-by-id (:entity-id relation))
-                  drawable (get-related-entitity-drawable relation)]
-               (position-entity-drawable related-entity drawable (-> drawable :src (.-left) (+ movementX))
-                                                                 (-> drawable :src (.-top)  (+ movementY)))))))))
+                  drawable (get-refered-drawable relation)]
+               (position-entity-drawable related-entity drawable :relation-scope (-> drawable :src (.-left) (+ movementX))
+                                                                                 (-> drawable :src (.-top)  (+ movementY)))))))))
 
 (defn assert-drawable [event name]
   (= (name (:drawable event))))
 
 (defn break-line []
   (fn [e]
-    (js/console.log (clj->js (p/prev-event e)))
     (when-not (and  (= (:type (p/prev-event e)) "object:moving")
                     (= (:drawable (p/prev-event e)) (:drawable e)))
       (let [entity (:entity e)
@@ -170,7 +239,9 @@
                :type  :relation
                :src   (relation-line eX eY oeX oeY CONNECTOR_DEFAULT_OPTIONS)
                :rels {:start breakpoint-id :end (:name line-end-breakpoint)}
-               :behaviours {"mouse:up" (break-line)}}
+               :behaviours {"mouse:up" (break-line)
+                            "object:moving" (all (moving-entity relation-id)
+                                                 (for-entity relations-validate))}}
               {:name  breakpoint-id
                :type  :breakpoint
                :src   (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)

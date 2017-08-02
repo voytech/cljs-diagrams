@@ -9,6 +9,7 @@
 (declare relation-line)
 (declare endpoint)
 (declare calculate-angle)
+(declare dissoc-breakpoint)
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
 (def TRANSPARENT_FILL {:fill "rgb(255,255,255)"})
@@ -226,6 +227,7 @@
                :rels {:end (:name line) :start relation-id :penultimate is-penultimate}
                :behaviours {"mouse:over"    (highlight true DEFAULT_OPTIONS)
                             "mouse:out"     (highlight false DEFAULT_OPTIONS)
+                            "mouse:up"      (dissoc-breakpoint)
                             "object:moving" (moving-endpoint)}})
             (p/sync-entity (e/entity-by-id (:uid entity)))
             (e/update-drawable-rel entity (:name line) :end breakpoint-id)
@@ -235,8 +237,24 @@
 
 (defn dissoc-breakpoint []
   (fn [e]
-    (when (and  (= (:type (p/prev-event e)) "object:moving")
-                (= (:drawable (p/prev-event e)) (:drawable e))))))
+    ;(when (and  (= (:type (p/prev-event e)) "mouse:down")
+    ;            (= (:type e) "mouse:up")
+    ;            (= (:drawable (p/prev-event e)) (:drawable e))]
+      (let [entity     (:entity e)
+            breakpoint (e/get-entity-drawable entity (:drawable e))
+            line-end   (e/get-entity-drawable entity (:end     (:rels breakpoint)))
+            line-endpoint (e/get-entity-drawable entity (:end (:rels line-end)))
+            line-start (e/get-entity-drawable entity (:start   (:rels breakpoint)))
+            line-startpoint (e/get-entity-drawable entity (:start (:rels line-start)))
+            is-penultimate? (:penultimate (:rels breakpoint))]
+         (e/remove-entity-drawable entity (:name breakpoint))
+         (e/remove-entity-drawable entity (:name line-end))
+         (e/update-drawable-rel entity (:name line-start) :end (:name line-endpoint))
+         (e/update-drawable-rel entity (:name line-endpoint) :start (:name line-start))
+         (e/update-drawable-rel entity (:name line-startpoint) :penultimate is-penultimate?)
+         (position-entity-drawable entity line-endpoint :entity-scope (.-left (:src line-endpoint))
+                                                                      (.-top  (:src line-endpoint)))
+         (p/sync-entity (e/entity-by-id (:uid entity))))))
 
 (defn all [ & handlers]
   (fn [e]

@@ -2,7 +2,6 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [core.utils.dnd :as dnd]
             [core.resources :as resources]
-            [core.toolctors :as ctors]
             [core.tools :as t :refer [tools]]))
 
 (declare select-files!)
@@ -68,5 +67,5 @@
                                   "Photo tool"
                                   (keyword tool-type)
                                   (:content e)
-                                  (ctors/create ctors/image (:content e))))]
+                                  (t/create ctors/image (:content e))))]
     [ToolBox (keyword tool-type)]])

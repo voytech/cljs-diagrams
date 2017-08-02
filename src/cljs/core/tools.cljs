@@ -29,3 +29,11 @@
 
 (defn by-type [type]
   (filter #(= type (:type %)) (vals @tools)))
+
+(defn ctor
+  ([entity data]
+   (fn [context]
+     (entity data context)))
+  ([entity]
+   (fn [context]
+     (entity nil context))))

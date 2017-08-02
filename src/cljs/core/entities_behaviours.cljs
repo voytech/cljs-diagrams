@@ -1,8 +1,8 @@
-(ns core.toolctors
+(ns core.entities-behaviours
  (:require [core.entities :as e]
            [core.project :as p]
-           [clojure.string :as str])
- (:require-macros [core.macros :refer [defentity]]))
+           [clojure.string :as str]))
+
 
 (declare position-endpoint)
 (declare moving-endpoint)
@@ -30,34 +30,12 @@
                       :normal-width 1.5})
 (def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
 
-(defn image [data options]
-  (if (not (nil? options))
-    (js/fabric.Image. data (clj->js options))
-    (js/fabric.Image. data)))
-
 (defn highlight [bln options]
   (fn [e]
     (.set (:src e) (clj->js {:stroke (if bln (:highlight-color options)
                                              (:normal-color options))
                              :strokeWidth (if bln (:highlight-width options)
                                                   (:normal-width options))}))))
-
-(defn is-break-point [x1 y1 x2 y2 bx by]
-  (let [dx (- x2 x1)
-        dy (- y2 y2)
-        l (- (* by dx) (* y1 dx))
-        r (- (* bx dy) (* x1 dy))]
-       (= l r)))
-
-(defn test-break-point []
-  (fn [e]
-    (let [entity (:entity e)
-          start-connector (e/get-entity-drawable entity "start")
-          end-connector (e/get-entity-drawable entity "end")
-          sc-src (:src start-connector)
-          ec-src (:src end-connector)]
-        (js/console.log  (.-e (:event e))))))
-
 
 (defn overlaying? [src trg]
     (or (.intersectsWithObject src trg)
@@ -188,7 +166,7 @@
   (position drawable left top))
 
 (defmethod position-entity-drawable [ "relation" :relation  :entity-scope] [entity drawable context left top])
-  
+
 
 (defmethod position-entity ["relation" :entity-scope] [entity ref-drawable context left top]
   (let [offset (calculate-offset ref-drawable left top)]
@@ -215,7 +193,7 @@
 (defn assert-drawable [event name]
   (= (name (:drawable event))))
 
-(defn break-line []
+(defn insert-breakpoint []
   (fn [e]
     (when-not (and  (= (:type (p/prev-event e)) "object:moving")
                     (= (:drawable (p/prev-event e)) (:drawable e)))
@@ -239,7 +217,7 @@
                :type  :relation
                :src   (relation-line eX eY oeX oeY CONNECTOR_DEFAULT_OPTIONS)
                :rels {:start breakpoint-id :end (:name line-end-breakpoint)}
-               :behaviours {"mouse:up" (break-line)
+               :behaviours {"mouse:up" (insert-breakpoint)
                             "object:moving" (all (moving-entity relation-id)
                                                  (for-entity relations-validate))}}
               {:name  breakpoint-id
@@ -255,6 +233,10 @@
             (when (= true is-penultimate)
               (e/update-drawable-rel entity (:name line-start-breakpoint) :penultimate false))))))))
 
+(defn dissoc-breakpoint []
+  (fn [e]
+    (when (and  (= (:type (p/prev-event e)) "object:moving")
+                (= (:drawable (p/prev-event e)) (:drawable e))))))
 
 (defn all [ & handlers]
   (fn [e]
@@ -410,91 +392,3 @@
                           (+ (js/Math.atan (/ y x)) (* 2 PI))
                           (js/Math.atan (/ y x))))))]
       (+ (/ (* angle 180) PI) 90)))
-
-(defentity rectangle-node data options
-  (with-drawables
-    (let [enriched-opts (merge options
-                               DEFAULT_SIZE_OPTS
-                               TRANSPARENT_FILL
-                               DEFAULT_STROKE
-                               RESTRICTED_BEHAVIOUR
-                               NO_DEFAULT_CONTROLS)
-          conL    (vector (:left options) (+ (/ (:height DEFAULT_SIZE_OPTS) 2) (:top options)))
-          conR    (vector (+ (:left options) (:width DEFAULT_SIZE_OPTS)) (+ (/ (:height DEFAULT_SIZE_OPTS) 2) (:top options)))
-          conT    (vector (+ (/ (:width DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
-          conB    (vector (+ (/ (:width DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height DEFAULT_SIZE_OPTS)))]
-      [{:name "connector-left"
-        :type :endpoint
-        :src (endpoint conL :moveable false :display "rect" :visibile false)}
-       {:name "connector-right"
-        :type :endpoint
-        :src (endpoint conR :moveable false :display "rect" :visibile false)}
-       {:name "connector-top"
-        :type :endpoint
-        :src (endpoint conT :moveable false :display "rect" :visibile false)}
-       {:name "connector-bottom"
-        :type :endpoint
-        :src (endpoint conB :moveable false :display "rect" :visibile false)}
-       {:name "body"
-        :type :main
-        :src (js/fabric.Rect. (clj->js enriched-opts))
-        :behaviours {"object:moving" (moving-entity "body")
-                     "mouse:over"    (highlight true DEFAULT_OPTIONS)
-                     "mouse:out"     (highlight false DEFAULT_OPTIONS)}}])))
-
-(defentity relation data options
-  (with-drawables
-    (let [enriched-opts (merge options DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS)
-          offset-x (:left options)
-          offset-y (:top options)
-          points-pairs (partition 2 data)
-          points-pairs-offset (map #(vector (+ (first %) offset-x) (+ (last %) offset-y)) points-pairs)
-          conS (first points-pairs-offset)
-          conE (last points-pairs-offset)]
-        [{:name "connector"
-          :type :relation
-          :src  (relation-line (first conS) (last conS) (first conE) (last conE) enriched-opts)
-          :behaviours {"mouse:up" (break-line)
-                       "object:moving" (all (moving-entity "connector")
-                                            (for-entity relations-validate))}
-          :rels {:start "start" :end "end"}}
-
-         {:name "start"
-          :type :startpoint
-          :src  (endpoint conS :moveable true :display "circle" :visible true :opacity 1)
-          :behaviours {"object:moving" (all (moving-endpoint)
-                                            (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
-                                                                (fn [src trg] (toggle-endpoints (:entity trg) false))))
-                       "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:drawable src))
-                                                                                                                                                    (toggle-endpoints (:entity trg) false)
-                                                                                                                                                    (position-endpoint (:entity src) "start" (.-left (:src trg)) (.-top (:src trg)))))
-                                            (for-entity relations-validate))
-                       "mouse:over"    (highlight true DEFAULT_OPTIONS)
-                       "mouse:out"     (highlight false DEFAULT_OPTIONS)}
-          :rels {:start "connector" :penultimate true}}
-
-         {:name "arrow"
-          :type :decorator
-          :src  (arrow data options)}
-
-         {:name "end"
-          :type :endpoint
-          :src  (endpoint conE :moveable true :display "circle" :visible true :opacity 0)
-          :behaviours {"object:moving" (all (moving-endpoint)
-                                            (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
-                                                                (fn [src trg] (toggle-endpoints (:entity trg) false))))
-                       "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:drawable src))
-                                                                                                                                                    (toggle-endpoints (:entity trg) false)
-                                                                                                                                                    (position-endpoint (:entity src) "end" (.-left (:src trg)) (.-top (:src trg)))))
-                                            (for-entity relations-validate))
-                       "mouse:over"    (highlight true DEFAULT_OPTIONS)
-                       "mouse:out"     (highlight false DEFAULT_OPTIONS)}
-          :rels {:end "connector"}}])))
-
-(defn create
-  ([entity data]
-   (fn [context]
-     (entity data context)))
-  ([entity]
-   (fn [context]
-     (entity nil context))))

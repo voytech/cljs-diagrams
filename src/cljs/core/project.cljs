@@ -205,11 +205,20 @@
     (.forEachObject canvas (fn [e] (when (= e src) (reset! test true))))
     @test))
 
+(defn- delete-orphans [entity]
+  (let [canvas (:canvas (proj-selected-page))
+        drawable-names (set (mapv #(:name %) (:drawables entity)))]
+    (.forEachObject canvas (fn [e]
+                             (when (= (.-refId e) (:uid entity))
+                               (when-not (contains? drawable-names (.-refPartId e))
+                                 (.remove canvas e)))))))
+
 (defn sync-entity [entity]
   (when (not (instance? e/Entity entity))
     (throw (js/Error. (str entity " is not an core.entities. Entity object"))))
   (let [drawables (:drawables entity)
         canvas (:canvas (proj-selected-page))]
+    (delete-orphans entity)
     (doseq [drawable drawables]
       (let [src (:src drawable)]
         (when-not (contains canvas src)

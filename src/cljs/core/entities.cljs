@@ -95,20 +95,20 @@
 
 (defn update-drawable-rel [entity name char value]
   (let [drawable (get-entity-drawable entity name)
-        i (index-of (:drawables entity) drawable)]
+        i (index-of (:drawables (entity-by-id (:uid entity))) drawable)]
      (swap! entities assoc-in [(:uid entity) :drawables i :rels char] value)))
 
 (defn remove-drawable-rel [entity name char]
   (let [drawable (get-entity-drawable entity name)
-        i (index-of (:drawables entity))]
+        i (index-of (:drawables (entity-by-id (:uid entity))))]
      (swap! entities update-in [(:uid entity) :drawables i :rels ] dissoc char)))
 
 (defn get-entity-drawable [entity name]
-  (let [drawables (:drawables entity)]
+  (let [drawables (:drawables (entity-by-id (:uid entity)))]
     (first (filter #(= name (:name %)) drawables))))
 
 (defn get-entity-drawables [entity name]
-  (let [drawables (:drawables entity)]
+  (let [drawables (:drawables (entity-by-id (:uid entity)))]
     (filter #(= name (:name %)) drawables)))
 
 (defn- handle-event [entity-type drawable event handler]
@@ -132,5 +132,11 @@
                       event-type
                       (get (:behaviours drawable_m) event-type))))))
 
+(defn remove-entity-drawable [entity drawable-name]
+  (let [drawables (:drawables (entity-by-id (:uid entity)))
+        idx (index-of drawables (get-entity-drawable entity drawable-name))
+        updated (concat (subvec drawables 0 idx)
+                        (subvec drawables (inc idx)))]
+     (swap! entities assoc-in [(:uid entity) :drawables] updated)))
 
 (defmulti create-entity-for-type (fn [type data-obj] type))

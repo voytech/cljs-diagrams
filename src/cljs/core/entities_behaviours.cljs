@@ -242,15 +242,15 @@
     ;            (= (:drawable (p/prev-event e)) (:drawable e))]
       (let [entity     (:entity e)
             breakpoint (e/get-entity-drawable entity (:drawable e))
-            line-end   (e/get-entity-drawable entity (:end     (:rels breakpoint)))
+            line-end   (e/get-entity-drawable entity (:start     (:rels breakpoint)))
             line-endpoint (e/get-entity-drawable entity (:end (:rels line-end)))
-            line-start (e/get-entity-drawable entity (:start   (:rels breakpoint)))
+            line-start (e/get-entity-drawable entity (:end   (:rels breakpoint)))
             line-startpoint (e/get-entity-drawable entity (:start (:rels line-start)))
             is-penultimate? (:penultimate (:rels breakpoint))]
          (e/remove-entity-drawable entity (:name breakpoint))
          (e/remove-entity-drawable entity (:name line-end))
          (e/update-drawable-rel entity (:name line-start) :end (:name line-endpoint))
-         (e/update-drawable-rel entity (:name line-endpoint) :start (:name line-start))
+         (e/update-drawable-rel entity (:name line-endpoint) :end (:name line-start))
          (e/update-drawable-rel entity (:name line-startpoint) :penultimate is-penultimate?)
          (position-entity-drawable entity line-endpoint :entity-scope (.-left (:src line-endpoint))
                                                                       (.-top  (:src line-endpoint)))

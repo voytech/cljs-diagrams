@@ -135,8 +135,8 @@
 (defn remove-entity-drawable [entity drawable-name]
   (let [drawables (:drawables (entity-by-id (:uid entity)))
         idx (index-of drawables (get-entity-drawable entity drawable-name))
-        updated (concat (subvec drawables 0 idx)
-                        (subvec drawables (inc idx)))]
+        updated (into [] (concat (subvec drawables 0 idx)
+                                 (subvec drawables (inc idx))))]
      (swap! entities assoc-in [(:uid entity) :drawables] updated)))
 
 (defmulti create-entity-for-type (fn [type data-obj] type))

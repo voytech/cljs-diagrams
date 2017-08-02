@@ -124,9 +124,10 @@
 (defmethod position-entity ["rectangle-node" :entity-scope] [entity ref-drawable context left top]
   (let [offset (calculate-offset ref-drawable left top)]
     (doseq [drawable (:drawables entity)]
-      (.set (:src drawable) (clj->js {:left (+ (.-left (:src drawable)) (:left offset))
-                                      :top  (+ (.-top (:src drawable)) (:top offset))}))
-      (.setCoords (:src drawable)))))
+      (when-not (= drawable ref-drawable)
+        (.set (:src drawable) (clj->js {:left (+ (.-left (:src drawable)) (:left offset))
+                                        :top  (+ (.-top (:src drawable)) (:top offset))}))
+        (.setCoords (:src drawable))))))
 
 (defmethod position-entity-drawable [ "rectangle-node" :main :relation-scope] [entity drawable context left top])
 

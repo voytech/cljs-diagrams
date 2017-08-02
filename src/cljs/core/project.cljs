@@ -65,6 +65,7 @@
                       "mouse:click"
                       "mouse:dbclick"]]
       (.on canvas (js-obj event-type (fn [e]
+                                        (js/console.log e)
                                         (when-let [jsobj (.-target e)]
                                           (let [drawable (.-refPartId jsobj)
                                                 entity  (e/entity-from-src jsobj)

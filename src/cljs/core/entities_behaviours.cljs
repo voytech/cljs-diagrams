@@ -271,8 +271,8 @@
            (e/update-drawable-rel entity (:name line-start) :end (:name line-endpoint))
            (e/update-drawable-rel entity (:name line-endpoint) :end (:name line-start))
            (e/update-drawable-rel entity (:name line-startpoint) :penultimate is-penultimate?)
-           (position-entity-drawable entity line-endpoint :entity-scope (.-left (:src line-endpoint))
-                                                                        (.-top  (:src line-endpoint)))
+           (position-entity-drawable entity (:name line-endpoint) :entity-scope (.-left (:src line-endpoint))
+                                                                                (.-top  (:src line-endpoint)))
            (p/sync-entity (e/entity-by-id (:uid entity))))))))
 
 (defn all [ & handlers]

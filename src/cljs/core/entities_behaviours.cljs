@@ -97,9 +97,14 @@
 (defn- effective-position [drawable left top coord-mode]
   (let [effective-left (if (= :offset coord-mode) (+ (.-left (:src drawable)) left) left)
         effective-top  (if (= :offset coord-mode) (+ (.-top (:src drawable)) top) top)]
-    (.set (:src drawable) (clj->js {:left effective-left
-                                    :top  effective-top}))
+    {:left effective-left :top effective-top}))
+
+(defn- apply-effective-position [drawable left top coord-mode]
+  (let [epos (effective-position drawable left top coord-mode)]
+    (.set (:src drawable) (clj->js {:left (:left epos)
+                                    :top  (:top epos)}))
     (.setCoords (:src drawable))))
+
 
 (defmulti get-refered-drawable-name (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
 
@@ -120,22 +125,19 @@
 
 (defmethod position-entity-drawable [ "rectangle-node" :main :entity-scope] [entity drawable-name context left top coord-mode]
   (let [drawable (e/get-entity-drawable entity drawable-name)]
-    (effective-position drawable left top coord-mode)))
+    (apply-effective-position drawable left top coord-mode)))
 
 (defmethod position-entity-drawable [ "rectangle-node" :endpoint :entity-scope] [entity drawable-name context left top coord-mode]
   (let [drawable (e/get-entity-drawable entity drawable-name)]
-    (effective-position drawable left top coord-mode)))
+    (apply-effective-position drawable left top coord-mode)))
 
 (defmethod position-entity ["rectangle-node" :entity-scope] [entity ref-drawable-name context left top coord-mode]
-  (js/console.log left)
   (let [effective-offset (calculate-effective-offset entity ref-drawable-name left top coord-mode)]
     (js/console.log (clj->js effective-offset))
     (doseq [drawable (:drawables entity)]
       (let [effective-left (if (:offset coord-mode) (:left effective-offset) (+ (.-left (:src drawable)) (:left effective-offset)))
             effective-top  (if (:offset coord-mode) (:top effective-offset) (+ (.-top (:src drawable)) (:top effective-offset)))]
         (when-not (= (:name drawable) ref-drawable-name)
-          (js/console.log effective-left)
-          ;(effective-position drawable effective-left effective-top coord-mode))))))
           (position-entity-drawable entity (:name drawable) context effective-left effective-top coord-mode))))))
 
 (defmethod position-entity-drawable [ "rectangle-node" :main :relation-scope] [entity drawable-name context left top coord-mode])
@@ -174,7 +176,7 @@
 
 (defmethod position-entity-drawable [ "relation" :decorator  :entity-scope] [entity drawable-name context left top coord-mode]
   (let [drawable (e/get-entity-drawable entity drawable-name)]
-    (effective-position drawable left top coord-mode)))
+    (apply-effective-position drawable left top coord-mode)))
 
 (defmethod position-entity-drawable [ "relation" :relation  :entity-scope] [entity drawable-name context left top coord-mode])
 
@@ -182,16 +184,15 @@
   (let [effective-offset (calculate-effective-offset entity ref-drawable-name left top coord-mode)]
     (doseq [drawable (:drawables entity)]
       (when-not (= (:name drawable) ref-drawable-name)
-        (let [effective-left (if (:offset coord-mode) (:left effective-offset) (+ (.-left (:src drawable)) (:left effective-offset)))
-              effective-top  (if (:offset coord-mode) (:top effective-offset) (+ (.-top (:src drawable)) (:top effective-offset)))]
-           (position-entity-drawable entity (:name drawable) context effective-left effective-top coord-mode))))))
+        (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
+              effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
+           (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))))
 
 (defn moving-entity [drawable-name]
   (fn [e]
     (when (= (:drawable e) drawable-name)
       (let [entity (:entity e)
             event (:event e)
-            ;ref-drawable (e/get-entity-drawable entity drawable-name)
             movementX (.-movementX (.-e event))
             movementY (.-movementY (.-e event))]
         (position-entity entity

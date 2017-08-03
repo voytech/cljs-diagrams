@@ -133,12 +133,11 @@
 
 (defmethod position-entity ["rectangle-node" :entity-scope] [entity ref-drawable-name context left top coord-mode]
   (let [effective-offset (calculate-effective-offset entity ref-drawable-name left top coord-mode)]
-    (js/console.log (clj->js effective-offset))
     (doseq [drawable (:drawables entity)]
-      (let [effective-left (if (:offset coord-mode) (:left effective-offset) (+ (.-left (:src drawable)) (:left effective-offset)))
-            effective-top  (if (:offset coord-mode) (:top effective-offset) (+ (.-top (:src drawable)) (:top effective-offset)))]
+      (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
+            effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
         (when-not (= (:name drawable) ref-drawable-name)
-          (position-entity-drawable entity (:name drawable) context effective-left effective-top coord-mode))))))
+          (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))))
 
 (defmethod position-entity-drawable [ "rectangle-node" :main :relation-scope] [entity drawable-name context left top coord-mode])
 
@@ -240,7 +239,7 @@
                :rels {:start breakpoint-id :end (:name line-end-breakpoint)}
                :behaviours {"mouse:up" (insert-breakpoint)
                             "object:moving" (all (moving-entity relation-id)
-                                                 (for-entity relations-validate))}}
+                                                 (event-wrap relations-validate))}}
               {:name  breakpoint-id
                :type  :breakpoint
                :src   (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
@@ -280,10 +279,17 @@
     (doseq [handler handlers]
       (handler e))))
 
-(defn for-entity [f]
-  (fn [e]
-    (let [entity (:entity e)]
-      (f entity))))
+(defn event-wrap
+  ([f]
+   (fn [e]
+     (let [entity (:entity e)]
+       (f entity))))
+  ([f & args]
+   (fn [e]
+     (let [entity (:entity e)
+           drawable-name (:drawabe e)]
+       (apply f (cons entity (cons drawable-name (vec args))))))))
+
 
 (defn relations-validate [entity]
   (doseq [relation (:relationships entity)]
@@ -353,6 +359,9 @@
  ([entity endpoint-name left top]
   (position-endpoint entity endpoint-name left top :absolute)))
 
+(defn show [entity drawable-name show]
+  (let [drawable (e/get-entity-drawable entity drawable-name)]
+    (.set (:src drawable) (clj->js {:visible show}))))
 
 (defn toggle-endpoints [entity toggle]
   (doseq [drawable (:drawables entity)]

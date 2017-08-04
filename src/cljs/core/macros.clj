@@ -42,5 +42,13 @@
         (throw (Error. "Provide drawables and behaviours definition within entitity definition")))
      `(defn ~name [~data ~options]
          (let [e# (core.entities/create-entity (name '~name) [])]
-           (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))             
+           (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))
            (core.entities/entity-by-id (:uid e#)))))))
+
+(defmacro defattribute [name & body]
+  `(defonce ~name (core.entities/Attribute. (name `~name)
+                                           ~(:cardinality body)
+                                           ~(:weight body)
+                                           ~(:domain body)
+                                           ~(:create body)
+                                           ~(:sync body))))

@@ -6,6 +6,7 @@
 (defonce ^:private ID "refId")
 (defonce ^:private PART_ID "refPartId")
 (defonce ^:private ATTR_ID "refAttrId")
+(defonce ^:private ATTR_DRAWABLE_ID "refAttrDrawableId")
 
 (defonce entities (atom {}))
 
@@ -13,15 +14,14 @@
 
 (defonce events (atom {}))
 
-(declare properties)
 (declare js-obj-id)
 
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defrecord Attribute [name cardinality domain])
+(defrecord Attribute [name cardinality weight domain create sync])
 
-(defrecord AttributeValue [attribute value value-icon])
+(defrecord AttributeValue [id attribute value img drawables])
 
 (defrecord EntityDrawable [name type src rels])
 
@@ -38,15 +38,6 @@
   IEntity
   (add-attribute [this attribute])
   (connect-to [this entity]))
-
-(defn properties [jsobj func]
- (let [props (atom [])]
-    (goog.object/forEach jsobj
-                         (fn [val key obj]
-                           (when (not (= (type val) js/Function))
-                             (when (not (nil? func)) (func key val))
-                             (swap! props conj key))))
-   @props))
 
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
@@ -75,7 +66,6 @@
         trg-rel (filter #(not= (:uid src) (:entity-id %)) (:relationships trg))]
     (swap! entities assoc-in [(:uid src) :relationships] src-rel)
     (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
-
 
 (defn entity-by-id [id]
   (get @entities id))
@@ -144,3 +134,15 @@
      (swap! entities assoc-in [(:uid entity) :drawables] updated)))
 
 (defmulti create-entity-for-type (fn [type data-obj] type))
+
+(defn create-attribute-value [attribute value img drawables]
+  (AttributeValue. (str (random-uuid)) attribute value img drawables))
+
+(defn add-entity-attribute [entity & attributes]
+  (doseq [attribute-value (vec attributes)]
+    (doseq [drawable (:drawables attribute-value)]
+      (make-js-property (:src drawable) ID  (:uid entity))
+      (make-js-property (:src drawable) ATTR_ID (:id attribute-value))
+      (make-js-property (:src drawable) ATTR_DRAWABLE_ID (:name drawable)))
+    (let [attributes (conj (:attributes (entity-by-id (:uid entity))) attribute-value)]
+       (swap! entities assoc-in [(:uid entity) :attributes] attributes))))

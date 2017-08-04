@@ -5,6 +5,8 @@
 
 
 (declare position-endpoint)
+(declare position-startpoint)
+(declare position-breakpoint)
 (declare moving-endpoint)
 (declare relation-line)
 (declare endpoint)
@@ -94,17 +96,29 @@
     (let [drawable  (e/get-entity-drawable entity drawable-name)]
       (calculate-offset drawable left top))))
 
-(defn- effective-position [drawable left top coord-mode]
-  (let [effective-left (if (= :offset coord-mode) (+ (.-left (:src drawable)) left) left)
-        effective-top  (if (= :offset coord-mode) (+ (.-top (:src drawable)) top) top)]
-    {:left effective-left :top effective-top}))
+(defn- effective-position
+ ([drawable get-x get-y x y coord-mode]
+  (let [effective-x (if (= :offset coord-mode) (+ (get-x (:src drawable)) x) x)
+        effective-y  (if (= :offset coord-mode) (+ (get-y (:src drawable)) y) y)]
+    {:x effective-x :y effective-y}))
+ ([drawable x y coord-mode]
+  (effective-position drawable #(.-left %) #(.-top %) x y coord-mode)))
 
-(defn- apply-effective-position [drawable left top coord-mode]
-  (let [epos (effective-position drawable left top coord-mode)]
-    (.set (:src drawable) (clj->js {:left (:left epos)
-                                    :top  (:top epos)}))
+(defn- apply-effective-position
+ ([drawable set-x get-x set-y get-y x y coord-mode]
+  (let [epos (effective-position drawable get-x get-y x y coord-mode)]
+    (set-x (:src drawable) (:x epos))
+    (set-y (:src drawable) (:y epos))
     (.setCoords (:src drawable))))
-
+ ([drawable x y coord-mode]
+  (apply-effective-position drawable
+                            #(.set %1 (clj->js {:left %2}))
+                            #(.-left %)
+                            #(.set %1 (clj->js {:top %2}))
+                            #(.-top %)
+                            x
+                            y
+                            coord-mode)))
 
 (defmulti get-refered-drawable-name (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
 
@@ -153,25 +167,25 @@
    (:end relation))
 
 (defmethod position-entity-drawable [ "relation" :endpoint   :relation-scope] [entity drawable-name context left top coord-mode]
-  (position-endpoint entity drawable-name left top coord-mode))
+  (position-endpoint entity left top coord-mode))
 
 (defmethod position-entity-drawable [ "relation" :startpoint :relation-scope] [entity drawable-name context left top coord-mode]
-  (position-endpoint entity drawable-name left top coord-mode))
+  (position-startpoint entity left top coord-mode))
 
 (defmethod position-entity-drawable [ "relation" :breakpoint :relation-scope] [entity drawable-name context left top coord-mode]
-  (position-endpoint entity drawable-name left top coord-mode))
+  (position-breakpoint entity drawable-name left top coord-mode))
 
 (defmethod position-entity [ "relation" :relation-scope] [entity ref-drawable-name context left top coord-mode]
   (position-entity-drawable entity ref-drawable-name context left top coord-mode))
 
 (defmethod position-entity-drawable [ "relation" :endpoint   :entity-scope] [entity drawable-name context left top coord-mode]
-  (position-endpoint entity drawable-name left top coord-mode))
+  (position-endpoint entity left top coord-mode))
 
 (defmethod position-entity-drawable [ "relation" :startpoint :entity-scope] [entity drawable-name context left top coord-mode]
-  (position-endpoint entity drawable-name left top coord-mode))
+  (position-startpoint entity left top coord-mode))
 
 (defmethod position-entity-drawable [ "relation" :breakpoint :entity-scope] [entity drawable-name context left top coord-mode]
-  (position-endpoint entity drawable-name left top coord-mode))
+  (position-breakpoint entity drawable-name left top coord-mode))
 
 (defmethod position-entity-drawable [ "relation" :decorator  :entity-scope] [entity drawable-name context left top coord-mode]
   (let [drawable (e/get-entity-drawable entity drawable-name)]
@@ -315,49 +329,69 @@
       (.set trg (clj->js {:left trgLeft :top trgTop}))
       (.setCoords trg)))
 
+(defn- refresh-arrow-angle [relation-drawable arrow-drawable]
+  (let [x1 (-> relation-drawable :src (.-x1))
+        y1 (-> relation-drawable :src (.-y1))
+        x2 (-> relation-drawable :src (.-x2))
+        y2 (-> relation-drawable :src (.-y2))]
+     (.set (:src arrow-drawable) (clj->js {:angle (calculate-angle x1 y1 x2 y2)}))))
+
+(defn- to-the-center-of [line x y shape]
+  (.set line (clj->js {x (+ (.-left shape) (/ (.-width shape) 2))
+                       y (+ (.-top shape) (/ (.-height shape) 2))}))
+  (.setCoords line))
+
+
+(defn position-breakpoint
+  ([entity name left top coord-mode]
+   (let [breakpoint-drawable (e/get-entity-drawable entity name)
+         position (effective-position breakpoint-drawable left top coord-mode)
+         effective-left (:x position)
+         effective-top  (:y position)
+         starts-relation-drawable (e/get-entity-drawable entity (:start (:rels breakpoint-drawable)))
+         ends-relation-drawable (e/get-entity-drawable entity (:end (:rels breakpoint-drawable)))
+         arrow-drawable (e/get-entity-drawable entity "arrow")]
+     (.set (:src breakpoint-drawable) (clj->js {:left effective-left :top  effective-top}))
+     (.setCoords (:src breakpoint-drawable))
+     (to-the-center-of (:src starts-relation-drawable) :x1 :y1 (:src breakpoint-drawable))
+     (to-the-center-of (:src ends-relation-drawable)   :x2 :y2 (:src breakpoint-drawable))
+     (when (= true (:penultimate (:rels breakpoint-drawable)))
+       (refresh-arrow-angle starts-relation-drawable arrow-drawable))))
+  ([entity name left top]
+   (position-breakpoint entity name left top :absolute)))
+
+(defn position-startpoint
+  ([entity left top coord-mode]
+   (let [startpoint-drawable (e/get-entity-drawable entity "start")
+         position (effective-position startpoint-drawable left top coord-mode)
+         effective-left (:x position)
+         effective-top  (:y position)
+         starts-relation-drawable (e/get-entity-drawable entity (:start (:rels startpoint-drawable)))
+         arrow-drawable (e/get-entity-drawable entity "arrow")]
+     (.set (:src startpoint-drawable) (clj->js {:left effective-left :top  effective-top}))
+     (.setCoords (:src startpoint-drawable))
+     (to-the-center-of (:src starts-relation-drawable) :x1 :y1 (:src startpoint-drawable))
+     (when (= true (:penultimate (:rels startpoint-drawable)))
+       (refresh-arrow-angle starts-relation-drawable arrow-drawable))))
+  ([entity left top]
+   (position-startpoint entity left top :absolute)))
+
 (defn position-endpoint
-  ([entity endpoint-name left top coord-mode]
-   (let [endpoint-drawable   (e/get-entity-drawable entity endpoint-name)
-         effective-left (if (= coord-mode :offset) (+ (.-left (:src endpoint-drawable)) left)  left)
-         effective-top  (if (= coord-mode :offset) (+ (.-top (:src endpoint-drawable)) top)  top)
-         starts-relation-drawable  (if-let [name (:start (:rels endpoint-drawable))]
-                                     (e/get-entity-drawable entity name)
-                                     nil)
-         ends-relation-drawable  (if-let [name (:end (:rels endpoint-drawable))]
-                                     (e/get-entity-drawable entity name)
-                                     nil)
+  ([entity left top coord-mode]
+   (let [endpoint-drawable   (e/get-entity-drawable entity "end")
+         position (effective-position endpoint-drawable left top coord-mode)
+         effective-left (:x position)
+         effective-top  (:y position)
+         ends-relation-drawable  (e/get-entity-drawable entity (:end (:rels endpoint-drawable)))
+
          arrow-drawable      (e/get-entity-drawable entity "arrow")]
-    (.set (:src endpoint-drawable) (clj->js {:left effective-left
-                                             :top  effective-top}))
+    (.set (:src endpoint-drawable) (clj->js {:left effective-left  :top  effective-top}))
     (.setCoords (:src endpoint-drawable))
-    (when-not (nil? starts-relation-drawable)
-      (.set (:src starts-relation-drawable) (clj->js {:x1 (+ (.-left (:src endpoint-drawable)) (/ (.-width  (:src endpoint-drawable)) 2))
-                                                      :y1 (+ (.-top (:src endpoint-drawable)) (/ (.-height (:src endpoint-drawable)) 2))}))
-      (.setCoords (:src starts-relation-drawable)))
-    (when-not (nil? ends-relation-drawable)
-      (.set (:src ends-relation-drawable) (clj->js {:x2 (+ (.-left (:src endpoint-drawable)) (/ (.-width  (:src endpoint-drawable)) 2))
-                                                    :y2 (+ (.-top (:src endpoint-drawable)) (/ (.-height (:src endpoint-drawable)) 2))}))
-      (.setCoords (:src ends-relation-drawable)))
-
-    (if (or  (= "end" endpoint-name) (= :endpoint (:type endpoint-drawable)))
-      (.set (:src arrow-drawable) (clj->js {:left (.-x2 (:src ends-relation-drawable))
-                                            :top  (.-y2 (:src ends-relation-drawable))}))
-      (.setCoords (:src arrow-drawable)))
-    (if (or  (= "end" endpoint-name)
-             (= :endpoint (:type endpoint-drawable))
-             (= true (:penultimate (:rels endpoint-drawable))))
-
-      (let [relation (if (= true (:penultimate (:rels endpoint-drawable)))
-                        starts-relation-drawable
-                        (if (= :endpoint (:type endpoint-drawable))
-                          ends-relation-drawable))
-            x1 (-> relation :src (.-x1))
-            y1 (-> relation :src (.-y1))
-            x2 (-> relation :src (.-x2))
-            y2 (-> relation :src (.-y2))]
-         (.set (:src arrow-drawable) (clj->js {:angle (calculate-angle x1 y1 x2 y2)}))))))
- ([entity endpoint-name left top]
-  (position-endpoint entity endpoint-name left top :absolute)))
+    (to-the-center-of (:src ends-relation-drawable) :x2 :y2 (:src endpoint-drawable))
+    (to-the-center-of (:src arrow-drawable) :left :top (:src endpoint-drawable))
+    (refresh-arrow-angle ends-relation-drawable arrow-drawable)))
+ ([entity left top]
+  (position-endpoint entity left top :absolute)))
 
 (defn show [entity drawable-name show]
   (let [drawable (e/get-entity-drawable entity drawable-name)]
@@ -372,9 +406,13 @@
 (defn moving-endpoint []
    (fn [e]
       (let [src      (:src e)
-            endpoint (:drawable e)
-            entity   (:entity e)]
-         (position-endpoint entity endpoint (.-left src) (.-top  src)))))
+            endpoint-name (:drawable e)
+            entity   (:entity e)
+            endpoint (e/get-entity-drawable entity endpoint-name)]
+         (cond
+           (= :breakpoint (:type endpoint)) (position-breakpoint entity endpoint-name (.-left src) (.-top src))
+           (= :startpoint (:type endpoint)) (position-startpoint entity (.-left src) (.-top src))
+           (= :endpoint   (:type endpoint)) (position-endpoint   entity (.-left src) (.-top src))))))
 
 (defmulti endpoint (fn [point & {:keys [moveable display visible]}] display))
 

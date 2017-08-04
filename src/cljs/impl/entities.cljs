@@ -4,7 +4,7 @@
            [core.entities-behaviours :as eb :refer [endpoint moving-entity highlight relation-line
                                                     insert-breakpoint dissoc-breakpoint all moving-endpoint
                                                     intersects? intersects-any? toggle-endpoints show
-                                                    position-endpoint relations-validate event-wrap arrow]]
+                                                    position-endpoint position-startpoint relations-validate event-wrap arrow]]
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity]]))
 
@@ -75,7 +75,7 @@
                                                                 (fn [src trg] (toggle-endpoints (:entity trg) false))))
                        "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:drawable src))
                                                                                                                                                     (toggle-endpoints (:entity trg) false)
-                                                                                                                                                    (position-endpoint (:entity src) "start" (.-left (:src trg)) (.-top (:src trg)))))
+                                                                                                                                                    (position-startpoint (:entity src) (.-left (:src trg)) (.-top (:src trg)))))
                                             (event-wrap relations-validate))
                        "mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
                        "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)}
@@ -93,7 +93,7 @@
                                                                 (fn [src trg] (toggle-endpoints (:entity trg) false))))
                        "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) (:drawable src))
                                                                                                                                                     (toggle-endpoints (:entity trg) false)
-                                                                                                                                                    (position-endpoint (:entity src) "end" (.-left (:src trg)) (.-top (:src trg)))))
+                                                                                                                                                    (position-endpoint (:entity src) (.-left (:src trg)) (.-top (:src trg)))))
                                             (event-wrap relations-validate))
                        "mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
                        "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)}

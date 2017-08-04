@@ -5,6 +5,7 @@
 
 (defonce ^:private ID "refId")
 (defonce ^:private PART_ID "refPartId")
+(defonce ^:private ATTR_ID "refAttrId")
 
 (defonce entities (atom {}))
 
@@ -18,6 +19,9 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
+(defrecord Attribute [name cardinality domain])
+
+(defrecord AttributeValue [attribute value value-icon])
 
 (defrecord EntityDrawable [name type src rels])
 

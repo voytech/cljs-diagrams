@@ -24,6 +24,7 @@
                                             ~(:cardinality dfinition)
                                             ~(:index dfinition)
                                             ~(:domain dfinition)
+                                            ~(:bbox dfinition)
                                             ~(:sync dfinition))]
          (core.entities/add-attribute attr#)))
      (fn [entity# ~data]

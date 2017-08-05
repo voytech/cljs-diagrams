@@ -21,7 +21,7 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defrecord Attribute [name cardinality index domain sync])
+(defrecord Attribute [name cardinality index domain bbox sync])
 
 (defrecord AttributeValue [id attribute value img drawables])
 
@@ -94,7 +94,7 @@
 
 (defn get-entity-content-bbox [entity]
     (:content-bbox entity))
-    
+
 (defn update-drawable-rel [entity name char value]
   (let [drawable (get-entity-drawable entity name)
         i (index-of (:drawables (entity-by-id (:uid entity))) drawable)]

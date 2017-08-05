@@ -75,8 +75,8 @@
                                         (event-wrap relations-validate))
                    "mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
                    "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)}
-     :breakpoint  {"mouse:over"    (highlight true DEFAULT_OPTIONS)
-                   "mouse:out"     (highlight false DEFAULT_OPTIONS)
+     :breakpoint  {"mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
+                   "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)
                    "mouse:up"      (dissoc-breakpoint)
                    "object:moving" (moving-endpoint)}})
 

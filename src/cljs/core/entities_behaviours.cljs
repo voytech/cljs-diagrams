@@ -253,7 +253,7 @@
                :rels {:start breakpoint-id :end (:name line-end-breakpoint)}}
               {:name  breakpoint-id
                :type  :breakpoint
-               :src   (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
+               :src   (endpoint [eX eY] :moveable true :display "circle" :visible true)
                :rels {:end (:name line) :start relation-id :penultimate is-penultimate}})
             (p/sync-entity (e/entity-by-id (:uid entity)))
             (e/update-drawable-rel entity (:name line) :end breakpoint-id)

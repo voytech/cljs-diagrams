@@ -14,16 +14,11 @@
       (when (nil? cntbbox)
         (throw (Error. "Provide attribute content bounding box parameters!")))
      `(do
-        (js/console.log (str "Registering behaviours for entity " (name '~name)))
         (doseq [drawable-type# (keys ~behaviours)]
           (let [event-map# (get ~behaviours drawable-type#)]
             (doseq [event-type# (keys event-map#)]
-              (js/console.log event-type#)
               (let [handler# (get event-map# event-type#)]
-                (js/console.log handler#)
                 (core.entities/handle-event (name '~name) drawable-type# event-type# handler#)))))
-        (js/console.log (str "All event handlers for behaviours definition has been registered for entity [" (name '~name) "]..."))
-        (js/console.log (str "Interning entity [ " (name '~name) " ] instantiation function into namespace."))
         (defn ~name [~data ~options]
            (let [e# (core.entities/create-entity (name '~name) [] ~cntbbox)]
              (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))

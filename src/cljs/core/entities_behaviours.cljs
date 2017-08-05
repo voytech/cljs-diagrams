@@ -201,28 +201,28 @@
               effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
            (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))))
 
-(defn moving-entity [drawable-name]
+(defn moving-entity []
   (fn [e]
-    (when (= (:drawable e) drawable-name)
-      (let [entity (:entity e)
-            event (:event e)
-            movementX (.-movementX (.-e event))
-            movementY (.-movementY (.-e event))]
-        (position-entity entity
-                         drawable-name
-                         :entity-scope
-                         movementX
-                         movementY
-                         :offset)
-        (doseq [relation (:relationships entity)]
-            (let [related-entity (e/entity-by-id (:entity-id relation))
-                  ref-drawable-name (get-refered-drawable-name relation)]
-               (position-entity-drawable related-entity
-                                         ref-drawable-name
-                                         :relation-scope
-                                         movementX
-                                         movementY
-                                         :offset)))))))
+    (let [entity (:entity e)
+          event (:event e)
+          drawable-name (:drawable e)
+          movementX (.-movementX (.-e event))
+          movementY (.-movementY (.-e event))]
+      (position-entity entity
+                       drawable-name
+                       :entity-scope
+                       movementX
+                       movementY
+                       :offset)
+      (doseq [relation (:relationships entity)]
+          (let [related-entity (e/entity-by-id (:entity-id relation))
+                ref-drawable-name (get-refered-drawable-name relation)]
+             (position-entity-drawable related-entity
+                                       ref-drawable-name
+                                       :relation-scope
+                                       movementX
+                                       movementY
+                                       :offset))))))
 
 (defn assert-drawable [event name]
   (= (name (:drawable event))))
@@ -250,18 +250,11 @@
               {:name  relation-id
                :type  :relation
                :src   (relation-line eX eY oeX oeY CONNECTOR_DEFAULT_OPTIONS)
-               :rels {:start breakpoint-id :end (:name line-end-breakpoint)}
-               :behaviours {"mouse:up" (insert-breakpoint)
-                            "object:moving" (all (moving-entity relation-id)
-                                                 (event-wrap relations-validate))}}
+               :rels {:start breakpoint-id :end (:name line-end-breakpoint)}}
               {:name  breakpoint-id
                :type  :breakpoint
                :src   (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
-               :rels {:end (:name line) :start relation-id :penultimate is-penultimate}
-               :behaviours {"mouse:over"    (highlight true DEFAULT_OPTIONS)
-                            "mouse:out"     (highlight false DEFAULT_OPTIONS)
-                            "mouse:up"      (dissoc-breakpoint)
-                            "object:moving" (moving-endpoint)}})
+               :rels {:end (:name line) :start relation-id :penultimate is-penultimate}})
             (p/sync-entity (e/entity-by-id (:uid entity)))
             (e/update-drawable-rel entity (:name line) :end breakpoint-id)
             (e/update-drawable-rel entity (:name line-end-breakpoint) :end relation-id)

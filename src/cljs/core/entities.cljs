@@ -126,13 +126,13 @@
       (make-js-property (:src drawable) ID  (:uid entity))
       (make-js-property (:src drawable) PART_ID (:name drawable))
       (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
-         (swap! entities assoc-in [(:uid entity) :drawables] drawables)))
-    (when (not (nil? (:behaviours drawable_m)))
-      (doseq [event-type (keys (:behaviours drawable_m))]
-        (handle-event (:type entity)
-                      (:name drawable_m)
-                      event-type
-                      (get (:behaviours drawable_m) event-type))))))
+         (swap! entities assoc-in [(:uid entity) :drawables] drawables)))))
+;    (when (not (nil? (:behaviours drawable_m)))
+;      (doseq [event-type (keys (:behaviours drawable_m))]
+;        (handle-event (:type entity)
+;                      (:name drawable)_m
+;                      event-type
+;                      (get (:behaviours drawable_m) event-type))))))
 
 (defn remove-entity-drawable [entity drawable-name]
   (let [drawables (:drawables (entity-by-id (:uid entity)))

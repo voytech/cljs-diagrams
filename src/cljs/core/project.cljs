@@ -5,7 +5,7 @@
            [core.utils.dom :as dom]
            [core.utils.dnd :as dnd]
            [core.entities :as e]
-           [core.tools :as t]))                                      
+           [core.tools :as t]))
 
 (declare add-item)
 (declare sync-entity)
@@ -65,7 +65,8 @@
                                         (when-let [jsobj (.-target e)]
                                           (let [drawable (.-refPartId jsobj)
                                                 entity  (e/entity-from-src jsobj)
-                                                handler (get-in @e/events [(:type entity) drawable event-type])]
+                                                drawable-type (:type (e/get-entity-drawable entity drawable))
+                                                handler (get-in @e/events [(:type entity) drawable-type event-type])]
                                              (when (not (nil? handler))
                                                (.setCoords jsobj)
                                                (let [event {:src jsobj      :drawable drawable
@@ -214,6 +215,7 @@
   (when (not (instance? e/Entity entity))
     (throw (js/Error. (str entity " is not an core.entities. Entity object"))))
   (let [drawables (:drawables entity)
+        attributes (:attributes entity)
         canvas (:canvas (proj-selected-page))]
     (delete-orphans entity)
     (doseq [drawable drawables]

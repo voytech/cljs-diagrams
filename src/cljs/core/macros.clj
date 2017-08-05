@@ -25,21 +25,21 @@
              (core.entities/entity-by-id (:uid e#))))))))
 
 (defmacro defattribute [name data options dfinition drawables]
-  `(defn ~name []
+  `(do
      (when-not (core.entities/is-attribute (name '~name))
        (let [attr# (core.entities/Attribute. (name '~name)
-                                            ~(:cardinality dfinition)
-                                            ~(:index dfinition)
-                                            ~(:domain dfinition)
-                                            ~(:bbox dfinition)
-                                            ~(:sync dfinition))]
-         (core.entities/add-attribute attr#)))
-     (fn [entity# ~data]
-        (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
-                        :top  (:top (core.entities/get-entity-content-bbox entity#))}
-              attribute#   (core.entities/get-attribute (name '~name))
-              attr-value#  (core.entities/create-attribute-value attribute#
-                                                                 ~(:value data)
-                                                                 ~(:img data)
-                                                                 ~drawables)]
-          (core.entities/add-entity-attribute-value entity# attr-value#)))))
+                                             ~(:cardinality dfinition)
+                                             ~(:index dfinition)
+                                             ~(:domain dfinition)
+                                             ~(:bbox dfinition)
+                                             ~(:sync dfinition))]
+         (core.entities/add-attribute attr#)
+         (defn ~name [entity# ~data]
+           (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
+                           :top  (:top (core.entities/get-entity-content-bbox entity#))}
+                 attribute#   (core.entities/get-attribute (name '~name))
+                 attr-value#  (core.entities/create-attribute-value attribute#
+                                                                    ~(:value data)
+                                                                    ~(:img data)
+                                                                    ~drawables)]
+              (core.entities/add-entity-attribute-value entity# attr-value#)))))))

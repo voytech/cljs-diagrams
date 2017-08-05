@@ -1,4 +1,4 @@
-(ns impl.attributes
+(ns impl.standard-attributes
  (:require [core.entities :as e]
            [core.project :as p])
  (:require-macros [core.macros :refer [defattribute]]))
@@ -7,13 +7,13 @@
   {:cardinality 1
    :index 0
    :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))
-   :bbox: {:width 100 :height 50}}
+   :bbox {:width 100 :height 50}}
   [{:name "name"
     :type :title
-    :src  (js/fabric.Text. "Name" options)}
+    :src  (js/fabric.Text. "Name")}
    {:name "value"
     :type :value
-    :src (js/fabric.Text. (:value data) (merge options {:left (+ 50 (:left options))}))}])
+    :src (js/fabric.Text. (:value data))}])
 
 (defattribute description data options
   {:cardinality 1
@@ -22,7 +22,7 @@
    :bbox {:width 100 :height 50}}
   [{:name "desc"
     :type :description
-    :src  (js/fabric.Text. "Description" options)}
+    :src  (js/fabric.Text. "Description")}
    {:name "value"
     :type :value
-    :src (js/fabric.Text. (:value data) (merge options {:left (+ 50 (:left options))}))}])
+    :src (js/fabric.Text. (:value data))}])

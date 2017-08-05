@@ -1,5 +1,6 @@
 (ns impl.entities
  (:require [core.entities :as e]
+           [impl.standard-attributes :as stdatr]
            [core.project :as p]
            [core.entities-behaviours :as eb :refer [endpoint moving-entity highlight relation-line
                                                     insert-breakpoint dissoc-breakpoint all moving-endpoint
@@ -45,7 +46,9 @@
         :src (endpoint conB :moveable false :display "rect" :visibile false)}
        {:name "body"
         :type :main
-        :src (js/fabric.Rect. (clj->js enriched-opts))}])))
+        :src (js/fabric.Rect. (clj->js enriched-opts))}]))
+  (with-attributes (stdatr/name "<Enter name here>")
+                   (stratr/description "<Enter descrition here>")))
 
 
 (defentity relation data options

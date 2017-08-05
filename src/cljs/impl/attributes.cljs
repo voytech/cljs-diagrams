@@ -3,15 +3,24 @@
            [core.project :as p])
  (:require-macros [core.macros :refer [defattribute]]))
 
-(defattribute name
-              {:cardinality 1
-               :weight 1
-               :create (fn [attribute data]
-                        (e/create-attribute-value
-                          attribute
-                          data
-                          nil
-                          {:attribute (e/EntityDrawable "name" :name (js/fabric.Text. "Name") [])
-                           :value (e/EntityDrawable "val" :value (js/fabric.Text. data) [])}))
-               :sync (fn [value]
-                        (.setText (:src (:value (:drawables value))) (:value value)))})
+(defattribute name data options
+  {:cardinality 1
+   :index 0
+   :sync (fn [value] (.setText (:src (:value (:drawables value))) (:value value)))}
+  [{:name "name"
+    :type :title
+    :src  (js/fabric.Text. "Name" options)}
+   {:name "value"
+    :type :value
+    :src (js/fabric.Text. (:text data) options)}])
+
+(defattribute description data options
+  {:cardinality 1
+   :index 1
+   :sync (fn [value] (.setText (:src (:value (:drawables value))) (:value value)))}
+  [{:name "desc"
+    :type :description
+    :src  (js/fabric.Text. "Description" options)}
+   {:name "value"
+    :type :value
+    :src (js/fabric.Text. (:text data) options)}])

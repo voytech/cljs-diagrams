@@ -12,6 +12,8 @@
 
 (defonce paged-entities (atom {}))
 
+(defonce attributes (atom {}))
+
 (defonce events (atom {}))
 
 (declare js-obj-id)
@@ -19,11 +21,11 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defrecord Attribute [name cardinality weight domain create sync])
+(defrecord Attribute [name cardinality index domain sync])
 
 (defrecord AttributeValue [id attribute value img drawables])
 
-(defrecord EntityDrawable [name type src rels])
+(defrecord Drawable [name type src rels])
 
 (defprotocol IEntity
   (add-attribute [this attribute])
@@ -111,10 +113,10 @@
 
 (defn add-entity-drawable [entity & drawables]
   (doseq [drawable_m (vec drawables)]
-    (let [drawable (EntityDrawable. (:name drawable_m)
-                                    (:type drawable_m)
-                                    (:src  drawable_m)
-                                    (:rels drawable_m))]
+    (let [drawable (Drawable. (:name drawable_m)
+                              (:type drawable_m)
+                              (:src  drawable_m)
+                              (:rels drawable_m))]
       (make-js-property (:src drawable) ID  (:uid entity))
       (make-js-property (:src drawable) PART_ID (:name drawable))
       (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
@@ -135,8 +137,18 @@
 
 (defmulti create-entity-for-type (fn [type data-obj] type))
 
+(defn get-attribute [name]
+  (get @attributes name))
+
+(defn is-attribute [name]
+  (not (nil? (get-attribute name))))
+
+(defn add-attribute [attribute]
+  (when-not (is-attribute (:name attribute))
+    (swap attributes assoc-in [(:name attribute)] attribute)))
+
 (defn create-attribute-value [attribute value img drawables]
-  (AttributeValue. (str (random-uuid)) attribute value img drawables))
+  (AttributeValue. (str (random-uuid)) attribute value img (map #(Drawable. (:name %) (:type %) (:src %) (:rels %)) drawables)))
 
 (defn add-entity-attribute [entity & attributes]
   (doseq [attribute-value (vec attributes)]

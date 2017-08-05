@@ -5,10 +5,7 @@
            [core.utils.dom :as dom]
            [core.utils.dnd :as dnd]
            [core.entities :as e]
-           [core.tools :as t]))
-
-(:require-macros [core.macros :refer [with-page
-                                      with-current-canvas]])
+           [core.tools :as t]))                                      
 
 (declare add-item)
 (declare sync-entity)

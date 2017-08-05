@@ -8,7 +8,8 @@
   (let [transposition (transpose-macro body)]
     (let [cntbbox    (:with-content-bounding-box transposition)
           drawables  (:with-drawables transposition)
-          behaviours (:with-behaviours transposition)]
+          behaviours (:with-behaviours transposition)
+          attributes (partition 2 (:with-attributes transposition))]
       (when (nil? drawables)
         (throw (Error. "Provide drawables and behaviours definition within entitity definition!")))
       (when (nil? cntbbox)
@@ -22,6 +23,8 @@
         (defn ~name [~data ~options]
            (let [e# (core.entities/create-entity (name '~name) [] ~cntbbox)]
              (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))
+             (doseq [attribute# ~attributes]
+               ((first attribute#) e# (last attribute#)))
              (core.entities/entity-by-id (:uid e#))))))))
 
 (defmacro defattribute [name data options dfinition drawables]

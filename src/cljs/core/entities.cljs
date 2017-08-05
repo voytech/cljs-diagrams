@@ -149,7 +149,7 @@
 
 (defn add-attribute [attribute]
   (when-not (is-attribute (:name attribute))
-    (swap attributes assoc-in [(:name attribute)] attribute)))
+    (swap! attributes assoc-in [(:name attribute)] attribute)))
 
 (defn create-attribute-value [attribute value img drawables]
   (let [drawables_ (into (sorted-map) (mapv #({(:name %) (Drawable. (:name %) (:type %) (:src %) (:rels %) drawables)})))]

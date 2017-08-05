@@ -211,6 +211,16 @@
                                (when-not (contains? drawable-names (.-refPartId e))
                                  (.remove canvas e)))))))
 
+(defn- do-attributes [canvas entity attribute-values]
+  (doseq [attribute-value attribute-values]
+    (let [left (:left (:content-bbox entity))
+          top  (:top  (:content-bbox entity))]
+      (doseq [drawable (:drawables attribute-value)]
+        (when-not (contains canvas (:src drawable))
+          (.set (:src drawable) (clj->js {:left left :top top}))
+          (.setCoords (:src drawable))
+          (.add canvas (:src drawable)))))))
+
 (defn sync-entity [entity]
   (when (not (instance? e/Entity entity))
     (throw (js/Error. (str entity " is not an core.entities. Entity object"))))
@@ -222,5 +232,6 @@
       (let [src (:src drawable)]
         (when-not (contains canvas src)
           (.add canvas src))))
+    (do-attributes canvas entity attirbutes)
     (.renderAll canvas)
     (changed)))

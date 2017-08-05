@@ -47,8 +47,8 @@
        {:name "body"
         :type :main
         :src (js/fabric.Rect. (clj->js enriched-opts))}]))
-  (with-attributes (stdatr/name "<Enter name here>")
-                   (stratr/description "<Enter descrition here>")))
+  (with-attributes [stdatr/name {:value "<Enter name here>"}
+                    stratr/description {:value "<Enter descrition here>"}]))
 
 
 (defentity relation data options

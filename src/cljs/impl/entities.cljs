@@ -10,6 +10,10 @@
 
 
 (defentity rectangle-node data options
+  (with-content-bounding-box {:left (:left options)
+                              :top  (:top options)
+                              :width  180
+                              :height 150})
   (with-drawables
     (let [enriched-opts (merge options
                                eb/DEFAULT_SIZE_OPTS
@@ -51,6 +55,10 @@
 
 
 (defentity relation data options
+  (with-content-bounding-box {:left (:left options)
+                              :top  (:top options)
+                              :width  180
+                              :height 150})
   (with-drawables
     (let [enriched-opts (merge options eb/DEFAULT_SIZE_OPTS eb/DEFAULT_STROKE eb/RESTRICTED_BEHAVIOUR eb/NO_DEFAULT_CONTROLS)
           offset-x (:left options)

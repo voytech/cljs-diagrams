@@ -35,7 +35,8 @@
                    type
                    drawables
                    attributes
-                   relationships]
+                   relationships
+                   content-bbox]
 
   IEntity
   (add-attribute [this attribute])
@@ -43,14 +44,16 @@
 
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
-  ([type drawables]
+  ([type drawables content-bbox]
    (let [uid (str (random-uuid))
-         entity (Entity. uid type drawables [] [])]
-      (doseq [drawable drawables]
-        (make-js-property (:src drawable) ID  (:uid entity))
-        (make-js-property (:src drawable) PART_ID (:name drawable)))
-      (swap! entities assoc uid entity)
-      entity)))
+         entity (Entity. uid type drawables [] [] content-bbox)]
+     (doseq [drawable drawables]
+       (make-js-property (:src drawable) ID  (:uid entity))
+       (make-js-property (:src drawable) PART_ID (:name drawable)))
+     (swap! entities assoc uid entity)
+     entity))
+  ([type drawables]
+   (create-entity type drawables nil)))
 
 (defn bind [entity page]
   (let [euids (page @paged-entities)
@@ -89,6 +92,9 @@
             (= v (last coll)))
       i)))
 
+(defn get-entity-content-bbox [entity]
+    (:content-bbox entity))
+    
 (defn update-drawable-rel [entity name char value]
   (let [drawable (get-entity-drawable entity name)
         i (index-of (:drawables (entity-by-id (:uid entity))) drawable)]
@@ -135,8 +141,6 @@
                                  (subvec drawables (inc idx))))]
      (swap! entities assoc-in [(:uid entity) :drawables] updated)))
 
-(defmulti create-entity-for-type (fn [type data-obj] type))
-
 (defn get-attribute [name]
   (get @attributes name))
 
@@ -148,13 +152,20 @@
     (swap attributes assoc-in [(:name attribute)] attribute)))
 
 (defn create-attribute-value [attribute value img drawables]
-  (AttributeValue. (str (random-uuid)) attribute value img (map #(Drawable. (:name %) (:type %) (:src %) (:rels %)) drawables)))
+  (let [drawables_ (into (sorted-map) (mapv #({(:name %) (Drawable. (:name %) (:type %) (:src %) (:rels %) drawables)})))]
+    (AttributeValue. (str (random-uuid)) attribute value img drawables_)))
 
-(defn add-entity-attribute [entity & attributes]
+(defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]
-    (doseq [drawable (:drawables attribute-value)]
+    (doseq [drawable (vals (:drawables attribute-value))]
       (make-js-property (:src drawable) ID  (:uid entity))
       (make-js-property (:src drawable) ATTR_ID (:id attribute-value))
       (make-js-property (:src drawable) ATTR_DRAWABLE_ID (:name drawable)))
     (let [attributes (conj (:attributes (entity-by-id (:uid entity))) attribute-value)]
        (swap! entities assoc-in [(:uid entity) :attributes] attributes))))
+
+(defn get-attribute-value-drawable [attribute-value drawable-name]
+  (get (:drawables attribute-value) drawable-name))
+
+(defn get-attribute-value-drawable-source [attribute-value drawable-name]
+  (:src (get-attribute-value-drawable attribute-value drawable-name)))

@@ -6,11 +6,14 @@
 
 (defmacro defentity [name data options & body]
   (let [transposition (transpose-macro body)]
-    (let [drawables (:with-drawables transposition)]
+    (let [cntbbox   (:with-content-bounding-box transposition)
+          drawables (:with-drawables transposition)]
       (when (nil? drawables)
-        (throw (Error. "Provide drawables and behaviours definition within entitity definition")))
+        (throw (Error. "Provide drawables and behaviours definition within entitity definition!")))
+      (when (nil? cntbbox)
+        (throw (Error. "Provide attribute content bounding box parameters!")))
      `(defn ~name [~data ~options]
-         (let [e# (core.entities/create-entity (name '~name) [])]
+         (let [e# (core.entities/create-entity (name '~name) [] ~cntbbox)]
            (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))
            (core.entities/entity-by-id (:uid e#)))))))
 
@@ -23,10 +26,12 @@
                                             ~(:domain dfinition)
                                             ~(:sync dfinition))]
          (core.entities/add-attribute attr#)))
-     (fn [entity# ~data ~options]
-        (let [attribute#   (core.entities/get-attribute (name '~name))
+     (fn [entity# ~data]
+        (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
+                        :top  (:top (core.entities/get-entity-content-bbox entity#))}
+              attribute#   (core.entities/get-attribute (name '~name))
               attr-value#  (core.entities/create-attribute-value attribute#
                                                                  ~(:value data)
                                                                  ~(:img data)
                                                                  ~drawables)]
-          (core.entities/add-entity-attribute entity# attr-value#)))))
+          (core.entities/add-entity-attribute-value entity# attr-value#)))))

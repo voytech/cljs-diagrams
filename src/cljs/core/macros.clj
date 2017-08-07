@@ -9,7 +9,7 @@
     (let [cntbbox    (:with-content-bounding-box transposition)
           drawables  (:with-drawables transposition)
           behaviours (:with-behaviours transposition)
-          attributes (partition 2 (:with-attributes transposition))]
+          attributes (:with-attributes transposition)]
       (when (nil? drawables)
         (throw (Error. "Provide drawables and behaviours definition within entitity definition!")))
       (when (nil? cntbbox)
@@ -23,26 +23,25 @@
         (defn ~name [~data ~options]
            (let [e# (core.entities/create-entity (name '~name) [] ~cntbbox)]
              (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))
-             (doseq [attribute# ~attributes]
-               ((first attribute#) e# (last attribute#)))
+             (doseq [call# ~attributes] (call# e#))
              (core.entities/entity-by-id (:uid e#))))))))
 
 (defmacro defattribute [name data options dfinition drawables]
   `(do
      (when-not (core.entities/is-attribute (name '~name))
        (let [attr# (core.entities/Attribute. (name '~name)
-                                             ~(:cardinality dfinition)
-                                             ~(:index dfinition)
-                                             ~(:domain dfinition)
-                                             ~(:bbox dfinition)
-                                             ~(:sync dfinition))]
+                                             (:cardinality ~dfinition)
+                                             (:index ~dfinition)
+                                             (:domain ~dfinition)
+                                             (:bbox ~dfinition)
+                                             (:sync ~dfinition))]
          (core.entities/add-attribute attr#)
          (defn ~name [entity# ~data]
            (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
                            :top  (:top (core.entities/get-entity-content-bbox entity#))}
                  attribute#   (core.entities/get-attribute (name '~name))
                  attr-value#  (core.entities/create-attribute-value attribute#
-                                                                    ~(:value data)
-                                                                    ~(:img data)
+                                                                    (:value ~data)
+                                                                    (:img ~data)
                                                                     ~drawables)]
               (core.entities/add-entity-attribute-value entity# attr-value#)))))))

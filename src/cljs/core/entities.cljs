@@ -127,12 +127,6 @@
       (make-js-property (:src drawable) PART_ID (:name drawable))
       (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
          (swap! entities assoc-in [(:uid entity) :drawables] drawables)))))
-;    (when (not (nil? (:behaviours drawable_m)))
-;      (doseq [event-type (keys (:behaviours drawable_m))]
-;        (handle-event (:type entity)
-;                      (:name drawable)_m
-;                      event-type
-;                      (get (:behaviours drawable_m) event-type))))))
 
 (defn remove-entity-drawable [entity drawable-name]
   (let [drawables (:drawables (entity-by-id (:uid entity)))
@@ -152,7 +146,7 @@
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
 (defn create-attribute-value [attribute value img drawables]
-  (let [drawables_ (into (sorted-map) (mapv #({(:name %) (Drawable. (:name %) (:type %) (:src %) (:rels %) drawables)})))]
+  (let [drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:rels d))}) drawables))]
     (AttributeValue. (str (random-uuid)) attribute value img drawables_)))
 
 (defn add-entity-attribute-value [entity & attributes]
@@ -161,8 +155,9 @@
       (make-js-property (:src drawable) ID  (:uid entity))
       (make-js-property (:src drawable) ATTR_ID (:id attribute-value))
       (make-js-property (:src drawable) ATTR_DRAWABLE_ID (:name drawable)))
-    (let [attributes (conj (:attributes (entity-by-id (:uid entity))) attribute-value)]
-       (swap! entities assoc-in [(:uid entity) :attributes] attributes))))
+    (let [attributes (conj (:attributes (entity-by-id (:uid entity))) attribute-value)
+          sorted (sort-by #(:index (:attribute %)) attributes)]
+       (swap! entities assoc-in [(:uid entity) :attributes] sorted))))
 
 (defn get-attribute-value-drawable [attribute-value drawable-name]
   (get (:drawables attribute-value) drawable-name))

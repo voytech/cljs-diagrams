@@ -7,22 +7,19 @@
   {:cardinality 1
    :index 0
    :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))
-   :bbox {:width 100 :height 50}}
-  [{:name "name"
-    :type :title
-    :src  (js/fabric.Text. "Name")}
-   {:name "value"
+   :bbox {:width 180 :height 30}}
+  [{:name "value"
     :type :value
-    :src (js/fabric.Text. (:value data))}])
+    :src (js/fabric.Text. (:value data) (clj->js {:fontSize 14 :fontWeight "bold" :width 180 :textAlign "center"}))}])
 
 (defattribute description data options
   {:cardinality 1
    :index 1
    :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))
-   :bbox {:width 100 :height 50}}
+   :bbox {:width 180 :height 30}}
   [{:name "desc"
     :type :description
-    :src  (js/fabric.Text. "Description")}
+    :src  (js/fabric.Text. "Description" (clj->js {:fontSize 12}))}
    {:name "value"
     :type :value
-    :src (js/fabric.Text. (:value data))}])
+    :src (js/fabric.Text. (:value data) (clj->js {:left 90 :fontSize 12}))}])

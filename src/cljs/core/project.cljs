@@ -174,6 +174,10 @@
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------
 
+;TODO how should we handle dragNdrop events originating from particulaar tool? If not all tools produces entities - some can have different behaviour in canvas context
+; For example : attribute value producing tool will bind attrib value to entity. It in fact can just return entity to which attribute value was added
+; then this entity is going to be synchronized - all changes made are going to be propageted to canvas.
+
 (defmethod dnd/dispatch-drop-event "tool-data" [event]
   (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
@@ -203,7 +207,7 @@
     (.forEachObject canvas (fn [e] (when (= e src) (reset! test true))))
     @test))
 
-(defn- delete-orphans [entity]
+(defn- delete-drawable-orphans [entity]
   (let [canvas (:canvas (proj-selected-page))
         drawable-names (set (mapv #(:name %) (:drawables entity)))]
     (.forEachObject canvas (fn [e]
@@ -211,15 +215,30 @@
                                (when-not (contains? drawable-names (.-refPartId e))
                                  (.remove canvas e)))))))
 
-(defn- do-attributes [canvas entity attribute-values]
-  (doseq [attribute-value attribute-values]
-    (let [left (:left (:content-bbox entity))
-          top  (:top  (:content-bbox entity))]
-      (doseq [drawable (:drawables attribute-value)]
-        (when-not (contains canvas (:src drawable))
-          (.set (:src drawable) (clj->js {:left left :top top}))
-          (.setCoords (:src drawable))
-          (.add canvas (:src drawable)))))))
+(defn- layout [container left top sources]
+  (let [most-right  (max-key #(+ (.-left %) (.-width %)) sources)
+        most-bottom (max-key #(+ (.-top %) (.-height %)) sources)
+        new-line?  (>= (+ (.-left most-right) (.-width most-right) @left) (+ (:left container) (:width container)))
+        line-height (+ (.-top most-bottom) (.-height most-bottom))]
+    (doseq [source sources]
+      (.set source (clj->js {:left (if new-line?
+                                      (+ (:left container) (.-left source))
+                                      (+ @left (.-left source)))
+                             :top  (if new-line?
+                                      (+ (.-top source) line-height @top)
+                                      (+ (.-top source) @top))}))
+      (.setCoords source))
+    (when new-line? (reset! top (+ @top line-height)))
+    (reset! left (+ @left (.-left most-right) (.-width most-right)))))
+
+(defn- sync-attributes [canvas entity attribute-values]
+  (let [left (atom (:left (:content-bbox entity)))
+        top  (atom (:top (:content-bbox entity)))]
+    (doseq [attribute-value attribute-values]
+        (doseq [drawable (vals (:drawables attribute-value))]
+          (when-not (contains canvas (:src drawable))
+            (.add canvas (:src drawable))))
+        (layout (:content-bbox entity) left top (map #(:src %) (vals (:drawables attribute-value)))))))
 
 (defn sync-entity [entity]
   (when (not (instance? e/Entity entity))
@@ -227,11 +246,12 @@
   (let [drawables (:drawables entity)
         attributes (:attributes entity)
         canvas (:canvas (proj-selected-page))]
-    (delete-orphans entity)
+    (js/console.log (clj->js attributes))
+    (delete-drawable-orphans entity)
     (doseq [drawable drawables]
       (let [src (:src drawable)]
         (when-not (contains canvas src)
           (.add canvas src))))
-    (do-attributes canvas entity attirbutes)
+    (sync-attributes canvas entity attributes)
     (.renderAll canvas)
     (changed)))

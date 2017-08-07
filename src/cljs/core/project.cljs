@@ -215,14 +215,14 @@
                                (when-not (contains? drawable-names (.-refPartId e))
                                  (.remove canvas e)))))))
 
-(defn- layout [container left top sources]
+(defn- layout [bbox container left top sources]
   (let [most-right  (apply max-key (cons #(+ (.-left %) (.-width %)) sources))
         most-bottom (apply max-key (cons #(+ (.-top %) (.-height %)) sources))
-        new-line?  (>= (+ (.-left most-right) (.-width most-right) @left) (+ (:left container) (:width container)))
+        new-line?  (>= (+ (.-left most-right) (.-width most-right) @left) (+ (:left bbox) (:left container) (:width container)))
         line-height (+ (.-top most-bottom) (.-height most-bottom))]
     (doseq [source sources]
       (.set source (clj->js {:left (if new-line?
-                                      (+ (:left container) (.-left source))
+                                      (+ (:left bbox) (:left container) (.-left source))
                                       (+ @left (.-left source)))
                              :top  (if new-line?
                                       (+ (.-top source) line-height @top)
@@ -232,13 +232,15 @@
     (reset! left (+ @left (.-left most-right) (.-width most-right)))))
 
 (defn- sync-attributes [canvas entity attribute-values]
-  (let [left (atom (:left (:content-bbox entity)))
-        top  (atom (:top (:content-bbox entity)))]
+  (let [bbox (e/get-entity-bbox entity)
+        left (atom (+ (:left (:content-bbox entity)) (:left bbox)))
+        top  (atom (+ (:top (:content-bbox entity)) (:top bbox)))]
+    (js/console.log (clj->js bbox))    
     (doseq [attribute-value attribute-values]
-        (doseq [drawable (vals (:drawables attribute-value))]
-          (when-not (contains canvas (:src drawable))
-            (.add canvas (:src drawable))))
-        (layout (:content-bbox entity) left top (map #(:src %) (vals (:drawables attribute-value)))))))
+      (doseq [drawable (vals (:drawables attribute-value))]
+        (when-not (contains canvas (:src drawable))
+          (.add canvas (:src drawable))))
+      (layout bbox (:content-bbox entity) left top (map #(:src %) (vals (:drawables attribute-value)))))))
 
 (defn sync-entity [entity]
   (when (not (instance? e/Entity entity))

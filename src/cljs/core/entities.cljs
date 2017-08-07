@@ -95,6 +95,17 @@
 (defn get-entity-content-bbox [entity]
     (:content-bbox entity))
 
+(defn get-entity-bbox [entity]
+   (let [sources (mapv :src (:drawables entity))
+         leftmost (apply min-key (cons #(.-left %) sources))
+         rightmost (apply max-key (cons #(+ (.-left %) (.-width %)) sources))
+         topmost (apply min-key (cons #(.-top %) sources))
+         bottommost (apply max-key (cons #(+ (.-top %) (.-height %)) sources))]
+     {:left (.-left leftmost)
+      :top  (.-top topmost)
+      :width (- (+ (.-left rightmost) (.-width rightmost)) (.-left leftmost))
+      :height (- (+ (.-top bottommost) (.-height  bottommost)) (.-top topmost))}))
+
 (defn update-drawable-rel [entity name char value]
   (let [drawable (get-entity-drawable entity name)
         i (index-of (:drawables (entity-by-id (:uid entity))) drawable)]

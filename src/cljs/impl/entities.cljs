@@ -11,9 +11,9 @@
 
 
 (defentity rectangle-node data options
-  (with-content-bounding-box {:left (:left options)
-                              :top  (:top options)
-                              :width  180
+  (with-content-bounding-box {:left 15
+                              :top  15
+                              :width  175
                               :height 150})
   (with-behaviours
     {:endpoint {"mouse:over" (event-wrap show true)
@@ -52,8 +52,8 @@
 
 
 (defentity relation data options
-  (with-content-bounding-box {:left (:left options)
-                              :top  (:top options)
+  (with-content-bounding-box {:left 15
+                              :top  15
                               :width  180
                               :height 150})
   (with-behaviours

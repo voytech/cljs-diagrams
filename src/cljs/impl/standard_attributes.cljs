@@ -20,4 +20,4 @@
     :src  (js/fabric.Text. "Description" (clj->js {:fontSize 12}))}
    {:name "value"
     :type :value
-    :src (js/fabric.Text. (:value data) (clj->js {:left 90 :fontSize 12}))}])
+    :src (js/fabric.Text. (:value data) (clj->js {:left 70 :fontSize 12}))}])

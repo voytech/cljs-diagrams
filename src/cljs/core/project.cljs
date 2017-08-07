@@ -216,8 +216,8 @@
                                  (.remove canvas e)))))))
 
 (defn- layout [container left top sources]
-  (let [most-right  (max-key #(+ (.-left %) (.-width %)) sources)
-        most-bottom (max-key #(+ (.-top %) (.-height %)) sources)
+  (let [most-right  (apply max-key (cons #(+ (.-left %) (.-width %)) sources))
+        most-bottom (apply max-key (cons #(+ (.-top %) (.-height %)) sources))
         new-line?  (>= (+ (.-left most-right) (.-width most-right) @left) (+ (:left container) (:width container)))
         line-height (+ (.-top most-bottom) (.-height most-bottom))]
     (doseq [source sources]

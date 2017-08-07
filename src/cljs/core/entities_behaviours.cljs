@@ -120,6 +120,12 @@
                             y
                             coord-mode)))
 
+(defn- position-attributes-drawables [attributes offset-left offset-top]
+   (doseq [src (flatten (mapv #(-> % :drawables vals) attributes))]
+     (.set (:src src) (clj->js {:left (+ (.-left (:src src)) offset-left)
+                                :top  (+ (.-top  (:src src)) offset-top)}))
+     (.setCoords (:src src))))
+
 (defmulti get-refered-drawable-name (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
 
 (defmulti position-entity-drawable (fn [entity drawable-name context left top coord-mode]
@@ -151,7 +157,8 @@
       (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
             effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
         (when-not (= (:name drawable) ref-drawable-name)
-          (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))))
+          (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))
+    (position-attributes-drawables (:attributes entity) (:left effective-offset) (:top effective-offset))))        
 
 (defmethod position-entity-drawable [ "rectangle-node" :main :relation-scope] [entity drawable-name context left top coord-mode])
 
@@ -199,7 +206,8 @@
       (when-not (= (:name drawable) ref-drawable-name)
         (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
               effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
-           (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))))
+           (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))
+    (position-attributes-drawables (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
 (defn moving-entity []
   (fn [e]

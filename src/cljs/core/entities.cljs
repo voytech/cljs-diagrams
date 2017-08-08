@@ -25,7 +25,7 @@
 
 (defrecord AttributeValue [id attribute value img drawables])
 
-(defrecord Drawable [name type src rels])
+(defrecord Drawable [name type src props])
 
 (defprotocol IEntity
   (add-attribute [this attribute])
@@ -106,15 +106,15 @@
       :width (- (+ (.-left rightmost) (.-width rightmost)) (.-left leftmost))
       :height (- (+ (.-top bottommost) (.-height  bottommost)) (.-top topmost))}))
 
-(defn update-drawable-rel [entity name char value]
+(defn update-drawable-prop [entity name char value]
   (let [drawable (get-entity-drawable entity name)
         i (index-of (:drawables (entity-by-id (:uid entity))) drawable)]
-     (swap! entities assoc-in [(:uid entity) :drawables i :rels char] value)))
+     (swap! entities assoc-in [(:uid entity) :drawables i :props char] value)))
 
-(defn remove-drawable-rel [entity name char]
+(defn remove-drawable-prop [entity name char]
   (let [drawable (get-entity-drawable entity name)
         i (index-of (:drawables (entity-by-id (:uid entity))))]
-     (swap! entities update-in [(:uid entity) :drawables i :rels ] dissoc char)))
+     (swap! entities update-in [(:uid entity) :drawables i :props ] dissoc char)))
 
 (defn get-entity-drawable [entity name]
   (let [drawables (:drawables (entity-by-id (:uid entity)))]
@@ -133,7 +133,7 @@
     (let [drawable (Drawable. (:name drawable_m)
                               (:type drawable_m)
                               (:src  drawable_m)
-                              (:rels drawable_m))]
+                              (:props drawable_m))]
       (make-js-property (:src drawable) ID  (:uid entity))
       (make-js-property (:src drawable) PART_ID (:name drawable))
       (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
@@ -157,7 +157,7 @@
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
 (defn create-attribute-value [attribute value img drawables]
-  (let [drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:rels d))}) drawables))]
+  (let [drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:props d))}) drawables))]
     (AttributeValue. (str (random-uuid)) attribute value img drawables_)))
 
 (defn add-entity-attribute-value [entity & attributes]

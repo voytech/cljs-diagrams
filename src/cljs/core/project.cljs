@@ -215,32 +215,43 @@
                                (when-not (contains? drawable-names (.-refPartId e))
                                  (.remove canvas e)))))))
 
-(defn- layout [bbox container left top sources]
-  (let [most-right  (apply max-key (cons #(+ (.-left %) (.-width %)) sources))
-        most-bottom (apply max-key (cons #(+ (.-top %) (.-height %)) sources))
-        new-line?  (>= (+ (.-left most-right) (.-width most-right) @left) (+ (:left bbox) (:left container) (:width container)))
-        line-height (+ (.-top most-bottom) (.-height most-bottom))]
-    (doseq [source sources]
-      (.set source (clj->js {:left (if new-line?
-                                      (+ (:left bbox) (:left container) (.-left source))
-                                      (+ @left (.-left source)))
-                             :top  (if new-line?
-                                      (+ (.-top source) line-height @top)
-                                      (+ (.-top source) @top))}))
-      (.setCoords source))
-    (when new-line? (reset! top (+ @top line-height)))
-    (reset! left (+ @left (.-left most-right) (.-width most-right)))))
+;Now works only for offset mode - left and top of source is relative to bounding box.
+(defn- layout [bbox layout-buffer partials-aware]
+  (let [partials (vals (:drawables partials-aware))
+        left (:left @layout-buffer)
+        top  (:top  @layout-buffer)
+        most-right  (apply max-key (cons #(+ left (or (-> % :props :relative-left) 0) (.-width (:src %))) partials))
+        most-bottom (apply max-key (cons #(+ top  (or (-> % :props :relative-top) 0) (.-height (:src %))) partials))
+        exceeds-bbox? (>= (+ (or (-> most-right :props :relative-left) 0) (.-width (:src most-right)) left) (+ (:left bbox) (:width bbox)))
+        starts-row?   (= left (:left bbox))
+        new-row?      (and (not starts-row?) exceeds-bbox?)]
+    (when new-row?
+      (swap! layout-buffer assoc-in [:left] (:left bbox))
+      (swap! layout-buffer assoc-in [:top] (+ top (:row-height @layout-buffer)))
+      (swap! layout-buffer assoc-in [:row-height] (+ (or (-> most-bottom :props :relative-top) 0) (.-height (:src most-bottom)))))
+    (doseq [partial partials]
+      (.set (:src partial) (clj->js {:left (+ (:left @layout-buffer) (or (-> partial :props :relative-left) 0))
+                                     :top  (+ (or (-> partial :props :relative-top) 0) (:top @layout-buffer))}))
+      (.setCoords (:src partial)))
+    (swap! layout-buffer assoc-in [:left] (+ (:left @layout-buffer) (or (-> most-right :props :relative-left) 0) (.-width (:src most-right))))
+    (let [partials-row-height (+ (or (-> most-bottom :props :relative-top) 0) (.-height (:src most-bottom)))
+          replace? (> partials-row-height (:row-height @layout-buffer))]
+      (when replace?
+        (swap! layout-buffer assoc-in [:row-height] partials-row-height)))))
 
 (defn- sync-attributes [canvas entity attribute-values]
   (let [bbox (e/get-entity-bbox entity)
         left (atom (+ (:left (:content-bbox entity)) (:left bbox)))
-        top  (atom (+ (:top (:content-bbox entity)) (:top bbox)))]
-    (js/console.log (clj->js bbox))    
+        top  (atom (+ (:top (:content-bbox entity)) (:top bbox)))
+        layout-buffer (atom {:row-height 0
+                             :left @left
+                             :top @top})
+        cbbox {:left @left :top @top :width (:width bbox) :height (:height bbox)}]
     (doseq [attribute-value attribute-values]
       (doseq [drawable (vals (:drawables attribute-value))]
         (when-not (contains canvas (:src drawable))
           (.add canvas (:src drawable))))
-      (layout bbox (:content-bbox entity) left top (map #(:src %) (vals (:drawables attribute-value)))))))
+      (layout cbbox layout-buffer attribute-value))))
 
 (defn sync-entity [entity]
   (when (not (instance? e/Entity entity))

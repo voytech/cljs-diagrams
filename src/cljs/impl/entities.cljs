@@ -12,7 +12,7 @@
 
 (defentity rectangle-node data options
   (with-content-bounding-box {:left 15
-                              :top  15
+                              :top  0
                               :width  175
                               :height 150})
   (with-behaviours
@@ -94,12 +94,12 @@
         [{:name "connector"
           :type :relation
           :src  (relation-line (first conS) (last conS) (first conE) (last conE) enriched-opts)
-          :rels {:start "start" :end "end"}}
+          :props {:start "start" :end "end"}}
 
          {:name "start"
           :type :startpoint
           :src  (endpoint conS :moveable true :display "circle" :visible true :opacity 1)
-          :rels {:start "connector" :penultimate true}}
+          :props {:start "connector" :penultimate true}}
 
          {:name "arrow"
           :type :decorator
@@ -108,4 +108,4 @@
          {:name "end"
           :type :endpoint
           :src  (endpoint conE :moveable true :display "circle" :visible true :opacity 0)
-          :rels {:end "connector"}}])))
+          :props {:end "connector"}}])))

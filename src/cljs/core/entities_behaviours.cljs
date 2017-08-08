@@ -15,8 +15,8 @@
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
 (def TRANSPARENT_FILL {:fill "rgb(255,255,255)"})
-(def DEFAULT_FILL {:fill "#666"})
-(def DEFAULT_STROKE {:stroke "#666" :strokeWidth 1.5})
+(def DEFAULT_FILL {:fill "black"})
+(def DEFAULT_STROKE {:stroke "black" :strokeWidth 1.5})
 (def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false
                            :lockRotation true
                            :lockScalingX true
@@ -25,10 +25,10 @@
                            :lockMovementY true})
 (def NO_DEFAULT_CONTROLS {:hasControls false :hasBorders false})
 (def INVISIBLE {:visible false})
-(def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "#666" :strokeWidth 1.5})
-(def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "#666" :strokeWidth 1.5})
+(def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
+(def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
 (def DEFAULT_OPTIONS {:highlight-color "red"
-                      :normal-color "#666"
+                      :normal-color "black"
                       :highlight-width 3
                       :normal-width 1.5})
 (def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
@@ -158,7 +158,7 @@
             effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
         (when-not (= (:name drawable) ref-drawable-name)
           (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))
-    (position-attributes-drawables (:attributes entity) (:left effective-offset) (:top effective-offset))))        
+    (position-attributes-drawables (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
 (defmethod position-entity-drawable [ "rectangle-node" :main :relation-scope] [entity drawable-name context left top coord-mode])
 
@@ -241,8 +241,8 @@
                     (= (:drawable (p/prev-event e)) (:drawable e)))
       (let [entity (:entity e)
             line (e/get-entity-drawable entity (:drawable e))
-            line-start-breakpoint (e/get-entity-drawable entity (:start (:rels line)))
-            line-end-breakpoint   (e/get-entity-drawable entity (:end (:rels line)))
+            line-start-breakpoint (e/get-entity-drawable entity (:start (:props line)))
+            line-end-breakpoint   (e/get-entity-drawable entity (:end (:props line)))
             src  (:src line)
             oeX  (.-x2 src)
             oeY  (.-y2 src)
@@ -253,21 +253,21 @@
           (.setCoords src)
           (let [relation-id   (str (random-uuid))
                 breakpoint-id (str (random-uuid))
-                is-penultimate (= true (:penultimate (:rels line-start-breakpoint)))]
+                is-penultimate (= true (:penultimate (:props line-start-breakpoint)))]
             (e/add-entity-drawable entity
               {:name  relation-id
                :type  :relation
                :src   (relation-line eX eY oeX oeY CONNECTOR_DEFAULT_OPTIONS)
-               :rels {:start breakpoint-id :end (:name line-end-breakpoint)}}
+               :props {:start breakpoint-id :end (:name line-end-breakpoint)}}
               {:name  breakpoint-id
                :type  :breakpoint
                :src   (endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
-               :rels {:end (:name line) :start relation-id :penultimate is-penultimate}})
+               :props {:end (:name line) :start relation-id :penultimate is-penultimate}})
             (p/sync-entity (e/entity-by-id (:uid entity)))
-            (e/update-drawable-rel entity (:name line) :end breakpoint-id)
-            (e/update-drawable-rel entity (:name line-end-breakpoint) :end relation-id)
+            (e/update-drawable-prop entity (:name line) :end breakpoint-id)
+            (e/update-drawable-prop entity (:name line-end-breakpoint) :end relation-id)
             (when (= true is-penultimate)
-              (e/update-drawable-rel entity (:name line-start-breakpoint) :penultimate false))))))))
+              (e/update-drawable-prop entity (:name line-start-breakpoint) :penultimate false))))))))
 
 (defn dissoc-breakpoint []
     (fn [e]
@@ -275,16 +275,16 @@
        (when (and  (not= (:type prev) "object:moving"))
         (let [entity     (:entity e)
               breakpoint (e/get-entity-drawable entity (:drawable e))
-              line-end   (e/get-entity-drawable entity (:start     (:rels breakpoint)))
-              line-endpoint (e/get-entity-drawable entity (:end (:rels line-end)))
-              line-start (e/get-entity-drawable entity (:end   (:rels breakpoint)))
-              line-startpoint (e/get-entity-drawable entity (:start (:rels line-start)))
-              is-penultimate? (:penultimate (:rels breakpoint))]
+              line-end   (e/get-entity-drawable entity (:start  (:props breakpoint)))
+              line-endpoint (e/get-entity-drawable entity (:end (:props line-end)))
+              line-start (e/get-entity-drawable entity (:end   (:props breakpoint)))
+              line-startpoint (e/get-entity-drawable entity (:start (:props line-start)))
+              is-penultimate? (:penultimate (:props breakpoint))]
            (e/remove-entity-drawable entity (:name breakpoint))
            (e/remove-entity-drawable entity (:name line-end))
-           (e/update-drawable-rel entity (:name line-start) :end (:name line-endpoint))
-           (e/update-drawable-rel entity (:name line-endpoint) :end (:name line-start))
-           (e/update-drawable-rel entity (:name line-startpoint) :penultimate is-penultimate?)
+           (e/update-drawable-prop entity (:name line-start) :end (:name line-endpoint))
+           (e/update-drawable-prop entity (:name line-endpoint) :end (:name line-start))
+           (e/update-drawable-prop entity (:name line-startpoint) :penultimate is-penultimate?)
            (position-entity-drawable entity (:name line-endpoint) :entity-scope (.-left (:src line-endpoint))
                                                                                 (.-top  (:src line-endpoint)))
            (p/sync-entity (e/entity-by-id (:uid entity))))))))
@@ -349,14 +349,14 @@
          position (effective-position breakpoint-drawable left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         starts-relation-drawable (e/get-entity-drawable entity (:start (:rels breakpoint-drawable)))
-         ends-relation-drawable (e/get-entity-drawable entity (:end (:rels breakpoint-drawable)))
+         starts-relation-drawable (e/get-entity-drawable entity (:start (:props breakpoint-drawable)))
+         ends-relation-drawable (e/get-entity-drawable entity (:end (:props breakpoint-drawable)))
          arrow-drawable (e/get-entity-drawable entity "arrow")]
      (.set (:src breakpoint-drawable) (clj->js {:left effective-left :top  effective-top}))
      (.setCoords (:src breakpoint-drawable))
      (to-the-center-of (:src starts-relation-drawable) :x1 :y1 (:src breakpoint-drawable))
      (to-the-center-of (:src ends-relation-drawable)   :x2 :y2 (:src breakpoint-drawable))
-     (when (= true (:penultimate (:rels breakpoint-drawable)))
+     (when (= true (:penultimate (:props breakpoint-drawable)))
        (refresh-arrow-angle starts-relation-drawable arrow-drawable))))
   ([entity name left top]
    (position-breakpoint entity name left top :absolute)))
@@ -367,12 +367,12 @@
          position (effective-position startpoint-drawable left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         starts-relation-drawable (e/get-entity-drawable entity (:start (:rels startpoint-drawable)))
+         starts-relation-drawable (e/get-entity-drawable entity (:start (:props startpoint-drawable)))
          arrow-drawable (e/get-entity-drawable entity "arrow")]
      (.set (:src startpoint-drawable) (clj->js {:left effective-left :top  effective-top}))
      (.setCoords (:src startpoint-drawable))
      (to-the-center-of (:src starts-relation-drawable) :x1 :y1 (:src startpoint-drawable))
-     (when (= true (:penultimate (:rels startpoint-drawable)))
+     (when (= true (:penultimate (:props startpoint-drawable)))
        (refresh-arrow-angle starts-relation-drawable arrow-drawable))))
   ([entity left top]
    (position-startpoint entity left top :absolute)))
@@ -383,7 +383,7 @@
          position (effective-position endpoint-drawable left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         ends-relation-drawable  (e/get-entity-drawable entity (:end (:rels endpoint-drawable)))
+         ends-relation-drawable  (e/get-entity-drawable entity (:end (:props endpoint-drawable)))
 
          arrow-drawable      (e/get-entity-drawable entity "arrow")]
     (.set (:src endpoint-drawable) (clj->js {:left effective-left  :top  effective-top}))

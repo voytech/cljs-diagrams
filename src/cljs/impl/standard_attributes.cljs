@@ -25,3 +25,21 @@
     :type :value
     :props {:relative-left 70}
     :src (js/fabric.Text. (:value data) (clj->js o/TEXT_NORMAL_DEFAULTS))}])
+
+(defattribute field1TestAttr data options
+  {:cardinality 1
+   :index 2
+   :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))}
+  [{:name "value"
+    :type :value
+    :props {:relative-left 5}
+    :src (js/fabric.Text. (:value data) (clj->js o/TEXT_NORMAL_DEFAULTS))}])
+
+(defattribute field2TestAttr data options
+ {:cardinality 4
+  :index 3
+  :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))}
+ [{:name "value"
+   :type :value
+   :props {:relative-left 5}
+   :src (js/fabric.Text. (:value data) (clj->js o/TEXT_NORMAL_DEFAULTS))}])

@@ -48,7 +48,11 @@
         :type :main
         :src (js/fabric.Rect. (clj->js enriched-opts))}]))
   (with-attributes [#(stdatr/name % {:value "<Enter name here>"})
-                    #(stdatr/description % {:value "<Enter descrition here>"})]))
+                    #(stdatr/description % {:value "<Enter descrition here>"})
+                    #(stdatr/field1TestAttr % {:value "Field 1 Val"})
+                    #(stdatr/field2TestAttr % {:value "Field 2 Val 1"})
+                    #(stdatr/field2TestAttr % {:value "Field 2 Val 2"})
+                    #(stdatr/field2TestAttr % {:value "Field 2 Val 3"})]))
 
 
 (defentity relation data options

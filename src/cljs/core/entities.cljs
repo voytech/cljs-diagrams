@@ -6,7 +6,6 @@
 (defonce ^:private ID "refId")
 (defonce ^:private PART_ID "refPartId")
 (defonce ^:private ATTR_ID "refAttrId")
-(defonce ^:private ATTR_DRAWABLE_ID "refAttrDrawableId")
 
 (defonce entities (atom {}))
 
@@ -162,13 +161,19 @@
 
 (defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]
-    (doseq [drawable (vals (:drawables attribute-value))]
-      (make-js-property (:src drawable) ID  (:uid entity))
-      (make-js-property (:src drawable) ATTR_ID (:id attribute-value))
-      (make-js-property (:src drawable) ATTR_DRAWABLE_ID (:name drawable)))
-    (let [attributes (conj (:attributes (entity-by-id (:uid entity))) attribute-value)
-          sorted (sort-by #(:index (:attribute %)) attributes)]
-       (swap! entities assoc-in [(:uid entity) :attributes] sorted))))
+    (let [entity-fetch (entity-by-id (:uid entity))
+          existing-cardinality (count (filter #(= (-> % :attribute :name) (-> attribute-value :attribute :name)) (:attributes entity-fetch)))
+          cardinality (:cardinality (:attribute attribute-value))]
+      (if (> cardinality existing-cardinality)
+        (do
+          (doseq [drawable (vals (:drawables attribute-value))]
+            (make-js-property (:src drawable) ID  (:uid entity))
+            (make-js-property (:src drawable) ATTR_ID (:id attribute-value))
+            (make-js-property (:src drawable) PART_ID (:name drawable)))
+          (let [attributes (conj (:attributes entity-fetch) attribute-value)
+                sorted (sort-by #(:index (:attribute %)) attributes)]
+             (swap! entities assoc-in [(:uid entity) :attributes] sorted)))
+        (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!")))))
 
 (defn get-attribute-value-drawable [attribute-value drawable-name]
   (get (:drawables attribute-value) drawable-name))

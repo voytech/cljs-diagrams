@@ -175,12 +175,12 @@ img.page-thumb{
   display:block;
   margin: 2px 2px 2px 2px;
   float:left;
-  min-height:100px;
+  min-height:40px;
   min-width:100px;
-  max-width:150px;
-  max-height:150px;
-  width:140px;
-  height:140px;
+  max-width:100px;
+  max-height:100px;
+  width:100px;
+  height:60px;
   overflow:hidden;
   background-color:white;
 }
@@ -209,14 +209,11 @@ img.page-thumb{
 
 .tool-title{
   position:absolute;
-  background : black;
-  opacity : 0.6;
   left:0px;
   top:0px;
   width:100%;
   text-align:left;
   font-weight:bold;
-  color:white;
 }
 
 .btn-gutter {

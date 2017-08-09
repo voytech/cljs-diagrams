@@ -8,9 +8,15 @@
                            :lockRotation true
                            :lockScalingX true
                            :lockScalingY true})
+(def LOCKED_SCALING       {:lockScalingX true
+                           :lockScalingY true})
+(def LOCKED_ROTATION      {:lockRotation true})
 (def LOCKED_MOVEMENT      {:lockMovementX true
                            :lockMovementY true})
-(def NO_DEFAULT_CONTROLS {:hasControls false :hasBorders false})
+(def NO_DEFAULT_CONTROLS  {:hasControls false
+                           :hasBorders false
+                           :hasRotatingPoint false})
+(def LOCKED (merge LOCKED_MOVEMENT LOCKED_ROTATION LOCKED_SCALING NO_DEFAULT_CONTROLS))                           
 (def INVISIBLE {:visible false})
 (def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
 (def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})

@@ -173,7 +173,7 @@
           (let [attributes (conj (:attributes entity-fetch) attribute-value)
                 sorted (sort-by #(:index (:attribute %)) attributes)]
              (swap! entities assoc-in [(:uid entity) :attributes] sorted)))
-        (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!")))))
+        (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
 
 (defn get-attribute-value-drawable [attribute-value drawable-name]
   (get (:drawables attribute-value) drawable-name))

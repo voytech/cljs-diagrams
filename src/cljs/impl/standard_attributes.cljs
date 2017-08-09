@@ -11,8 +11,7 @@
    :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))}
   [{:name "value"
     :type :value
-    :props {:relative-top 10}
-    :src (js/fabric.Text. (:value data) (clj->js o/TEXT_HEADER_DEFAULTS))}])
+    :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_HEADER_DEFAULTS)))}])
 
 (defattribute description data options
   {:cardinality 1
@@ -20,11 +19,10 @@
    :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))}
   [{:name "desc"
     :type :description
-    :src  (js/fabric.Text. "Description" (clj->js o/TEXT_NORMAL_DEFAULTS))}
+    :src  (js/fabric.Text. "Description" (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}
    {:name "value"
     :type :value
-    :props {:relative-left 70}
-    :src (js/fabric.Text. (:value data) (clj->js o/TEXT_NORMAL_DEFAULTS))}])
+    :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS {:left 70})))}])
 
 (defattribute field1TestAttr data options
   {:cardinality 1
@@ -32,8 +30,7 @@
    :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))}
   [{:name "value"
     :type :value
-    :props {:relative-left 5}
-    :src (js/fabric.Text. (:value data) (clj->js o/TEXT_NORMAL_DEFAULTS))}])
+    :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}])
 
 (defattribute field2TestAttr data options
  {:cardinality 4
@@ -41,5 +38,4 @@
   :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))}
  [{:name "value"
    :type :value
-   :props {:relative-left 5}
-   :src (js/fabric.Text. (:value data) (clj->js o/TEXT_NORMAL_DEFAULTS))}])
+   :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}])

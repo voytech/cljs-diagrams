@@ -12,14 +12,12 @@
 
 (defn Library [class]
   [:div {:class (:class class)}
-    [components/Tabs {:name "Photos" :view [tv/ToolBoxWithUpload "photos"]}
-                     {:name "Toolbox" :view [tv/ToolBox :basic-tools]}
-                     {:name "Designer" :view [:div "Designer"]}
-                     {:name "Templates" :view [:div "Templates"]}]])
+    [components/Tabs {:name "Toolbox" :view [tv/ToolBox :basic-tools]}
+                     {:name "Attributes" :view [:div "Attributes"]}]])
 
 
 (defn Main []
   [:div.container-fluid
     [:div.row.row-offcanvas.row-offcanvas-left
-     [Library {:class "col-3 sidebar-offcanvas"}]
+     [Library {:class "col-2 sidebar-offcanvas"}]
      [Workspace {:class "col"}]]])

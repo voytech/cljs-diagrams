@@ -12,7 +12,7 @@
 
 (defentity rectangle-node data options
   (with-content-bounding-box {:left 15
-                              :top  0
+                              :top  15
                               :width  175
                               :height 150})
   (with-behaviours

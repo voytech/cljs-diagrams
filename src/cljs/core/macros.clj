@@ -39,7 +39,8 @@
                                                (:index ~dfinition)
                                                (:domain ~dfinition)
                                                (:bbox ~dfinition)
-                                               (:sync ~dfinition))]
+                                               (:sync ~dfinition)
+                                               (fn [~data] ~drawables))]
            (core.entities/add-attribute attr#)
            (when (not (nil? ~behaviours))
              (doseq [drawable-type# (keys ~behaviours)]
@@ -52,7 +53,5 @@
                              :top  (:top (core.entities/get-entity-content-bbox entity#))}
                    attribute#   (core.entities/get-attribute (name '~name))
                    attr-value#  (core.entities/create-attribute-value attribute#
-                                                                      (:value ~data)
-                                                                      (:img ~data)
-                                                                      ~drawables)]
+                                                                      ~data)]
                 (core.entities/add-entity-attribute-value entity# attr-value#))))))))

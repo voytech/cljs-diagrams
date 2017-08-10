@@ -18,7 +18,7 @@
   (with-drawables
     [{:name "value"
       :type :value
-      :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_HEADER_DEFAULTS)))}])
+      :src (js/fabric.Text. data (clj->js (merge o/LOCKED o/TEXT_HEADER_DEFAULTS)))}])
   (with-behaviours
     {:value highlight-hovering}))
 
@@ -33,7 +33,7 @@
       :src  (js/fabric.Text. "Description" (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}
      {:name "value"
       :type :value
-      :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS {:left 60})))}])
+      :src (js/fabric.Text. data (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS {:left 60})))}])
   (with-behaviours
     {:value highlight-hovering}))
 
@@ -45,7 +45,7 @@
   (with-drawables
     [{:name "value"
       :type :value
-      :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))
+      :src (js/fabric.Text. data (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))
 
 (defattribute field2TestAttr data options
   (with-definition
@@ -55,4 +55,4 @@
   (with-drawables
      [{:name "value"
        :type :value
-       :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))
+       :src (js/fabric.Text. data (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))

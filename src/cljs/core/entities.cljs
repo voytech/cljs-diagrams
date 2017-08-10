@@ -22,9 +22,9 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defrecord Attribute [name cardinality index domain bbox sync])
+(defrecord Attribute [name cardinality index domain bbox sync factory])
 
-(defrecord AttributeValue [id attribute value img drawables])
+(defrecord AttributeValue [id attribute value drawables])
 
 (defrecord Drawable [name type src props])
 
@@ -164,10 +164,10 @@
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
-; Should not use drawables in argument list. Istead pass drawable factory-like function into the attribute definition.
-(defn create-attribute-value [attribute value img drawables]
-  (let [drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:props d))}) drawables))]
-    (AttributeValue. (str (random-uuid)) attribute value img drawables_)))
+(defn create-attribute-value [attribute data]
+  (let [drawables ((:factory (get-attribute (:name attribute))) data)
+        drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:props d))}) drawables))]
+    (AttributeValue. (str (random-uuid)) attribute data drawables_)))
 
 (defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]

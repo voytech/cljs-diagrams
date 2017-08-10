@@ -7,8 +7,8 @@
  (:require-macros [core.macros :refer [defattribute]]))
 
 (def highlight-hovering
-  {"mouse:over" (behaviours/highlight true  (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "green" :normal-width 0.5 :highlight-width 0.7}))
-   "mouse:out"  (behaviours/highlight false (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "green" :normal-width 0.5 :highlight-width 0.7}))})
+  {"mouse:over" (behaviours/highlight true  (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7}))
+   "mouse:out"  (behaviours/highlight false (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7}))})
 
 (defattribute name data options
   (with-definition

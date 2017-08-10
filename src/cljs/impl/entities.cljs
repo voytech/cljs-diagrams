@@ -73,8 +73,8 @@
                                                                                                                                                (toggle-endpoints (:entity trg) false)
                                                                                                                                                (position-startpoint (:entity src) (.-left (:src trg)) (.-top (:src trg)))))
                                        (event-wrap relations-validate))
-                  "mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
-                  "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)}
+                  "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
+                  "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}
      :endpoint   {"object:moving" (all (moving-endpoint)
                                        (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
                                                            (fn [src trg] (toggle-endpoints (:entity trg) false))))
@@ -82,10 +82,10 @@
                                                                                                                                                 (toggle-endpoints (:entity trg) false)
                                                                                                                                                 (position-endpoint (:entity src) (.-left (:src trg)) (.-top (:src trg)))))
                                         (event-wrap relations-validate))
-                   "mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
-                   "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)}
-     :breakpoint  {"mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
-                   "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)
+                   "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
+                   "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}
+     :breakpoint  {"mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
+                   "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)
                    "mouse:up"      (dissoc-breakpoint)
                    "object:moving" (moving-endpoint)}})
 

@@ -55,6 +55,46 @@
           keyword-id (assert-keyword id)]
       (get-in @project [:pages keyword-id]))))
 
+
+(defn- enrich-event-and-handle [canvas e event-type decomposed handler]
+  (let [event {:src (.-target e)
+               :event e
+               :entity (-> decomposed :entity)
+               :canvas canvas
+               :drawable (-> decomposed :drawable-name)
+               :type event-type}]
+      (handler event)
+      (add-event event)
+      (.renderAll canvas)))
+
+(defn- decompose [target]
+  (let [drawable-name      (.-refPartId target)
+        attribute-value-id (.-refAttrId target)
+        entity-id          (.-refId target)
+        entity             (e/entity-from-src target)
+        attribute-value    (e/get-attribute-value entity attribute-value-id)]
+    {:entity           entity
+     :attribute-value  attribute-value
+     :drawable-name    drawable-name}))
+
+(defmulti handle-event-by-class (fn [canvas event-type e] (if (not (nil? (.-refAttrId (.-target e)))) :attribute :entity)))
+
+(defmethod handle-event-by-class :attribute [canvas event-type e]
+  (let [decomposed (decompose (.-target e))
+        handler (get-in @e/attribute-events [(-> decomposed :attribute-value :attribute :name)
+                                             (:type (e/get-attribute-value-drawable (:attribute-value decomposed) (:drawable-name decomposed)))
+                                             event-type])]
+      (when (not (nil? handler))
+        (enrich-event-and-handle canvas e event-type decomposed handler))))
+
+(defmethod handle-event-by-class :entity [canvas event-type e]
+  (let [decomposed (decompose (.-target e))
+        handler (get-in @e/entity-events [(-> decomposed :entity :type)
+                                          (:type (e/get-entity-drawable (:entity decomposed) (:drawable-name decomposed)))
+                                          event-type])]
+      (when (not (nil? handler))
+        (enrich-event-and-handle canvas e event-type decomposed handler))))
+
 (defn- dispatch-events [canvas]
   (doseq [event-type ["object:moving"  "object:rotating"
                       "object:scaling" "object:selected"
@@ -63,29 +103,7 @@
                       "mouse:click"    "mouse:dbclick"]]
       (.on canvas (js-obj event-type (fn [e]
                                         (when-let [jsobj  (.-target e)]
-                                          (let [drawable  (.-refPartId jsobj)
-                                                attribute (.-refAttrId jsobj)
-                                                entity    (e/entity-from-src jsobj)
-                                                attribute-value (e/get-attribute-value entity attribute)
-                                                class     (if (nil? attribute) :entity :attribute)
-                                                instance-type  (if (= class :entity) (:type entity)
-                                                                                     (-> attribute-value :attribute :name))
-                                                drawable-type (:type (if (= class :entity) (e/get-entity-drawable entity drawable)
-                                                                                           (e/get-attribute-value-drawable entity attribute drawable)))
-                                                handler (get-in (if (= class :entity) @e/entity-events @e/attribute-events) [instance-type drawable-type event-type])]
-                                             (js/console.log drawable-type)
-                                             (js/console.log class)
-                                             (js/console.log handler)
-                                             (when (not (nil? handler))
-                                               (.setCoords jsobj)
-                                               (let [event {:src jsobj      :drawable drawable
-                                                            :entity entity  :canvas canvas
-                                                            :event e        :type event-type}]
-                                                 (handler event)
-                                                 (add-event event))
-                                               (.renderAll canvas)))))))))
-
-
+                                          (handle-event-by-class canvas event-type e)))))))
 
 (defn initialize-page [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))

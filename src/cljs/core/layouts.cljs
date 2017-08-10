@@ -36,8 +36,6 @@
 (defn- layout-row [bbox layout-buffer partials-aware]
   (let [partials (get-partials partials-aware)
         partials-bbox (get-bbox partials-aware)
-        ;pbbox-right-corner-x (+ (:left partials-bbox) (:width partials-bbox))
-        ;pbbox-bottom-corner-y (+ (:top partials-bbox) (:height partials-bbox))
         relative-left #(- (.-left (:src %)) (:left partials-bbox))
         relative-top  #(- (.-top (:src %)) (:top partials-bbox))
         absolute-left (:left @layout-buffer)

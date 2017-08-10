@@ -37,22 +37,26 @@
   (with-behaviours
     {:value highlight-hovering}))
 
-(defattribute field1TestAttr data options
+(defn status-components [status])
+  
+
+(defattribute state data options
   (with-definition
     {:cardinality 1
-     :index 2
-     :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))})
-  (with-drawables
-    [{:name "value"
-      :type :value
-      :src (js/fabric.Text. data (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))
-
-(defattribute field2TestAttr data options
-  (with-definition
-    {:cardinality 4
-     :index 3
-     :sync (fn [attr-value] (.setText (e/get-attribute-value-drawable-source attr-value "value") (:value attr-value)))})
-  (with-drawables
-     [{:name "value"
-       :type :value
-       :src (js/fabric.Text. data (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))
+     :index 4})
+  (with-domain
+     [(value :open
+        (with-drawables
+          [{:name "value-open"
+            :type :value
+            :src (js/fabric.Text. "OPEN" (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))
+      (value :progress
+        (with-drawables
+          [{:name "value-progress"
+            :type :value
+            :src (js/fabric.Text. "PROGRESS" (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))
+      (value :closed
+        (with-drawables
+          [{:name "value-closed"
+            :type :value
+            :src (js/fabric.Text. "CLOSED" (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}]))]))

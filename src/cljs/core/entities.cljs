@@ -22,7 +22,15 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defrecord Attribute [name cardinality index domain bbox sync factory])
+(defrecord AttributeDomain [value
+                            factory])
+(defrecord Attribute [name
+                      cardinality
+                      index
+                      domain
+                      bbox
+                      sync
+                      factory])
 
 (defrecord AttributeValue [id attribute value drawables])
 
@@ -161,11 +169,16 @@
   (not (nil? (get-attribute name))))
 
 (defn add-attribute [attribute]
+  (js/console.log (clj->js attribute))
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
-(defn create-attribute-value [attribute data]
-  (let [drawables ((:factory (get-attribute (:name attribute))) data)
+(defn create-attribute-value [attribute_ data]
+  (let [attribute (get-attribute (:name attribute_))
+        domain (:domain attribute)
+        domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))
+        drawable-factory (or (:factory domain-value) (:factory attribute))
+        drawables (drawable-factory data)
         drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:props d))}) drawables))]
     (AttributeValue. (str (random-uuid)) attribute data drawables_)))
 

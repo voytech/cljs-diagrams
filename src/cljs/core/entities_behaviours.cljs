@@ -27,18 +27,7 @@
 (def INVISIBLE {:visible false})
 (def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
 (def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
-(def DEFAULT_OPTIONS {:highlight-color "red"
-                      :normal-color "black"
-                      :highlight-width 3
-                      :normal-width 1.5})
 (def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
-
-(defn highlight [bln options]
-  (fn [e]
-    (.set (:src e) (clj->js {:stroke (if bln (:highlight-color options)
-                                             (:normal-color options))
-                             :strokeWidth (if bln (:highlight-width options)
-                                                  (:normal-width options))}))))
 
 (defn overlaying? [src trg]
     (or (.intersectsWithObject src trg)
@@ -289,22 +278,6 @@
                                                                                 (.-top  (:src line-endpoint)))
            (p/sync-entity (e/entity-by-id (:uid entity))))))))
 
-(defn all [ & handlers]
-  (fn [e]
-    (doseq [handler handlers]
-      (handler e))))
-
-(defn event-wrap
-  ([f]
-   (fn [e]
-     (let [entity (:entity e)]
-       (f entity))))
-  ([f & args]
-   (fn [e]
-     (let [entity (:entity e)
-           drawable-name (:drawabe e)]
-       (apply f (cons entity (cons drawable-name (vec args))))))))
-
 
 (defn relations-validate [entity]
   (doseq [relation (:relationships entity)]
@@ -322,14 +295,6 @@
           (e/disconnect-entities entity related-entity)))))
 
 
-(defn align-center [src trg]
-  (let [srcCx   (+ (.-left src) (/ (.-width src) 2))
-        srcCy   (+ (.-top src) (/ (.-width src) 2))
-        trgLeft (- srcCx (/ (.-width trg) 2))
-        trgTop  (- srcCy (/ (.-height trg) 2))]
-      (.set trg (clj->js {:left trgLeft :top trgTop}))
-      (.setCoords trg)))
-
 (defn- refresh-arrow-angle [relation-drawable arrow-drawable]
   (let [x1 (-> relation-drawable :src (.-x1))
         y1 (-> relation-drawable :src (.-y1))
@@ -341,7 +306,6 @@
   (.set line (clj->js {x (+ (.-left shape) (/ (.-width shape) 2))
                        y (+ (.-top shape) (/ (.-height shape) 2))}))
   (.setCoords line))
-
 
 (defn position-breakpoint
   ([entity name left top coord-mode]
@@ -393,10 +357,6 @@
     (refresh-arrow-angle ends-relation-drawable arrow-drawable)))
  ([entity left top]
   (position-endpoint entity left top :absolute)))
-
-(defn show [entity drawable-name show]
-  (let [drawable (e/get-entity-drawable entity drawable-name)]
-    (.set (:src drawable) (clj->js {:visible show}))))
 
 (defn toggle-endpoints [entity toggle]
   (doseq [drawable (:drawables entity)]

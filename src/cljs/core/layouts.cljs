@@ -1,5 +1,13 @@
 (ns core.layouts)
 
+(defn align-center [src trg]
+  (let [srcCx   (+ (.-left src) (/ (.-width src) 2))
+        srcCy   (+ (.-top src) (/ (.-width src) 2))
+        trgLeft (- srcCx (/ (.-width trg) 2))
+        trgTop  (- srcCy (/ (.-height trg) 2))]
+      (.set trg (clj->js {:left trgLeft :top trgTop}))
+      (.setCoords trg)))
+
 (defn position [partial left top coord-mode])
 
 (defn position-entity [entity left top coord-mode])

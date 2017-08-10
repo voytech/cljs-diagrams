@@ -62,11 +62,20 @@
                       "mouse:over"     "mouse:out"
                       "mouse:click"    "mouse:dbclick"]]
       (.on canvas (js-obj event-type (fn [e]
-                                        (when-let [jsobj (.-target e)]
-                                          (let [drawable (.-refPartId jsobj)
-                                                entity  (e/entity-from-src jsobj)
-                                                drawable-type (:type (e/get-entity-drawable entity drawable))
-                                                handler (get-in @e/entity-events [(:type entity) drawable-type event-type])]
+                                        (when-let [jsobj  (.-target e)]
+                                          (let [drawable  (.-refPartId jsobj)
+                                                attribute (.-refAttrId jsobj)
+                                                entity    (e/entity-from-src jsobj)
+                                                attribute-value (e/get-attribute-value entity attribute)
+                                                class     (if (nil? attribute) :entity :attribute)
+                                                instance-type  (if (= class :entity) (:type entity)
+                                                                                     (-> attribute-value :attribute :name))
+                                                drawable-type (:type (if (= class :entity) (e/get-entity-drawable entity drawable)
+                                                                                           (e/get-attribute-value-drawable entity attribute drawable)))
+                                                handler (get-in (if (= class :entity) @e/entity-events @e/attribute-events) [instance-type drawable-type event-type])]
+                                             (js/console.log drawable-type)
+                                             (js/console.log class)
+                                             (js/console.log handler)
                                              (when (not (nil? handler))
                                                (.setCoords jsobj)
                                                (let [event {:src jsobj      :drawable drawable

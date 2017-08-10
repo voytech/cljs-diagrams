@@ -16,14 +16,14 @@
 (def NO_DEFAULT_CONTROLS  {:hasControls false
                            :hasBorders false
                            :hasRotatingPoint false})
-(def LOCKED (merge LOCKED_MOVEMENT LOCKED_ROTATION LOCKED_SCALING NO_DEFAULT_CONTROLS))                           
+(def LOCKED (merge LOCKED_MOVEMENT LOCKED_ROTATION LOCKED_SCALING NO_DEFAULT_CONTROLS))
 (def INVISIBLE {:visible false})
 (def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
 (def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
-(def DEFAULT_OPTIONS {:highlight-color "red"
-                      :normal-color "black"
-                      :highlight-width 3
-                      :normal-width 1.5})
+(def DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "red"
+                                :normal-color "black"
+                                :highlight-width 3
+                                :normal-width 1.5})
 (def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
 
 (def TEXT_DEFAULT_FONT {:fontFamily "calibri"})

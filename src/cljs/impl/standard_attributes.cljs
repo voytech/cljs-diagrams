@@ -1,9 +1,14 @@
 (ns impl.standard-attributes
  (:require [core.entities :as e]
+           [core.behaviours :as behaviours]
            [core.project :as p]
            [core.options :as o])
 
  (:require-macros [core.macros :refer [defattribute]]))
+
+(def highlight-hovering
+  {"mouse:over" (behaviours/highlight true  (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "green" :normal-width 0.5 :highlight-width 0.7}))
+   "mouse:out"  (behaviours/highlight false (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "green" :normal-width 0.5 :highlight-width 0.7}))})
 
 (defattribute name data options
   (with-definition
@@ -13,7 +18,9 @@
   (with-drawables
     [{:name "value"
       :type :value
-      :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_HEADER_DEFAULTS)))}]))
+      :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_HEADER_DEFAULTS)))}])
+  (with-behaviours
+    {:value highlight-hovering}))
 
 (defattribute description data options
   (with-definition
@@ -26,7 +33,9 @@
       :src  (js/fabric.Text. "Description" (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS)))}
      {:name "value"
       :type :value
-      :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS {:left 70})))}]))
+      :src (js/fabric.Text. (:value data) (clj->js (merge o/LOCKED o/TEXT_NORMAL_DEFAULTS {:left 60})))}])
+  (with-behaviours
+    {:value highlight-hovering}))
 
 (defattribute field1TestAttr data options
   (with-definition

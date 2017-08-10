@@ -2,10 +2,12 @@
  (:require [core.entities :as e]
            [impl.standard-attributes :as stdatr]
            [core.project :as p]
-           [core.entities-behaviours :as eb :refer [endpoint moving-entity highlight relation-line
-                                                    insert-breakpoint dissoc-breakpoint all moving-endpoint
-                                                    intersects? intersects-any? toggle-endpoints show
-                                                    position-endpoint position-startpoint relations-validate event-wrap arrow]]
+           [core.behaviours :as cb :refer [highlight show all event-wrap]]
+           [core.options :as o]
+           [core.entities-behaviours :as eb :refer [endpoint moving-entity relation-line
+                                                    insert-breakpoint dissoc-breakpoint moving-endpoint
+                                                    intersects? intersects-any? toggle-endpoints
+                                                    position-endpoint position-startpoint relations-validate arrow]]
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity]]))
 
@@ -19,8 +21,8 @@
     {:endpoint {"mouse:over" (event-wrap show true)
                 "mouse:out"  (event-wrap show false)}
      :main     {"object:moving" (moving-entity)
-                "mouse:over"    (highlight true eb/DEFAULT_OPTIONS)
-                "mouse:out"     (highlight false eb/DEFAULT_OPTIONS)}})
+                "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
+                "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}})
   (with-drawables
     (let [enriched-opts (merge options
                                eb/DEFAULT_SIZE_OPTS

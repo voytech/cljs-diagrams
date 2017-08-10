@@ -26,6 +26,7 @@
              (doseq [call# ~attributes] (call# e#))
              (core.entities/entity-by-id (:uid e#))))))))
 
+
 (defmacro defattribute [name data options & body]
   (let [transposition (transpose-macro body)
         dfinition (:with-definition transposition)

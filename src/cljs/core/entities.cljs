@@ -185,8 +185,14 @@
              (swap! entities assoc-in [(:uid entity) :attributes] sorted)))
         (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
 
-(defn get-attribute-value-drawable [attribute-value drawable-name]
-  (get (:drawables attribute-value) drawable-name))
+(defn get-attribute-value [entity id]
+  (first (filter #(= (:id %) id) (:attributes entity))))
+
+(defn get-attribute-value-drawable
+  ([attribute-value drawable-name]
+   (get (:drawables attribute-value) drawable-name))
+  ([entity attr-id drawable-name]
+   (get-attribute-value-drawable (get-attribute-value entity attr-id) drawable-name)))
 
 (defn get-attribute-value-drawable-source [attribute-value drawable-name]
   (:src (get-attribute-value-drawable attribute-value drawable-name)))

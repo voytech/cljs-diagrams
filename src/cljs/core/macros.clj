@@ -19,29 +19,39 @@
           (let [event-map# (get ~behaviours drawable-type#)]
             (doseq [event-type# (keys event-map#)]
               (let [handler# (get event-map# event-type#)]
-                (core.entities/handle-event (name '~name) drawable-type# event-type# handler#)))))
+                (core.entities/register-event-handler :entity (name '~name) drawable-type# event-type# handler#)))))
         (defn ~name [~data ~options]
            (let [e# (core.entities/create-entity (name '~name) [] ~cntbbox)]
              (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))
              (doseq [call# ~attributes] (call# e#))
              (core.entities/entity-by-id (:uid e#))))))))
 
-(defmacro defattribute [name data options dfinition drawables]
-  `(do
-     (when-not (core.entities/is-attribute (name '~name))
-       (let [attr# (core.entities/Attribute. (name '~name)
-                                             (:cardinality ~dfinition)
-                                             (:index ~dfinition)
-                                             (:domain ~dfinition)
-                                             (:bbox ~dfinition)
-                                             (:sync ~dfinition))]
-         (core.entities/add-attribute attr#)
-         (defn ~name [entity# ~data]
-           (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
-                           :top  (:top (core.entities/get-entity-content-bbox entity#))}
-                 attribute#   (core.entities/get-attribute (name '~name))
-                 attr-value#  (core.entities/create-attribute-value attribute#
-                                                                    (:value ~data)
-                                                                    (:img ~data)
-                                                                    ~drawables)]
-              (core.entities/add-entity-attribute-value entity# attr-value#)))))))
+(defmacro defattribute [name data options & body]
+  (let [transposition (transpose-macro body)
+        dfinition (:with-definition transposition)
+        drawables (:with-drawables transposition)
+        behaviours (:with-behaviours transposition)]
+    `(do
+       (when-not (core.entities/is-attribute (name '~name))
+         (let [attr# (core.entities/Attribute. (name '~name)
+                                               (:cardinality ~dfinition)
+                                               (:index ~dfinition)
+                                               (:domain ~dfinition)
+                                               (:bbox ~dfinition)
+                                               (:sync ~dfinition))]
+           (core.entities/add-attribute attr#)
+           (when (not (nil? ~behaviours))
+             (doseq [drawable-type# (keys ~behaviours)]
+               (let [event-map# (get ~behaviours drawable-type#)]
+                 (doseq [event-type# (keys event-map#)]
+                   (let [handler# (get event-map# event-type#)]
+                     (core.entities/register-event-handler :attribute (name '~name) drawable-type# event-type# handler#))))))
+           (defn ~name [entity# ~data]
+             (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
+                             :top  (:top (core.entities/get-entity-content-bbox entity#))}
+                   attribute#   (core.entities/get-attribute (name '~name))
+                   attr-value#  (core.entities/create-attribute-value attribute#
+                                                                      (:value ~data)
+                                                                      (:img ~data)
+                                                                      ~drawables)]
+                (core.entities/add-entity-attribute-value entity# attr-value#))))))))

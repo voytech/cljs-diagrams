@@ -13,7 +13,9 @@
 
 (defonce attributes (atom {}))
 
-(defonce events (atom {}))
+(defonce entity-events (atom {}))
+
+(defonce attribute-events (atom {}))
 
 (declare js-obj-id)
 
@@ -123,9 +125,16 @@
   (let [drawables (:drawables (entity-by-id (:uid entity)))]
     (filter #(= name (:name %)) drawables)))
 
-(defn- handle-event [entity-type drawable event handler]
-  (when (nil? (get-in @events [entity-type drawable event]))
-    (swap! events assoc-in [entity-type drawable event] handler)))
+(defmulti register-event-handler (fn [class type drawable event handler] class))
+
+(defmethod register-event-handler :entity [class type drawable event handler]
+  (when (nil? (get-in @entity-events [type drawable event]))
+    (swap! entity-events assoc-in [type drawable event] handler)))
+
+(defmethod register-event-handler :attribute [class type drawable event handler]
+  (when (nil? (get-in @attribute-events [type drawable event]))
+    (swap! attribute-events assoc-in [type drawable event] handler)))
+
 
 (defn add-entity-drawable [entity & drawables]
   (doseq [drawable_m (vec drawables)]
@@ -155,6 +164,7 @@
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
+; Should not use drawables in argument list. Istead pass drawable factory-like function into the attribute definition.
 (defn create-attribute-value [attribute value img drawables]
   (let [drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:props d))}) drawables))]
     (AttributeValue. (str (random-uuid)) attribute value img drawables_)))

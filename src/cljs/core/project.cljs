@@ -60,14 +60,13 @@
                       "object:scaling" "object:selected"
                       "mouse:down"     "mouse:up"
                       "mouse:over"     "mouse:out"
-                      "mouse:click"
-                      "mouse:dbclick"]]
+                      "mouse:click"    "mouse:dbclick"]]
       (.on canvas (js-obj event-type (fn [e]
                                         (when-let [jsobj (.-target e)]
                                           (let [drawable (.-refPartId jsobj)
                                                 entity  (e/entity-from-src jsobj)
                                                 drawable-type (:type (e/get-entity-drawable entity drawable))
-                                                handler (get-in @e/events [(:type entity) drawable-type event-type])]
+                                                handler (get-in @e/entity-events [(:type entity) drawable-type event-type])]
                                              (when (not (nil? handler))
                                                (.setCoords jsobj)
                                                (let [event {:src jsobj      :drawable drawable

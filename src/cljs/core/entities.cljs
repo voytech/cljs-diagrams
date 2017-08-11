@@ -174,13 +174,13 @@
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
 (defn create-attribute-value [attribute_ data]
+  (js/console.log (clj->js (:domain (get-attribute (:name attribute_)))))
   (let [attribute (get-attribute (:name attribute_))
         domain (:domain attribute)
         domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))
         drawable-factory (or (:factory domain-value) (:factory attribute))
-        drawables (drawable-factory data)
-        drawables_ (into {} (mapv (fn [d] {(:name d) (Drawable. (:name d) (:type d) (:src d) (:props d))}) drawables))]
-    (AttributeValue. (str (random-uuid)) attribute data drawables_)))
+        drawables (drawable-factory data)]
+    (AttributeValue. (str (random-uuid)) attribute data drawables)))
 
 (defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]

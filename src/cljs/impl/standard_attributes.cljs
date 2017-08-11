@@ -4,7 +4,7 @@
            [core.project :as p]
            [core.options :as o])
 
- (:require-macros [core.macros :refer [defattribute]]))
+ (:require-macros [core.macros :refer [defattribute with-drawables value]]))
 
 (def highlight-hovering
   {"mouse:over" (behaviours/highlight true  (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7}))
@@ -38,7 +38,7 @@
     {:value highlight-hovering}))
 
 (defn status-components [status])
-  
+
 
 (defattribute state data options
   (with-definition

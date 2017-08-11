@@ -2,31 +2,14 @@
   (:require [cljs.analyzer :as a]))
 
 (defn transform-body [body]
-  (apply merge (map (fn [e] {(keyword (name (first e))) (last e)}) body)))
-
-(defn- transform-domain-entry [e data]
-  (let [error-usage (Error. "Domain entry must be in form (value <value> (with-components [{:name <name> :type <type> :drawable <drawable>} ... ]))")]
-   (if (= 3 (count e))
-     (let [name (name (first e))
-           value (second e)
-           components (last e)
-        ;   with-components (name (first components))
-           components-vec  (last components)]
-        (when (not= name "value") (throw error-usage))
-        ;(when (not= with-components "with-drawables") (throw error-usage))
-        {:v value :d components})
-     (throw error-usage))))
-
-(defn transform-domain [domain data]
-  (when (not (nil? domain))
-    (mapv #(transform-domain-entry % data) domain)))
+  (apply merge (map (fn [e] {(keyword (name (first e)))  e}) body)))
 
 (defmacro defentity [name data options & body]
   (let [transformed (transform-body body)]
-    (let [cntbbox    (:with-content-bounding-box transformed)
-          drawables  (:with-drawables transformed)
-          behaviours (:with-behaviours transformed)
-          attributes (:with-attributes transformed)]
+    (let [cntbbox    (last (:with-content-bounding-box transformed))
+          drawables  (last (:with-drawables transformed))
+          behaviours (last (:with-behaviours transformed))
+          attributes (last (:with-attributes transformed))]
       (when (nil? drawables)
         (throw (Error. "Provide drawables and behaviours definition within entitity definition!")))
       (when (nil? cntbbox)
@@ -46,21 +29,23 @@
 (defmacro value [value  drawables]
   `(core.entities/AttributeDomain. ~value ~drawables))
 
-(defmacro with-drawables [drawables]
-  `(fn [] (into {} (mapv (fn [dd#] {(:name dd#) (core.entities/Drawable. (:name dd#) (:type dd#) (:src dd#) (:props dd#))}) ~drawables))))
+(defmacro with-drawables [data drawables]
+  `(fn [~data] (into {} (mapv (fn [dd#] {(:name dd#) (core.entities/Drawable. (:name dd#)
+                                                                              (:type dd#)
+                                                                              (:src dd#)
+                                                                              (:props dd#))}) ~drawables))))
 
-(defmacro defattribute [name data options & body]
-  (let [transformed (transform-body body)
-        dfinition   (:with-definition transformed)
+(defmacro defattribute [name options & body]
+  (let [transformed    (transform-body body)
+        dfinition      (last (:with-definition transformed))
         has-definition (contains? transformed :with-definition)
-        drawables   (:with-drawables  transformed)
-        has-drawables (contains? transformed :with-drawables)
-        behaviours  (:with-behaviours transformed)
+        drawables      (:with-drawables  transformed)
+        has-drawables  (contains? transformed :with-drawables)
+        behaviours     (last (:with-behaviours transformed))
         has-behaviours (contains? transformed :with-behaviours)
-        domain       (:with-domain transformed)
-        has-domain (contains? transformed :with-domain)]
-    `(do
-       (when-not (core.entities/is-attribute (name '~name))
+        domain         (last (:with-domain transformed))
+        has-domain     (contains? transformed :with-domain)]
+    `(when-not (core.entities/is-attribute (name '~name))
          (let [attr# (core.entities/Attribute. (name '~name)
                                                (:cardinality ~dfinition)
                                                (:index ~dfinition)
@@ -70,10 +55,7 @@
                                                (:bbox ~dfinition)
                                                (:sync ~dfinition)
                                                (if ~has-drawables
-                                                 (fn [~data] (into {} (mapv (fn [dd#] {(:name dd#) (core.entities/Drawable. (:name dd#)
-                                                                                                                            (:type dd#)
-                                                                                                                            (:src dd#)
-                                                                                                                            (:props dd#))}) ~drawables)))
+                                                 ~drawables
                                                  nil))]
            (core.entities/add-attribute attr#)
            (when (not (nil? ~behaviours))
@@ -82,9 +64,9 @@
                  (doseq [event-type# (keys event-map#)]
                    (let [handler# (get event-map# event-type#)]
                      (core.entities/register-event-handler :attribute (name '~name) drawable-type# event-type# handler#))))))
-           (defn ~name [entity# ~data]
+           (defn ~name [entity# data#]
              (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
                              :top  (:top (core.entities/get-entity-content-bbox entity#))}
                    attribute#   (core.entities/get-attribute (name '~name))
-                   attr-value#  (core.entities/create-attribute-value attribute# ~data)]
-                (core.entities/add-entity-attribute-value entity# attr-value#))))))))
+                   attr-value#  (core.entities/create-attribute-value attribute# data#)]
+                (core.entities/add-entity-attribute-value entity# attr-value#)))))))

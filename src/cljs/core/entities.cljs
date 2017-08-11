@@ -169,12 +169,10 @@
   (not (nil? (get-attribute name))))
 
 (defn add-attribute [attribute]
-  (js/console.log (clj->js attribute))
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
 (defn create-attribute-value [attribute_ data]
-  (js/console.log (clj->js (:domain (get-attribute (:name attribute_)))))
   (let [attribute (get-attribute (:name attribute_))
         domain (:domain attribute)
         domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))

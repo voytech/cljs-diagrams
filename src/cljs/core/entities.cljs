@@ -64,6 +64,9 @@
   ([type drawables]
    (create-entity type drawables nil)))
 
+(defn components [holder]
+  (vals (:drawables holder)))
+
 (defn bind [entity page]
   (let [euids (page @paged-entities)
         uid (:uid entity)]
@@ -105,7 +108,7 @@
     (:content-bbox entity))
 
 (defn get-entity-bbox [entity]
-   (let [sources (mapv :src (:drawables entity))
+   (let [sources (mapv :src (components entity))
          leftmost (apply min-key (cons #(.-left %) sources))
          rightmost (apply max-key (cons #(+ (.-left %) (.-width %)) sources))
          topmost (apply min-key (cons #(.-top %) sources))
@@ -115,23 +118,14 @@
       :width (- (+ (.-left rightmost) (.-width rightmost)) (.-left leftmost))
       :height (- (+ (.-top bottommost) (.-height  bottommost)) (.-top topmost))}))
 
-(defn update-drawable-prop [entity name char value]
-  (let [drawable (get-entity-drawable entity name)
-        i (index-of (:drawables (entity-by-id (:uid entity))) drawable)]
-     (swap! entities assoc-in [(:uid entity) :drawables i :props char] value)))
+(defn update-drawable-prop [entity name prop value]
+  (swap! entities assoc-in [(:uid entity) :drawables name :props prop] value))
 
-(defn remove-drawable-prop [entity name char]
-  (let [drawable (get-entity-drawable entity name)
-        i (index-of (:drawables (entity-by-id (:uid entity))))]
-     (swap! entities update-in [(:uid entity) :drawables i :props ] dissoc char)))
+(defn remove-drawable-prop [entity name prop]
+  (swap! entities update-in [(:uid entity) :drawables name :props ] dissoc prop))
 
 (defn get-entity-drawable [entity name]
-  (let [drawables (:drawables (entity-by-id (:uid entity)))]
-    (first (filter #(= name (:name %)) drawables))))
-
-(defn get-entity-drawables [entity name]
-  (let [drawables (:drawables (entity-by-id (:uid entity)))]
-    (filter #(= name (:name %)) drawables)))
+  (get-in @entities [(:uid entity) :drawables name]))
 
 (defmulti register-event-handler (fn [class type drawable event handler] class))
 
@@ -143,24 +137,15 @@
   (when (nil? (get-in @attribute-events [type drawable event]))
     (swap! attribute-events assoc-in [type drawable event] handler)))
 
-
 (defn add-entity-drawable [entity & drawables]
-  (doseq [drawable_m (vec drawables)]
-    (let [drawable (Drawable. (:name drawable_m)
-                              (:type drawable_m)
-                              (:src  drawable_m)
-                              (:props drawable_m))]
-      (make-js-property (:src drawable) ID  (:uid entity))
-      (make-js-property (:src drawable) PART_ID (:name drawable))
-      (let [drawables (conj (:drawables (entity-by-id (:uid entity))) drawable)]
-         (swap! entities assoc-in [(:uid entity) :drawables] drawables)))))
+  (doseq [drawable (flatten drawables)]
+    (make-js-property (:src drawable) ID  (:uid entity))
+    (make-js-property (:src drawable) PART_ID (:name drawable))
+    (swap! entities assoc-in [(:uid entity) :drawables (:name drawable)] drawable)))
 
 (defn remove-entity-drawable [entity drawable-name]
-  (let [drawables (:drawables (entity-by-id (:uid entity)))
-        idx (index-of drawables (get-entity-drawable entity drawable-name))
-        updated (into [] (concat (subvec drawables 0 idx)
-                                 (subvec drawables (inc idx))))]
-     (swap! entities assoc-in [(:uid entity) :drawables] updated)))
+  (swap! entities update-in [(:uid entity) :drawables ] dissoc drawable-name))
+  ;(eventbus/fire ""))
 
 (defn get-attribute [name]
   (get @attributes name))
@@ -172,13 +157,14 @@
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
-(defn create-attribute-value [attribute_ data]
+(defn create-attribute-value [attribute_ data options]
   (let [attribute (get-attribute (:name attribute_))
         domain (:domain attribute)
         domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))
         drawable-factory (or (:factory domain-value) (:factory attribute))
-        drawables (drawable-factory data)]
-    (AttributeValue. (str (random-uuid)) attribute data drawables)))
+        drawables (drawable-factory data options)
+        drawables-map (into {} (map (fn [d] {(:name d) d}) drawables))]
+    (AttributeValue. (str (random-uuid)) attribute data drawables-map)))
 
 (defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]

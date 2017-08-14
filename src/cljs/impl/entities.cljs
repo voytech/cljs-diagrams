@@ -9,10 +9,10 @@
                                                     intersects? intersects-any? toggle-endpoints
                                                     position-endpoint position-startpoint relations-validate arrow]]
            [clojure.string :as str])
- (:require-macros [core.macros :refer [defentity]]))
+ (:require-macros [core.macros :refer [defentity with-drawables]]))
 
 
-(defentity rectangle-node data options
+(defentity rectangle-node
   (with-content-bounding-box {:left 15
                               :top  15
                               :width  175
@@ -23,7 +23,7 @@
      :main     {"object:moving" (moving-entity)
                 "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
                 "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}})
-  (with-drawables
+  (with-drawables data options
     (let [enriched-opts (merge options
                                eb/DEFAULT_SIZE_OPTS
                                eb/TRANSPARENT_FILL
@@ -55,7 +55,7 @@
 
 
 
-(defentity relation data options
+(defentity relation
   (with-content-bounding-box {:left 15
                               :top  15
                               :width  180
@@ -63,7 +63,7 @@
   (with-behaviours
     {:relation   {"mouse:up" (insert-breakpoint)
                   "object:moving" (all (moving-entity)
-                                      (event-wrap relations-validate))}
+                                       (event-wrap relations-validate))}
      :startpoint {"object:moving" (all (moving-endpoint)
                                        (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
                                                            (fn [src trg] (toggle-endpoints (:entity trg) false))))
@@ -87,7 +87,7 @@
                    "mouse:up"      (dissoc-breakpoint)
                    "object:moving" (moving-endpoint)}})
 
-  (with-drawables
+  (with-drawables data options
     (let [enriched-opts (merge options eb/DEFAULT_SIZE_OPTS eb/DEFAULT_STROKE eb/RESTRICTED_BEHAVIOUR eb/NO_DEFAULT_CONTROLS)
           offset-x (:left options)
           offset-y (:top options)

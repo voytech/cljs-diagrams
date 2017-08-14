@@ -110,7 +110,7 @@
                             coord-mode)))
 
 (defn- position-attributes-drawables [attributes offset-left offset-top]
-   (doseq [src (flatten (mapv #(-> % :drawables vals) attributes))]
+   (doseq [src (flatten (mapv #(e/components %) attributes))]
      (.set (:src src) (clj->js {:left (+ (.-left (:src src)) offset-left)
                                 :top  (+ (.-top  (:src src)) offset-top)}))
      (.setCoords (:src src))))
@@ -142,7 +142,7 @@
 
 (defmethod position-entity ["rectangle-node" :entity-scope] [entity ref-drawable-name context left top coord-mode]
   (let [effective-offset (calculate-effective-offset entity ref-drawable-name left top coord-mode)]
-    (doseq [drawable (:drawables entity)]
+    (doseq [drawable (e/components entity)]
       (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
             effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
         (when-not (= (:name drawable) ref-drawable-name)
@@ -191,7 +191,7 @@
 
 (defmethod position-entity ["relation" :entity-scope] [entity ref-drawable-name context left top coord-mode]
   (let [effective-offset (calculate-effective-offset entity ref-drawable-name left top coord-mode)]
-    (doseq [drawable (:drawables entity)]
+    (doseq [drawable (e/components entity)]
       (when-not (= (:name drawable) ref-drawable-name)
         (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
               effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
@@ -285,9 +285,9 @@
           end-part   (e/get-entity-drawable entity end)
           end-src    (:src end-part)
           related-entity (e/entity-by-id (:entity-id relation))
-          cnt (count (:drawables related-entity))
+          cnt (count (e/components related-entity))
           i (atom 0)]
-        (doseq [drawable (:drawables related-entity)]
+        (doseq [drawable (e/components related-entity)]
           (let [related-d-src (:src drawable)]
             (if (not (overlaying? end-src related-d-src))  ; use filter instead of doseq here to make it more declaratice
               (swap! i inc))))
@@ -359,7 +359,7 @@
   (position-endpoint entity left top :absolute)))
 
 (defn toggle-endpoints [entity toggle]
-  (doseq [drawable (:drawables entity)]
+  (doseq [drawable (e/components entity)]
     (when (contains? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (:name drawable))
       (let [src (:src drawable)]
          (.set src (clj->js {:visible toggle :borderColor "#ff0000"}))))))

@@ -4,10 +4,20 @@
 (defn transform-body [body]
   (apply merge (map (fn [e] {(keyword (name (first e)))  e}) body)))
 
-(defmacro defentity [name data options & body]
+(defmacro value [value drawables]
+  `(core.entities/AttributeDomain. ~value ~drawables))
+
+(defmacro with-drawables [data options & drawables-vector]
+  (let [drawables (if (and (coll? (first drawables-vector)) (= 1 (count drawables-vector))) (first drawables-vector) drawables-vector)]
+    `(fn [~data ~options] (mapv (fn [dd#] (core.entities/Drawable. (:name dd#)
+                                                                   (:type dd#)
+                                                                   (:src dd#)
+                                                                   (:props dd#))) ~drawables))))
+
+(defmacro defentity [name & body]
   (let [transformed (transform-body body)]
     (let [cntbbox    (last (:with-content-bounding-box transformed))
-          drawables  (last (:with-drawables transformed))
+          drawables  (:with-drawables transformed)
           behaviours (last (:with-behaviours transformed))
           attributes (last (:with-attributes transformed))]
       (when (nil? drawables)
@@ -20,22 +30,14 @@
             (doseq [event-type# (keys event-map#)]
               (let [handler# (get event-map# event-type#)]
                 (core.entities/register-event-handler :entity (name '~name) drawable-type# event-type# handler#)))))
-        (defn ~name [~data ~options]
-           (let [e# (core.entities/create-entity (name '~name) [] ~cntbbox)]
-             (apply core.entities/add-entity-drawable (cons e# ((fn[] ~drawables))))
+        (defn ~name [data# options#]
+           (let [e# (core.entities/create-entity (name '~name) {} ~cntbbox)
+                 drawable-factory# ~drawables]
+             (apply core.entities/add-entity-drawable (cons e# (drawable-factory# data# options#)))
              (doseq [call# ~attributes] (call# e#))
              (core.entities/entity-by-id (:uid e#))))))))
 
-(defmacro value [value  drawables]
-  `(core.entities/AttributeDomain. ~value ~drawables))
-
-(defmacro with-drawables [data drawables]
-  `(fn [~data] (into {} (mapv (fn [dd#] {(:name dd#) (core.entities/Drawable. (:name dd#)
-                                                                              (:type dd#)
-                                                                              (:src dd#)
-                                                                              (:props dd#))}) ~drawables))))
-
-(defmacro defattribute [name options & body]
+(defmacro defattribute [name & body]
   (let [transformed    (transform-body body)
         dfinition      (last (:with-definition transformed))
         has-definition (contains? transformed :with-definition)
@@ -50,7 +52,7 @@
                                                (:cardinality ~dfinition)
                                                (:index ~dfinition)
                                                (if ~has-domain
-                                                 ~domain ;(mapv (fn [dv#] (core.entities/AttributeDomain. (:v dv#) (fn [~data] ((:d dv#)) )) ~domain))
+                                                 ~domain
                                                  nil)
                                                (:bbox ~dfinition)
                                                (:sync ~dfinition)
@@ -64,9 +66,10 @@
                  (doseq [event-type# (keys event-map#)]
                    (let [handler# (get event-map# event-type#)]
                      (core.entities/register-event-handler :attribute (name '~name) drawable-type# event-type# handler#))))))
-           (defn ~name [entity# data#]
-             (let [~options {:left (:left (core.entities/get-entity-content-bbox entity#))
-                             :top  (:top (core.entities/get-entity-content-bbox entity#))}
-                   attribute#   (core.entities/get-attribute (name '~name))
-                   attr-value#  (core.entities/create-attribute-value attribute# data#)]
-                (core.entities/add-entity-attribute-value entity# attr-value#)))))))
+           (defn ~name
+             ([entity# data#]
+              (~name entity# data# nil))
+             ([entity# data# options#]
+              (let [attribute#   (core.entities/get-attribute (name '~name))
+                    attr-value#  (core.entities/create-attribute-value attribute# data# options#)]
+                (core.entities/add-entity-attribute-value entity# attr-value#))))))))

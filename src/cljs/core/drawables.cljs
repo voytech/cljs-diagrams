@@ -1,3 +1,20 @@
 (ns core.drawables)
 
-(defrecord Drawable [type])
+(defprotocol IDrawable
+  (create [this options])
+  (set [this property value])
+  (get [this property])
+  (setBorderColor [this color])
+  (setBackgroundColor [this color])
+  (setBorderStyle [this style])
+  (setBorderWidth [this width])
+  (setLeft [this left])
+  (setTop [this top])
+  (setWidth [this width])
+  (setHeight [this height])
+  (getLeft [this])
+  (getTop [this])
+  (getWidth [this])
+  (getHeight [this]))
+
+(defrecord Drawable [type source])

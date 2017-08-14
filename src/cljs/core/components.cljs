@@ -1,4 +1,4 @@
 (ns core.components)
 
 
-(defrecord Component [name type drawable props])
+(defrecord Component [name type drawable hints])

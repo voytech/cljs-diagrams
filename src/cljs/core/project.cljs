@@ -63,6 +63,7 @@
                :canvas canvas
                :drawable (-> decomposed :drawable-name)
                :type event-type}]
+      ;(bus/fire (str (:type entity) "." ()))
       (handler event)
       (add-event event)
       (.renderAll canvas)))

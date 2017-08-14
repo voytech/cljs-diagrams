@@ -1,8 +1,20 @@
 (ns core.eventbus)
 
+(defonce DEFAULT_PRIORITY 999)
+
+(defonce EVENT_STORE_CAPACITY 20)
+
 (defonce bus (atom {}))
 
-(defonce DEFAULT_PRIORITY 1)
+(defonce event-store (atom []))
+
+(defn add-event [event]
+  (when (> (count @event-store) EVENT_STORE_CAPACITY)
+    (swap! event-store subvec 1))
+  (swap! event-store conj event))
+
+(defn prev-event []
+  (last @event-store))
 
 (defn on
   ([event-name priority callback]
@@ -57,6 +69,7 @@
   ([event context]
    (let [event (atom (make-event event context))
          listeners (get @bus event)]
+     (add-event @event)
      (when-not (nil? listeners)
        (next listeners event))))
 

@@ -16,7 +16,7 @@
 
 (def canvas-initializing-wrapper
  (with-meta identity
-   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 1000 :height 1000})}))
+   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 1270  :height 1000})}))
 
 (defn FabricCanvas [id]
   (fn []
@@ -34,9 +34,6 @@
       (doall
         (for [page (vals (:pages @project)) idx (range (count (keys (:pages @project))))]
           ^{:key idx}
-          [FabricCanvas (str "page-" idx)]))]
-    [:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) p/select-page p/add-page p/remove-page]]
-    [:div {:id "zoom-control"
-           :class "zoom-control-div"}
-      [:div {:class "pull-right"} "History controls"]
-      [:div {:class "pull-right col-md-4"} "Zoom controls"]]])
+          [FabricCanvas (str "page-" idx)]))]])
+    ;[:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) p/select-page p/add-page p/remove-page]]
+(p/add-page)

@@ -11,7 +11,9 @@
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity with-drawables]]))
 
-
+; After implementing EventBus -> implement plugins which will be functions of type pluing-name(obj-group,obj-type) -> void.
+; This plugin will register specific event handling on bus which will allow e.g. implementing behavioural plugins based
+; on originalEvents from DOM or Canvas frameworks. with-vehaviours can be changed then to accept just set of plugins.
 (defentity rectangle-node
   (with-content-bounding-box {:left 15
                               :top  15

@@ -108,7 +108,7 @@ img.page-thumb{
 
 #canvas-wrapper{
   overflow-y:scroll;
-  height:75vh;
+  height:100vh;
   background-color:lightgray;
   border-color:lightgray;
   border-width:1px;
@@ -121,9 +121,6 @@ img.page-thumb{
 .canvas-container{
   position:absolute;
   background-color:white;
-  margin-right: auto;
-  margin-left: auto;
-  margin-top:20px;
   left:0;
   top:0;
 }

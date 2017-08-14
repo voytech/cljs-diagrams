@@ -13,6 +13,13 @@
                                                                    (:type dd#)
                                                                    (:src dd#)
                                                                    (:props dd#))) ~drawables))))
+(defmacro with-domain [name body])
+
+(defmacro with-behaviours [name body])
+
+(defmacro with-content-bounding-box [name body])
+
+(defmacro with-attributes [body])
 
 (defmacro defentity [name & body]
   (let [transformed (transform-body body)]

@@ -1,37 +1,20 @@
-(ns core.rendering)
+(ns core.rendering
+  (:require [core.eventbus :as bus]))
 
-(def RENDERER (atom :canvas))
+(def RENDERER (atom :fabric))
 
-(defn set-renderer [renderer]
+(defn set-rendering [renderer]
   (reset! RENDERER renderer))
 
-(defn get-renderer []
+(defn get-rendering []
   @RENDERER)
 
-(defmulti create (fn [type options] [@RENDERER type]))
+(defmulti do-render (fn [drawable] [@RENDERER (:type drawable)]))
 
-(defmulti update (fn [source model] @RENDERER))
+(defmulti create-rendering-state (fn [type options] [@RENDERER type]))
 
-(defmulti resolve-property (fn [known-property] [@RENDERER known-property]))
-
-(defmulti set (fn [source property value] @RENDERER))
-
-(defmulti get (fn [source property] @RENDERER))
-
-(defmulti set-left (fn [source value] @RENDERER))
-
-(defmulti set-top (fn [source value] @RENDERER))
-
-(defmulti set-width (fn [source value] @RENDERER))
-
-(defmulti set-height (fn [source value] @RENDERER))
-
-(defmulti set-border-style (fn [source value] @RENDERER))
-
-(defmulti set-border-color (fn [source value] @RENDERER))
-
-(defmulti set-border-width (fn [source value] @RENDERER))
-
-(defmulti set-opacity (fn [source value] @RENDERER))
-
-(defmulti set-visible (fn [source value] @RENDERER))
+(defn render [drawable]
+  (let [rendering-state (:rendering-state drawable)]
+    (when (nil? rendering-state)
+      (update-state (create-rendering-state (:type drawable))))
+    (do-render drawable)))

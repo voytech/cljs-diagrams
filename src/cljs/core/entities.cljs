@@ -72,17 +72,25 @@
         uid (:uid entity)]
     (swap! paged-entities assoc-in [page] (if (nil? euids) #{uid} (conj euids uid)))))
 
-(defn connect-entities [src trg end]
-  (let [src-rel (conj (:relationships src) {:end end :entity-id (:uid trg)})
-        trg-rel (conj (:relationships trg) {:end end :entity-id (:uid src)})]
+(defn connect-entities [src trg association-type arg1 arg2]
+  (let [src-rel (conj (:relationships src) {:relation-type association-type :association-data arg1 :entity-id (:uid trg)})
+        trg-rel (conj (:relationships trg) {:relation-type association-type :association-data arg2 :entity-id (:uid src)})]
     (swap! entities assoc-in [(:uid src) :relationships] src-rel)
     (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
 
-(defn disconnect-entities [src trg]
-  (let [src-rel (filter #(not= (:uid trg) (:entity-id %)) (:relationships src))
-        trg-rel (filter #(not= (:uid src) (:entity-id %)) (:relationships trg))]
-    (swap! entities assoc-in [(:uid src) :relationships] src-rel)
-    (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
+(defn disconnect-entities
+  ([src trg]
+   (let [src-rel (filter #(not= (:uid trg) (:entity-id %))) (:relationships src)]
+        trg-rel (filter #(not= (:uid src) (:entity-id %))) (:relationships trg)
+     (swap! entities assoc-in [(:uid src) :relationships] src-rel)
+     (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
+  ([src trg association-type]
+   (let [src-rel (filter #(and (not= (:relation-type %) association-type)
+                              (not= (:uid trg) (:entity-id %))) (:relationships src))]
+        trg-rel (filter #(and (not= (:relation-type %) association-type)
+                              (not= (:uid src) (:entity-id %))) (:relationships trg))
+     (swap! entities assoc-in [(:uid src) :relationships] src-rel)
+     (swap! entities assoc-in [(:uid trg) :relationships] trg-rel))))
 
 (defn entity-by-id [id]
   (get @entities id))

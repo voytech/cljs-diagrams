@@ -160,7 +160,7 @@
 ;; ==============================================================================================
 
 (defmethod get-refered-drawable-name "relation" [relation]
-   (:end relation))
+   (:association-data relation))
 
 (defmethod position-entity-drawable [ "relation" :endpoint   :relation-scope] [entity drawable-name context left top coord-mode]
   (position-endpoint entity left top coord-mode))

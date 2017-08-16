@@ -80,15 +80,15 @@
 
 (defn disconnect-entities
   ([src trg]
-   (let [src-rel (filter #(not= (:uid trg) (:entity-id %))) (:relationships src)]
-        trg-rel (filter #(not= (:uid src) (:entity-id %))) (:relationships trg)
+   (let [src-rel (filter #(not= (:uid trg) (:entity-id %)) (:relationships src))
+         trg-rel (filter #(not= (:uid src) (:entity-id %)) (:relationships trg))]
      (swap! entities assoc-in [(:uid src) :relationships] src-rel)
      (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
   ([src trg association-type]
    (let [src-rel (filter #(and (not= (:relation-type %) association-type)
-                              (not= (:uid trg) (:entity-id %))) (:relationships src))]
-        trg-rel (filter #(and (not= (:relation-type %) association-type)
-                              (not= (:uid src) (:entity-id %))) (:relationships trg))
+                               (not= (:uid trg) (:entity-id %))) (:relationships src))
+         trg-rel (filter #(and (not= (:relation-type %) association-type)
+                               (not= (:uid src) (:entity-id %))) (:relationships trg))]
      (swap! entities assoc-in [(:uid src) :relationships] src-rel)
      (swap! entities assoc-in [(:uid trg) :relationships] trg-rel))))
 

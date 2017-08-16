@@ -69,7 +69,7 @@
      :startpoint {"object:moving" (all (moving-endpoint)
                                        (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
                                                            (fn [src trg] (toggle-endpoints (:entity trg) false))))
-                  "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) :entity-link "end" "end")
+                  "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
                                                                                                                                                (toggle-endpoints (:entity trg) false)
                                                                                                                                                (position-startpoint (:entity src) (.-left (:src trg)) (.-top (:src trg)))))
                                        (event-wrap relations-validate))

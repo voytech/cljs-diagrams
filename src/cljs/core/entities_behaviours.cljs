@@ -1,6 +1,7 @@
 (ns core.entities-behaviours
  (:require [core.entities :as e]
            [core.project :as p]
+           [core.layouts :as layouts]
            [clojure.string :as str]))
 
 
@@ -259,41 +260,33 @@
               (e/update-drawable-prop entity (:name line-start-breakpoint) :penultimate false))))))))
 
 (defn dissoc-breakpoint []
-    (fn [e]
-     (let [prev (p/prev-event)]
-       (when (and  (not= (:type prev) "object:moving"))
-        (let [entity     (:entity e)
-              breakpoint (e/get-entity-drawable entity (:drawable e))
-              line-end   (e/get-entity-drawable entity (:start  (:props breakpoint)))
-              line-endpoint (e/get-entity-drawable entity (:end (:props line-end)))
-              line-start (e/get-entity-drawable entity (:end   (:props breakpoint)))
-              line-startpoint (e/get-entity-drawable entity (:start (:props line-start)))
-              is-penultimate? (:penultimate (:props breakpoint))]
-           (e/remove-entity-drawable entity (:name breakpoint))
-           (e/remove-entity-drawable entity (:name line-end))
-           (e/update-drawable-prop entity (:name line-start) :end (:name line-endpoint))
-           (e/update-drawable-prop entity (:name line-endpoint) :end (:name line-start))
-           (e/update-drawable-prop entity (:name line-startpoint) :penultimate is-penultimate?)
-           (position-entity-drawable entity (:name line-endpoint) :entity-scope (.-left (:src line-endpoint))
-                                                                                (.-top  (:src line-endpoint)))
-           (p/sync-entity (e/entity-by-id (:uid entity))))))))
+  (fn [e]
+   (let [prev (p/prev-event)]
+     (when (and  (not= (:type prev) "object:moving"))
+      (let [entity     (:entity e)
+            breakpoint (e/get-entity-drawable entity (:drawable e))
+            line-end   (e/get-entity-drawable entity (:start  (:props breakpoint)))
+            line-endpoint (e/get-entity-drawable entity (:end (:props line-end)))
+            line-start (e/get-entity-drawable entity (:end   (:props breakpoint)))
+            line-startpoint (e/get-entity-drawable entity (:start (:props line-start)))
+            is-penultimate? (:penultimate (:props breakpoint))]
+         (e/remove-entity-drawable entity (:name breakpoint))
+         (e/remove-entity-drawable entity (:name line-end))
+         (e/update-drawable-prop entity (:name line-start) :end (:name line-endpoint))
+         (e/update-drawable-prop entity (:name line-endpoint) :end (:name line-start))
+         (e/update-drawable-prop entity (:name line-startpoint) :penultimate is-penultimate?)
+         (position-entity-drawable entity (:name line-endpoint) :entity-scope (.-left (:src line-endpoint))
+                                                                              (.-top  (:src line-endpoint)))
+         (p/sync-entity (e/entity-by-id (:uid entity))))))))
 
-
+; by default validate relations depending on entity bounding box intersection rule.
 (defn relations-validate [entity]
   (doseq [relation (:relationships entity)]
-    (let [end (:end relation)
-          end-part   (e/get-entity-drawable entity end)
-          end-src    (:src end-part)
-          related-entity (e/entity-by-id (:entity-id relation))
-          cnt (count (e/components related-entity))
-          i (atom 0)]
-        (doseq [drawable (e/components related-entity)]
-          (let [related-d-src (:src drawable)]
-            (if (not (overlaying? end-src related-d-src))  ; use filter instead of doseq here to make it more declaratice
-              (swap! i inc))))
-        (when (= @i cnt)
-          (e/disconnect-entities entity related-entity)))))
-
+    (let [related-entity (e/entity-by-id (:entity-id relation))
+          target-bbox (layouts/get-bbox related-entity)
+          source-bbox (layouts/get-bbox entity)]
+      (when (not (layouts/intersects? source-bbox target-bbox))
+        (e/disconnect-entities entity related-entity)))))
 
 (defn- refresh-arrow-angle [relation-drawable arrow-drawable]
   (let [x1 (-> relation-drawable :src (.-x1))

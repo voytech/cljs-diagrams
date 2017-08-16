@@ -63,3 +63,10 @@
   (let [layout-buffer (atom {:row-height 0 :left (:left bbox) :top (:top bbox)})]
     (doseq [partials-aware entries]
       (layout-row bbox layout-buffer partials-aware))))
+
+(defn intersects? [tbbox obbox]
+  (or
+    (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
+         (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))
+    (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
+         (<= (:top obbox) (:top tbbox)) (>= (+ (:top obbox) (:height obbox)) (:top tbbox)))))

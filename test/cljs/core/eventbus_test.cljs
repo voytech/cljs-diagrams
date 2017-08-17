@@ -78,7 +78,7 @@
     (bus/fire "event.testing" 1)
     (is (= [1 1 1] @aggregate))))
 
-(deftest fire-with-explicit-stop-propagation []
+(deftest test-fire-with-explicit-stop-propagation []
   (let [aggregate (atom [])]
     (bus/on ["event.testing"] 0 (fn [event] (swap! aggregate conj (:context @event))
                                             nil))
@@ -89,7 +89,7 @@
     (bus/fire "event.testing" 1)
     (is (= [1 1] @aggregate))))
 
-(deftest fire-with-return-and-stop-propagation []
+(deftest test-fire-with-return-and-stop-propagation []
   (let [aggregate (atom [])]
     (bus/on ["event.testing"] 0 (fn [event] (swap! aggregate conj (:context @event))
                                             nil))
@@ -99,3 +99,14 @@
                                             nil))
     (is (= 2 (bus/fire "event.testing" 1)))
     (is (= [1 1] @aggregate))))
+
+(deftest test-fire-with-priorities []
+  (let [aggregate (atom [])]
+    (bus/on ["event.testing"] 0 (fn [event] (swap! aggregate conj 0)
+                                            nil))
+    (bus/on ["event.testing"] 2 (fn [event] (swap! aggregate conj 1)
+                                            nil))
+    (bus/on ["event.testing"] 1 (fn [event] (swap! aggregate conj 2)
+                                            nil))
+    (bus/fire "event.testing")
+    (is (= [0 2 1] @aggregate))))

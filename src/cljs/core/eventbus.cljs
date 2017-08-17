@@ -17,9 +17,9 @@
   (last @event-store))
 
 (defn on
-  ([event-name priority callback]
+  ([event-names priority callback]
    (doseq [name event-names]
-     (when-let [listeners (get @bus name)]
+     (let [listeners (or (get @bus name) [])]
        (swap! bus assoc name (->> (cons {:priority priority :callback callback} listeners)
                                   (sort-by :priority))))))
 
@@ -66,12 +66,12 @@
           result)))))
 
 (defn fire
-  ([event context]
-   (let [event (atom (make-event event context))
-         listeners (get @bus event)]
+  ([name context]
+   (let [event (atom (make-event name context))
+         listeners (get @bus name)]
      (add-event @event)
      (when-not (nil? listeners)
        (next listeners event))))
 
-  ([event]
-   (fire event {})))
+  ([name]
+   (fire name {})))

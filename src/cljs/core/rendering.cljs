@@ -34,7 +34,13 @@
 
 (defmulti do-render (fn [drawable context] [@RENDERER (:type drawable)]))
 
-(defmulti create-rendering-state (fn [type options] [@RENDERER type]))
+(defmulti create-rendering-state (fn [drawable context] [@RENDERER (:type drawable)]))
+
+(defmethod create-rendering-state :default [drawable context])
+
+(defmulti destroy-rendering-state (fn [rendering-state context] [@RENDERER (:type drawable)]))
+
+(defmethod destroy-rendering-state :default [rendering-state context])
 
 (defn render [drawable]
   (let [rendering-state (:rendering-state drawable)]

@@ -8,6 +8,7 @@
 (defprotocol IDrawable
   (update-state [this state])
   (set [this property value])
+  (set-data [this map_])
   (get [this property])
   (set-border-color [this color])
   (set-background-Color [this color])
@@ -41,6 +42,9 @@
   (set [this property value]
     (register-watcher this property)
     (swap! model assoc property value))
+  (set-data [this map_]
+    (doseq [key (keys map_)]
+      (set this key (get map_ key))))
   (get [this property value] (get @model property))
   (set-border-color [this value] (set this :border-color value))
   (set-border-style [this value] (set this :border-style value))
@@ -67,3 +71,11 @@
           (test obbox tbbox))))
 
   (contains? [this other]))
+
+(defn create-drawable
+  ([type]
+   (create-drawable type {}))
+  ([type data]
+   (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}))]
+     (set-data drawable data)
+     drawable)))

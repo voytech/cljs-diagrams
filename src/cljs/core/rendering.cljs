@@ -21,11 +21,15 @@
 
 (defn- render-entity [entity])
 
+(bus/on ["drawable.added"] -999 (fn [event]))
+
 (bus/on ["drawable.changed"] -999 (fn [event])
   (let [context (:context @event)
         drawable (:drawable context)]
      (swap! rendering-context assoc-in [(:property context)] (:new context))
      (render drawable)))
+
+(bus/on ["drawable.removed"] -999 (fn [event]))
 
 (bus/on ["rendering.execute"] -999 (fn [event])
  (let [context (:context @event)
@@ -45,5 +49,5 @@
 (defn render [drawable]
   (let [rendering-state (:rendering-state drawable)]
     (when (nil? rendering-state)
-      (update-state (create-rendering-state (:type drawable))))
+      (update-state drawable (create-rendering-state drawable @rendering-context)))
     (do-render drawable @rendering-context)))

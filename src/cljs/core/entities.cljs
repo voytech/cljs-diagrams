@@ -32,37 +32,29 @@
                       sync
                       factory])
 
-(defrecord AttributeValue [id attribute value drawables])
+(defrecord AttributeValue [id attribute value components])
 
-(defrecord Drawable [name type src props])
-
-(defprotocol IEntity
-  (add-attribute [this attribute])
-  (connect-to [this entity]))
+(defrecord Component [name type drawable props])
 
 (defrecord Entity [uid
                    type
-                   drawables
+                   components
                    attributes
                    relationships
-                   content-bbox]
-
-  IEntity
-  (add-attribute [this attribute])
-  (connect-to [this entity]))
+                   content-bbox])
 
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
-  ([type drawables content-bbox]
+  ([type components content-bbox]
    (let [uid (str (random-uuid))
-         entity (Entity. uid type drawables [] [] content-bbox)]
-     (doseq [drawable drawables]
-       (make-js-property (:src drawable) ID  (:uid entity))
-       (make-js-property (:src drawable) PART_ID (:name drawable)))
+         entity (Entity. uid type components [] [] content-bbox)]
+     (doseq [component components]
+       (make-js-property (:drawable component) ID  (:uid entity))
+       (make-js-property (:drawable component) PART_ID (:name component)))
      (swap! entities assoc uid entity)
      entity))
-  ([type drawables]
-   (create-entity type drawables nil)))
+  ([type components]
+   (create-entity type components nil)))
 
 (defn components [holder]
   (vals (:drawables holder)))
@@ -115,33 +107,33 @@
 (defn get-entity-content-bbox [entity]
     (:content-bbox entity))
 
-(defn update-drawable-prop [entity name prop value]
-  (swap! entities assoc-in [(:uid entity) :drawables name :props prop] value))
+(defn update-component-prop [entity name prop value]
+  (swap! entities assoc-in [(:uid entity) :components name :props prop] value))
 
-(defn remove-drawable-prop [entity name prop]
-  (swap! entities update-in [(:uid entity) :drawables name :props ] dissoc prop))
+(defn remove-component-prop [entity name prop]
+  (swap! entities update-in [(:uid entity) :components name :props ] dissoc prop))
 
-(defn get-entity-drawable [entity name]
-  (get-in @entities [(:uid entity) :drawables name]))
+(defn get-entity-component [entity name]
+  (get-in @entities [(:uid entity) :components name]))
 
-(defmulti register-event-handler (fn [class type drawable event handler] class))
+(defmulti register-event-handler (fn [class type component event handler] class))
 
-(defmethod register-event-handler :entity [class type drawable event handler]
-  (when (nil? (get-in @entity-events [type drawable event]))
-    (swap! entity-events assoc-in [type drawable event] handler)))
+(defmethod register-event-handler :entity [class type component event handler]
+  (when (nil? (get-in @entity-events [type component event]))
+    (swap! entity-events assoc-in [type component event] handler)))
 
-(defmethod register-event-handler :attribute [class type drawable event handler]
-  (when (nil? (get-in @attribute-events [type drawable event]))
-    (swap! attribute-events assoc-in [type drawable event] handler)))
+(defmethod register-event-handler :attribute [class type component event handler]
+  (when (nil? (get-in @attribute-events [type component event]))
+    (swap! attribute-events assoc-in [type component event] handler)))
 
-(defn add-entity-drawable [entity & drawables]
-  (doseq [drawable (flatten drawables)]
-    (make-js-property (:src drawable) ID  (:uid entity))
-    (make-js-property (:src drawable) PART_ID (:name drawable))
-    (swap! entities assoc-in [(:uid entity) :drawables (:name drawable)] drawable)))
+(defn add-entity-component [entity & components]
+  (doseq [component (flatten components)]
+    (make-js-property (:src component) ID  (:uid entity))
+    (make-js-property (:src component) PART_ID (:name component))
+    (swap! entities assoc-in [(:uid entity) :components (:name component)] component)))
 
-(defn remove-entity-drawable [entity drawable-name]
-  (swap! entities update-in [(:uid entity) :drawables ] dissoc drawable-name))
+(defn remove-entity-component [entity component-name]
+  (swap! entities update-in [(:uid entity) :components ] dissoc component-name))
   ;(eventbus/fire ""))
 
 (defn get-attribute [name]
@@ -158,10 +150,10 @@
   (let [attribute (get-attribute (:name attribute_))
         domain (:domain attribute)
         domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))
-        drawable-factory (or (:factory domain-value) (:factory attribute))
-        drawables (drawable-factory data options)
-        drawables-map (into {} (map (fn [d] {(:name d) d}) drawables))]
-    (AttributeValue. (str (random-uuid)) attribute data drawables-map)))
+        component-factory (or (:factory domain-value) (:factory attribute))
+        components (component-factory data options)
+        components-map (into {} (map (fn [d] {(:name d) d}) components))]
+    (AttributeValue. (str (random-uuid)) attribute data components-map)))
 
 (defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]
@@ -170,10 +162,10 @@
           cardinality (:cardinality (:attribute attribute-value))]
       (if (> cardinality existing-cardinality)
         (do
-          (doseq [drawable (vals (:drawables attribute-value))]
-            (make-js-property (:src drawable) ID  (:uid entity))
-            (make-js-property (:src drawable) ATTR_ID (:id attribute-value))
-            (make-js-property (:src drawable) PART_ID (:name drawable)))
+          (doseq [component (vals (:components attribute-value))]
+            (make-js-property (:drawable component) ID  (:uid entity))
+            (make-js-property (:drawable component) ATTR_ID (:id attribute-value))
+            (make-js-property (:drawable component) PART_ID (:name component)))
           (let [attributes (conj (:attributes entity-fetch) attribute-value)
                 sorted (sort-by #(:index (:attribute %)) attributes)]
              (swap! entities assoc-in [(:uid entity) :attributes] sorted)))
@@ -182,11 +174,11 @@
 (defn get-attribute-value [entity id]
   (first (filter #(= (:id %) id) (:attributes entity))))
 
-(defn get-attribute-value-drawable
-  ([attribute-value drawable-name]
-   (get (:drawables attribute-value) drawable-name))
-  ([entity attr-id drawable-name]
-   (get-attribute-value-drawable (get-attribute-value entity attr-id) drawable-name)))
+(defn get-attribute-value-component
+  ([attribute-value component-name]
+   (get (:components attribute-value) component-name))
+  ([entity attr-id component-name]
+   (get-attribute-value-component (get-attribute-value entity attr-id) component-name)))
 
-(defn get-attribute-value-drawable-source [attribute-value drawable-name]
-  (:src (get-attribute-value-drawable attribute-value drawable-name)))
+(defn get-attribute-value-drawable [attribute-value component-name]
+  (:drawable (get-attribute-value-component attribute-value component-name)))

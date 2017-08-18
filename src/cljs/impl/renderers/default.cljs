@@ -1,5 +1,18 @@
 (ns impl.renderers.default
-  (:require [core.utils.general :refer [make-js-property]]))
+  (:require [core.utils.general :refer [make-js-property]])
+
+(def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false
+                           :lockRotation true
+                           :lockScalingX true
+                           :lockScalingY true})
+(def LOCKED_MOVEMENT      {:lockMovementX true
+                           :lockMovementY true})
+(def NO_DEFAULT_CONTROLS {:hasControls false :hasBorders false})
+(def INVISIBLE {:visible false})
+(def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
+(def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
+(def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
+
 
 (defn- set [property]
   (fn [source value]

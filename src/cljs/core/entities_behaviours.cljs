@@ -2,6 +2,7 @@
  (:require [core.entities :as e]
            [core.project :as p]
            [core.layouts :as layouts]
+           [core.drawables :as d]
            [clojure.string :as str]))
 
 
@@ -15,33 +16,20 @@
 (declare dissoc-breakpoint)
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
-(def TRANSPARENT_FILL {:fill "rgb(255,255,255)"})
-(def DEFAULT_FILL {:fill "black"})
-(def DEFAULT_STROKE {:stroke "black" :strokeWidth 1.5})
-(def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false
-                           :lockRotation true
-                           :lockScalingX true
-                           :lockScalingY true})
-(def LOCKED_MOVEMENT      {:lockMovementX true
-                           :lockMovementY true})
-(def NO_DEFAULT_CONTROLS {:hasControls false :hasBorders false})
 (def INVISIBLE {:visible false})
-(def HANDLER_SMALL {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
-(def HANDLER_SMALLEST {:radius 8 :fill "#fff" :stroke "black" :strokeWidth 1.5})
-(def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
+(def HANDLER_SMALL {:radius 8 :background-color "#fff" :border-color "black" :border-width 1.5})
+(def HANDLER_SMALLEST {:radius 8 :background-color "#fff" :border-color "black" :border-width 1.5})
 
 (defn overlaying? [src trg]
-    (or (.intersectsWithObject src trg)
-        (.isContainedWithinObject src trg)
-        (.isContainedWithinObject trg src)))
+  (intersercts? src trg))
 
-(defn intersects-any? [parts yes]
+(defn intersects-any? [components yes]
   (fn [e]
-    (let [src    (:src e)
+    (let [src    (:drawable e)
           entity (:entity e)
-          part   (:drawable e)
+          part   (:component e)
           canvas (:canvas e)]
-      (when (contains? #{"end" "start"} part)
+      (when (contains? #{"end" "start"} component)
           (.forEachObject canvas
                           #(when (and (not (== % src)) (contains? parts (.-refPartId %)))
                              (let [trg %
@@ -74,55 +62,53 @@
   (when-not (or (= context :entity-scope)
                 (= context :relation-scope)
                 (= context :any-scope))
-     (Error. "context must be entity-relation or drawable-relation")))
+     (Error. "context must be entity-relation or component-relation")))
 
-(defn- calculate-offset [drawable left top]
-  {:left (- left (.-left  (:src drawable)))
-   :top  (- top  (.-top   (:src drawable)))})
+(defn- calculate-offset [component left top]
+  {:left (- left (d/getp (:drawable component) :left))
+   :top  (- top  (d/getp (:drawable component) :top))})
 
-(defn- calculate-effective-offset [entity drawable-name left top coord-mode]
+(defn- calculate-effective-offset [entity component-name left top coord-mode]
   (if (= :offset coord-mode)
     {:left left :top top}
-    (let [drawable  (e/get-entity-drawable entity drawable-name)]
-      (calculate-offset drawable left top))))
+    (let [component (e/get-entity-component entity component-name)]
+      (calculate-offset component left top))))
 
 (defn- effective-position
- ([drawable get-x get-y x y coord-mode]
-  (let [effective-x (if (= :offset coord-mode) (+ (get-x (:src drawable)) x) x)
-        effective-y  (if (= :offset coord-mode) (+ (get-y (:src drawable)) y) y)]
+ ([component get-x get-y x y coord-mode]
+  (let [effective-x (if (= :offset coord-mode) (+ (get-x (:drawable component)) x) x)
+        effective-y  (if (= :offset coord-mode) (+ (get-y (:drawable component)) y) y)]
     {:x effective-x :y effective-y}))
- ([drawable x y coord-mode]
-  (effective-position drawable #(.-left %) #(.-top %) x y coord-mode)))
+ ([component x y coord-mode]
+  (effective-position component #(d/getp % :left) #(d/getp % :top) x y coord-mode)))
 
 (defn- apply-effective-position
- ([drawable set-x get-x set-y get-y x y coord-mode]
-  (let [epos (effective-position drawable get-x get-y x y coord-mode)]
-    (set-x (:src drawable) (:x epos))
-    (set-y (:src drawable) (:y epos))
-    (.setCoords (:src drawable))))
- ([drawable x y coord-mode]
-  (apply-effective-position drawable
-                            #(.set %1 (clj->js {:left %2}))
-                            #(.-left %)
-                            #(.set %1 (clj->js {:top %2}))
-                            #(.-top %)
+ ([component set-x get-x set-y get-y x y coord-mode]
+  (let [epos (effective-position component get-x get-y x y coord-mode)]
+    (set-x (:drawable component) (:x epos))
+    (set-y (:drawable component) (:y epos))))
+ ([comopnent x y coord-mode]
+  (apply-effective-position comopnent
+                            #(d/setp %1 :left %2)
+                            #(d/getp % :left)
+                            #(d/setp %1 :top %2)
+                            #(d/getp % :top)
                             x
                             y
                             coord-mode)))
 
-(defn- position-attributes-drawables [attributes offset-left offset-top]
+(defn- position-attributes-components [attributes offset-left offset-top]
    (doseq [src (flatten (mapv #(e/components %) attributes))]
-     (.set (:src src) (clj->js {:left (+ (.-left (:src src)) offset-left)
-                                :top  (+ (.-top  (:src src)) offset-top)}))
-     (.setCoords (:src src))))
+     (d/set-data (:drawable src) {:left (+ (d/getp (:drawable src) :left) offset-left)
+                                  :top  (+ (d/getp (:drawable src) :top) offset-top)})))
 
-(defmulti get-refered-drawable-name (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
+(defmulti get-refered-component-name (fn [relation] (:type (e/entity-by-id (:entity-id relation)))))
 
-(defmulti position-entity-drawable (fn [entity drawable-name context left top coord-mode]
+(defmulti position-entity-component (fn [entity component-name context left top coord-mode]
                                      (assert-position-context context)
-                                     [(:type entity) (:type (e/get-entity-drawable entity drawable-name)) context]))
+                                     [(:type entity) (:type (e/get-entity-component entity component-name)) context]))
 
-(defmulti position-entity (fn [entity ref-drawable-name context left top coord-mode]
+(defmulti position-entity (fn [entity ref-component-name context left top coord-mode]
                             (assert-position-context context)
                             [(:type entity) context]))
 
@@ -130,100 +116,100 @@
 ;; Multimethods for RECTANGLE-NODE entity positioning
 ;; ==============================================================================================
 
-(defmethod get-refered-drawable-name "rectangle-node" [relation]
+(defmethod get-refered-component-name "rectangle-node" [relation]
    "body")
 
-(defmethod position-entity-drawable [ "rectangle-node" :main :entity-scope] [entity drawable-name context left top coord-mode]
-  (let [drawable (e/get-entity-drawable entity drawable-name)]
-    (apply-effective-position drawable left top coord-mode)))
+(defmethod position-entity-component [ "rectangle-node" :main :entity-scope] [entity component-name context left top coord-mode]
+  (let [component (e/get-entity-component entity component-name)]
+    (apply-effective-position component left top coord-mode)))
 
-(defmethod position-entity-drawable [ "rectangle-node" :endpoint :entity-scope] [entity drawable-name context left top coord-mode]
-  (let [drawable (e/get-entity-drawable entity drawable-name)]
-    (apply-effective-position drawable left top coord-mode)))
+(defmethod position-entity-component [ "rectangle-node" :endpoint :entity-scope] [entity component-name context left top coord-mode]
+  (let [component (e/get-entity-component entity component-name)]
+    (apply-effective-position component left top coord-mode)))
 
-(defmethod position-entity ["rectangle-node" :entity-scope] [entity ref-drawable-name context left top coord-mode]
-  (let [effective-offset (calculate-effective-offset entity ref-drawable-name left top coord-mode)]
-    (doseq [drawable (e/components entity)]
-      (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
-            effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
-        (when-not (= (:name drawable) ref-drawable-name)
-          (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))
-    (position-attributes-drawables (:attributes entity) (:left effective-offset) (:top effective-offset))))
+(defmethod position-entity ["rectangle-node" :entity-scope] [entity ref-component-name context left top coord-mode]
+  (let [effective-offset (calculate-effective-offset entity ref-component-name left top coord-mode)]
+    (doseq [component (e/components entity)]
+      (let [effective-left  (+ (d/getp (:drawable component) :left) (:left effective-offset))
+            effective-top   (+ (d/getp (:drawable component) :top) (:top effective-offset))]
+        (when-not (= (:name component) ref-component-name)
+          (position-entity-component entity (:name component) context effective-left effective-top :absolute))))
+    (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
-(defmethod position-entity-drawable [ "rectangle-node" :main :relation-scope] [entity drawable-name context left top coord-mode])
+(defmethod position-entity-component [ "rectangle-node" :main :relation-scope] [entity component-name context left top coord-mode])
 
-(defmethod position-entity-drawable [ "rectangle-node" :endpoint :relation-scope] [entity drawable-name context left top coord-mode])
+(defmethod position-entity-component [ "rectangle-node" :endpoint :relation-scope] [entity component-name context left top coord-mode])
 
-(defmethod position-entity ["rectangle-node" :relation-scope] [entity ref-drawable-name context left top coord-mode])
+(defmethod position-entity ["rectangle-node" :relation-scope] [entity ref-component-name context left top coord-mode])
 
 ;; ==============================================================================================
 ;; Multimethods for RELATION entity positioning
 ;; ==============================================================================================
 
-(defmethod get-refered-drawable-name "relation" [relation]
+(defmethod get-refered-component-name "relation" [relation]
    (:association-data relation))
 
-(defmethod position-entity-drawable [ "relation" :endpoint   :relation-scope] [entity drawable-name context left top coord-mode]
+(defmethod position-entity-component [ "relation" :endpoint   :relation-scope] [entity component-name context left top coord-mode]
   (position-endpoint entity left top coord-mode))
 
-(defmethod position-entity-drawable [ "relation" :startpoint :relation-scope] [entity drawable-name context left top coord-mode]
+(defmethod position-entity-component [ "relation" :startpoint :relation-scope] [entity component-name context left top coord-mode]
   (position-startpoint entity left top coord-mode))
 
-(defmethod position-entity-drawable [ "relation" :breakpoint :relation-scope] [entity drawable-name context left top coord-mode]
-  (position-breakpoint entity drawable-name left top coord-mode))
+(defmethod position-entity-component [ "relation" :breakpoint :relation-scope] [entity component-name context left top coord-mode]
+  (position-breakpoint entity component-name left top coord-mode))
 
-(defmethod position-entity [ "relation" :relation-scope] [entity ref-drawable-name context left top coord-mode]
-  (position-entity-drawable entity ref-drawable-name context left top coord-mode))
+(defmethod position-entity [ "relation" :relation-scope] [entity ref-component-name context left top coord-mode]
+  (position-entity-component entity ref-component-name context left top coord-mode))
 
-(defmethod position-entity-drawable [ "relation" :endpoint   :entity-scope] [entity drawable-name context left top coord-mode]
+(defmethod position-entity-component [ "relation" :endpoint   :entity-scope] [entity component-name context left top coord-mode]
   (position-endpoint entity left top coord-mode))
 
-(defmethod position-entity-drawable [ "relation" :startpoint :entity-scope] [entity drawable-name context left top coord-mode]
+(defmethod position-entity-component [ "relation" :startpoint :entity-scope] [entity component-name context left top coord-mode]
   (position-startpoint entity left top coord-mode))
 
-(defmethod position-entity-drawable [ "relation" :breakpoint :entity-scope] [entity drawable-name context left top coord-mode]
-  (position-breakpoint entity drawable-name left top coord-mode))
+(defmethod position-entity-component [ "relation" :breakpoint :entity-scope] [entity component-name context left top coord-mode]
+  (position-breakpoint entity component-name left top coord-mode))
 
-(defmethod position-entity-drawable [ "relation" :decorator  :entity-scope] [entity drawable-name context left top coord-mode]
-  (let [drawable (e/get-entity-drawable entity drawable-name)]
-    (apply-effective-position drawable left top coord-mode)))
+(defmethod position-entity-component [ "relation" :decorator  :entity-scope] [entity component-name context left top coord-mode]
+  (let [component (e/get-entity-component entity component-name)]
+    (apply-effective-position component left top coord-mode)))
 
-(defmethod position-entity-drawable [ "relation" :relation  :entity-scope] [entity drawable-name context left top coord-mode])
+(defmethod position-entity-component [ "relation" :relation  :entity-scope] [entity component-name context left top coord-mode])
 
-(defmethod position-entity ["relation" :entity-scope] [entity ref-drawable-name context left top coord-mode]
-  (let [effective-offset (calculate-effective-offset entity ref-drawable-name left top coord-mode)]
-    (doseq [drawable (e/components entity)]
-      (when-not (= (:name drawable) ref-drawable-name)
-        (let [effective-left  (+ (.-left (:src drawable)) (:left effective-offset))
-              effective-top   (+ (.-top (:src drawable)) (:top effective-offset))]
-           (position-entity-drawable entity (:name drawable) context effective-left effective-top :absolute))))
-    (position-attributes-drawables (:attributes entity) (:left effective-offset) (:top effective-offset))))
+(defmethod position-entity ["relation" :entity-scope] [entity ref-component-name context left top coord-mode]
+  (let [effective-offset (calculate-effective-offset entity ref-component-name left top coord-mode)]
+    (doseq [component (e/components entity)]
+      (when-not (= (:name component) ref-component-name)
+        (let [effective-left  (+ (d/get-left (:drawable component)) (:left effective-offset))
+              effective-top   (+ (d/get-top (:drawable component)) (:top effective-offset))]
+           (position-entity-component entity (:name component) context effective-left effective-top :absolute))))
+    (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
 (defn moving-entity []
   (fn [e]
     (let [entity (:entity e)
           event (:event e)
-          drawable-name (:drawable e)
-          movementX (.-movementX (.-e event))
-          movementY (.-movementY (.-e event))]
+          component-name (:component e)
+          movementX (:movement-x e)
+          movementY (:movement-y e)]
       (position-entity entity
-                       drawable-name
+                       component-name
                        :entity-scope
                        movementX
                        movementY
                        :offset)
       (doseq [relation (:relationships entity)]
           (let [related-entity (e/entity-by-id (:entity-id relation))
-                ref-drawable-name (get-refered-drawable-name relation)]
-             (position-entity-drawable related-entity
-                                       ref-drawable-name
-                                       :relation-scope
-                                       movementX
-                                       movementY
-                                       :offset))))))
+                ref-component-name (get-refered-component-name relation)]
+             (position-entity-component related-entity
+                                        ref-component-name
+                                        :relation-scope
+                                        movementX
+                                        movementY
+                                        :offset))))))
 
 (defn assert-drawable [event name]
-  (= (name (:drawable event))))
+  (= (name (:component event))))
 
 (defn insert-breakpoint []
   (fn [e]

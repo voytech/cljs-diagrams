@@ -19,11 +19,11 @@
 
 (defn highlight [bln options]
  (fn [e]
-   (.set (:src e) (clj->js {:stroke (if bln (:highlight-color options)
-                                            (:normal-color options))
-                            :strokeWidth (if bln (:highlight-width options)
-                                                 (:normal-width options))}))))
+   (set-data (:drawable e) {:border-color (if bln (:highlight-color options)
+                                                  (:normal-color options))
+                            :border-width (if bln (:highlight-width options)
+                                                  (:normal-width options))})))
 
-(defn show [entity drawable-name show]
- (let [drawable (e/get-entity-drawable entity drawable-name)]
-   (.set (:src drawable) (clj->js {:visible show}))))
+(defn show [entity component-name show]
+ (let [component (e/get-entity-drawable entity component-name)]
+   (setp (:drawable component) :visible show)))

@@ -7,12 +7,12 @@
 (defmacro value [value drawables]
   `(core.entities/AttributeDomain. ~value ~drawables))
 
-(defmacro with-drawables [data options & drawables-vector]
-  (let [drawables (if (and (coll? (first drawables-vector)) (= 1 (count drawables-vector))) (first drawables-vector) drawables-vector)]
-    `(fn [~data ~options] (mapv (fn [dd#] (core.entities/Drawable. (:name dd#)
-                                                                   (:type dd#)
-                                                                   (:src dd#)
-                                                                   (:props dd#))) ~drawables))))
+(defmacro with-components [data options & components-vector]
+  (let [components (if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
+    `(fn [~data ~options] (mapv (fn [dd#] (core.entities/Component. (:name dd#)
+                                                                    (:type dd#)
+                                                                    (:drawable dd#)
+                                                                    (:props dd#))) ~components))))
 (defmacro with-domain [name body])
 
 (defmacro with-behaviours [name body])
@@ -24,23 +24,23 @@
 (defmacro defentity [name & body]
   (let [transformed (transform-body body)]
     (let [cntbbox    (last (:with-content-bounding-box transformed))
-          drawables  (:with-drawables transformed)
+          components (:with-components transformed)
           behaviours (last (:with-behaviours transformed))
           attributes (last (:with-attributes transformed))]
-      (when (nil? drawables)
-        (throw (Error. "Provide drawables and behaviours definition within entitity definition!")))
+      (when (nil? components)
+        (throw (Error. "Provide components and behaviours definition within entitity definition!")))
       (when (nil? cntbbox)
         (throw (Error. "Provide attribute content bounding box parameters!")))
      `(do
-        (doseq [drawable-type# (keys ~behaviours)]
-          (let [event-map# (get ~behaviours drawable-type#)]
+        (doseq [component-type# (keys ~behaviours)]
+          (let [event-map# (get ~behaviours component-type#)]
             (doseq [event-type# (keys event-map#)]
               (let [handler# (get event-map# event-type#)]
-                (core.entities/register-event-handler :entity (name '~name) drawable-type# event-type# handler#)))))
+                (core.entities/register-event-handler :entity (name '~name) component-type# event-type# handler#)))))
         (defn ~name [data# options#]
            (let [e# (core.entities/create-entity (name '~name) {} ~cntbbox)
-                 drawable-factory# ~drawables]
-             (apply core.entities/add-entity-drawable (cons e# (drawable-factory# data# options#)))
+                 component-factory# ~components]
+             (apply core.entities/add-entity-component (cons e# (component-factory# data# options#)))
              (doseq [call# ~attributes] (call# e#))
              (core.entities/entity-by-id (:uid e#))))))))
 
@@ -48,8 +48,8 @@
   (let [transformed    (transform-body body)
         dfinition      (last (:with-definition transformed))
         has-definition (contains? transformed :with-definition)
-        drawables      (:with-drawables  transformed)
-        has-drawables  (contains? transformed :with-drawables)
+        components      (:with-components  transformed)
+        has-components  (contains? transformed :with-drawables)
         behaviours     (last (:with-behaviours transformed))
         has-behaviours (contains? transformed :with-behaviours)
         domain         (last (:with-domain transformed))
@@ -63,16 +63,16 @@
                                                  nil)
                                                (:bbox ~dfinition)
                                                (:sync ~dfinition)
-                                               (if ~has-drawables
-                                                 ~drawables
+                                               (if ~has-components
+                                                 ~components
                                                  nil))]
            (core.entities/add-attribute attr#)
            (when (not (nil? ~behaviours))
-             (doseq [drawable-type# (keys ~behaviours)]
-               (let [event-map# (get ~behaviours drawable-type#)]
+             (doseq [component-type# (keys ~behaviours)]
+               (let [event-map# (get ~behaviours component-type#)]
                  (doseq [event-type# (keys event-map#)]
                    (let [handler# (get event-map# event-type#)]
-                     (core.entities/register-event-handler :attribute (name '~name) drawable-type# event-type# handler#))))))
+                     (core.entities/register-event-handler :attribute (name '~name) component-type# event-type# handler#))))))
            (defn ~name
              ([entity# data#]
               (~name entity# data# nil))

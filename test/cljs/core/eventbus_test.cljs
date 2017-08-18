@@ -41,6 +41,18 @@
   (let [handlers (get-registered-handlers "event.testing")]
     (is (= 2 (count handlers)))))
 
+(deftest test-register-unregister-handler []
+  (bus/on ["event.testing"] (fn [event] identity))
+  (is (= 1 (count (keys @bus/bus))))
+  (bus/off ["event.testing"])
+  (is (= 0 (count (keys @bus/bus)))))
+
+(deftest test-once-handler []
+  (bus/once "event.testing" (fn [event] :executed))
+  (is (= 1 (count (keys @bus/bus))))
+  (is (= :executed (bus/fire "event.testing")))
+  (is (= 0 (count (keys @bus/bus)))))
+
 (deftest test-fire-an-event []
   (bus/on ["event.testing"] (fn [event] :executed))
   (is (= :executed (bus/fire "event.testing"))))

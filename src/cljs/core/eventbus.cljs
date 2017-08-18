@@ -32,9 +32,9 @@
 
 (defn once [event-name callback]
   (let [wrapper (fn [event]
-                  (callback event)
-                  (off event-name))]
-     (on event-names wrapper)))
+                  (off [event-name])
+                  (callback event))]
+     (on [event-name] wrapper)))
 
 (defn- make-event [event-name context]
   {:type      event-name

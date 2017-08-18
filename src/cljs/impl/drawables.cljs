@@ -14,10 +14,10 @@
 
 (defdrawable dotted-line  {:z-index 0 :border-color "black" :border-style :dotted :border-width 1})
 
-(defdrawable trianlge {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable triangle {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
 
 (defdrawable point {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
 
 (defdrawable path {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable text {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable text {:z-index 0 :border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})

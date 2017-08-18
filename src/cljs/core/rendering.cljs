@@ -61,7 +61,6 @@
      (remove-drawable drawable)
      (destroy-rendering-state drawable rendering-context)))
 
-
 (bus/on ["rendering.execute"] -999 (fn [event])
  (let [context (:context @event)
        entities  (:entities context)]

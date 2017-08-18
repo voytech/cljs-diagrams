@@ -80,3 +80,9 @@
               (let [attribute#   (core.entities/get-attribute (name '~name))
                     attr-value#  (core.entities/create-attribute-value attribute# data# options#)]
                 (core.entities/add-entity-attribute-value entity# attr-value#))))))))
+
+(defmacro defdrawable [name options]
+  `(defn ~name [~options]
+     (let [drawable (core.drawables/create-drawable (keyword (name ~name)) ~options)]
+        (core.eventbus/fire ["drawable.created"] {:drawable drawable})
+        drawable)))

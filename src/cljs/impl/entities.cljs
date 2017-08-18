@@ -1,15 +1,16 @@
 (ns impl.entities
  (:require [core.entities :as e]
            [impl.standard-attributes :as stdatr]
+           [impl.drawables :as d]
            [core.project :as p]
            [core.behaviours :as cb :refer [highlight show all event-wrap]]
            [core.options :as o]
-           [core.entities-behaviours :as eb :refer [endpoint moving-entity relation-line
+           [core.entities-behaviours :as eb :refer [moving-entity
                                                     insert-breakpoint dissoc-breakpoint moving-endpoint
                                                     intersects? intersects-any? toggle-endpoints
-                                                    position-endpoint position-startpoint relations-validate arrow]]
+                                                    position-endpoint position-startpoint relations-validate]]
            [clojure.string :as str])
- (:require-macros [core.macros :refer [defentity with-drawables]]))
+ (:require-macros [core.macros :refer [defentity with-components]]))
 
 ; After implementing EventBus -> implement plugins which will be functions of type pluing-name(obj-group,obj-type) -> void.
 ; This plugin will register specific event handling on bus which will allow e.g. implementing behavioural plugins based
@@ -25,7 +26,7 @@
      :main     {"object:moving" (moving-entity)
                 "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
                 "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}})
-  (with-drawables data options
+  (with-components data options
     (let [enriched-opts (merge options
                                eb/DEFAULT_SIZE_OPTS
                                eb/TRANSPARENT_FILL
@@ -38,19 +39,19 @@
           conB    (vector (+ (/ (:width eb/DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height eb/DEFAULT_SIZE_OPTS)))]
       [{:name "connector-left"
         :type :endpoint
-        :src (endpoint conL :moveable false :display "rect" :visibile false)}
+        :drawable (d/endpoint conL :moveable false :display "rect" :visibile false)}
        {:name "connector-right"
         :type :endpoint
-        :src (endpoint conR :moveable false :display "rect" :visibile false)}
+        :drawable (d/endpoint conR :moveable false :display "rect" :visibile false)}
        {:name "connector-top"
         :type :endpoint
-        :src (endpoint conT :moveable false :display "rect" :visibile false)}
+        :drawable (d/endpoint conT :moveable false :display "rect" :visibile false)}
        {:name "connector-bottom"
         :type :endpoint
-        :src (endpoint conB :moveable false :display "rect" :visibile false)}
+        :drawable (d/endpoint conB :moveable false :display "rect" :visibile false)}
        {:name "body"
         :type :main
-        :src (js/fabric.Rect. (clj->js enriched-opts))}]))
+        :drawable (d/rect enriched-opts)}]))
   (with-attributes [#(stdatr/name % "<Enter name here>")
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
@@ -89,7 +90,7 @@
                    "mouse:up"      (dissoc-breakpoint)
                    "object:moving" (moving-endpoint)}})
 
-  (with-drawables data options
+  (with-components data options
     (let [enriched-opts (merge options eb/DEFAULT_SIZE_OPTS eb/DEFAULT_STROKE eb/RESTRICTED_BEHAVIOUR eb/NO_DEFAULT_CONTROLS)
           offset-x (:left options)
           offset-y (:top options)
@@ -99,19 +100,19 @@
           conE (last points-pairs-offset)]
         [{:name "connector"
           :type :relation
-          :src  (relation-line (first conS) (last conS) (first conE) (last conE) enriched-opts)
+          :drawable  (d/relation-line (first conS) (last conS) (first conE) (last conE) enriched-opts)
           :props {:start "start" :end "end"}}
 
          {:name "start"
           :type :startpoint
-          :src  (endpoint conS :moveable true :display "circle" :visible true :opacity 1)
+          :drawable  (d/endpoint conS :moveable true :display "circle" :visible true :opacity 1)
           :props {:start "connector" :penultimate true}}
 
          {:name "arrow"
           :type :decorator
-          :src  (arrow data options)}
+          :drawable  (d/arrow data options)}
 
          {:name "end"
           :type :endpoint
-          :src  (endpoint conE :moveable true :display "circle" :visible true :opacity 0)
+          :drawable  (d/endpoint conE :moveable true :display "circle" :visible true :opacity 0)
           :props {:end "connector"}}])))

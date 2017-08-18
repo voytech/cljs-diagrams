@@ -88,4 +88,4 @@
   ([type data]
    (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}) nil)]
      (set-data drawable data)
-     drawable)))
+     drawable)))    

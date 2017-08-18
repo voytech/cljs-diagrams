@@ -34,7 +34,7 @@
 
 (defrecord AttributeValue [id attribute value components])
 
-(defrecord Component [name type drawable props])
+(defrecord Component [name type drawable props parent])
 
 (defrecord Entity [uid
                    type
@@ -128,9 +128,22 @@
 
 (defn add-entity-component [entity & components]
   (doseq [component (flatten components)]
-    (make-js-property (:src component) ID  (:uid entity))
-    (make-js-property (:src component) PART_ID (:name component))
-    (swap! entities assoc-in [(:uid entity) :components (:name component)] component)))
+    (let [drawable (assoc (:drawable component) :parent {:component-id (:name component) :entity-id (:uid entity)})
+          altered  (assoc component :parent {:entity-id (:uid entity)}
+                                    :drawable drawable)]
+      (swap! entities assoc-in [(:uid entity) :components (:name altered)] altered))))
+
+(defn get-drawable-parent-entity [drawable]
+  (let [uid (-> drawable :parent :entity-id)]
+    entity (get @entities uid)))
+
+(defn get-drawable-parent-component [drawable]
+  (let [uid (-> drawable :parent :entity-id)
+        name (-> drawable :parent :component-id)
+        entity (get @entities uid)]
+     (get-entity-component entity name)))
+
+(defn get-drawable-parent-attribute [drawable])
 
 (defn remove-entity-component [entity component-name]
   (swap! entities update-in [(:uid entity) :components ] dissoc component-name))
@@ -163,9 +176,9 @@
       (if (> cardinality existing-cardinality)
         (do
           (doseq [component (vals (:components attribute-value))]
-            (make-js-property (:drawable component) ID  (:uid entity))
-            (make-js-property (:drawable component) ATTR_ID (:id attribute-value))
-            (make-js-property (:drawable component) PART_ID (:name component)))
+            (let [drawable (assoc (:drawable component) :parent {:component-id (:name component) :attribute-id (:id attribute-value)})
+                  altered  (assoc component :parent {:attribute-id (:id attribute-value)}
+                                            :drawable drawable)]))
           (let [attributes (conj (:attributes entity-fetch) attribute-value)
                 sorted (sort-by #(:index (:attribute %)) attributes)]
              (swap! entities assoc-in [(:uid entity) :attributes] sorted)))

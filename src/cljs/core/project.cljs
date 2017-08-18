@@ -59,6 +59,10 @@
 (defn- enrich-event-and-handle [canvas e event-type decomposed handler]
   (let [event {:src (.-target e)
                :event e
+               :x (.-layerX e)
+               :y (.-layerY e)
+               :movement-x (.-movementX e)
+               :movement-y (.-movementY e)
                :entity (-> decomposed :entity)
                :canvas canvas
                :drawable (-> decomposed :drawable-name)

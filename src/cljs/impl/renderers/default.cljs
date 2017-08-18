@@ -1,4 +1,5 @@
-(ns impl.renderers.default)
+(ns impl.renderers.default
+  (:require [core.utils.general :refer [make-js-property]]))
 
 (defn- set [property]
   (fn [source value]
@@ -19,9 +20,10 @@
         (((:name prop) property-mapping) source (:new prop)))
       (.setCoords source)))
 
-
 (defn- fabric-create-rendering-state [context drawable create]
   (let [fabric-object (create)]
+     (make-js-property fabric-object "parentId"   (-> drawable :parent :id))
+     (make-js-property fabric-object "parentType" (-> drawable :parent :type))
      (.add context fabric-object)
      fabric-object))
 

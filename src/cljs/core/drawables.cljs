@@ -3,6 +3,13 @@
 
 (defonce watchers (atom {}))
 
+(defonce standard-properties [:left :top :width :height :border-color :border-width
+                              :border-style :color :background-color :opacity
+                              :fill :fill-type :angle :z-index])
+
+(defonce standard-property-values {:border-style [:dotted :dashed :solid]
+                                   :fill-type [:border-only :full :gradient :no-fill]})
+
 (defonce DRAWABLE_CHANGED "drawable.changed")
 
 (defprotocol IDrawable
@@ -26,6 +33,7 @@
   (intersects? [this other])
   (contains? [this other]))
 
+
 (defn- register-watcher [drawable property]
   (when (nil? (get @watchers [(:uid drawable) property]))
     (let [model (:model drawable)]
@@ -36,7 +44,7 @@
                                                               :drawable drawable})))
       (swap! watchers assoc-in [(:uid drawable) property] true))))
 
-(defrecord Drawable [uid type model rendering-state]
+(defrecord Drawable [uid type model rendering-state parent]
   IDrawable
   (update-state [this state] (swap! this assoc :rendering-state state))
   (set [this property value]
@@ -72,10 +80,11 @@
 
   (contains? [this other]))
 
+
 (defn create-drawable
   ([type]
    (create-drawable type {}))
   ([type data]
-   (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}))]
+   (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}) nil)]
      (set-data drawable data)
      drawable)))

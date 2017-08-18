@@ -81,8 +81,8 @@
                     attr-value#  (core.entities/create-attribute-value attribute# data# options#)]
                 (core.entities/add-entity-attribute-value entity# attr-value#))))))))
 
-(defmacro defdrawable [name options]
-  `(defn ~name [~options]
-     (let [drawable (core.drawables/create-drawable (keyword (name ~name)) ~options)]
+(defmacro defdrawable [name options-defaults]
+  `(defn ~name [options#]
+     (let [drawable (core.drawables/create-drawable (keyword (name ~name)) (merge options# ~options-defaults))]
         (core.eventbus/fire ["drawable.created"] {:drawable drawable})
         drawable)))

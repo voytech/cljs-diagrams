@@ -37,12 +37,15 @@
   (let [drawable (get-drawable uid)]
     (swap! drawables update-in [(:type drawable)] dissoc uid)))
 
+(defn update-context [value-map]
+  (reset! rendering-context (merge value-map @rendering-context)))
+
 (defn- render-entity [entity])
 
 (bus/on ["drawable.created"] -999 (fn [event])
   (let [context (:context @event)
         drawable (:drawable context)]
-     (add-drawable drawable)))     
+     (add-drawable drawable)))
 
 (bus/on ["drawable.added"] -999 (fn [event]))
 

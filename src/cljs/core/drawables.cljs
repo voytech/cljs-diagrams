@@ -14,11 +14,11 @@
 
 (defprotocol IDrawable
   (update-state [this state])
-  (set [this property value])
+  (setp [this property value])
   (set-data [this map_])
-  (get [this property])
+  (getp [this property])
   (set-border-color [this color])
-  (set-background-Color [this color])
+  (set-background-color [this color])
   (set-border-style [this style])
   (set-border-width [this width])
   (set-left [this left])
@@ -28,7 +28,7 @@
   (get-left [this])
   (get-top [this])
   (get-width [this])
-  (get-geight [this])
+  (get-height [this])
   (get-bbox [this])
   (intersects? [this other])
   (contains? [this other]))
@@ -39,32 +39,33 @@
     (let [model (:model drawable)]
       (add-watch model property (fn [key atom old-state new-state]
                                   (bus/fire DRAWABLE_CHANGED {:property key
-                                                              :old old-state
-                                                              :new new-state
+                                                              :old (property old-state)
+                                                              :new (property new-state)
                                                               :drawable drawable})))
       (swap! watchers assoc-in [(:uid drawable) property] true))))
 
 (defrecord Drawable [uid type model rendering-state parent]
   IDrawable
   (update-state [this state] (swap! this assoc :rendering-state state))
-  (set [this property value]
+  (setp [this property value]
     (register-watcher this property)
     (swap! model assoc property value))
   (set-data [this map_]
     (doseq [key (keys map_)]
-      (set this key (get map_ key))))
-  (get [this property value] (get @model property))
-  (set-border-color [this value] (set this :border-color value))
-  (set-border-style [this value] (set this :border-style value))
-  (set-border-width [this value] (set this :border-width value))
-  (set-left [this value] (set this :left value))
-  (set-top [this value] (set this :top value))
-  (set-width [this value] (set this :width value))
-  (set-height [this value] (set this :height value))
-  (get-left [this] (get this :left))
-  (get-top [this] (get this :top))
-  (get-width [this] (get this :width))
-  (get-height [this] (get this :height))
+      (setp this key (get map_ key))))
+  (getp [this property] (get @model property))
+  (set-border-color [this value] (setp this :border-color value))
+  (set-background-color [this value] (setp this :background-color value))
+  (set-border-style [this value] (setp this :border-style value))
+  (set-border-width [this value] (setp this :border-width value))
+  (set-left [this value] (setp this :left value))
+  (set-top [this value] (setp this :top value))
+  (set-width [this value] (setp this :width value))
+  (set-height [this value] (setp this :height value))
+  (get-left [this] (getp this :left))
+  (get-top [this] (getp this :top))
+  (get-width [this] (getp this :width))
+  (get-height [this] (getp this :height))
   (get-bbox [this] {:left (get-left this)
                     :top (get-top this)
                     :width (get-width this)

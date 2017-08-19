@@ -25,18 +25,18 @@
 (defmulti endpoint (fn [point & {:keys [moveable display visible]}] display))
 
 (defmethod endpoint "circle" [point & {:keys [moveable display visible opacity]}]
-  (let [options (merge {:left (- (first point) (:radius 8))
-                        :top (- (last point)   (:radius 8))
+  (let [options (merge {:left (- (first point) 8)
+                        :top (- (last point)   8)
                         :visible visible
                         :opacity opacity})]
 
       (circle options)))
 
 (defmethod endpoint "rect" [point & {:keys [moveable display visible]}]
-  (let [options (merge {:left (- (first point) (:radius 8))
-                        :top (- (last point)   (:radius 8))
-                        :width (* 2 (:radius 8))
-                        :height (* 2 (:radius 8))
+  (let [options (merge {:left (- (first point) 8)
+                        :top (- (last point)   8)
+                        :width 16
+                        :height 16
                         :visible visible})]
       (rect options)))
 
@@ -50,12 +50,12 @@
         deltaX (- x1 cX)
         deltaY (- y1 cY)]
       (triangle {:left x2
-                   :top (+ y1 deltaY)
-                   :origin-x :center
-                   :origin-y :center
-                   :angle 90
-                   :width 20
-                   :height 20})))
+                 :top (+ y1 deltaY)
+                 :origin-x :center
+                 :origin-y :center
+                 :angle 90
+                 :width 20
+                 :height 20})))
 
 (defn relation-line [x1 y1 x2 y2]
   (line {:left x1 :top y1 :x1 x1 :y1 y1 :x2 x2 :y2 y2}))

@@ -2,6 +2,10 @@
   (:require [core.entities :as e
              core.drawables :as d]))
 
+(defn to-the-center-of [line x y shape]
+  (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
+                    y (+ (d/get-top shape) (/ (d/get-height shape) 2))}))
+
 (defn all [ & handlers]
   (fn [e]
     (doseq [handler handlers]
@@ -26,7 +30,7 @@
                                                     (:normal-width options))})))
 
 (defn show [entity component-name show]
- (let [component (e/get-entity-drawable entity component-name)]
+ (let [component (e/get-entity-component entity component-name)]
    (setp (:drawable component) :visible show)))
 
 
@@ -38,7 +42,7 @@
          drawable         (:drawable component)]
      (when (contains? #{"end" "start"} component-name)
        (doseq [drwlb @e/drawables]
-         #(when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
+          (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]
               (when (intersects? drawable drwlb)
@@ -52,18 +56,12 @@
          drawable         (:drawable component)]
      (when (contains? #{"end" "start"} component-nam)
        (doseq [drwlb @e/drawables]
-         #(when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
+          (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]
                (if (intersects? drawable drwlb)
                  (yes {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})
                  (no  {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})))))))))
-
-(defn- assert-position-context [context]
- (when-not (or (= context :entity-scope)
-               (= context :relation-scope)
-               (= context :any-scope))
-    (Error. "context must be entity-relation or component-relation")))
 
 (defn- calculate-offset [component left top]
  {:left (- left (d/getp (:drawable component) :left))
@@ -107,7 +105,7 @@
   (let [component (e/get-entity-component entity component-name)]
     (apply-effective-position component left top coord-mode)))
 
-(defn default-position-entity [entity ref-component-name context left top coord-mode]
+(defn default-position-entity [entity ref-component-name left top coord-mode]
  (let [effective-offset (calculate-effective-offset entity ref-component-name left top coord-mode)]
    (doseq [component (e/components entity)]
      (let [effective-left  (+ (d/getp (:drawable component) :left) (:left effective-offset))
@@ -125,19 +123,17 @@
          movementY (:movement-y e)]
      (default-position-entity entity
                               component-name
-                              :entity-scope
                               movementX
                               movementY
                               :offset)
      (doseq [relation (:relationships entity)]
-         (let [related-entity (e/entity-by-id (:entity-id relation))
-               ref-component-name (get-refered-component-name relation)]
-            (default-position-entity-component related-entity
-                                               ref-component-name
-                                               :relation-scope
-                                               movementX
-                                               movementY
-                                               :offset))))))
+       (let [related-entity (e/entity-by-id (:entity-id relation))
+             ref-component-name (get-refered-component-name relation)]
+          (default-position-entity-component related-entity
+                                             ref-component-name
+                                             movementX
+                                             movementY
+                                             :offset))))))
 
 (defn relations-validate [entity]
  (doseq [relation (:relationships entity)]
@@ -146,7 +142,3 @@
          source-bbox (layouts/get-bbox entity)]
      (when (not (layouts/intersects? source-bbox target-bbox))
        (e/disconnect-entities entity related-entity)))))
-
-(defn to-the-center-of [line x y shape]
- (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
-                   y (+ (d/get-top shape) (/ (d/get-height shape) 2))}))

@@ -41,6 +41,9 @@
                    relationships
                    content-bbox])
 
+(defn components [holder]
+ (vals (:drawables holder)))
+
 (defn entity-by-id [id]
  (get @entities id))
 
@@ -51,19 +54,23 @@
     (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
       (assoc lookups drawable-id lookup))))
 
-(defn- define-lookups [entity]
+(defn- define-lookups-on-components [entity]
   (doseq [component (:components entity)]
-    (let [uid (:drawable component)]
+    (let [uid (:uid (:drawable component))]
       (define-lookup uid {:entity (:uid entity)
-                          :component (:name component)})))
+                          :component (:name component)}))))
+
+(defn- define-lookups-on-attributes [entity]
   (doseq [attribute (:attributes entity)]
     (doseq [component (:components attribute)]
-      (let [aid (:id attribute)
-            cid (:name component)
-            did (:drawable component)]
+      (let [did (:uid (:drawable component))]
         (define-lookup did {:entity (:uid entity)
-                            :component cid
-                            :attribute aid})))))
+                            :component (:name component)
+                            :attribute (:id attribute)})))))
+
+(defn- define-lookups [entity]
+  (define-lookups-on-components entity)
+  (define-lookups-on-attributes entity))
 
 (defmulti do-lookup (fn [lookup-for entity id] lookup-for))
 
@@ -82,21 +89,18 @@
         entity    (entity-by-id entity-id)
         lookup (get @lookups uid)]
     (when-let [id (lookup-for lookup)]
-       (do-lookup lookup-for id))))
+       (do-lookup lookup-for entity id))))
 
 (defn create-entity
   "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
   ([type components content-bbox]
    (let [uid (str (random-uuid))
          entity (Entity. uid type components [] [] content-bbox)]
-     (define-lookups entity)
+     (define-lookups-on-components entity)
      (swap! entities assoc uid entity)
      (get @entities uid)))
   ([type components]
    (create-entity type components nil)))
-
-(defn components [holder]
-  (vals (:drawables holder)))
 
 (defn connect-entities [src trg association-type arg1 arg2]
   (let [src-rel (conj (:relationships src) {:relation-type association-type :association-data arg1 :entity-id (:uid trg)})
@@ -150,7 +154,7 @@
   (doseq [component (flatten components)]
     (swap! drawables assoc (-> component :drawable :uid) (:drawable component))
     (swap! entities assoc-in [(:uid entity) :components (:name component)] component))
-  (define-lookups (entity-by-id (:uid entity))))
+  (define-lookups-on-components (entity-by-id (:uid entity))))
 
 (defn remove-entity-component [entity component-name]
   (swap! entities update-in [(:uid entity) :components ] dissoc component-name))
@@ -187,7 +191,7 @@
           (let [attributes (conj (:attributes entity-fetch) attribute-value)
                 sorted (sort-by #(:index (:attribute %)) attributes)]
              (swap! entities assoc-in [(:uid entity) :attributes] sorted)
-             (define-lookups (entity-by-id (:uid entity)))))
+             (define-lookups-on-attributes (entity-by-id (:uid entity)))))
         (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
 
 (defn get-attribute-value [entity id]

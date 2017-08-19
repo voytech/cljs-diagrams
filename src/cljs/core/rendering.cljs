@@ -6,7 +6,6 @@
 ; Sets default renderers
 (def RENDERER (atom :fabric))
 
-
 ; Sets default rendering options.
 ; Options can be :
 ; :auto - should rendering be triggered automatically in drawable model property  changes or only on 'rendering.execute' events ?
@@ -27,8 +26,8 @@
 
 (bus/on ["drawable.created"] -999 (fn [event])
   (let [context (:context @event)
-        drawable (:drawable context)]
-     (add-drawable drawable)))
+        drawable (:drawable context)]))
+     
 
 (bus/on ["drawable.added"] -999 (fn [event]))
 

@@ -30,7 +30,7 @@
                         :visible visible
                         :opacity opacity})]
 
-      (d/circle options)))
+      (circle options)))
 
 (defmethod endpoint "rect" [point & {:keys [moveable display visible]}]
   (let [options (merge {:left (- (first point) (:radius 8))
@@ -38,7 +38,7 @@
                         :width (* 2 (:radius 8))
                         :height (* 2 (:radius 8))
                         :visible visible})]
-      (d/rect options)))
+      (rect options)))
 
 (defn arrow [data options]
   (let [x1 (+ (:left options))
@@ -49,7 +49,7 @@
         cY (/ (+ y1 y2) 2)
         deltaX (- x1 cX)
         deltaY (- y1 cY)]
-      (d/triangle {:left x2
+      (triangle {:left x2
                    :top (+ y1 deltaY)
                    :origin-x :center
                    :origin-y :center
@@ -58,4 +58,4 @@
                    :height 20})))
 
 (defn relation-line [x1 y1 x2 y2]
-  (d/line {:left x1 :top y1 :x1 x1 :y1 y1 :x2 x2 :y2 y2}))
+  (line {:left x1 :top y1 :x1 x1 :y1 y1 :x2 x2 :y2 y2}))

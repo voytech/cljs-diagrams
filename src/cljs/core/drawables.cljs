@@ -44,7 +44,7 @@
                                                               :drawable drawable})))
       (swap! watchers assoc-in [(:uid drawable) property] true))))
 
-(defrecord Drawable [uid type model rendering-state parent]
+(defrecord Drawable [uid type model rendering-state]
   IDrawable
   (update-state [this state] (swap! this assoc :rendering-state state))
   (setp [this property value]
@@ -88,4 +88,4 @@
   ([type data]
    (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}) nil)]
      (set-data drawable data)
-     drawable)))    
+     drawable)))

@@ -48,11 +48,8 @@
  (get @entities id))
 
 (defn- define-lookup [drawable-id parent]
-  (let [entity-id (:entity parent)
-        component-name (:component parent)
-        attribute-name (:attribute parent)]
-    (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
-      (assoc lookups drawable-id lookup))))
+  (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
+    (swap! lookups assoc drawable-id lookup)))
 
 (defn- define-lookups-on-components [entity]
   (doseq [component (:components entity)]
@@ -92,15 +89,42 @@
        (do-lookup lookup-for entity id))))
 
 (defn create-entity
-  "Creates editable entity backed by fabric.js object. Adds id identifier to original javascript object. "
+  "Creates editable entity. Entity is a first class functional element used within relational-designer.
+   Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
+   each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
+   Those properties models functions of specific component. Under Component we have only one Drawable wich holds properties for renderer."
   ([type components content-bbox]
    (let [uid (str (random-uuid))
-         entity (Entity. uid type components [] [] content-bbox)]
+         _components (apply merge {} (map (fn [e] {(:name e) (core.entities/Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
+         entity (Entity. uid type _components [] [] content-bbox)]
      (define-lookups-on-components entity)
      (swap! entities assoc uid entity)
      (get @entities uid)))
   ([type components]
-   (create-entity type components nil)))
+   (create-entity type components nil))
+  ([type]
+   (create-entity type [] nil)))
+
+(defn add-entity-component [entity & components]
+ (doseq [component (flatten components)]
+   (swap! drawables assoc (-> component :drawable :uid) (:drawable component))
+   (swap! entities assoc-in [(:uid entity) :components (:name component)] component))
+ (define-lookups-on-components (entity-by-id (:uid entity))))
+
+(defn remove-entity-component [entity component-name]
+ (swap! entities update-in [(:uid entity) :components ] dissoc component-name))
+
+(defn update-component-prop [entity name prop value]
+ (swap! entities assoc-in [(:uid entity) :components name :props prop] value))
+
+(defn remove-component-prop [entity name prop]
+ (swap! entities update-in [(:uid entity) :components name :props ] dissoc prop))
+
+(defn get-entity-component [entity name]
+ (get-in @entities [(:uid entity) :components name]))
+
+(defn get-entity-content-bbox [entity]
+   (:content-bbox entity))
 
 (defn connect-entities [src trg association-type arg1 arg2]
   (let [src-rel (conj (:relationships src) {:relation-type association-type :association-data arg1 :entity-id (:uid trg)})
@@ -128,18 +152,6 @@
             (= v (last coll)))
       i)))
 
-(defn get-entity-content-bbox [entity]
-    (:content-bbox entity))
-
-(defn update-component-prop [entity name prop value]
-  (swap! entities assoc-in [(:uid entity) :components name :props prop] value))
-
-(defn remove-component-prop [entity name prop]
-  (swap! entities update-in [(:uid entity) :components name :props ] dissoc prop))
-
-(defn get-entity-component [entity name]
-  (get-in @entities [(:uid entity) :components name]))
-
 (defmulti register-event-handler (fn [class type component event handler] class))
 
 (defmethod register-event-handler :entity [class type component event handler]
@@ -149,15 +161,6 @@
 (defmethod register-event-handler :attribute [class type component event handler]
   (when (nil? (get-in @attribute-events [type component event]))
     (swap! attribute-events assoc-in [type component event] handler)))
-
-(defn add-entity-component [entity & components]
-  (doseq [component (flatten components)]
-    (swap! drawables assoc (-> component :drawable :uid) (:drawable component))
-    (swap! entities assoc-in [(:uid entity) :components (:name component)] component))
-  (define-lookups-on-components (entity-by-id (:uid entity))))
-
-(defn remove-entity-component [entity component-name]
-  (swap! entities update-in [(:uid entity) :components ] dissoc component-name))
   ;(eventbus/fire ""))
 
 (defn get-attribute [name]

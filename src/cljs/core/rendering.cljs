@@ -27,7 +27,7 @@
 (bus/on ["drawable.created"] -999 (fn [event])
   (let [context (:context @event)
         drawable (:drawable context)]))
-     
+
 
 (bus/on ["drawable.added"] -999 (fn [event]))
 
@@ -40,7 +40,6 @@
 (bus/on ["drawable.removed"] -999 (fn [event])
   (let [context (:context @event)
         drawable (:drawable context)]
-     (remove-drawable drawable)
      (destroy-rendering-state drawable rendering-context)))
 
 (bus/on ["rendering.execute"] -999 (fn [event])

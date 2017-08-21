@@ -1,6 +1,6 @@
 (ns core.behaviours
-  (:require [core.entities :as e
-             core.drawables :as d]))
+  (:require [core.entities :as e]
+            [core.drawables :as d]))
 
 (defn to-the-center-of [line x y shape]
   (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))

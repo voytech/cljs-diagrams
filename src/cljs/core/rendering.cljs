@@ -24,28 +24,32 @@
 
 (defn- render-entity [entity])
 
-(bus/on ["drawable.created"] -999 (fn [event])
-  (let [context (:context @event)
-        drawable (:drawable context)]))
+(bus/on ["rendering.context.update" -999 (fn [event]
+                                            (let [context (:context @event)]
+                                              (update-context context)))])
+
+(bus/on ["drawable.created"] -999 (fn [event]
+                                    (let [context (:context @event)
+                                          drawable (:drawable context)])))
 
 
 (bus/on ["drawable.added"] -999 (fn [event]))
 
-(bus/on ["drawable.changed"] -999 (fn [event])
-  (let [context (:context @event)
-        drawable (:drawable context)]
-     (swap! rendering-context assoc-in [(:property context)] (:new context))
-     (render drawable)))
+(bus/on ["drawable.changed"] -999 (fn [event]
+                                    (let [context (:context @event)
+                                          drawable (:drawable context)]
+                                       (swap! rendering-context assoc-in [(:property context)] (:new context))
+                                       (render drawable))))
 
-(bus/on ["drawable.removed"] -999 (fn [event])
-  (let [context (:context @event)
-        drawable (:drawable context)]
-     (destroy-rendering-state drawable rendering-context)))
+(bus/on ["drawable.removed"] -999 (fn [event]
+                                    (let [context (:context @event)
+                                          drawable (:drawable context)]
+                                       (destroy-rendering-state drawable rendering-context))))
 
-(bus/on ["rendering.execute"] -999 (fn [event])
- (let [context (:context @event)
-       entities  (:entities context)]
-    (doseq [entity enttities] (render-entity entity))))
+(bus/on ["rendering.execute"] -999 (fn [event]
+                                     (let [context (:context @event)
+                                           entities  (:entities context)]
+                                        (doseq [entity enttities] (render-entity entity)))))
 
 (defmulti do-render (fn [drawable context] [@RENDERER (:type drawable)]))
 

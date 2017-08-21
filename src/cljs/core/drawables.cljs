@@ -14,6 +14,7 @@
 
 (defprotocol IDrawable
   (update-state [this state])
+  (state [this])
   (setp [this property value])
   (set-data [this map_])
   (getp [this property])
@@ -47,6 +48,7 @@
 (defrecord Drawable [uid type model rendering-state]
   IDrawable
   (update-state [this state] (swap! this assoc :rendering-state state))
+  (state [this] @model)
   (setp [this property value]
     (register-watcher this property)
     (swap! model assoc property value))

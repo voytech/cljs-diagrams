@@ -1,12 +1,14 @@
-(ns core.layouts)
+(ns core.layouts
+  (:require [core.drawables :as d]
+            [core.eventbus :as b]))
 
 (defn align-center [src trg]
-  (let [srcCx   (+ (.-left src) (/ (.-width src) 2))
-        srcCy   (+ (.-top src) (/ (.-width src) 2))
-        trgLeft (- srcCx (/ (.-width trg) 2))
-        trgTop  (- srcCy (/ (.-height trg) 2))]
-      (.set trg (clj->js {:left trgLeft :top trgTop}))
-      (.setCoords trg)))
+  (let [srcCx   (+ (d/get-left src) (/ (d/get-width src) 2))
+        srcCy   (+ (d/get-top src) (/ (d/get-height src) 2))
+        trgLeft (- srcCx (/ (d/get-width trg) 2))
+        trgTop  (- srcCy (/ (d.get-height trg) 2))]
+      (d/set-data trg {:left trgLeft :top trgTop})))
+
 
 (defn position [partial left top coord-mode])
 
@@ -14,30 +16,30 @@
 
 (defn position-attribute [attribute left top coord-mode])
 
-(defn get-partials [partials-container]
-  (if (not (nil? (:drawables partials-container)))
-    (if (map? (:drawables partials-container))
-      (vals (:drawables partials-container))
-      (:drawables partials-container))
+(defn get-components [partials-container]
+  (if (not (nil? (:components partials-container)))
+    (if (map? (:components partials-container))
+      (vals (:components partials-container))
+      (:components partials-container))
     (throw (Error. "Paramter passed to get-partials is supposed to be partials container but IS NOT !"))))
 
 (defn get-bbox [partials-container]
-  (let [values (get-partials partials-container)
-        sources (mapv :src values)
-        leftmost   (apply min-key (cons #(.-left %) sources))
-        rightmost  (apply max-key (cons #(+ (.-left %) (.-width %)) sources))
-        topmost    (apply min-key (cons #(.-top %) sources))
-        bottommost (apply max-key (cons #(+ (.-top %) (.-height %)) sources))]
-    {:left (.-left leftmost)
-     :top  (.-top topmost)
-     :width (- (+ (.-left rightmost) (.-width rightmost)) (.-left leftmost))
-     :height (- (+ (.-top bottommost) (.-height  bottommost)) (.-top topmost))}))
+  (let [values (get-components partials-container)
+        sources (mapv :drawable values)
+        leftmost   (apply min-key (cons #(d/get-left %) sources))
+        rightmost  (apply max-key (cons #(+ (d/get-left %) (d/get-width %)) sources))
+        topmost    (apply min-key (cons #(d/get-top %) sources))
+        bottommost (apply max-key (cons #(+ (d/get-top %) (d/get-height %)) sources))]
+    {:left (d/get-left leftmost)
+     :top  (d/get-top topmost)
+     :width (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
+     :height (- (+ (d/get-top bottommost) (d/get-height  bottommost)) (d/get-top topmost))}))
 
 (defn- layout-row [bbox layout-buffer partials-aware]
-  (let [partials (get-partials partials-aware)
+  (let [partials (get-components partials-aware)
         partials-bbox (get-bbox partials-aware)
-        relative-left #(- (.-left (:src %)) (:left partials-bbox))
-        relative-top  #(- (.-top (:src %)) (:top partials-bbox))
+        relative-left #(- (d/get-left (:drawable %)) (:left partials-bbox))
+        relative-top  #(- (d/get-top (:drawable %)) (:top partials-bbox))
         absolute-left (:left @layout-buffer)
         absolute-top  (:top  @layout-buffer)
         exceeds-bbox? (>= (+ absolute-left (:width partials-bbox)) (+ (:left bbox) (:width bbox)))
@@ -48,9 +50,9 @@
       (swap! layout-buffer assoc-in [:top] (+ absolute-top (:row-height @layout-buffer)))
       (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))
     (doseq [partial partials]
-      (.set (:src partial) (clj->js {:left (+ (:left @layout-buffer) (relative-left partial))
-                                     :top  (+ (:top @layout-buffer) (relative-top partial))}))
-      (.setCoords (:src partial)))
+      (d/set-data (:drawable partial) {:left (+ (:left @layout-buffer) (relative-left partial))
+                                       :top  (+ (:top @layout-buffer) (relative-top partial))}))
+    (b/fire ["layout.finished"] -999 (:drawable partial))
     (swap! layout-buffer assoc-in [:left] (+ (:left @layout-buffer) (:width partials-bbox)))
     (let [replace? (> (:height partials-bbox) (:row-height @layout-buffer))]
       (when replace? (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox))))))

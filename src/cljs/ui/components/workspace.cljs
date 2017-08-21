@@ -16,14 +16,13 @@
 
 (def canvas-initializing-wrapper
  (with-meta identity
-   {:component-did-mount #(p/initialize-page (.-id (reagent/dom-node %)) {:width 1270  :height 1000})}))
+   {:component-did-mount #(p/initialize (.-id (reagent/dom-node %)) {:width 1270  :height 1000})}))
 
 (defn FabricCanvas [id]
   (fn []
-    [:div {:style {:display (if (= (keyword id) (:current-page-id @project)) "block" "none")}}
+    [:div
       [canvas-initializing-wrapper
         [:canvas {:id id :class "canvas"}]]]))
-
 
 (defn Workspace [class]
   [:div {:id "workspace-inner" :class (:class class)}
@@ -31,9 +30,5 @@
            :class "workspace-div"
            :on-drop resolve-drop
            :on-drag-over #(.preventDefault %)}
-      (doall
-        (for [page (vals (:pages @project)) idx (range (count (keys (:pages @project))))]
-          ^{:key idx}
-          [FabricCanvas (str "page-" idx)]))]])
+       [FabricCanvas "project-page"]]])
     ;[:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) p/select-page p/add-page p/remove-page]]
-(p/add-page)

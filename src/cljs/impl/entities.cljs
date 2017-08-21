@@ -3,12 +3,10 @@
            [impl.standard-attributes :as stdatr]
            [impl.drawables :as d]
            [core.project :as p]
-           [core.behaviours :as cb :refer [highlight show all event-wrap]]
+           [core.behaviours :as cb :refer [highlight show all event-wrap moving-entity intersects? intersects-any? relations-validate]]
            [core.options :as o]
-           [core.entities-behaviours :as eb :refer [moving-entity
-                                                    insert-breakpoint dissoc-breakpoint moving-endpoint
-                                                    intersects? intersects-any? toggle-endpoints
-                                                    position-endpoint position-startpoint relations-validate]]
+           [impl.behaviours.standard :as eb :refer [insert-breakpoint dissoc-breakpoint moving-endpoint
+                                                    toggle-endpoints position-endpoint position-startpoint]]
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity with-components]]))
 

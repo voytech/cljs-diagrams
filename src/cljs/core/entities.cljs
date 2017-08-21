@@ -1,5 +1,7 @@
 (ns core.entities
   (:require [reagent.core :as reagent :refer [atom]]
+            [core.eventbus :as bus]
+            [core.drawables :as d]
             [core.utils.general :as utils :refer [make-js-property]]))
 
 (declare get-entity-component)
@@ -17,6 +19,11 @@
 
 (defonce attribute-events (atom {}))
 
+(bus/on ["drawable.created"] -999 (fn [event]
+                                   (let [context (:context @event)
+                                         drawable (:drawable context)]
+                                     (swap! drawables assoc (:uid drawable) drawable))))
+
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
@@ -27,7 +34,6 @@
                       index
                       domain
                       bbox
-                      sync
                       factory])
 
 (defrecord AttributeValue [id attribute value components])
@@ -81,7 +87,7 @@
   (get-attribute-value entity id))
 
 (defn lookup [drawable lookup-for]
-  (let [uid (:uid drawable)
+  (let [uid (if (record? drawable) (:uid drawable) drawable)
         lookup (get @lookups uid)
         entity (entity-by-id (:entity lookup))]
     (when-let [id (lookup-for lookup)]
@@ -106,7 +112,6 @@
 
 (defn add-entity-component [entity & components]
  (doseq [component (flatten components)]
-   (swap! drawables assoc (-> component :drawable :uid) (:drawable component))
    (swap! entities assoc-in [(:uid entity) :components (:name component)] component))
  (define-lookups-on-components (entity-by-id (:uid entity))))
 
@@ -160,7 +165,6 @@
 (defmethod register-event-handler :attribute [class type component event handler]
   (when (nil? (get-in @attribute-events [type component event]))
     (swap! attribute-events assoc-in [type component event] handler)))
-  ;(eventbus/fire ""))
 
 (defn get-attribute [name]
   (get @attributes name))
@@ -179,8 +183,6 @@
         component-factory (or (:factory domain-value) (:factory attribute))
         components (component-factory data options)
         components-map (into {} (map (fn [d] {(:name d) d}) components))]
-    (doseq [component components]
-      (swap! drawables assoc (-> component :drawable :uid) (:drawable component)))
     (AttributeValue. (str (random-uuid)) attribute data components-map)))
 
 (defn add-entity-attribute-value [entity & attributes]
@@ -189,11 +191,10 @@
           existing-cardinality (count (filter #(= (-> % :attribute :name) (-> attribute-value :attribute :name)) (:attributes entity-fetch)))
           cardinality (:cardinality (:attribute attribute-value))]
       (if (> cardinality existing-cardinality)
-        (do
-          (let [attributes (conj (:attributes entity-fetch) attribute-value)
-                sorted (sort-by #(:index (:attribute %)) attributes)]
-             (swap! entities assoc-in [(:uid entity) :attributes] sorted)
-             (define-lookups-on-attributes (entity-by-id (:uid entity)))))
+        (let [attributes (conj (:attributes entity-fetch) attribute-value)
+              sorted (sort-by #(:index (:attribute %)) attributes)]
+           (swap! entities assoc-in [(:uid entity) :attributes] sorted)
+           (define-lookups-on-attributes (entity-by-id (:uid entity))))
         (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
 
 (defn get-attribute-value [entity id]
@@ -207,3 +208,10 @@
 
 (defn get-attribute-value-drawable [attribute-value component-name]
   (:drawable (get-attribute-value-component attribute-value component-name)))
+
+(defn get-attribute-value-property [attribute-value component-name property]
+  (let [drawable (:drawable (get-attribute-value-component attribute-value component-name))]
+    (d/getp drawable property)))
+
+(defn get-attribute-value-data [attribute-value]
+  (:value attribute-value))

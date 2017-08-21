@@ -1,9 +1,7 @@
 (ns impl.tools
   (:require [reagent.core :as reagent :refer [atom]]
             [core.tools :as t]
-            [impl.entities :as eimpl]
-            [core.entities-behaviours :as ctors]))
-
+            [impl.entities :as eimpl]))
 
 (t/create-tool "Rectangle Node"
                :basic-tools

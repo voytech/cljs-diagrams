@@ -52,14 +52,14 @@
     (swap! lookups assoc drawable-id lookup)))
 
 (defn- define-lookups-on-components [entity]
-  (doseq [component (:components entity)]
+  (doseq [component (vals (:components entity))]
     (let [uid (:uid (:drawable component))]
       (define-lookup uid {:entity (:uid entity)
                           :component (:name component)}))))
 
 (defn- define-lookups-on-attributes [entity]
   (doseq [attribute (:attributes entity)]
-    (doseq [component (:components attribute)]
+    (doseq [component (vals (:components attribute))]
       (let [did (:uid (:drawable component))]
         (define-lookup did {:entity (:uid entity)
                             :component (:name component)
@@ -81,10 +81,9 @@
   (get-attribute-value entity id))
 
 (defn lookup [drawable lookup-for]
-  (let [uid (-> drawable :uid)
-        entity-id (:entity @lookups)
-        entity    (entity-by-id entity-id)
-        lookup (get @lookups uid)]
+  (let [uid (:uid drawable)
+        lookup (get @lookups uid)
+        entity (entity-by-id (:entity lookup))]
     (when-let [id (lookup-for lookup)]
        (do-lookup lookup-for entity id))))
 
@@ -95,7 +94,7 @@
    Those properties models functions of specific component. Under Component we have only one Drawable wich holds properties for renderer."
   ([type components content-bbox]
    (let [uid (str (random-uuid))
-         _components (apply merge {} (map (fn [e] {(:name e) (core.entities/Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
+         _components (apply merge (cons {} (mapv (fn [e] {(:name e) (Component. (:name e) (:type e) (:drawable e) (:props e))}) components)))
          entity (Entity. uid type _components [] [] content-bbox)]
      (define-lookups-on-components entity)
      (swap! entities assoc uid entity)

@@ -30,6 +30,11 @@
                                                  {:name "start" :type :start :drawable start :props {}}
                                                  {:name "link"  :type :link  :drawable link  :props {}}])]
     (is (= 1 (count (vals @e/entities))))
+    (is (= 3 (count (vals @e/lookups))))
+    (js/console.log (clj->js (keys @e/lookups)))
+    (is (= {:component "start" :entity (:uid entity)} (get @e/lookups (:uid start))))
     (is (= {:name "end" :type :end :drawable end :props {}} (e/get-entity-component entity "end")))
-    (is (= {:name "start" :type :end :drawable start :props {}} (e/get-entity-component entity "start")))
-    (is (= {:name "link" :type :end :drawable link :props {}} (e/get-entity-component entity "link")))))
+    (is (= {:name "start" :type :start :drawable start :props {}} (e/get-entity-component entity "start")))
+    (is (= {:name "link" :type :link :drawable link :props {}} (e/get-entity-component entity "link")))
+    (is (= entity (e/lookup start :entity)))
+    (is (= {:name "start" :type :start :drawable start :props {}} (e/lookup start :component)))))

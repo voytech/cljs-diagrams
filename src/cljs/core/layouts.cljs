@@ -54,7 +54,7 @@
       (doseq [partial partials]
         (d/set-data (:drawable partial) {:left (+ (:left @layout-buffer) (relative-left partial))
                                          :top  (+ (:top @layout-buffer) (relative-top partial))}))
-      (b/fire ["layout.finished"] -999 (:drawable partial))
+      (b/fire "layout.drawable.finished" (:drawable partial))
       (swap! layout-buffer assoc-in [:left] (+ (:left @layout-buffer) (:width partials-bbox)))
       (let [replace? (> (:height partials-bbox) (:row-height @layout-buffer))]
         (when replace? (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))))))
@@ -66,7 +66,8 @@
 (defn layout [bbox entries]
   (let [layout-buffer (atom {:row-height 0 :left (:left bbox) :top (:top bbox)})]
     (doseq [partials-aware entries]
-      (layout-row bbox layout-buffer partials-aware))))
+      (layout-row bbox layout-buffer partials-aware))
+    (b/fire "layout.finished" (:entries entries))))  
 
 (defn intersects? [tbbox obbox]
   (or

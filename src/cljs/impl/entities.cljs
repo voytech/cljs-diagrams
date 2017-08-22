@@ -1,5 +1,6 @@
 (ns impl.entities
  (:require [core.entities :as e]
+           [core.options :as defaults]
            [impl.standard-attributes :as stdatr]
            [impl.drawables :as d]
            [core.project :as p]
@@ -25,16 +26,11 @@
                 "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
                 "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}})
   (with-components data options
-    (let [enriched-opts (merge options
-                               eb/DEFAULT_SIZE_OPTS
-                               eb/TRANSPARENT_FILL
-                               eb/DEFAULT_STROKE
-                               eb/RESTRICTED_BEHAVIOUR
-                               eb/NO_DEFAULT_CONTROLS)
-          conL    (vector (:left options) (+ (/ (:height eb/DEFAULT_SIZE_OPTS) 2) (:top options)))
-          conR    (vector (+ (:left options) (:width eb/DEFAULT_SIZE_OPTS)) (+ (/ (:height eb/DEFAULT_SIZE_OPTS) 2) (:top options)))
-          conT    (vector (+ (/ (:width eb/DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
-          conB    (vector (+ (/ (:width eb/DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height eb/DEFAULT_SIZE_OPTS)))]
+    (let [enriched-opts (merge options defaults/DEFAULT_SIZE_OPTS defaults/TRANSPARENT_FILL defaults/DEFAULT_STROKE)
+          conL    (vector (:left options) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
+          conR    (vector (+ (:left options) (:width defaults/DEFAULT_SIZE_OPTS)) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
+          conT    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
+          conB    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height defaults/DEFAULT_SIZE_OPTS)))]
       [{:name "connector-left"
         :type :endpoint
         :drawable (d/endpoint conL :moveable false :display "rect" :visibile false)}

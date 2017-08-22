@@ -41,7 +41,7 @@
   (doseq [attribute-value (:attributes entity)]
     (render-components (e/components attribute-value)))
   (let [bbox (l/get-bbox entity)]
-    (l/layout bbox (:attributes entity))))
+    (l/layout bbox (e/get-attributes-values entity))))
 
 (bus/on ["rendering.context.update"] -999 (fn [event]
                                             (let [context (:context @event)]

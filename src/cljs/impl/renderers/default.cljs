@@ -43,18 +43,19 @@
                                   :radius "radius"
                                   :font-family "fontFamily"
                                   :font-weight "fontWeight"
+                                  :font-size "fontSize"
+                                  :text-align "textAlign"
+                                  :color "color"
                                   :border-width "strokeWidth"})
 
 (defn to-fabric-property-map [input-map]
-  (apply merge (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (e input-map)}) (keys input-map))))
+  (apply merge (cons LOCKED (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (e input-map)}) (keys input-map)))))
 
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (d/state drawable))
         redraw   (-> rendering-context :redraw-properties)
         drawable-update   (get redraw (:uid drawable))
         update-map (apply merge (mapv (fn [e] {(e (:new (get drawable-update e))) (keys drawable-update)})))]
-      ;(js/console.log (clj->js drawable))
-      ;(js/console.log (clj->js source))
       (set source (to-fabric-property-map update-map))
       (.setCoords source)
       (r/clear-context {:redraw-properties (:uid drawable)})))
@@ -79,6 +80,7 @@
 
 (defmethod r/create-rendering-state [:fabric :rect] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
+    (js/console.log (clj->js data))
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Rect. (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :rect] [drawable context]
@@ -92,7 +94,6 @@
 
 (defmethod r/create-rendering-state [:fabric :circle] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
-    (js/console.log (clj->js data))
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Circle. (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :circle] [drawable context]

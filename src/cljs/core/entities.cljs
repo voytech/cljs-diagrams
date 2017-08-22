@@ -201,6 +201,9 @@
 (defn get-attribute-value [entity id]
   (first (filter #(= (:id %) id) (:attributes entity))))
 
+(defn get-attributes-values [entity]
+  (:attributes (entity-by-id (:uid entity))))
+
 (defn get-attribute-value-component
   ([attribute-value component-name]
    (get (:components attribute-value) component-name))

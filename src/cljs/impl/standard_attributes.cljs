@@ -14,8 +14,7 @@
 (defattribute name
   (with-definition
     {:cardinality 1
-     :index 0
-     :sync (fn [attr-value])})
+     :index 0})
   (with-components data options
     [{:name "value"
       :type :value
@@ -26,8 +25,7 @@
 (defattribute description
   (with-definition
     {:cardinality 1
-     :index 1
-     :sync (fn [attr-value])})
+     :index 1})
   (with-components data options
     [{:name "desc"
       :type :description

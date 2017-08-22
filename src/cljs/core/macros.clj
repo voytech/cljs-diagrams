@@ -51,7 +51,7 @@
         dfinition      (last (:with-definition transformed))
         has-definition (contains? transformed :with-definition)
         components      (:with-components  transformed)
-        has-components  (contains? transformed :with-drawables)
+        has-components  (contains? transformed :with-components)
         behaviours     (last (:with-behaviours transformed))
         has-behaviours (contains? transformed :with-behaviours)
         domain         (last (:with-domain transformed))

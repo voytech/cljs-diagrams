@@ -42,6 +42,7 @@
                  component-factory# ~components]
              (apply core.entities/add-entity-component (cons e# (component-factory# data# options#)))
              (doseq [call# ~attributes] (call# e#))
+             (core.eventbus/fire "entity.render" {:entity e#})
              (core.entities/entity-by-id (:uid e#))))))))
 
 (defmacro defattribute [name & body]
@@ -83,5 +84,5 @@
 (defmacro defdrawable [name options-defaults]
   `(defn ~name [options#]
      (let [drawable# (core.drawables/create-drawable (keyword (name '~name)) (merge options# ~options-defaults))]
-        (core.eventbus/fire ["drawable.created"] {:drawable drawable#})
+        (core.eventbus/fire "drawable.created" {:drawable drawable#})
         drawable#)))

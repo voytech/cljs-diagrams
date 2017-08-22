@@ -40,15 +40,12 @@
      :type       event-type}))
 
 (defn- dispatch-events [canvas]
-  (doseq [event-type ["object:moving"  "object:rotating"
-                      "object:scaling" "object:selected"
-                      "mouse:down"     "mouse:up"
-                      "mouse:over"     "mouse:out"
-                      "mouse:click"    "mouse:dbclick"]]
+  (doseq [event-type (keys event-map)]
       (.on canvas (js-obj event-type (fn [e]
-                                       (let [decomposed (decompose e event-type)
+                                       (let [normalised-event-type (normalise-event event-type)
+                                             decomposed (decompose e normalised-event-type)
                                              type-to-name (fn [decomposed class-kwrd] (name (-> decomposed class-kwrd :type)))]
-                                         (b/fire (str (type-to-name decomposed :entity) "." (type-to-name decomposed :component) "." (normalise-event event-type) decomposed))))))))
+                                         (b/fire (str (type-to-name decomposed :entity) "." (type-to-name decomposed :component) "." normalised-event-type) decomposed)))))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -89,53 +86,3 @@
   {:data (dnd/get-dnd-data event "text/html")}
   :params (dnd/event-layer-coords event)
   :type "dom")
-
-;;
-;;API methods !
-;;It can be re-factored so that each
-;;entity is added via add-entity multi method.
-;;A dispatch then should be made on entity type.
-;;
-
-(defn- contains [canvas src]
-  (let [test (atom false)]
-    (.forEachObject canvas (fn [e] (when (= e src) (reset! test true))))
-    @test))
-
-;make it generic not only for entities but for all drawable-awares (furhter partials-aware)
-(defn- delete-drawable-orphans [entity]
-  (let [canvas (:canvas (proj-selected-page))
-        drawable-names (set (mapv #(:name %) (e/components entity)))]
-    (.forEachObject canvas (fn [e]
-                             (when (= (.-refId e) (:uid entity))
-                               (when-not (contains? drawable-names (.-refPartId e))
-                                 (.remove canvas e)))))))
-
-;Now works only for offset mode - left and top of source is relative to bounding box.
-
-(defn- sync-attributes [canvas entity attribute-values]
-  (let [bbox (layouts/get-bbox entity)
-        cbbox {:left (+ (:left (:content-bbox entity)) (:left bbox))
-               :top  (+ (:top (:content-bbox entity))  (:top bbox))
-               :width   (:width (:content-bbox entity))
-               :height  (:height (:content-bbox entity))}]
-    (doseq [attribute-value attribute-values]
-      (doseq [drawable (e/components attribute-value)]
-        (when-not (contains canvas (:src drawable))
-          (.add canvas (:src drawable)))))
-    (layouts/layout cbbox attribute-values)))
-
-(defn sync-entity [entity]
-  (when (not (instance? e/Entity entity))
-    (throw (js/Error. (str entity " is not an core.entities. Entity object"))))
-  (let [drawables (e/components entity)
-        attributes (:attributes entity)
-        canvas (:canvas (proj-selected-page))]
-    (delete-drawable-orphans entity)
-    (doseq [drawable drawables]
-      (let [src (:src drawable)]
-        (when-not (contains canvas src)
-          (.add canvas src))))
-    (sync-attributes canvas entity attributes)
-    (.renderAll canvas)
-    (changed)))

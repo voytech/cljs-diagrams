@@ -48,7 +48,7 @@
                    content-bbox])
 
 (defn components [holder]
- (vals (:drawables holder)))
+ (vals (:components holder)))
 
 (defn entity-by-id [id]
  (get @entities id))
@@ -104,6 +104,7 @@
          entity (Entity. uid type _components [] [] content-bbox)]
      (define-lookups-on-components entity)
      (swap! entities assoc uid entity)
+     (bus/fire "entity.added" {:entity entity})
      (get @entities uid)))
   ([type components]
    (create-entity type components nil))

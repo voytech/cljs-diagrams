@@ -27,6 +27,9 @@
 (defmethod endpoint "circle" [point & {:keys [moveable display visible opacity]}]
   (let [options (merge {:left (- (first point) 8)
                         :top (- (last point)   8)
+                        :radius 8
+                        :background-color "white"
+                        :border-color "black"
                         :visible visible
                         :opacity opacity})]
 

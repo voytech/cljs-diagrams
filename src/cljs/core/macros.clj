@@ -42,8 +42,9 @@
                  component-factory# ~components]
              (apply core.entities/add-entity-component (cons e# (component-factory# data# options#)))
              (doseq [call# ~attributes] (call# e#))
-             (core.eventbus/fire "entity.render" {:entity e#})
-             (core.entities/entity-by-id (:uid e#))))))))
+             (let [result# (core.entities/entity-by-id (:uid e#))]
+               (core.eventbus/fire "entity.render" {:entity result#})
+               result#)))))))
 
 (defmacro defattribute [name & body]
   (let [transformed    (transform-body body)

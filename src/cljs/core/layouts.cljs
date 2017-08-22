@@ -24,38 +24,40 @@
     (throw (Error. "Paramter passed to get-partials is supposed to be partials container but IS NOT !"))))
 
 (defn get-bbox [partials-container]
-  (let [values (get-components partials-container)
-        sources (mapv :drawable values)
-        leftmost   (apply min-key (cons #(d/get-left %) sources))
-        rightmost  (apply max-key (cons #(+ (d/get-left %) (d/get-width %)) sources))
-        topmost    (apply min-key (cons #(d/get-top %) sources))
-        bottommost (apply max-key (cons #(+ (d/get-top %) (d/get-height %)) sources))]
-    {:left (d/get-left leftmost)
-     :top  (d/get-top topmost)
-     :width (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
-     :height (- (+ (d/get-top bottommost) (d/get-height  bottommost)) (d/get-top topmost))}))
+  (when (> (count (get-components partials-container)) 0)
+    (let [values (get-components partials-container)
+          sources (mapv :drawable values)
+          leftmost   (apply min-key (cons #(d/get-left %) sources))
+          rightmost  (apply max-key (cons #(+ (d/get-left %) (d/get-width %)) sources))
+          topmost    (apply min-key (cons #(d/get-top %) sources))
+          bottommost (apply max-key (cons #(+ (d/get-top %) (d/get-height %)) sources))]
+      {:left (d/get-left leftmost)
+       :top  (d/get-top topmost)
+       :width (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
+       :height (- (+ (d/get-top bottommost) (d/get-height  bottommost)) (d/get-top topmost))})))
 
 (defn- layout-row [bbox layout-buffer partials-aware]
-  (let [partials (get-components partials-aware)
-        partials-bbox (get-bbox partials-aware)
-        relative-left #(- (d/get-left (:drawable %)) (:left partials-bbox))
-        relative-top  #(- (d/get-top (:drawable %)) (:top partials-bbox))
-        absolute-left (:left @layout-buffer)
-        absolute-top  (:top  @layout-buffer)
-        exceeds-bbox? (>= (+ absolute-left (:width partials-bbox)) (+ (:left bbox) (:width bbox)))
-        starts-row?   (= absolute-left (:left bbox))
-        new-row?      (and (not starts-row?) exceeds-bbox?)]
-    (when new-row?
-      (swap! layout-buffer assoc-in [:left] (:left bbox))
-      (swap! layout-buffer assoc-in [:top] (+ absolute-top (:row-height @layout-buffer)))
-      (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))
-    (doseq [partial partials]
-      (d/set-data (:drawable partial) {:left (+ (:left @layout-buffer) (relative-left partial))
-                                       :top  (+ (:top @layout-buffer) (relative-top partial))}))
-    (b/fire ["layout.finished"] -999 (:drawable partial))
-    (swap! layout-buffer assoc-in [:left] (+ (:left @layout-buffer) (:width partials-bbox)))
-    (let [replace? (> (:height partials-bbox) (:row-height @layout-buffer))]
-      (when replace? (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox))))))
+  (when (> (count (get-components partials-aware)) 0)
+    (let [partials (get-components partials-aware)
+          partials-bbox (get-bbox partials-aware)
+          relative-left #(- (d/get-left (:drawable %)) (:left partials-bbox))
+          relative-top  #(- (d/get-top (:drawable %)) (:top partials-bbox))
+          absolute-left (:left @layout-buffer)
+          absolute-top  (:top  @layout-buffer)
+          exceeds-bbox? (>= (+ absolute-left (:width partials-bbox)) (+ (:left bbox) (:width bbox)))
+          starts-row?   (= absolute-left (:left bbox))
+          new-row?      (and (not starts-row?) exceeds-bbox?)]
+      (when new-row?
+        (swap! layout-buffer assoc-in [:left] (:left bbox))
+        (swap! layout-buffer assoc-in [:top] (+ absolute-top (:row-height @layout-buffer)))
+        (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))
+      (doseq [partial partials]
+        (d/set-data (:drawable partial) {:left (+ (:left @layout-buffer) (relative-left partial))
+                                         :top  (+ (:top @layout-buffer) (relative-top partial))}))
+      (b/fire ["layout.finished"] -999 (:drawable partial))
+      (swap! layout-buffer assoc-in [:left] (+ (:left @layout-buffer) (:width partials-bbox)))
+      (let [replace? (> (:height partials-bbox) (:row-height @layout-buffer))]
+        (when replace? (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))))))
 
 ; Position array of objects (being composed of drawable partials) within given bounding box.
 ; 1. Get each entry (object composed of drawable partials) bounding box - calculate it from drawables.

@@ -7,6 +7,8 @@
            [core.entities :as e]
            [core.tools :as t]
            [core.eventbus :as b]
+           [core.rendering :as r]
+           [impl.renderers.default :as dd]
            [core.layouts :as layouts]))
 
 (defonce project (atom {}))
@@ -20,10 +22,10 @@
                     "mouse:out" "mouseout"})
 
 (defn- normalise-event [event]
-  (event event-map))
+  (get event-map event))
 
 (defn- decompose [event event-type]
-  (let [drawable-id        (.-refId (.-target e))
+  (let [drawable-id        (.-refId (.-target event))
         entity             (e/lookup drawable-id :entity)
         component          (e/lookup drawable-id :component)
         attribute-value    (e/lookup drawable-id :attribute)
@@ -33,19 +35,20 @@
      :drawable         drawable
      :component        component
      :event event
-     :x (.-layerX e)
-     :y (.-layerY e)
-     :movement-x (.-movementX e)
-     :movement-y (.-movementY e)
+     :x (.-layerX event)
+     :y (.-layerY event)
+     :movement-x (.-movementX event)
+     :movement-y (.-movementY event)
      :type       event-type}))
 
 (defn- dispatch-events [canvas]
   (doseq [event-type (keys event-map)]
       (.on canvas (js-obj event-type (fn [e]
-                                       (let [normalised-event-type (normalise-event event-type)
-                                             decomposed (decompose e normalised-event-type)
-                                             type-to-name (fn [decomposed class-kwrd] (name (-> decomposed class-kwrd :type)))]
-                                         (b/fire (str (type-to-name decomposed :entity) "." (type-to-name decomposed :component) "." normalised-event-type) decomposed)))))))
+                                       (when (not (nil? (.-target e)))
+                                         (let [normalised-event-type (normalise-event event-type)
+                                               decomposed (decompose e normalised-event-type)
+                                               type-to-name (fn [decomposed class-kwrd] (name (-> decomposed class-kwrd :type)))]
+                                           (b/fire (str (type-to-name decomposed :entity) "." (type-to-name decomposed :component) "." normalised-event-type) decomposed))))))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -57,7 +60,7 @@
     (.setHeight (:canvas data) height)
     (reset! project data)
     (dispatch-events (:canvas data))
-    (b/fire "rendering.context.update" {:canvas data})))
+    (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]
   ;;  (do (.setWidth canvas @zoom-page-width)
   ;;      (.setHeight canvas @zoom-page-height)

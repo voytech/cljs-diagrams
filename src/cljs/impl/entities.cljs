@@ -89,7 +89,7 @@
                    "object:moving" (moving-endpoint)}})
 
   (with-components data options
-    (let [enriched-opts (merge options eb/DEFAULT_SIZE_OPTS eb/DEFAULT_STROKE eb/RESTRICTED_BEHAVIOUR eb/NO_DEFAULT_CONTROLS)
+    (let [enriched-opts options
           offset-x (:left options)
           offset-y (:top options)
           points-pairs (partition 2 data)

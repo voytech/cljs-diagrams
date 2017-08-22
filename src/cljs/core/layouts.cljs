@@ -67,7 +67,7 @@
   (let [layout-buffer (atom {:row-height 0 :left (:left bbox) :top (:top bbox)})]
     (doseq [partials-aware entries]
       (layout-row bbox layout-buffer partials-aware))
-    (b/fire "layout.finished" (:entries entries))))  
+    (b/fire "layout.finished" (:entries entries))))
 
 (defn intersects? [tbbox obbox]
   (or

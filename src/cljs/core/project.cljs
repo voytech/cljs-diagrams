@@ -79,13 +79,3 @@
         context (dnd/event-layer-coords event)
         tool-obj (t/by-id tool-id)]
     (t/invoke-tool tool-obj context)))
-
-(defmethod dnd/dispatch-drop-event "imgid" [event]
-  {:data (dom/by-id (dnd/get-dnd-data event "imgid"))
-   :params (dnd/event-layer-coords event)
-   :type "dom"})
-
-(defmethod dnd/dispatch-drop-event "text/html" [event]
-  {:data (dnd/get-dnd-data event "text/html")}
-  :params (dnd/event-layer-coords event)
-  :type "dom")

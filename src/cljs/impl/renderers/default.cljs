@@ -28,6 +28,7 @@
 
 (defonce fabric-property-mapping {:left "left"
                                   :top  "top"
+                                  :text "text"
                                   :width  "width"
                                   :height "height"
                                   :origin-x "originX"
@@ -80,7 +81,6 @@
 
 (defmethod r/create-rendering-state [:fabric :rect] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
-    (js/console.log (clj->js data))
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Rect. (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :rect] [drawable context]
@@ -134,6 +134,7 @@
 
 (defmethod r/create-rendering-state [:fabric :text] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
+   (js/console.log (clj->js data))
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :text] [drawable context]

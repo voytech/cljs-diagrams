@@ -8,6 +8,7 @@
            [core.tools :as t]
            [core.eventbus :as b]
            [core.rendering :as r]
+           [core.drawables :as d]
            [impl.renderers.default :as dd]
            [core.layouts :as layouts]))
 
@@ -17,11 +18,36 @@
 
 (defonce drawable-buckets (atom {}))
 
-(b/on ["drawable.created" "drawable.changed"] -999 (fn [e]
-                                                      (let [context (:context e)
-                                                            drawable (:drawable context)])))
+(defn- update-buckets [drawable]
+  (doseq [key (get @drawable-buckets (:uid drawable))]
+    (swap! drawable-buckets dissoc key))
+  (swap! drawable-buckets dissoc (:uid drawable))
+  (let [x-s (js/Math.floor (/ (:left drawable) bucket-size))
+        y-s (js/Math.floor (/ (:top drawable) bucket-size))
+        x-e (+ bucket-size (js/Math.floor (/ (+ (:left drawable) (:width drawable)) bucket-size)))
+        y-e (+ bucket-size (js/Math.floor (/ (+ (:top drawable) (:height drawable)) bucket-size)))]
+    (doseq [x (range x-s x-e)
+            y (range y-s y-e)]
+      (let [coord-key (str x "." y)
+            drawables (or (get @drawable-buckets coord-key) [])
+            keys      (or (get @drawable-buckets (:uid drawable)) [])]
+        (swap! drawable-buckets assoc coord-key (cons (:uid drawable) drawables))
+        (swap! drawable-buckets assoc (:uid drawable) (cons coord-key keys))))))
 
+;(b/on ["drawable.created" "drawable.changed"] -999 (fn [e] (update-buckets (-> e :context :drawable))))
 
+(defn- lookup-drawable [x y]
+  (let [x-s (js/Math.floor (/ x bucket-size))
+        y-s (js/Math.floor (/ y bucket-size))]
+    (doseq [drawable (get @drawable-buckets (str x-s "." y-s))]
+      (when (and (>= x (d/get-left drawable)) (<= x (+ (d/get-left drawable) (d/get-width drawable)))
+                 (>= y (d/get-top drawable)) (<= y (+ (d/get-top drawable) (d/get-height drawable))))
+          drawable))))
+
+(defn- lookup [x y]
+  (first (filter (fn [e]
+                   (and (>= x (d/get-left e)) (<= x (+ (d/get-left e) (d/get-width e)))
+                        (>= y (d/get-top e)) (<= y (+ (d/get-top e) (d/get-height e))))) (vals @e/drawables))))
 
 (defonce event-map {"object:moving" "moving"
                     "mouse:down" "mousedown"
@@ -31,14 +57,13 @@
                     "mouse:over" "mouseover"
                     "mouse:out" "mouseout"})
 
-(defonce source-events "click dbclick mouseenter mouseleave keypress keydown keyup")
+(defonce source-events "click dbclick mousemove mouseenter mouseleave keypress keydown keyup")
 
 (defn- normalise-event [event]
   (get event-map event))
 
-(defn- decompose [event event-type]
-  (let [drawable-id        (.-refId (.-target event))
-        entity             (e/lookup drawable-id :entity)
+(defn- decompose [x y event event-type drawable-id]
+  (let [entity             (e/lookup drawable-id :entity)
         component          (e/lookup drawable-id :component)
         attribute-value    (e/lookup drawable-id :attribute)
         drawable           (:drawable component)]
@@ -47,10 +72,10 @@
      :drawable         drawable
      :component        component
      :event event
-     :x (.-layerX event)
-     :y (.-layerY event)
-     :movement-x (.-movementX event)
-     :movement-y (.-movementY event)
+     :x x
+     :y y
+     ;:movement-x (.-movementX event)
+     ;:movement-y (.-movementY event)
      :type       event-type}))
 
 (defn- event-name [decomposed]
@@ -71,8 +96,12 @@
                                            (b/fire (event-name decomposed) decomposed))))))))
 
 (defn- bind-dispatch-listener [id]
-  (.bind (js/jQuery (str "#" id)) source-events (fn [e]
-                                                  (js/console.log e))))
+  (let [obj  (js/document.getElementById id)
+        rect (.getBoundingClientRect obj)]
+    (.bind (js/jQuery (str "#" id)) source-events (fn [e]
+                                                    (let [cx (- (.-clientX e) (.-left rect))
+                                                          cy (- (.-clientY e) (.-top rect))]
+                                                      (js/console.log (clj->js (decompose cx cy e (.-type e) (:uid (lookup cx cy))))))))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))

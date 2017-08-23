@@ -37,10 +37,9 @@
 (defn intersects-any? [names yes]
  (fn [e]
    (let [entity           (:entity e)
-         component-name   (:component e)
-         component        (e/get-entity-component entity component-name)
-         drawable         (:drawable component)]
-     (when (contains? #{"end" "start"} component-name)
+         component        (:component e)
+         drawable         (:drawable e)]
+     (when (contains? #{"end" "start"} (:name component))
        (doseq [drwlb @e/drawables]
           (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
@@ -51,10 +50,9 @@
 (defn intersects? [target-name yes no]
  (fn [e]
    (let [entity           (:entity e)
-         component-name   (:component e)
-         component        (e/get-entity-component entity component-name)
-         drawable         (:drawable component)]
-     (when (contains? #{"end" "start"} component-nam)
+         component        (:component e)
+         drawable         (:drawable e)]
+     (when (contains? #{"end" "start"} (:name component))
        (doseq [drwlb @e/drawables]
           (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
@@ -118,11 +116,11 @@
  (fn [e]
    (let [entity (:entity e)
          event (:event e)
-         component-name (:component e)
+         component (:component e)
          movementX (:movement-x e)
          movementY (:movement-y e)]
      (default-position-entity entity
-                              component-name
+                              (:name component)
                               movementX
                               movementY
                               :offset)

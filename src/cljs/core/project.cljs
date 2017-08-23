@@ -50,14 +50,15 @@
                         (>= y (d/get-top e)) (<= y (+ (d/get-top e) (d/get-height e))))) (vals @e/drawables))))
 
 (defonce event-map {"object:moving" "moving"
-                    "mouse:down" "mousedown"
-                    "mouse:up" "mouseup"
-                    "mouse:click" "mouseclick"
-                    "mouse:dbclick" "mousedbclick"
-                    "mouse:over" "mouseover"
-                    "mouse:out" "mouseout"})
+                    "mousedown" "mousedown"
+                    "mouseup" "mouseup"
+                    "click" "mouseclick"
+                    "dbclick" "mousedbclick"
+                    "mousemove" "mousemove"
+                    "mouseenter" "mouseenter"
+                    "mouseleave" "mouseleave"})
 
-(defonce source-events "click dbclick mousemove mouseenter mouseleave keypress keydown keyup")
+(defonce source-events "click dbclick mousemove mousedown mouseup mouseenter mouseleave keypress keydown keyup")
 
 (defn- normalise-event [event]
   (get event-map event))
@@ -86,22 +87,24 @@
          component-type (str (name (-> decomposed :component :type)) ".")]
       (str entity-type attribute-type component-type (:type decomposed))))
 
-(defn- dispatch-events [canvas]
-  (doseq [event-type (keys event-map)]
-      (.on canvas (js-obj event-type (fn [e]
-                                       (when (not (nil? (.-target e)))
-                                         (let [normalised-event-type (normalise-event event-type)
-                                               decomposed (decompose e normalised-event-type)]
-                                           (js/console.log (str "on " (event-name decomposed)))
-                                           (b/fire (event-name decomposed) decomposed))))))))
+;(defn- dispatch-events [canvas]
+;  (doseq [event-type (keys event-map)]
+;      (.on canvas (js-obj event-type (fn [e]
+;                                       (when (not (nil? (.-target e)))
+;                                         (let [normalised-event-type (normalise-event event-type)
+;                                               decomposed (decompose e normalised-event-type)
+;                                           (js/console.log (str "on " (event-name decomposed)))
+;                                           (b/fire (event-name decomposed) decomposed))))
 
 (defn- bind-dispatch-listener [id]
   (let [obj  (js/document.getElementById id)
         rect (.getBoundingClientRect obj)]
     (.bind (js/jQuery (str "#" id)) source-events (fn [e]
                                                     (let [cx (- (.-clientX e) (.-left rect))
-                                                          cy (- (.-clientY e) (.-top rect))]
-                                                      (js/console.log (clj->js (decompose cx cy e (.-type e) (:uid (lookup cx cy))))))))))
+                                                          cy (- (.-clientY e) (.-top rect))
+                                                          event-type (normalise-event (.-type e))
+                                                          decomposed (decompose cx cy e event-type (:uid (lookup cx cy)))]
+                                                       (b/fire (event-name decomposed) decomposed))))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))

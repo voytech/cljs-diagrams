@@ -6,6 +6,7 @@
 
 (declare get-entity-component)
 (declare get-attribute-value)
+(declare get-attribute-value-component)
 
 (defonce drawables (atom {}))
 
@@ -75,23 +76,24 @@
   (define-lookups-on-components entity)
   (define-lookups-on-attributes entity))
 
-(defmulti do-lookup (fn [lookup-for entity id] lookup-for))
+(defmulti do-lookup (fn [lookup-for entity lookup] lookup-for))
 
-(defmethod do-lookup :entity [lookup-for entity id]
+(defmethod do-lookup :entity [lookup-for entity lookup]
   entity)
 
-(defmethod do-lookup :component [lookup-for entity id]
-  (get-entity-component entity id))
+(defmethod do-lookup :component [lookup-for entity lookup]
+  (if (not (nil? (:attribute lookup)))
+    (get-attribute-value-component entity (:attribute lookup) (:component lookup))
+    (get-entity-component entity (:component lookup))))
 
-(defmethod do-lookup :attribute [lookup-for entity id]
-  (get-attribute-value entity id))
+(defmethod do-lookup :attribute [lookup-for entity lookup]
+  (get-attribute-value entity (:attribute lookup)))
 
 (defn lookup [drawable lookup-for]
   (let [uid (if (record? drawable) (:uid drawable) drawable)
         lookup (get @lookups uid)
         entity (entity-by-id (:entity lookup))]
-    (when-let [id (lookup-for lookup)]
-       (do-lookup lookup-for entity id))))
+    (do-lookup lookup-for entity lookup)))
 
 (defn create-entity
   "Creates editable entity. Entity is a first class functional element used within relational-designer.

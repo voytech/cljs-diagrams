@@ -41,14 +41,22 @@
      :movement-y (.-movementY event)
      :type       event-type}))
 
+(defn- event-name [decomposed]
+   (let [entity-type    (str (name (-> decomposed :entity :type)) ".")
+         attribute-type (if (not (nil? (:attribute-value decomposed)))
+                            (str (name (-> decomposed :attribute-value :attribute :name)) ".")
+                            "")
+         component-type (str (name (-> decomposed :component :type)) ".")]
+      (str entity-type attribute-type component-type (:type decomposed))))
+
 (defn- dispatch-events [canvas]
   (doseq [event-type (keys event-map)]
       (.on canvas (js-obj event-type (fn [e]
                                        (when (not (nil? (.-target e)))
                                          (let [normalised-event-type (normalise-event event-type)
-                                               decomposed (decompose e normalised-event-type)
-                                               type-to-name (fn [decomposed class-kwrd] (name (-> decomposed class-kwrd :type)))]
-                                           (b/fire (str (type-to-name decomposed :entity) "." (type-to-name decomposed :component) "." normalised-event-type) decomposed))))))))
+                                               decomposed (decompose e normalised-event-type)]
+                                           (js/console.log (str "on " (event-name decomposed)))
+                                           (b/fire (event-name decomposed) decomposed))))))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))

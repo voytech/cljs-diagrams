@@ -13,6 +13,16 @@
 
 (defonce project (atom {}))
 
+(defonce bucket-size 50)
+
+(defonce drawable-buckets (atom {}))
+
+(b/on ["drawable.created" "drawable.changed"] -999 (fn [e]
+                                                      (let [context (:context e)
+                                                            drawable (:drawable context)])))
+
+
+
 (defonce event-map {"object:moving" "moving"
                     "mouse:down" "mousedown"
                     "mouse:up" "mouseup"
@@ -20,6 +30,8 @@
                     "mouse:dbclick" "mousedbclick"
                     "mouse:over" "mouseover"
                     "mouse:out" "mouseout"})
+
+(defonce source-events "click dbclick mouseenter mouseleave keypress keydown keyup")
 
 (defn- normalise-event [event]
   (get event-map event))
@@ -58,6 +70,10 @@
                                            (js/console.log (str "on " (event-name decomposed)))
                                            (b/fire (event-name decomposed) decomposed))))))))
 
+(defn- bind-dispatch-listener [id]
+  (.bind (js/jQuery (str "#" id)) source-events (fn [e]
+                                                  (js/console.log e))))
+
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
   (let [data {:canvas (js/fabric.StaticCanvas. id)
@@ -67,6 +83,7 @@
     (.setWidth (:canvas data) width)
     (.setHeight (:canvas data) height)
     (reset! project data)
+    (bind-dispatch-listener id)
     (dispatch-events (:canvas data))
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]

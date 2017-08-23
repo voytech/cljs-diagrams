@@ -19,11 +19,11 @@
 
 (def LOCKED (merge LOCKED_MOVEMENT LOCKED_ROTATION LOCKED_SCALING NO_DEFAULT_CONTROLS))
 
-(defn- set
+(defn- fabric-set
   ([source property value]
    (.set source (clj->js {property value})))
-  ([source map]
-   (.set source (clj->js map))))
+  ([source map_]
+   (.set source (clj->js map_))))
 
 
 (defonce fabric-property-mapping {:left "left"
@@ -52,11 +52,18 @@
 (defn to-fabric-property-map [input-map]
   (apply merge (cons LOCKED (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (e input-map)}) (keys input-map)))))
 
+(defn- synchronize-bounds [drawable]
+  (let [source (:data (d/state drawable))]
+    (d/set-width  drawable (.-width  source))
+    (d/set-height drawable (.-height source))))
+
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (d/state drawable))
-        redraw   (-> rendering-context :redraw-properties (:uid drawable))]
-      (set source (to-fabric-property-map redraw))
-      (.setCoords source)))
+        redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
+      (fabric-set source (to-fabric-property-map redraw))
+      (.setCoords source)
+      (.renderAll (:canvas rendering-context))
+      (synchronize-bounds drawable)))
 
 (defn- fabric-create-rendering-state [context drawable create]
   (let [fabric-object (create)]

@@ -63,7 +63,13 @@
                                     (let [context (:context @event)
                                           drawable (:drawable context)]
                                        (update-property-to-redraw drawable (:property context) (:new context) (:old context)))))
-                                       ;(render drawable))))
+
+
+(bus/on ["drawable.render" "drawable.layout.finished"] -999 (fn [event]
+                                                              (let [context (:context @event)
+                                                                    drawable (:drawable context)]
+                                                                 (js/console.log (clj->js drawable))    
+                                                                 (render drawable))))
 
 (bus/on ["drawable.removed"] -999 (fn [event]
                                     (let [context (:context @event)
@@ -76,8 +82,7 @@
                                         (doseq [entity enttities] (render-entity entity)))))
 
 (bus/on ["entity.added"] -999 (fn [event]
-                                 (let [context (:context @event)]
-                                    (js/console.log (clj->js (:entity context))))))
+                                 (let [context (:context @event)])))
                                     ;(render-entity (:entity context)))))
 
 (bus/on ["entity.render"] -999 (fn [event]
@@ -96,10 +101,20 @@
 
 (defmethod destroy-rendering-state :default [rendering-state context])
 
+(defn- rewrite-redraw-properties [drawable]
+  (when (not (nil? (:redraw-properties @rendering-context)))
+    (let [redraw   (get-in @rendering-context [:redraw-properties (:uid drawable)])
+          update-map (apply merge (mapv (fn [e] {e (:new (get redraw e))}) (keys redraw)))]
+      (assoc-context [:redraw-properties (:uid drawable)] update-map))))
+
 (defn render [drawable]
   (when (not (nil? drawable))
-    (js/console.log (str "Rendering drawable : " (:uid drawable) "[ " (:type drawable) " ]"))
+    (js/console.log (str ">>>[ " (:type drawable) " " (:uid drawable)  " ]>>>"))
     (let [rendering-state (d/state drawable)]
       (when (or (nil? rendering-state) (empty? rendering-state))
         (d/update-state drawable (create-rendering-state drawable @rendering-context)))
-      (do-render drawable @rendering-context))))
+      (rewrite-redraw-properties drawable)
+      (js/console.log (apply str  (cons "Rendering properties: " (keys (get-in @rendering-context [:redraw-properties (:uid drawable)])))))
+      (do-render drawable @rendering-context)
+      (clear-context [:redraw-properties (:uid drawable)])
+      (js/console.log (str "<<<[ " (:type drawable) " " (:uid drawable)  " ]<<<\n")))))

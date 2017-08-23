@@ -60,7 +60,7 @@
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
-  (let [data {:canvas (js/fabric.Canvas. id)
+  (let [data {:canvas (js/fabric.StaticCanvas. id)
               :id id
               :width width
               :height height}]

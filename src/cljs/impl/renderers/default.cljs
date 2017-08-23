@@ -54,12 +54,9 @@
 
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (d/state drawable))
-        redraw   (-> rendering-context :redraw-properties)
-        drawable-update   (get redraw (:uid drawable))
-        update-map (apply merge (mapv (fn [e] {(e (:new (get drawable-update e))) (keys drawable-update)})))]
-      (set source (to-fabric-property-map update-map))
-      (.setCoords source)
-      (r/clear-context {:redraw-properties (:uid drawable)})))
+        redraw   (-> rendering-context :redraw-properties (:uid drawable))]
+      (set source (to-fabric-property-map redraw))
+      (.setCoords source)))
 
 (defn- fabric-create-rendering-state [context drawable create]
   (let [fabric-object (create)]
@@ -134,7 +131,6 @@
 
 (defmethod r/create-rendering-state [:fabric :text] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
-   (js/console.log (clj->js data))
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :text] [drawable context]

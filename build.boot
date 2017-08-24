@@ -17,7 +17,8 @@
                  [powerlaces/boot-cljs-devtools "0.2.0" :scope "test"]
                  [cljsjs/fabric                   "1.5.0-0"]
                  [cljsjs/jquery                   "2.1.4-0"]
-                 [cljsjs/jquery-ui                "1.11.3-1"]])
+                 [cljsjs/jquery-ui                "1.11.3-1"]
+                 [cljsjs/rx                       "4.0.7-0"]])
 
 (require
  '[adzerk.boot-cljs      :refer [cljs]]

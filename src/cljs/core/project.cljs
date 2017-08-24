@@ -2,6 +2,7 @@
  (:require [reagent.core :as reagent :refer [atom]]
            [cljsjs.jquery]
            [cljsjs.fabric]
+           [cljsjs.rx]
            [core.utils.dom :as dom]
            [core.utils.dnd :as dnd]
            [core.entities :as e]
@@ -49,7 +50,7 @@
                  (>= y (d/get-top drawable)) (<= y (+ (d/get-top drawable) (d/get-height drawable))))
           drawable))))
 
-(defonce event-map {"object:moving" "moving"
+(defonce event-map {"object:moving" "mousedrag"
                     "mousedown" "mousedown"
                     "mouseup" "mouseup"
                     "click" "mouseclick"
@@ -60,7 +61,7 @@
 
 (defonce source-events "click dbclick mousemove mousedown mouseup mouseenter mouseleave keypress keydown keyup")
 
-(defn- normalise-event [event]
+(defn- normalise-event-type [event]
   (get event-map event))
 
 (defn- decompose [x y event event-type drawable-id]
@@ -75,8 +76,8 @@
      :event event
      :x x
      :y y
-     ;:movement-x (.-movementX event)
-     ;:movement-y (.-movementY event)
+     :movement-x x
+     :movement-y y
      :type       event-type}))
 
 (defn- event-name [decomposed]
@@ -87,17 +88,47 @@
          component-type (str (name (-> decomposed :component :type)) ".")]
       (str entity-type attribute-type component-type (:type decomposed))))
 
-(defn- bind-dispatch-listener [id]
-  (let [obj  (js/document.getElementById id)]
-    (.bind (js/jQuery (str "#" id)) source-events (fn [e]
-                                                    (let [rect (.getBoundingClientRect obj)
-                                                          cx (- (.-clientX e) (.-left rect))
-                                                          cy (- (.-clientY e) (.-top rect))
-                                                          event-type (normalise-event (.-type e))
-                                                          decomposed (decompose cx cy e event-type (:uid (lookup cx cy)))]
-                                                       (when-not (nil? (:entity decomposed))
-                                                        (js/console.log (str "on " (event-name decomposed)))
-                                                        (b/fire (event-name decomposed) decomposed)))))))
+    ;;(.bind (js/jQuery (str "#" id)) source-events
+(defn normalise-event [e obj]
+  {:source e
+   :state nil
+   :ctrl-key (.-ctrlKey e)
+   :target (.-target e)
+   :type (normalise-event-type (.-type e))
+   :left (- (.-clientX e) (.-left (.getBoundingClientRect obj)))
+   :top  (- (.-clientY e) (.-top (.getBoundingClientRect obj)))
+   :movement-x 0
+   :movement-y 0})
+
+(defn- set-type [prev curr]
+  (if (and (= "dragging" (:state curr)) (= "mousemove" (:type curr))) "mousedrag" (:type curr)))
+
+(defn- set-state [prev curr]
+   (cond
+     (= "mousedown" (:type curr)) "dragging"
+     (= "mouseup"   (:type curr)) "moving"
+     :else (:state prev)))
+
+(defn- bind-dispatch-event [obj event]
+  (let [stream (js/Rx.Observable.fromEvent obj event)
+        ;debounced (.debounce stream 50)
+        normalized (.map stream (fn [e] (normalise-event e obj)))
+        enriched (.scan normalized (fn [acc,e] (assoc (merge acc e) :movement-x (- (:left e) (or (:left acc) 0))
+                                                                    :movement-y (- (:top e) (or (:top acc) 0))
+                                                                    :type  (set-type acc e)
+                                                                    :state (set-state acc e))) {})]
+    (.subscribe enriched (fn [e]
+                            (js/console.log (clj->js e))
+                            (let [event-type (:type e)
+                                  decomposed (decompose cx cy e event-type (:uid (lookup cx cy)))]
+                               (when-not (nil? (:entity decomposed))
+                                (js/console.log (str "on " (event-name decomposed)))
+                                (b/fire (event-name decomposed) decomposed)))))))
+
+(defn bind-dispatch-events [id events]
+  (let [obj (js/document.getElementById id)]
+    (doseq [event events]
+      (bind-dispatch-event obj event))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -108,7 +139,7 @@
     (.setWidth (:canvas data) width)
     (.setHeight (:canvas data) height)
     (reset! project data)
-    (bind-dispatch-listener id)
+    (bind-dispatch-events id (clojure.string/split source-events #" "))
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]
   ;;  (do (.setWidth canvas @zoom-page-width)

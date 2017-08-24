@@ -4,6 +4,7 @@
            [impl.standard-attributes :as stdatr]
            [impl.drawables :as d]
            [core.project :as p]
+           [core.eventbus :as bus]
            [core.behaviours :as cb :refer [highlight show all event-wrap moving-entity intersects? intersects-any? relations-validate]]
            [core.options :as o]
            [impl.behaviours.standard :as eb :refer [insert-breakpoint dissoc-breakpoint moving-endpoint
@@ -46,11 +47,14 @@
        {:name "body"
         :type :main
         :drawable (d/rect enriched-opts)}]))
+
   (with-attributes [#(stdatr/name % "<Enter name here>")
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
 
-
+(bus/on ["rectangle-node.main.mousemove"] -999 (fn [e]
+                                                  (let [event (:context @e)]
+                                                    ((moving-entity) event))))
 
 (defentity relation
   (with-content-bounding-box {:left 15

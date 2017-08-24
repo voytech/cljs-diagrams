@@ -1,6 +1,10 @@
 (ns core.behaviours
   (:require [core.entities :as e]
-            [core.drawables :as d]))
+            [core.drawables :as d]
+            [core.eventbus :as bus]))
+
+(defn- rerender [drawable]
+  (bus/fire "drawable.render" {:drawable drawable}))
 
 (defn to-the-center-of [line x y shape]
   (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
@@ -83,7 +87,8 @@
  ([component set-x get-x set-y get-y x y coord-mode]
   (let [epos (effective-position component get-x get-y x y coord-mode)]
     (set-x (:drawable component) (:x epos))
-    (set-y (:drawable component) (:y epos))))
+    (set-y (:drawable component) (:y epos))
+    (rerender (:drawable component))))
  ([comopnent x y coord-mode]
   (apply-effective-position comopnent
                             #(d/setp %1 :left %2)
@@ -97,7 +102,8 @@
 (defn- position-attributes-components [attributes offset-left offset-top]
   (doseq [src (flatten (mapv #(e/components %) attributes))]
     (d/set-data (:drawable src) {:left (+ (d/getp (:drawable src) :left) offset-left)
-                                 :top  (+ (d/getp (:drawable src) :top) offset-top)})))
+                                 :top  (+ (d/getp (:drawable src) :top) offset-top)})
+    (rerender (:drawable src))))
 
 (defn default-position-entity-component [entity component-name left top coord-mode]
   (let [component (e/get-entity-component entity component-name)]
@@ -108,8 +114,7 @@
    (doseq [component (e/components entity)]
      (let [effective-left  (+ (d/getp (:drawable component) :left) (:left effective-offset))
            effective-top   (+ (d/getp (:drawable component) :top) (:top effective-offset))]
-       (when-not (= (:name component) ref-component-name)
-         (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))
+       (default-position-entity-component entity (:name component) effective-left effective-top :absolute)))
    (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
 (defn moving-entity []
@@ -123,7 +128,7 @@
                               (:name component)
                               movementX
                               movementY
-                              :offset)
+                              :absolute)
      (doseq [relation (:relationships entity)]
        (let [related-entity (e/entity-by-id (:entity-id relation))
              ref-component-name (get-refered-component-name relation)]

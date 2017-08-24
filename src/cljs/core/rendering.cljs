@@ -113,12 +113,12 @@
 
 (defn render [drawable]
   (when (not (nil? drawable))
-    (js/console.log (str ">>>[ " (:type drawable) " " (:uid drawable)  " ]>>>"))
+    ;(js/console.log (str ">>>[ " (:type drawable) " " (:uid drawable)  " ]>>>"))
     (let [rendering-state (d/state drawable)]
       (when (or (nil? rendering-state) (empty? rendering-state))
         (d/update-state drawable (create-rendering-state drawable @rendering-context)))
       (rewrite-redraw-properties drawable)
-      (js/console.log (apply str  (cons "Rendering properties: " (keys (get-in @rendering-context [:redraw-properties (:uid drawable)])))))
+      ;(js/console.log (apply str  (cons "Rendering properties: " (keys (get-in @rendering-context [:redraw-properties (:uid drawable)])))))
       (do-render drawable @rendering-context)
-      (clear-context [:redraw-properties (:uid drawable)])
-      (js/console.log (str "<<<[ " (:type drawable) " " (:uid drawable)  " ]<<<\n")))))
+      (clear-context [:redraw-properties (:uid drawable)]))))
+      ;(js/console.log (str "<<<[ " (:type drawable) " " (:uid drawable)  " ]<<<\n")))))

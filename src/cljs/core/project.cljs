@@ -19,6 +19,8 @@
 
 (defonce lookup-cache (atom nil))
 
+(defonce dragging-context (atom nil))
+
 (defonce drawable-buckets (atom {}))
 
 (defn- update-buckets [drawable]
@@ -68,7 +70,7 @@
 (defn- normalise-event-type [event]
   (get event-map event))
 
-(defn- decompose [x y event event-type drawable-id]
+(defn- decompose [drawable-id]
   (let [entity             (e/lookup drawable-id :entity)
         component          (e/lookup drawable-id :component)
         attribute-value    (e/lookup drawable-id :attribute)
@@ -86,17 +88,21 @@
          component-type (str (name (-> decomposed :component :type)) ".")]
       (str entity-type attribute-type component-type (:type decomposed))))
 
-    ;;(.bind (js/jQuery (str "#" id)) source-events
+
 (defn normalise-event [e obj]
-  {:source e
-   :state nil
-   :ctrl-key (.-ctrlKey e)
-   :target (.-target e)
-   :type (normalise-event-type (.-type e))
-   :left (- (.-clientX e) (.-left (.getBoundingClientRect obj)))
-   :top  (- (.-clientY e) (.-top (.getBoundingClientRect obj)))
-   :movement-x 0
-   :movement-y 0})
+  (let [rect (.getBoundingClientRect obj)
+        left (- (.-clientX e) (.-left rect))
+        top (- (.-clientY e) (.-top rect))]
+     {:source e
+      :state nil
+      :ctrl-key (.-ctrlKey e)
+      :target (.-target e)
+      :type (normalise-event-type (.-type e))
+      :left left
+      :top  top
+      :movement-x 0
+      :movement-y 0}))
+
 
 (defn- set-type [prev curr]
   (if (and (= "dragging" (:state prev)) (= "mousemove" (:type curr))) "mousedrag" (:type curr)))
@@ -107,26 +113,32 @@
      (= "mouseup"   (:type curr)) "moving"
      :else (:state prev)))
 
+(defn- get-dragging-context [event]
+  (when (= "dragging" (:state event))
+    @dragging-context))
+
+(defn- update-dragging-context [event]
+  (reset! dragging-context (if (= "dragging" (:state event)) (:drawable event) nil)))
+
 (defn- merge-streams [obj events]
   (apply js/Rx.Observable.merge (mapv (fn [e] (js/Rx.Observable.fromEvent obj e)) events)))
 
 (defn- bind-dispatch-events [id events]
   (let [obj (js/document.getElementById id)
         stream (merge-streams obj events)
-        ;debounced (.debounce stream 50)
         normalized (.map stream (fn [e] (normalise-event e obj)))
         enriched (.scan normalized (fn [acc,e] (assoc (merge acc e) :movement-x (- (:left e) (or (:left acc) 0))
                                                                     :movement-y (- (:top e) (or (:top acc) 0))
                                                                     :type  (set-type acc e)
                                                                     :state (set-state acc e))) {})]
     (.subscribe enriched (fn [e]
-                            (let [event-type (:type e)
-                                  left (:left e)
-                                  top (:top e)
-                                  decomposed (decompose left top e event-type (:uid (lookup left top)))]
-                               (when-not (nil? (:entity decomposed))
-                                (js/console.log (str "on " (event-name decomposed)))
-                                (b/fire (event-name decomposed) decomposed)))))))
+                            (let [target (or (get-dragging-context e) (lookup (:left e) (:top e)))
+                                  decomposed (decompose (:uid target))
+                                  merged (merge e decomposed)]
+                             (when-not (nil? (:entity merged))
+                              (update-dragging-context merged)
+                              (js/console.log (str "on " (event-name merged)))
+                              (b/fire (event-name merged) merged)))))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))

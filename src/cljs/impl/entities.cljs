@@ -52,7 +52,7 @@
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
 
-(bus/on ["rectangle-node.main.mousemove"] -999 (fn [e]
+(bus/on ["rectangle-node.main.mousedrag"] -999 (fn [e]
                                                   (let [event (:context @e)]
                                                     ((moving-entity) event))))
 

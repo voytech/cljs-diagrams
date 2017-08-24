@@ -114,7 +114,9 @@
    (doseq [component (e/components entity)]
      (let [effective-left  (+ (d/getp (:drawable component) :left) (:left effective-offset))
            effective-top   (+ (d/getp (:drawable component) :top) (:top effective-offset))]
-       (default-position-entity-component entity (:name component) effective-left effective-top :absolute)))
+       (if (= ref-component-name (:name component))
+         (default-position-entity-component entity (:name component) left top :offset)
+         (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))
    (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
 (defn moving-entity []
@@ -128,7 +130,7 @@
                               (:name component)
                               movementX
                               movementY
-                              :absolute)
+                              :offset)
      (doseq [relation (:relationships entity)]
        (let [related-entity (e/entity-by-id (:entity-id relation))
              ref-component-name (get-refered-component-name relation)]
@@ -136,7 +138,8 @@
                                              ref-component-name
                                              movementX
                                              movementY
-                                             :offset))))))
+                                             :offset)))
+    (bus/fire "rendering.finish"))))                                         
 
 (defn relations-validate [entity]
  (doseq [relation (:relationships entity)]

@@ -45,9 +45,8 @@
               :top  (+ (:top (e/get-entity-content-bbox entity)) (:top bbox))
               :width (:width (e/get-entity-content-bbox entity))
               :height (:height (e/get-entity-content-bbox entity))}]
-    (js/console.log  "asdsadasd")
-    (js/console.log (clj->js cbox))
-    (l/layout cbox (e/get-attributes-values entity))))
+    (l/layout cbox (e/get-attributes-values entity))
+    (bus/fire "rendering.finish")))
 
 (bus/on ["rendering.context.update"] -999 (fn [event]
                                             (let [context (:context @event)]
@@ -74,7 +73,6 @@
 (bus/on ["drawable.render" "drawable.layout.finished"] -999 (fn [event]
                                                               (let [context (:context @event)
                                                                     drawable (:drawable context)]
-                                                                 (js/console.log (clj->js drawa))
                                                                  (render drawable))))
 
 (bus/on ["drawable.removed"] -999 (fn [event]

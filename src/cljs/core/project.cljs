@@ -17,6 +17,8 @@
 
 (defonce bucket-size 50)
 
+(defonce lookup-cache (atom nil))
+
 (defonce drawable-buckets (atom {}))
 
 (defn- update-buckets [drawable]
@@ -35,11 +37,13 @@
         (swap! drawable-buckets assoc coord-key (cons (:uid drawable) drawables))
         (swap! drawable-buckets assoc (:uid drawable) (cons coord-key keys))))))
 
-;(b/on ["drawable.created" "drawable.changed"] -999 (fn [e] (update-buckets (-> e :context :drawable))))
 (defn- lookup [x y]
-  (first (filter (fn [e]
-                   (and (>= x (d/get-left e)) (<= x (+ (d/get-left e) (d/get-width e)))
-                        (>= y (d/get-top e)) (<= y (+ (d/get-top e) (d/get-height e))))) (vals @e/drawables))))
+  (if (and (not (nil? @lookup-cache)) (d/contains-point? @lookup-cache x y))
+      @lookup-cache
+      (do
+        (reset! lookup-cache nil)
+        (let [drawable (first (filter (fn [e] (d/contains-point? e x y)) (vals @e/drawables)))]
+         (reset! lookup-cache drawable)))))
 
 
 (defn- lookup-drawable [x y]
@@ -69,16 +73,10 @@
         component          (e/lookup drawable-id :component)
         attribute-value    (e/lookup drawable-id :attribute)
         drawable           (:drawable component)]
-    {:entity           entity
-     :attribute-value  attribute-value
-     :drawable         drawable
-     :component        component
-     :event event
-     :x x
-     :y y
-     :movement-x x
-     :movement-y y
-     :type       event-type}))
+    (merge event {:entity           entity
+                  :attribute-value  attribute-value
+                  :drawable         drawable
+                  :component        component})))
 
 (defn- event-name [decomposed]
    (let [entity-type    (str (name (-> decomposed :entity :type)) ".")
@@ -101,7 +99,7 @@
    :movement-y 0})
 
 (defn- set-type [prev curr]
-  (if (and (= "dragging" (:state curr)) (= "mousemove" (:type curr))) "mousedrag" (:type curr)))
+  (if (and (= "dragging" (:state prev)) (= "mousemove" (:type curr))) "mousedrag" (:type curr)))
 
 (defn- set-state [prev curr]
    (cond
@@ -109,8 +107,12 @@
      (= "mouseup"   (:type curr)) "moving"
      :else (:state prev)))
 
-(defn- bind-dispatch-event [obj event]
-  (let [stream (js/Rx.Observable.fromEvent obj event)
+(defn- merge-streams [obj events]
+  (apply js/Rx.Observable.merge (mapv (fn [e] (js/Rx.Observable.fromEvent obj e)) events)))
+
+(defn- bind-dispatch-events [id events]
+  (let [obj (js/document.getElementById id)
+        stream (merge-streams obj events)
         ;debounced (.debounce stream 50)
         normalized (.map stream (fn [e] (normalise-event e obj)))
         enriched (.scan normalized (fn [acc,e] (assoc (merge acc e) :movement-x (- (:left e) (or (:left acc) 0))
@@ -118,17 +120,13 @@
                                                                     :type  (set-type acc e)
                                                                     :state (set-state acc e))) {})]
     (.subscribe enriched (fn [e]
-                            (js/console.log (clj->js e))
                             (let [event-type (:type e)
-                                  decomposed (decompose cx cy e event-type (:uid (lookup cx cy)))]
+                                  left (:left e)
+                                  top (:top e)
+                                  decomposed (decompose left top e event-type (:uid (lookup left top)))]
                                (when-not (nil? (:entity decomposed))
                                 (js/console.log (str "on " (event-name decomposed)))
                                 (b/fire (event-name decomposed) decomposed)))))))
-
-(defn bind-dispatch-events [id events]
-  (let [obj (js/document.getElementById id)]
-    (doseq [event events]
-      (bind-dispatch-event obj event))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))

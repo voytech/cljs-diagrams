@@ -33,7 +33,8 @@
   (get-height [this])
   (get-bbox [this])
   (intersects? [this other])
-  (contains? [this other]))
+  (contains? [this other])
+  (contains-point? [this x y]))
 
 
 (defn- register-watcher [drawable property]
@@ -83,7 +84,10 @@
       (or (test tbbox obbox)
           (test obbox tbbox))))
 
-  (contains? [this other]))
+  (contains? [this other])
+  (contains-point? [this x y]
+    (and (>= x (get-left this)) (<= x (+ (get-left this) (get-width this)))
+         (>= y (get-top this)) (<= y (+ (get-top this) (get-height this))))))
 
 
 (defn create-drawable

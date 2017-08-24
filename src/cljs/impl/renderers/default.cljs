@@ -1,6 +1,7 @@
 (ns impl.renderers.default
   (:require [core.utils.general :refer [make-js-property]]
             [core.drawables :as d]
+            [core.eventbus :as b]
             [core.rendering :as r]))
 
 ;Some fabric object specific options to pass.
@@ -62,8 +63,10 @@
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
       (fabric-set source (to-fabric-property-map redraw))
       (.setCoords source)
-      (.renderAll (:canvas rendering-context))
+      ;(.renderAll (:canvas rendering-context))
       (synchronize-bounds drawable)))
+
+(b/on ["rendering.finish"] -999 (fn [e] (.renderAll (get @r/rendering-context :canvas))))
 
 (defn- fabric-create-rendering-state [context drawable create]
   (let [fabric-object (create)]

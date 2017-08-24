@@ -35,6 +35,11 @@
         (swap! drawable-buckets assoc (:uid drawable) (cons coord-key keys))))))
 
 ;(b/on ["drawable.created" "drawable.changed"] -999 (fn [e] (update-buckets (-> e :context :drawable))))
+(defn- lookup [x y]
+  (first (filter (fn [e]
+                   (and (>= x (d/get-left e)) (<= x (+ (d/get-left e) (d/get-width e)))
+                        (>= y (d/get-top e)) (<= y (+ (d/get-top e) (d/get-height e))))) (vals @e/drawables))))
+
 
 (defn- lookup-drawable [x y]
   (let [x-s (js/Math.floor (/ x bucket-size))
@@ -43,11 +48,6 @@
       (when (and (>= x (d/get-left drawable)) (<= x (+ (d/get-left drawable) (d/get-width drawable)))
                  (>= y (d/get-top drawable)) (<= y (+ (d/get-top drawable) (d/get-height drawable))))
           drawable))))
-
-(defn- lookup [x y]
-  (first (filter (fn [e]
-                   (and (>= x (d/get-left e)) (<= x (+ (d/get-left e) (d/get-width e)))
-                        (>= y (d/get-top e)) (<= y (+ (d/get-top e) (d/get-height e))))) (vals @e/drawables))))
 
 (defonce event-map {"object:moving" "moving"
                     "mousedown" "mousedown"
@@ -87,24 +87,17 @@
          component-type (str (name (-> decomposed :component :type)) ".")]
       (str entity-type attribute-type component-type (:type decomposed))))
 
-;(defn- dispatch-events [canvas]
-;  (doseq [event-type (keys event-map)]
-;      (.on canvas (js-obj event-type (fn [e]
-;                                       (when (not (nil? (.-target e)))
-;                                         (let [normalised-event-type (normalise-event event-type)
-;                                               decomposed (decompose e normalised-event-type)
-;                                           (js/console.log (str "on " (event-name decomposed)))
-;                                           (b/fire (event-name decomposed) decomposed))))
-
 (defn- bind-dispatch-listener [id]
-  (let [obj  (js/document.getElementById id)
-        rect (.getBoundingClientRect obj)]
+  (let [obj  (js/document.getElementById id)]
     (.bind (js/jQuery (str "#" id)) source-events (fn [e]
-                                                    (let [cx (- (.-clientX e) (.-left rect))
+                                                    (let [rect (.getBoundingClientRect obj)
+                                                          cx (- (.-clientX e) (.-left rect))
                                                           cy (- (.-clientY e) (.-top rect))
                                                           event-type (normalise-event (.-type e))
                                                           decomposed (decompose cx cy e event-type (:uid (lookup cx cy)))]
-                                                       (b/fire (event-name decomposed) decomposed))))))
+                                                       (when-not (nil? (:entity decomposed))
+                                                        (js/console.log (str "on " (event-name decomposed)))
+                                                        (b/fire (event-name decomposed) decomposed)))))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -116,7 +109,6 @@
     (.setHeight (:canvas data) height)
     (reset! project data)
     (bind-dispatch-listener id)
-    (dispatch-events (:canvas data))
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]
   ;;  (do (.setWidth canvas @zoom-page-width)

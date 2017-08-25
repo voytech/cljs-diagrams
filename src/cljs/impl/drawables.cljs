@@ -40,6 +40,8 @@
                         :top (- (last point)   8)
                         :width 16
                         :height 16
+                        :background-color "white"
+                        :border-color "black"
                         :visible visible})]
       (rect options)))
 

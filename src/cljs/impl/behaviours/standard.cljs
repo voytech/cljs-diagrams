@@ -126,9 +126,10 @@
 
 (defn toggle-endpoints [entity toggle]
   (doseq [component (e/components entity)]
-    (when (contains? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (:name component))
+    (when (= :endpoint (:type component))
       (let [drawable (:drawable component)]
-         (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))
+         (d/set-data drawable {:visible toggle :border-color "#ff0000"})
+         (b/fire "drawable.render" {:drawable drawable})))))
 
 (defn moving-endpoint []
    (fn [e]

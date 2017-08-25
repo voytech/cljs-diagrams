@@ -32,8 +32,7 @@
                                                     (:normal-color options))
                               :border-width (if bln (:highlight-width options)
                                                     (:normal-width options))})
-   (rerender (:drawable e))
-   (bus/fire "rendering.finish")))
+   (rerender (:drawable e))))                                                  
 
 (defn show [entity component-name show]
  (let [component (e/get-entity-component entity component-name)]

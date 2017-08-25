@@ -57,11 +57,15 @@
 
 (bus/on ["rectangle-node.main.mousemove"] -999 (fn [e]
                                                   (let [event (:context @e)]
-                                                    ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event))))
+                                                    ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                                                    (toggle-endpoints (:entity event) true)
+                                                    (bus/fire "rendering.finish"))))
 
 (bus/on ["rectangle-node.main.mouseout"] -999 (fn [e]
                                                   (let [event (:context @e)]
-                                                    ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event))))
+                                                    ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                                                    (toggle-endpoints (:entity event) false)                                                    
+                                                    (bus/fire "rendering.finish"))))
 
 (defentity relation
   (with-content-bounding-box {:left 15

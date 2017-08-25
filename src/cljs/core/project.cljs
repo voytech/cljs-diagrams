@@ -70,7 +70,7 @@
 (defn- normalise-event-type [event]
   (get event-map event))
 
-(defn- decompose [drawable-id]
+(defn- enrich [drawable-id]
   (let [entity             (e/lookup drawable-id :entity)
         component          (e/lookup drawable-id :component)
         attribute-value    (e/lookup drawable-id :attribute)
@@ -81,12 +81,14 @@
                   :component        component})))
 
 (defn- event-name [decomposed]
-   (let [entity-type    (str (name (-> decomposed :entity :type)) ".")
-         attribute-type (if (not (nil? (:attribute-value decomposed)))
-                            (str (name (-> decomposed :attribute-value :attribute :name)) ".")
-                            "")
-         component-type (str (name (-> decomposed :component :type)) ".")]
-      (str entity-type attribute-type component-type (:type decomposed))))
+   (if (nil? (:entity decomposed))
+     (:type decomposed)
+     (let [entity-type    (str (name (-> decomposed :entity :type)) ".")
+           attribute-type (if (not (nil? (:attribute-value decomposed)))
+                              (str (name (-> decomposed :attribute-value :attribute :name)) ".")
+                              "")
+           component-type (str (name (-> decomposed :component :type)) ".")]
+        (str entity-type attribute-type component-type (:type decomposed)))))
 
 
 (defn normalise-event [e obj]
@@ -120,25 +122,48 @@
 (defn- update-dragging-context [event]
   (reset! dragging-context (if (= "dragging" (:state event)) (:drawable event) nil)))
 
+(defn- update-stroke [prev curr]
+  (let [current (or (:stroke prev) "")
+        arr (clojure.string/split current #"\.")
+        trimmed (if (> (count arr) 9) (clojure.string/join "." (take-last 9 arr)) current)]
+     (str trimmed "." (:type curr))))
+
+(defn- detect-pattern [prev curr])
+
 (defn- merge-streams [obj events]
   (apply js/Rx.Observable.merge (mapv (fn [e] (js/Rx.Observable.fromEvent obj e)) events)))
 
-(defn- bind-dispatch-events [id events]
+(defn- delta-stream [input func]
+  (.scan input (fn [acc,e] (merge acc e (func acc e))) {}))
+
+(defn- enriching-stream [input]
+  (.map input (fn [e] (merge e (enrich (or (get-dragging-context e) (lookup (:left e) (:top e))))))))
+
+(defn- mouse-out? [prev curr]
+  (and (= "mousemove" (:type prev)) (not (nil? (:entity prev))) (nil? (:entity curr))))
+
+(defn- dispatch-events [id events patterns]
   (let [obj (js/document.getElementById id)
         stream (merge-streams obj events)
         normalized (.map stream (fn [e] (normalise-event e obj)))
-        enriched (.scan normalized (fn [acc,e] (assoc (merge acc e) :movement-x (- (:left e) (or (:left acc) 0))
-                                                                    :movement-y (- (:top e) (or (:top acc) 0))
-                                                                    :type  (set-type acc e)
-                                                                    :state (set-state acc e))) {})]
-    (.subscribe enriched (fn [e]
-                            (let [target (or (get-dragging-context e) (lookup (:left e) (:top e)))
-                                  decomposed (decompose (:uid target))
-                                  merged (merge e decomposed)]
-                             (when-not (nil? (:entity merged))
-                              (update-dragging-context merged)
-                              (js/console.log (str "on " (event-name merged)))
-                              (b/fire (event-name merged) merged)))))))
+        delta    (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
+                                                       :movement-y (- (:top e) (or (:top acc) 0))
+                                                       :type  (set-type acc e)
+                                                       :stroke (update-stroke acc e)
+                                                       :state (set-state acc e)}))
+        enriched (enriching-stream delta)
+        last     (delta-stream enriched (fn [acc e]
+                                          (let [mouse-out (mouse-out? acc e)]
+                                           {:type (if mouse-out "mouseout" (:type e))
+                                            :entity (if mouse-out (:entity acc) (:entity e))
+                                            :drawable (if mouse-out (:drawable acc) (:drawable e))
+                                            :component (if mouse-out (:component acc) (:component e))
+                                            :attribute-value (if mouse-out (:attribute-value acc) (:attribute-value e))})))]
+    (.subscribe last    (fn [e]
+                            (when-not (nil? (:entity e))
+                              (update-dragging-context e))
+                            (js/console.log (str "on " (event-name e)))
+                            (b/fire (event-name e) e)))))
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -149,7 +174,7 @@
     (.setWidth (:canvas data) width)
     (.setHeight (:canvas data) height)
     (reset! project data)
-    (bind-dispatch-events id (clojure.string/split source-events #" "))
+    (dispatch-events id (clojure.string/split source-events #" ") [])
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]
   ;;  (do (.setWidth canvas @zoom-page-width)

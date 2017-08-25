@@ -62,7 +62,8 @@
 (bus/on ["drawable.added"] -999 (fn [event]))
 
 (defn- update-property-to-redraw [drawable property newvalue oldvalue]
-  (swap! rendering-context assoc-in [:redraw-properties (:uid drawable) property] {:new newvalue :old oldvalue}))
+  (let [properties (conj (or (get-in @rendering-context [:redraw-properties (:uid drawable)]) #{}) property)]
+    (swap! rendering-context assoc-in [:redraw-properties (:uid drawable)] properties))) ;{:new newvalue :old oldvalue}))
 
 (bus/on ["drawable.changed"] -999 (fn [event]
                                     (let [context (:context @event)
@@ -117,7 +118,7 @@
     (let [rendering-state (d/state drawable)]
       (when (or (nil? rendering-state) (empty? rendering-state))
         (d/update-state drawable (create-rendering-state drawable @rendering-context)))
-      (rewrite-redraw-properties drawable)
+      ;(rewrite-redraw-properties drawable)
       ;(js/console.log (apply str  (cons "Rendering properties: " (keys (get-in @rendering-context [:redraw-properties (:uid drawable)])))))
       (do-render drawable @rendering-context)
       (clear-context [:redraw-properties (:uid drawable)]))))

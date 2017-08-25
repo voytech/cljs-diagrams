@@ -31,7 +31,9 @@
    (d/set-data (:drawable e) {:border-color (if bln (:highlight-color options)
                                                     (:normal-color options))
                               :border-width (if bln (:highlight-width options)
-                                                    (:normal-width options))})))
+                                                    (:normal-width options))})
+   (rerender (:drawable e))
+   (bus/fire "rendering.finish")))
 
 (defn show [entity component-name show]
  (let [component (e/get-entity-component entity component-name)]
@@ -139,7 +141,7 @@
                                              movementX
                                              movementY
                                              :offset)))
-    (bus/fire "rendering.finish"))))                                         
+    (bus/fire "rendering.finish"))))
 
 (defn relations-validate [entity]
  (doseq [relation (:relationships entity)]

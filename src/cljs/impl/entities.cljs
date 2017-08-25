@@ -47,7 +47,6 @@
        {:name "body"
         :type :main
         :drawable (d/rect enriched-opts)}]))
-
   (with-attributes [#(stdatr/name % "<Enter name here>")
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
@@ -55,6 +54,14 @@
 (bus/on ["rectangle-node.main.mousedrag"] -999 (fn [e]
                                                   (let [event (:context @e)]
                                                     ((moving-entity) event))))
+
+(bus/on ["rectangle-node.main.mousemove"] -999 (fn [e]
+                                                  (let [event (:context @e)]
+                                                    ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event))))
+
+(bus/on ["rectangle-node.main.mouseout"] -999 (fn [e]
+                                                  (let [event (:context @e)]
+                                                    ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event))))
 
 (defentity relation
   (with-content-bounding-box {:left 15

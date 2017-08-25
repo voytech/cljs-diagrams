@@ -50,8 +50,12 @@
                                   :color "color"
                                   :border-width "strokeWidth"})
 
-(defn to-fabric-property-map [input-map]
+(defn- to-fabric-property-map [input-map]
   (apply merge (cons LOCKED (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (e input-map)}) (keys input-map)))))
+
+(defn- fabric-apply [drawable source properties]
+  (doseq [p properties]
+    (fabric-set source (or (p fabric-property-mapping) p) (d/getp drawable p))))
 
 (defn- synchronize-bounds [drawable]
   (let [source (:data (d/state drawable))]
@@ -61,7 +65,8 @@
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (d/state drawable))
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
-      (fabric-set source (to-fabric-property-map redraw))
+      ;(fabric-set source (to-fabric-property-map redraw))
+      (fabric-apply drawable source redraw)
       (.setCoords source)
       ;(.renderAll (:canvas rendering-context))
       (synchronize-bounds drawable)))

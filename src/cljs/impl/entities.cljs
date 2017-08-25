@@ -64,7 +64,7 @@
 (bus/on ["rectangle-node.main.mouseout"] -999 (fn [e]
                                                   (let [event (:context @e)]
                                                     ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
-                                                    (toggle-endpoints (:entity event) false)                                                    
+                                                    (toggle-endpoints (:entity event) false)
                                                     (bus/fire "rendering.finish"))))
 
 (defentity relation
@@ -125,3 +125,25 @@
           :type :endpoint
           :drawable  (d/endpoint conE :moveable true :display "circle" :visible true :opacity 0)
           :props {:end "connector"}}])))
+
+(bus/on ["relation.startpoint.mousedrag"
+         "relation.endpoint.mousedrag"
+         "relation.breakpoint.mousedrag"] -999 (fn [e]
+                                                  (let [event (:context @e)]
+                                                    ((moving-endpoint) event)
+                                                    (bus/fire "uncommited.render")
+                                                    (bus/fire "rendering.finish"))))
+
+(bus/on ["relation.startpoint.mousemove"
+         "relation.endpoint.mousemove"
+         "relation.breakpoint.mousemove"] -999 (fn [e]
+                                                  ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) (:context @e))
+                                                  (bus/fire "uncommited.render")
+                                                  (bus/fire "rendering.finish")))
+
+(bus/on ["relation.startpoint.mouseout"
+         "relation.endpoint.mouseout"
+         "relation.breakpoint.mouseout"] -999 (fn [e]
+                                                 ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) (:context @e))
+                                                 (bus/fire "uncommited.render")
+                                                 (bus/fire "rendering.finish")))

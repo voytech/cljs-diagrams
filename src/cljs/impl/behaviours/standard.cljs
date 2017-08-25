@@ -3,6 +3,7 @@
             [core.layouts :as layouts]
             [core.drawables :as d]
             [core.eventbus :as b]
+            [core.behaviours :refer [effective-position]]
             [impl.drawables :as dimpl]))
 
 (declare position-endpoint)
@@ -16,7 +17,7 @@
         y1 (-> relation-component :drawable (d/getp :y1))
         x2 (-> relation-component :drawable (d/getp :x2))
         y2 (-> relation-component :drawable (d/getp :y2))]
-     (d/setp (:drawable arrow-drawable) :angle (calculate-angle x1 y1 x2 y2))))
+     (d/setp (:drawable arrow-component) :angle (calculate-angle x1 y1 x2 y2))))
 
 (defn- to-the-center-of [line x y shape]
   (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
@@ -133,14 +134,13 @@
 
 (defn moving-endpoint []
    (fn [e]
-      (let [endpoint-name (:component e)
+      (let [endpoint (:component e)
             entity   (:entity e)
-            endpoint (e/get-entity-component entity endpoint-name)
             drawable (:drawable endpoint)]
          (cond
-           (= :breakpoint (:type endpoint)) (position-breakpoint entity endpoint-name (d/get-left drawable) (d/get-top drawable))
-           (= :startpoint (:type endpoint)) (position-startpoint entity (d/get-left drawable) (d/get-top drawable))
-           (= :endpoint   (:type endpoint)) (position-endpoint   entity (d/get-left drawable) (d/get-top drawable))))))
+           (= :breakpoint (:type endpoint)) (position-breakpoint entity (:name endpoint) (:movement-x e) (:movement-y e) :offset)
+           (= :startpoint (:type endpoint)) (position-startpoint entity (:movement-x e) (:movement-y e) :offset)
+           (= :endpoint   (:type endpoint)) (position-endpoint   entity (:movement-x e) (:movement-y e) :offset)))))
 
 (defn calculate-angle [x1 y1 x2 y2]
    (let [PI 3.14

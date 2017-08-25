@@ -22,7 +22,9 @@
 
 (defn- fabric-set
   ([source property value]
-   (.set source (clj->js {property value})))
+   (when (or (= "x1" property) (= "x2" property) (= "y1" property) (= "y2" property))
+     (js/console.log (str "prop: " property " value " value)))
+   (.set source property value))
   ([source map_]
    (.set source (clj->js map_))))
 
@@ -67,7 +69,7 @@
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
       ;(fabric-set source (to-fabric-property-map redraw))
       (fabric-apply drawable source redraw)
-      (.setCoords source)
+      ;(.setCoords source)
       ;(.renderAll (:canvas rendering-context))
       (synchronize-bounds drawable)))
 
@@ -115,7 +117,10 @@
 ;; line rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:fabric :line] [drawable rendering-context]
-  (property-change-render drawable rendering-context))
+  (fabric-destroy-rendering-state rendering-context (d/state drawable))
+  (let [data (to-fabric-property-map (d/model drawable))]
+    (d/update-state drawable (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data)))))))
+  ;(property-change-render drawable rendering-context))
 
 (defmethod r/create-rendering-state [:fabric :line] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]

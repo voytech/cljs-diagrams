@@ -68,6 +68,8 @@
 (bus/on ["drawable.changed"] -999 (fn [event]
                                     (let [context (:context @event)
                                           drawable (:drawable context)]
+                                       (when (or (= :y1 (:property context)) (= :y2 (:property context)))    
+                                        (js/console.log (clj->js context)))
                                        (update-property-to-redraw drawable (:property context) (:new context) (:old context)))))
 
 
@@ -96,6 +98,12 @@
                                     (js/console.log (clj->js (:entity context)))
                                     (render-entity (:entity context)))))
 
+(bus/on ["uncommited.render"] -999 (fn [event]
+                                     (let [uncommited (get @rendering-context :redraw-properties)]
+                                       (doseq [drawable-id (keys uncommited)]
+                                          (render (get @e/drawables drawable-id))))))
+
+
 (defmulti do-render (fn [drawable context] [@RENDERER (:type drawable)]))
 
 (defmulti create-rendering-state (fn [drawable context] [@RENDERER (:type drawable)]))
@@ -119,7 +127,7 @@
       (when (or (nil? rendering-state) (empty? rendering-state))
         (d/update-state drawable (create-rendering-state drawable @rendering-context)))
       ;(rewrite-redraw-properties drawable)
-      ;(js/console.log (apply str  (cons "Rendering properties: " (keys (get-in @rendering-context [:redraw-properties (:uid drawable)])))))
+      ;(js/console.log (apply str  (cons "Rendering properties: " (get-in @rendering-context [:redraw-properties (:uid drawable)]))))
       (do-render drawable @rendering-context)
       (clear-context [:redraw-properties (:uid drawable)]))))
       ;(js/console.log (str "<<<[ " (:type drawable) " " (:uid drawable)  " ]<<<\n")))))

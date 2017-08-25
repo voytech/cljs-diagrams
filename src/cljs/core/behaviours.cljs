@@ -32,7 +32,7 @@
                                                     (:normal-color options))
                               :border-width (if bln (:highlight-width options)
                                                     (:normal-width options))})
-   (rerender (:drawable e))))                                                  
+   (rerender (:drawable e))))
 
 (defn show [entity component-name show]
  (let [component (e/get-entity-component entity component-name)]
@@ -66,17 +66,17 @@
                  (yes {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})
                  (no  {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})))))))))
 
-(defn- calculate-offset [component left top]
+(defn calculate-offset [component left top]
  {:left (- left (d/getp (:drawable component) :left))
   :top  (- top  (d/getp (:drawable component) :top))})
 
-(defn- calculate-effective-offset [entity component-name left top coord-mode]
+(defn calculate-effective-offset [entity component-name left top coord-mode]
  (if (= :offset coord-mode)
    {:left left :top top}
    (let [component (e/get-entity-component entity component-name)]
      (calculate-offset component left top))))
 
-(defn- effective-position
+(defn effective-position
  ([component get-x get-y x y coord-mode]
   (let [effective-x (if (= :offset coord-mode) (+ (get-x (:drawable component)) x) x)
         effective-y  (if (= :offset coord-mode) (+ (get-y (:drawable component)) y) y)]
@@ -84,7 +84,7 @@
  ([component x y coord-mode]
   (effective-position component #(d/getp % :left) #(d/getp % :top) x y coord-mode)))
 
-(defn- apply-effective-position
+(defn apply-effective-position
  ([component set-x get-x set-y get-y x y coord-mode]
   (let [epos (effective-position component get-x get-y x y coord-mode)]
     (set-x (:drawable component) (:x epos))

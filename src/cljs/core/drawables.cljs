@@ -38,7 +38,7 @@
 
 
 (defn- register-watcher [drawable property]
-  (when (nil? (get @watchers [(:uid drawable) property]))
+  (when (nil? (get-in @watchers [(:uid drawable) property]))
     (let [model (:model drawable)]
       (add-watch model property (fn [key atom old-state new-state]
                                   (bus/fire DRAWABLE_CHANGED {:property key

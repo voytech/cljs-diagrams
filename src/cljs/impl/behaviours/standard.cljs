@@ -3,7 +3,7 @@
             [core.layouts :as layouts]
             [core.drawables :as d]
             [core.eventbus :as b]
-            [core.behaviours :refer [effective-position]]
+            [core.behaviours :refer [effective-position default-position-entity-component]]
             [impl.drawables :as dimpl]))
 
 (declare position-endpoint)
@@ -25,20 +25,19 @@
 
 (defn insert-breakpoint []
   (fn [e]
-    (when-not (and  (= (:type (p/prev-event e)) "object:moving")
-                    (= (:component (p/prev-event e)) (:component e)))
+    ;(when-not (and  (= (:type (p/prev-event e)) "object:moving")
+    ;                (= (:component (p/prev-event e)) (:component e))]
       (let [entity (:entity e)
-            line (e/get-entity-component entity (:component e))
+            line (:component e)
             line-start-breakpoint (e/get-entity-component entity (:start (:props line)))
             line-end-breakpoint   (e/get-entity-component entity (:end (:props line)))
             drawable  (:drawable line)
             oeX  (d/getp drawable :x2)
             oeY  (d/getp drawable :y2)
-            eX   (:x e)
-            eY   (:y e)]
+            eX   (:left e)
+            eY   (:top e)]
         (when (= :relation (:type line))
           (d/set-data drawable {:x2 eX :y2 eY})
-          ;
           (let [relation-id   (str (random-uuid))
                 breakpoint-id (str (random-uuid))
                 is-penultimate (= true (:penultimate (:props line-start-breakpoint)))]
@@ -51,18 +50,17 @@
                :type     :breakpoint
                :drawable (dimpl/endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
                :props    {:end (:name line) :start relation-id :penultimate is-penultimate}})
-            (b/fire "rendering.execute" {:entity entity})
             (e/update-component-prop entity (:name line) :end breakpoint-id)
             (e/update-component-prop entity (:name line-end-breakpoint) :end relation-id)
             (when (= true is-penultimate)
-              (e/update-component-prop entity (:name line-start-breakpoint) :penultimate false))))))))
+              (e/update-component-prop entity (:name line-start-breakpoint) :penultimate false)))))))
 
 (defn dissoc-breakpoint []
   (fn [e]
-   (let [prev (p/prev-event)]
-     (when (and  (not= (:type prev) "object:moving"))
+   ;(let [prev (p/prev-event)]
+     ;(when (and  (not= (:type prev) "object:moving"))
       (let [entity     (:entity e)
-            breakpoint (e/get-entity-component entity (:component e))
+            breakpoint (:component e)
             line-end   (e/get-entity-component entity (:start  (:props breakpoint)))
             line-endpoint (e/get-entity-component entity (:end (:props line-end)))
             line-start (e/get-entity-component entity (:end   (:props breakpoint)))
@@ -72,10 +70,9 @@
          (e/remove-entity-component entity (:name line-end))
          (e/update-component-prop entity (:name line-start) :end (:name line-endpoint))
          (e/update-component-prop entity (:name line-endpoint) :end (:name line-start))
-         (e/update-component-prop entity (:name line-startpoint) :penultimate is-penultimate?)
-         (position-entity-component entity (:name line-endpoint) :entity-scope (d/get-left (:drawable line-endpoint))
-                                                                               (d/get-top  (:drawable line-endpoint)))
-         (b/fire "rendering.execute" {:entity entity}))))))
+         (e/update-component-prop entity (:name line-startpoint) :penultimate is-penultimate?))))
+         ;(default-position-entity-component entity (:name line-endpoint) (d/get-left (:drawable line-endpoint))
+         ;                                                                (d/get-top  (:drawable line-endpoint))))))))
 
 (defn position-breakpoint
   ([entity name left top coord-mode]

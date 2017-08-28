@@ -22,8 +22,6 @@
 
 (defn- fabric-set
   ([source property value]
-   (when (or (= "x1" property) (= "x2" property) (= "y1" property) (= "y2" property))
-     (js/console.log (str "prop: " property " value " value)))
    (.set source property value))
   ([source map_]
    (.set source (clj->js map_))))
@@ -114,11 +112,17 @@
   (fabric-destroy-rendering-state context (d/state drawable)))
 
 ;;==========================================================================================================
-;; line rendering
+;; line rendering (must be improved ... changes to x1 x2 y1 y2 on static canvas not working as expected)
+;; As a temporary workaround - we are removing rendering state of drawable and creating new line as a new rendering state with new
+;; x1 x2 y1 y2 properties. Also take into account that synchronization of x1 x2 y1 y2 with left top widht height must be better.
 ;;==========================================================================================================
 (defmethod r/do-render [:fabric :line] [drawable rendering-context]
   (fabric-destroy-rendering-state rendering-context (d/state drawable))
-  (let [data (to-fabric-property-map (d/model drawable))]
+  (d/set-left drawable (d/getp drawable :x1))
+  (d/set-top drawable (d/getp drawable :y1))
+  (d/set-width drawable (+ (d/getp drawable :x1) (d/getp drawable :x2)))
+  (d/set-height drawable (+ (d/getp drawable :y1) (d/getp drawable :y2)))
+  (let [data (dissoc (to-fabric-property-map (d/model drawable)) :width :height :left :top)]
     (d/update-state drawable (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data)))))))
   ;(property-change-render drawable rendering-context))
 

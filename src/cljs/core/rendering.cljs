@@ -68,8 +68,6 @@
 (bus/on ["drawable.changed"] -999 (fn [event]
                                     (let [context (:context @event)
                                           drawable (:drawable context)]
-                                       (when (or (= :y1 (:property context)) (= :y2 (:property context)))    
-                                        (js/console.log (clj->js context)))
                                        (update-property-to-redraw drawable (:property context) (:new context) (:old context)))))
 
 

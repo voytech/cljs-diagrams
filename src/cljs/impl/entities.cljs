@@ -147,3 +147,8 @@
                                                  ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) (:context @e))
                                                  (bus/fire "uncommited.render")
                                                  (bus/fire "rendering.finish")))
+
+(bus/on ["relation.relation.mouseclick"] -999 (fn [e]
+                                                  ((insert-breakpoint) (:context @e))
+                                                  (bus/fire "uncommited.render")
+                                                  (bus/fire "rendering.finish")))

@@ -25,8 +25,6 @@
 
 (defn insert-breakpoint []
   (fn [e]
-    ;(when-not (and  (= (:type (p/prev-event e)) "object:moving")
-    ;                (= (:component (p/prev-event e)) (:component e))]
       (let [entity (:entity e)
             line (:component e)
             line-start-breakpoint (e/get-entity-component entity (:start (:props line)))
@@ -57,8 +55,6 @@
 
 (defn dissoc-breakpoint []
   (fn [e]
-   ;(let [prev (p/prev-event)]
-     ;(when (and  (not= (:type prev) "object:moving"))
       (let [entity     (:entity e)
             breakpoint (:component e)
             line-end   (e/get-entity-component entity (:start  (:props breakpoint)))
@@ -70,9 +66,11 @@
          (e/remove-entity-component entity (:name line-end))
          (e/update-component-prop entity (:name line-start) :end (:name line-endpoint))
          (e/update-component-prop entity (:name line-endpoint) :end (:name line-start))
-         (e/update-component-prop entity (:name line-startpoint) :penultimate is-penultimate?))))
-         ;(default-position-entity-component entity (:name line-endpoint) (d/get-left (:drawable line-endpoint))
-         ;                                                                (d/get-top  (:drawable line-endpoint))))))))
+         (e/update-component-prop entity (:name line-startpoint) :penultimate is-penultimate?)
+         (let [drawable (:drawable line-start)
+               endpoint-drawable (:drawable line-endpoint)]
+           (d/set-data drawable {:x2 (+ (d/getp endpoint-drawable :left) (/ (d/getp endpoint-drawable :width) 2))
+                                 :y2 (+ (d/getp endpoint-drawable :top) (/ (d/getp endpoint-drawable :height) 2))})))))
 
 (defn position-breakpoint
   ([entity name left top coord-mode]

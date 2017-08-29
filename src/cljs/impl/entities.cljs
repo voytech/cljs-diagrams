@@ -152,3 +152,8 @@
                                                   ((insert-breakpoint) (:context @e))
                                                   (bus/fire "uncommited.render")
                                                   (bus/fire "rendering.finish")))
+
+(bus/on ["relation.breakpoint.mouseclick"] -999 (fn [e]
+                                                  ((dissoc-breakpoint) (:context @e))
+                                                  (bus/fire "uncommited.render")
+                                                  (bus/fire "rendering.finish")))

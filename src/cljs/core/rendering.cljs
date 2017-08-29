@@ -70,7 +70,6 @@
                                           drawable (:drawable context)]
                                        (update-property-to-redraw drawable (:property context) (:new context) (:old context)))))
 
-
 (bus/on ["drawable.render" "drawable.layout.finished"] -999 (fn [event]
                                                               (let [context (:context @event)
                                                                     drawable (:drawable context)]
@@ -79,7 +78,7 @@
 (bus/on ["drawable.removed"] -999 (fn [event]
                                     (let [context (:context @event)
                                           drawable (:drawable context)]
-                                       (destroy-rendering-state drawable rendering-context))))
+                                       (destroy-rendering-state drawable @rendering-context))))
 
 (bus/on ["entities.render"] -999 (fn [event]
                                      (let [context (:context @event)

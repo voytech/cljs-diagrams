@@ -119,7 +119,11 @@
  (define-lookups-on-components (entity-by-id (:uid entity))))
 
 (defn remove-entity-component [entity component-name]
- (swap! entities update-in [(:uid entity) :components ] dissoc component-name))
+  (let [component (get-in @entities [(:uid entity) :components component-name])
+        drawable (:drawable component)]
+    (swap! drawables dissoc (:uid drawable))
+    (bus/fire "drawable.removed" {:drawable drawable})
+    (swap! entities update-in [(:uid entity) :components ] dissoc component-name)))
 
 (defn update-component-prop [entity name prop value]
  (swap! entities assoc-in [(:uid entity) :components name :props prop] value))

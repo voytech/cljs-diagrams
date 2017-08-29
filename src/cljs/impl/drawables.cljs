@@ -2,6 +2,17 @@
   (:require [core.drawables :as drawables])
   (:require-macros [core.macros :refer [defdrawable]]))
 
+(defn- setup-bbox [drawable p p1 p2 p3 p4]
+  (when (or (= p p1) (= p p2))
+    (if (>= (drawables/getp drawable p1) (drawables/getp drawable p2))
+       (do (drawables/setp drawable p3 (drawables/getp drawable p2))
+           (drawables/setp drawable p4 (- (drawables/getp drawable p1) (drawables/getp drawable p2))))
+       (do (drawables/setp drawable p3 (drawables/getp drawable p1))
+           (drawables/setp drawable p4 (- (drawables/getp drawable p2) (drawables/getp drawable p1)))))))
+
+(drawables/add-hook :line :setp (fn [drawable p] (setup-bbox drawable p :x1 :x2 :left :width)
+                                                 (setup-bbox drawable p :y1 :y2 :top :height)))
+
 (defdrawable rect {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
 
 (defdrawable circle {:z-index 0 :border-color "black" :border-style :solid :border-width 1})

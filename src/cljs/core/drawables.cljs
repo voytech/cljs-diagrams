@@ -1,7 +1,11 @@
 (ns core.drawables
   (:require [core.eventbus :as bus]))
 
+(declare invoke-hook)
+
 (defonce watchers (atom {}))
+
+(defonce hooks (atom {}))
 
 (defonce standard-properties [:left :top :width :height :border-color :border-width
                               :border-style :color :background-color :opacity
@@ -36,7 +40,6 @@
   (contains? [this other])
   (contains-point? [this x y]))
 
-
 (defn- register-watcher [drawable property]
   (when (nil? (get-in @watchers [(:uid drawable) property]))
     (let [model (:model drawable)]
@@ -54,10 +57,12 @@
   (model [this] @model)
   (setp [this property value]
     (register-watcher this property)
-    (swap! model assoc property value))
+    (swap! model assoc property value)
+    (invoke-hook this :setp property value))
   (set-data [this map_]
     (doseq [key (keys map_)]
-      (setp this key (get map_ key))))
+      (setp this key (get map_ key)))
+    (invoke-hook this :set-data map_))
   (getp [this property] (get @model property))
   (set-border-color [this value] (setp this :border-color value))
   (set-background-color [this value] (setp this :background-color value))
@@ -97,3 +102,11 @@
    (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}) nil)]
      (set-data drawable data)
      drawable)))
+
+(defn add-hook [type function hook]
+  (swap! hooks assoc-in [type function] hook))
+
+(defn- invoke-hook [drawable function & args]
+  (let [type (:type drawable)]
+     (when-let [hook (get-in @hooks [type function])]
+        (apply hook (cons drawable args)))))

@@ -47,6 +47,8 @@
         (let [drawable (first (filter (fn [e] (d/contains-point? e x y)) (vals @e/drawables)))]
          (reset! lookup-cache drawable)))))
 
+(defn- lookup-all [x y]
+  (filter (fn [e] (d/contains-point? e x y)) (vals @e/drawables)))
 
 (defn- lookup-drawable [x y]
   (let [x-s (js/Math.floor (/ x bucket-size))

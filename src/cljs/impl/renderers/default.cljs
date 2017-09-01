@@ -117,8 +117,10 @@
 ;;==========================================================================================================
 (defmethod r/do-render [:fabric :line] [drawable rendering-context]
   (fabric-destroy-rendering-state rendering-context (d/state drawable))
-  (let [data (dissoc (to-fabric-property-map (d/model drawable)) :width :height :left :top)]    
-    (d/update-state drawable (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data)))))))
+  (let [data (dissoc (to-fabric-property-map (d/model drawable)) :width :height :left :top)
+        state (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))]
+    (.moveTo (:data state) (get data "zIndex"))
+    (d/update-state drawable state)))
   ;(property-change-render drawable rendering-context))
 
 (defmethod r/create-rendering-state [:fabric :line] [drawable context]

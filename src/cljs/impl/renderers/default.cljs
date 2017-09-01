@@ -65,7 +65,6 @@
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (d/state drawable))
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
-      ;(fabric-set source (to-fabric-property-map redraw))
       (fabric-apply drawable source redraw)
       ;(.setCoords source)
       ;(.renderAll (:canvas rendering-context))

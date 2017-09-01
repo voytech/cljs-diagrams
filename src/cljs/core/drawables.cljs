@@ -5,6 +5,8 @@
 
 (defonce watchers (atom {}))
 
+(defonce drawables (atom {}))
+
 (defonce hooks (atom {}))
 
 (defonce standard-properties [:left :top :width :height :border-color :border-width
@@ -94,6 +96,19 @@
     (and (>= x (get-left this)) (<= x (+ (get-left this) (get-width this)))
          (>= y (get-top this)) (<= y (+ (get-top this) (get-height this))))))
 
+(defn- next-z-index []
+  (inc (max-key #(getp % :z-index) (vals @drawables))))
+
+(defn- assert-z-index [drawable]
+  (when (nil? (getp drawable :z-index))
+    (setp drawable :z-index (next-z-index))))
+
+(defn- add-drawable [drawable]
+  (swap! drawables assoc (:uid drawable) drawable))
+
+(defn remove-drawable [drawable]
+  (swap! drawables dissoc (:uid drawable))
+  (bus/fire "drawable.removed" {:drawable drawable}))
 
 (defn create-drawable
   ([type]
@@ -101,6 +116,9 @@
   ([type data]
    (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}) nil)]
      (set-data drawable data)
+     (assert-z-index drawable)
+     (add-drawable drawable)
+     (bus/fire "drawable.created" {:drawable drawable})
      drawable)))
 
 (defn add-hook [type function hook]

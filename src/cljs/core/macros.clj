@@ -84,6 +84,4 @@
 
 (defmacro defdrawable [name options-defaults]
   `(defn ~name [options#]
-     (let [drawable# (core.drawables/create-drawable (keyword (name '~name)) (merge options# ~options-defaults))]
-        (core.eventbus/fire "drawable.created" {:drawable drawable#})
-        drawable#)))
+     (core.drawables/create-drawable (keyword (name '~name)) (merge options# ~options-defaults))))      

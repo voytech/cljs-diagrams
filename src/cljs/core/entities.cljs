@@ -8,8 +8,6 @@
 (declare get-attribute-value)
 (declare get-attribute-value-component)
 
-(defonce drawables (atom {}))
-
 (defonce entities (atom {}))
 
 (defonce lookups (atom {}))
@@ -19,11 +17,6 @@
 (defonce entity-events (atom {}))
 
 (defonce attribute-events (atom {}))
-
-(bus/on ["drawable.created"] -999 (fn [event]
-                                   (let [context (:context @event)
-                                         drawable (:drawable context)]
-                                     (swap! drawables assoc (:uid drawable) drawable))))
 
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
@@ -121,8 +114,7 @@
 (defn remove-entity-component [entity component-name]
   (let [component (get-in @entities [(:uid entity) :components component-name])
         drawable (:drawable component)]
-    (swap! drawables dissoc (:uid drawable))
-    (bus/fire "drawable.removed" {:drawable drawable})
+    (d/remove-drawable drawable)
     (swap! entities update-in [(:uid entity) :components ] dissoc component-name)))
 
 (defn update-component-prop [entity name prop value]

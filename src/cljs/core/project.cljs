@@ -44,11 +44,15 @@
       @lookup-cache
       (do
         (reset! lookup-cache nil)
-        (let [drawable (first (filter (fn [e] (d/contains-point? e x y)) (vals @e/drawables)))]
+        (let [drawable (first (filter (fn [e] (d/contains-point? e x y)) (vals @d/drawables)))]
          (reset! lookup-cache drawable)))))
 
 (defn- lookup-all [x y]
-  (filter (fn [e] (d/contains-point? e x y)) (vals @e/drawables)))
+  (->> @d/drawables
+       vals
+       (filter #(d/contains-point? % x y))
+       (sort-by #(d/getp % :z-index) >)))
+
 
 (defn- lookup-drawable [x y]
   (let [x-s (js/Math.floor (/ x bucket-size))
@@ -139,7 +143,8 @@
   (.scan input (fn [acc,e] (merge acc e (func acc e))) {}))
 
 (defn- enriching-stream [input]
-  (.map input (fn [e] (merge e (enrich (or (get-dragging-context e) (lookup (:left e) (:top e))))))))
+  (.map input (fn [e] (->> (enrich (or (get-dragging-context e) (first (lookup-all (:left e) (:top e)))))
+                           (merge e)))))
 
 (defn- mouse-out? [prev curr]
   (and (= "mousemove" (:type prev)) (not (nil? (:entity prev))) (nil? (:entity curr))))

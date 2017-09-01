@@ -98,7 +98,7 @@
 (bus/on ["uncommited.render"] -999 (fn [event]
                                      (let [uncommited (get @rendering-context :redraw-properties)]
                                        (doseq [drawable-id (keys uncommited)]
-                                          (render (get @e/drawables drawable-id))))))
+                                          (render (get @d/drawables drawable-id))))))
 
 
 (defmulti do-render (fn [drawable context] [@RENDERER (:type drawable)]))

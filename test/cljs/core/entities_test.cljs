@@ -12,11 +12,11 @@
 (defn cleanup [f]
   (reset! e/lookups {})
   (reset! e/entities {})
-  (reset! e/drawables {})
+  (reset! d/drawables {})
   (f)
   (reset! e/lookups {})
   (reset! e/entities {})
-  (reset! e/drawables {}))
+  (reset! d/drawables {}))
 
 (use-fixtures :each cleanup)
 

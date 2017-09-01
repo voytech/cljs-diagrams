@@ -45,7 +45,7 @@
          component        (:component e)
          drawable         (:drawable e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [drwlb @e/drawables]
+       (doseq [drwlb @d/drawables]
           (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]
@@ -58,7 +58,7 @@
          component        (:component e)
          drawable         (:drawable e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [drwlb @e/drawables]
+       (doseq [drwlb @d/drawables]
           (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]

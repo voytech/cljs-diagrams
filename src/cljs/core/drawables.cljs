@@ -97,7 +97,12 @@
          (>= y (get-top this)) (<= y (+ (get-top this) (get-height this))))))
 
 (defn- next-z-index []
-  (inc (max-key #(getp % :z-index) (vals @drawables))))
+  (or
+    (let [vs (vals @drawables)]
+      (when (and (not (nil? vs)) (< 0 (count vs)));
+         (when-let [e (apply max-key #(getp % :z-index) vs)]
+            (inc (getp e :z-index)))))
+    1))
 
 (defn- assert-z-index [drawable]
   (when (nil? (getp drawable :z-index))

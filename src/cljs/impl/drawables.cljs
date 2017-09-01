@@ -13,25 +13,25 @@
 (drawables/add-hook :line :setp (fn [drawable p] (setup-bbox drawable p :x1 :x2 :left :width)
                                                  (setup-bbox drawable p :y1 :y2 :top :height)))
 
-(defdrawable rect {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable rect {:border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable circle {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable circle {:border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable ellipse {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable ellipse {:border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable line {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable line {:border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable dashed-line  {:z-index 0 :border-color "black" :border-style :dashed :border-width 1})
+(defdrawable dashed-line  {:border-color "black" :border-style :dashed :border-width 1})
 
-(defdrawable dotted-line  {:z-index 0 :border-color "black" :border-style :dotted :border-width 1})
+(defdrawable dotted-line  {:border-color "black" :border-style :dotted :border-width 1})
 
-(defdrawable triangle {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable triangle {:border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable point {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable point {:border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable path {:z-index 0 :border-color "black" :border-style :solid :border-width 1})
+(defdrawable path {:border-color "black" :border-style :solid :border-width 1})
 
-(defdrawable text {:z-index 0 :border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defdrawable text {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
 
 (defmulti endpoint (fn [point & {:keys [moveable display visible]}] display))
 

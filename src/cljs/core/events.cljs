@@ -4,8 +4,57 @@
 
 (defonce patterns (atom {}))
 
-(defn add-pattern [name functions])
+(defonce funcs (atom {}))
 
-(defn evaluate [event]
+(defonce indices (atom {}))
+
+(defonce matches (atom []))
+
+(defonce context (atom {}))
+
+(defonce state (atom {}))
+
+(defn- clear-context [])
+
+(defn- clear-state []
+  (reset! state {}))
+
+(defn- matches? [key]
+  (let [steps (key @patterns)
+        index (key @indices)]
+    (= index (count steps))))
+
+(defn- advance [key event]
+  (let [steps (key @patterns)
+        index (key @indices)
+        step (get steps index)
+        result (step event)
+        count  (count steps)]
+    (swap! indices assoc key (if (and result (< index count)) (inc index) 0))))
+
+(defn- after-match [key event]
+  (swap! matches conj key)
+  (swap! indices assoc key 0)
+  (swap! state assoc :state (name key))
+  (swap! state merge ((key @funcs) event)))
+
+(defn- update-test [key event]
+   (advance key event)
+   ;(js/console.log (str key " : " (key @indices)))
+   (when (matches? key) (after-match key event)))
+
+(defn add-pattern [name step-functions result-function]
+  (swap! patterns assoc name step-functions)
+  (swap! funcs assoc name result-function)
+  (swap! indices assoc name 0))
+
+(defn set-context [event-type data]
+  (swap! context assoc event-type data))
+
+(defn get-context [event-type]
+  (get @context event-type))
+
+(defn test [event]
   (doseq [key (keys @patterns)]
-    (let [pattern (key @patterns)])))
+     (update-test key event))
+  event)

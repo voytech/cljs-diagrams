@@ -8,6 +8,7 @@
            [core.entities :as e]
            [core.tools :as t]
            [core.eventbus :as b]
+           [core.events :as events]
            [core.rendering :as r]
            [core.drawables :as d]
            [impl.renderers.default :as dd]
@@ -76,10 +77,10 @@
 (defn- normalise-event-type [event]
   (get event-map event))
 
-(defn- enrich [drawable-id]
-  (let [entity             (e/lookup drawable-id :entity)
-        component          (e/lookup drawable-id :component)
-        attribute-value    (e/lookup drawable-id :attribute)
+(defn- enrich [drawable]
+  (let [entity             (e/lookup drawable :entity)
+        component          (e/lookup drawable :component)
+        attribute-value    (e/lookup drawable :attribute)
         drawable           (:drawable component)]
     (merge event {:entity           entity
                   :attribute-value  attribute-value
@@ -102,39 +103,14 @@
         left (- (.-clientX e) (.-left rect))
         top (- (.-clientY e) (.-top rect))]
      {:source e
-      :state nil
       :ctrl-key (.-ctrlKey e)
       :target (.-target e)
       :type (normalise-event-type (.-type e))
+      :state (or (:state @events/state) (normalise-event-type (.-type e)))
       :left left
       :top  top
       :movement-x 0
       :movement-y 0}))
-
-
-(defn- set-type [prev curr]
-  (if (and (= "dragging" (:state prev)) (= "mousemove" (:type curr))) "mousedrag" (:type curr)))
-
-(defn- set-state [prev curr]
-   (cond
-     (= "mousedown" (:type curr)) "dragging"
-     (= "mouseup"   (:type curr)) "moving"
-     :else (:state prev)))
-
-(defn- get-dragging-context [event]
-  (when (= "dragging" (:state event))
-    @dragging-context))
-
-(defn- update-dragging-context [event]
-  (reset! dragging-context (if (= "dragging" (:state event)) (:drawable event) nil)))
-
-(defn- update-stroke [prev curr]
-  (let [current (or (:stroke prev) "")
-        arr (clojure.string/split current #"\.")
-        trimmed (if (> (count arr) 9) (clojure.string/join "." (take-last 9 arr)) current)]
-     (str trimmed "." (:type curr))))
-
-(defn- detect-pattern [prev curr])
 
 (defn- merge-streams [obj events]
   (apply js/Rx.Observable.merge (mapv (fn [e] (js/Rx.Observable.fromEvent obj e)) events)))
@@ -143,34 +119,53 @@
   (.scan input (fn [acc,e] (merge acc e (func acc e))) {}))
 
 (defn- enriching-stream [input]
-  (.map input (fn [e] (->> (enrich (or (get-dragging-context e) (first (lookup-all (:left e) (:top e)))))
+  (.map input (fn [e] (->> (enrich (or (:drawable @events/state) (first (lookup-all (:left e) (:top e)))))
                            (merge e)))))
-
-(defn- mouse-out? [prev curr]
-  (and (= "mousemove" (:type prev)) (not (nil? (:entity prev))) (nil? (:entity curr))))
 
 (defn- dispatch-events [id events patterns]
   (let [obj (js/document.getElementById id)
         stream (merge-streams obj events)
         normalized (.map stream (fn [e] (normalise-event e obj)))
         delta    (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
-                                                       :movement-y (- (:top e) (or (:top acc) 0))
-                                                       :type  (set-type acc e)
-                                                       :stroke (update-stroke acc e)
-                                                       :state (set-state acc e)}))
+                                                       :movement-y (- (:top e) (or (:top acc) 0))}))
         enriched (enriching-stream delta)
-        last     (delta-stream enriched (fn [acc e]
-                                          (let [mouse-out (mouse-out? acc e)]
-                                           {:type (if mouse-out "mouseout" (:type e))
-                                            :entity (if mouse-out (:entity acc) (:entity e))
-                                            :drawable (if mouse-out (:drawable acc) (:drawable e))
-                                            :component (if mouse-out (:component acc) (:component e))
-                                            :attribute-value (if mouse-out (:attribute-value acc) (:attribute-value e))})))]
-    (.subscribe last    (fn [e]
-                            (when-not (nil? (:entity e))
-                              (update-dragging-context e))
-                            (js/console.log (str "on " (event-name e)))
-                            (b/fire (event-name e) e)))))
+        pattern  (.map enriched (fn [e] (events/test e)))
+        last     (.map pattern  (fn [e] (merge e @events/state {:type (or (:state @events/state) (:type e))})))]
+      (.subscribe last  (fn [e]
+                          (js/console.log (clj->js e))
+                          (js/console.log (str "on " (event-name e)))
+                          (b/fire (event-name e) e)))))
+
+(defn- add-drag-start-pattern []
+  (events/add-pattern :mousedrag
+                      [(fn [e] (= (:type e) "mousedown"))
+                       (fn [e] (= (:type e) "mousemove"))]
+                      (fn [e] {:drawable (:drawable e)})))
+
+(defn- add-drag-end-pattern []
+  (events/add-pattern :mousemove
+                      [(fn [e] (and (= (:state e) "mousedrag") (= (:type e) "mouseup")))]
+                      (fn [e] (events/clear-state))))
+
+(defn- add-mouse-out-pattern []
+  (events/add-pattern :mouseout
+                      [(fn [e]
+                         (when-let [result (and (not= (:state e) "mousedrag")
+                                                (not= (:state e) "mouseout")
+                                                (= (:type e) "mousemove")
+                                                (not (nil? (:drawable e))))]
+                           (events/set-context :mouseout (:drawable e))
+                           result))
+                       (fn [e] (and (not= (:state e) "mousedrag") (= (:type e) "mousemove") (not= (:uid (events/get-context :mouseout)) (->> e :drawable :uid))))]
+                      (fn [e] {:drawable (events/get-context :mouseout)})))
+
+(defn- add-mouse-clear-pattern []
+  (events/add-pattern :mouseclear
+                      [(fn [e]  (= (:state e) "mouseout"))
+                       (fn [e]  (= (:state e) "mouseout"))]
+                      (fn [e] (events/clear-state))))
+
+(defn- add-tripple-click-pattern [])
 
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing canvas with id [ " id " ]."))
@@ -181,6 +176,10 @@
     (.setWidth (:canvas data) width)
     (.setHeight (:canvas data) height)
     (reset! project data)
+    (add-drag-start-pattern)
+    (add-drag-end-pattern)
+    (add-mouse-out-pattern)
+    (add-mouse-clear-pattern)
     (dispatch-events id (clojure.string/split source-events #" ") [])
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]

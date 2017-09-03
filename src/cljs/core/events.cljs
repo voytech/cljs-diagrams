@@ -14,10 +14,22 @@
 
 (defonce state (atom {}))
 
-(defn- clear-context [])
+(defonce phases (atom {}))
 
-(defn- clear-state []
+(defn schedule [function phase]
+  (let [hooks (cons function (or (phase @phases) []))]
+    (swap! phases assoc phase hooks)))
+
+(defn on-phase [phase]
+  (let [hooks (phase @phases)]
+    (swap! phases dissoc phase)
+    (doseq [hook hooks] (hook))))
+
+(defn clear-state []
   (reset! state {}))
+
+(defn clear-state-for-next-event []
+  (schedule clear-state :started))
 
 (defn- matches? [key]
   (let [steps (key @patterns)
@@ -53,6 +65,11 @@
 
 (defn get-context [event-type]
   (get @context event-type))
+
+(defn remove-context [event-type]
+  (let [data (get-context event-type)]
+    (swap! context dissoc event-type)
+    data))
 
 (defn test [event]
   (doseq [key (keys @patterns)]

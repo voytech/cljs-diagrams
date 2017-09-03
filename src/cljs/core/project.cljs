@@ -82,10 +82,10 @@
         component          (e/lookup drawable :component)
         attribute-value    (e/lookup drawable :attribute)
         drawable           (:drawable component)]
-    (merge event {:entity           entity
-                  :attribute-value  attribute-value
-                  :drawable         drawable
-                  :component        component})))
+      {:entity           entity
+       :attribute-value  attribute-value
+       :drawable         drawable
+       :component        component}))
 
 (defn- event-name [decomposed]
    (if (nil? (:entity decomposed))
@@ -125,12 +125,14 @@
 (defn- dispatch-events [id events patterns]
   (let [obj (js/document.getElementById id)
         stream (merge-streams obj events)
-        normalized (.map stream (fn [e] (normalise-event e obj)))
+        onstart    (.map stream (fn [e] (events/on-phase :start) e))
+        normalized (.map onstart (fn [e] (normalise-event e obj)))
         delta    (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
                                                        :movement-y (- (:top e) (or (:top acc) 0))}))
         enriched (enriching-stream delta)
         pattern  (.map enriched (fn [e] (events/test e)))
-        last     (.map pattern  (fn [e] (merge e @events/state {:type (or (:state @events/state) (:type e))})))]
+        last     (.map pattern  (fn [e] (merge e @events/state {:type (or (:state @events/state) (:type e))})))] ; this could be moved to events/tests at the end
+
       (.subscribe last  (fn [e]
                           (js/console.log (clj->js e))
                           (js/console.log (str "on " (event-name e)))
@@ -140,7 +142,7 @@
   (events/add-pattern :mousedrag
                       [(fn [e] (= (:type e) "mousedown"))
                        (fn [e] (= (:type e) "mousemove"))]
-                      (fn [e] {:drawable (:drawable e)})))
+                      (fn [e] (enrich (:drawable e)))))
 
 (defn- add-drag-end-pattern []
   (events/add-pattern :mousemove
@@ -154,16 +156,15 @@
                                                 (not= (:state e) "mouseout")
                                                 (= (:type e) "mousemove")
                                                 (not (nil? (:drawable e))))]
-                           (events/set-context :mouseout (:drawable e))
+                           (when (= true result) (events/set-context :mouseout (:drawable e)))
                            result))
                        (fn [e] (and (not= (:state e) "mousedrag") (= (:type e) "mousemove") (not= (:uid (events/get-context :mouseout)) (->> e :drawable :uid))))]
-                      (fn [e] {:drawable (events/get-context :mouseout)})))
+                      (fn [e]
+                        (events/schedule events/clear-state :start)
+                        (enrich (events/remove-context :mouseout)))))
 
-(defn- add-mouse-clear-pattern []
-  (events/add-pattern :mouseclear
-                      [(fn [e]  (= (:state e) "mouseout"))
-                       (fn [e]  (= (:state e) "mouseout"))]
-                      (fn [e] (events/clear-state))))
+(defn- add-point-click-pattern []
+  (events/add-pattern :mousepointclick [] (fn [e] (events/clear-state))))
 
 (defn- add-tripple-click-pattern [])
 
@@ -179,7 +180,6 @@
     (add-drag-start-pattern)
     (add-drag-end-pattern)
     (add-mouse-out-pattern)
-    (add-mouse-clear-pattern)
     (dispatch-events id (clojure.string/split source-events #" ") [])
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]

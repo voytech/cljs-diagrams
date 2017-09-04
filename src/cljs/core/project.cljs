@@ -158,13 +158,22 @@
                                                 (not (nil? (:drawable e))))]
                            (when (= true result) (events/set-context :mouseout (:drawable e)))
                            result))
-                       (fn [e] (and (not= (:state e) "mousedrag") (= (:type e) "mousemove") (not= (:uid (events/get-context :mouseout)) (->> e :drawable :uid))))]
+                       (fn [e] (and (not= (:state e) "mousedrag")
+                                    (= (:type e) "mousemove")
+                                    (not= (:state e) "mouseout")
+                                    (not= (:uid (events/get-context :mouseout)) (->> e :drawable :uid))))]
                       (fn [e]
                         (events/schedule events/clear-state :start)
                         (enrich (events/remove-context :mouseout)))))
 
+
 (defn- add-point-click-pattern []
-  (events/add-pattern :mousepointclick [] (fn [e] (events/clear-state))))
+  (events/add-pattern :mousepointclick
+                      [(fn [e] (= (:type e) "mousedown"))
+                       (fn [e] (= (:type e) "mouseup"))]
+                      (fn [e]
+                        (events/schedule events/clear-state :start)
+                        {})))     
 
 (defn- add-tripple-click-pattern [])
 
@@ -180,6 +189,7 @@
     (add-drag-start-pattern)
     (add-drag-end-pattern)
     (add-mouse-out-pattern)
+    (add-point-click-pattern)
     (dispatch-events id (clojure.string/split source-events #" ") [])
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]

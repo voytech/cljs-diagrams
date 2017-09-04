@@ -13,20 +13,13 @@
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity with-components]]))
 
-; After implementing EventBus -> implement plugins which will be functions of type pluing-name(obj-group,obj-type) -> void.
-; This plugin will register specific event handling on bus which will allow e.g. implementing behavioural plugins based
-; on originalEvents from DOM or Canvas frameworks. with-vehaviours can be changed then to accept just set of plugins.
+
 (defentity rectangle-node
   (with-content-bounding-box {:left 15
                               :top  15
                               :width  175
                               :height 150})
-  (with-behaviours
-    {:endpoint {"mouse:over" (event-wrap show true)
-                "mouse:out"  (event-wrap show false)}
-     :main     {"object:moving" (moving-entity)
-                "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
-                "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}})
+  (with-behaviours {})
   (with-components data options
     (let [enriched-opts (merge options defaults/DEFAULT_SIZE_OPTS defaults/TRANSPARENT_FILL defaults/DEFAULT_STROKE)
           conL    (vector (:left options) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
@@ -73,33 +66,7 @@
                               :top  15
                               :width  180
                               :height 150})
-  (with-behaviours
-    {:relation   {"mouse:up" (insert-breakpoint)
-                  "object:moving" (all (moving-entity)
-                                       (event-wrap relations-validate))}
-     :startpoint {"object:moving" (all (moving-endpoint)
-                                       (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
-                                                           (fn [src trg] (toggle-endpoints (:entity trg) false))))
-                  "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
-                                                                                                                                               (toggle-endpoints (:entity trg) false)
-                                                                                                                                               (position-startpoint (:entity src) (.-left (:src trg)) (.-top (:src trg)))))
-                                       (event-wrap relations-validate))
-                  "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
-                  "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}
-     :endpoint   {"object:moving" (all (moving-endpoint)
-                                       (intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
-                                                           (fn [src trg] (toggle-endpoints (:entity trg) false))))
-                   "mouse:up"      (all (intersects-any? #{"connector-top" "connector-bottom" "connector-left" "connector-right"} (fn [src trg] (e/connect-entities (:entity src) (:entity trg) :entity-link "end" "end")
-                                                                                                                                                (toggle-endpoints (:entity trg) false)
-                                                                                                                                                (position-endpoint (:entity src) (.-left (:src trg)) (.-top (:src trg)))))
-                                        (event-wrap relations-validate))
-                   "mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
-                   "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)}
-     :breakpoint  {"mouse:over"    (highlight true o/DEFAULT_HIGHLIGHT_OPTIONS)
-                   "mouse:out"     (highlight false o/DEFAULT_HIGHLIGHT_OPTIONS)
-                   "mouse:up"      (dissoc-breakpoint)
-                   "object:moving" (moving-endpoint)}})
-
+  (with-behaviours {})
   (with-components data options
     (let [enriched-opts options
           offset-x (:left options)

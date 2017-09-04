@@ -152,20 +152,17 @@
 (defn- add-mouse-out-pattern []
   (events/add-pattern :mouseout
                       [(fn [e]
-                         (when-let [result (and (not= (:state e) "mousedrag")
-                                                (not= (:state e) "mouseout")
-                                                (= (:type e) "mousemove")
-                                                (not (nil? (:drawable e))))]
-                           (when (= true result) (events/set-context :mouseout (:drawable e)))
-                           result))
-                       (fn [e] (and (not= (:state e) "mousedrag")
-                                    (= (:type e) "mousemove")
-                                    (not= (:state e) "mouseout")
-                                    (not= (:uid (events/get-context :mouseout)) (->> e :drawable :uid))))]
+                         (let [result (and (not= (:state e) "mousedrag")
+                                           (not= (:state e) "mouseout")
+                                           (= (:type e) "mousemove"))
+                               context (events/get-context :mouseout)]
+                           (cond
+                             (and (= true result) (nil? context)) (do (events/set-context :mouseout {:d (:drawable e) :s true}) false)
+                             (and (= true result) (= true (:s context)) (not= (->> context :d :uid) (->> e :drawable :uid))) true
+                             :else false)))]
                       (fn [e]
                         (events/schedule events/clear-state :start)
-                        (enrich (events/remove-context :mouseout)))))
-
+                        (enrich (:d (events/remove-context :mouseout))))))
 
 (defn- add-point-click-pattern []
   (events/add-pattern :mousepointclick
@@ -173,7 +170,7 @@
                        (fn [e] (= (:type e) "mouseup"))]
                       (fn [e]
                         (events/schedule events/clear-state :start)
-                        {})))     
+                        {})))
 
 (defn- add-tripple-click-pattern [])
 

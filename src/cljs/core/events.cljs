@@ -42,7 +42,11 @@
         step (get steps index)
         result (step event)
         count  (count steps)]
-    (swap! indices assoc key (if (and result (< index count)) (inc index) 0))))
+    (cond
+      (= :success result) (swap! indices assoc key count)
+      (and (= true result) (< index count)) (swap! indices assoc key (inc index))
+      :else (swap! indices assoc key 0))))
+      ;(swap! indices assoc key (if (and result (< index count)) (inc index) 0)))))
 
 (defn- after-match [key event]
   (swap! matches conj key)
@@ -70,6 +74,9 @@
   (let [data (get-context event-type)]
     (swap! context dissoc event-type)
     data))
+
+(defn has-context [event-type]
+  (not (nil? (get-context event-type))))    
 
 (defn test [event]
   (doseq [key (keys @patterns)]

@@ -115,6 +115,9 @@
   (swap! drawables dissoc (:uid drawable))
   (bus/fire "drawable.removed" {:drawable drawable}))
 
+(defn is-drawable [uid]
+  (not (nil? (get @drawables uid))))
+
 (defn create-drawable
   ([type]
    (create-drawable type {}))

@@ -69,8 +69,6 @@
       (fabric-apply drawable source redraw)
       (synchronize-bounds drawable)))
 
-;(b/on ["rendering.finish"] -999 (fn [e] (.renderAll (get @r/rendering-context :canvas))))
-
 (defn- fabric-create-rendering-state [context drawable create]
   (let [fabric-object (create)]
      (make-js-property fabric-object "refId" (:uid drawable))

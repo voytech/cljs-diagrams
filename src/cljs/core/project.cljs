@@ -78,14 +78,15 @@
   (get event-map event))
 
 (defn- enrich [drawable]
-  (let [entity             (e/lookup drawable :entity)
-        component          (e/lookup drawable :component)
-        attribute-value    (e/lookup drawable :attribute)
-        drawable           (:drawable component)]
-      {:entity           entity
-       :attribute-value  attribute-value
-       :drawable         drawable
-       :component        component}))
+  (when (d/is-drawable (:uid drawable))
+    (let [entity             (e/lookup drawable :entity)
+          component          (e/lookup drawable :component)
+          attribute-value    (e/lookup drawable :attribute)
+          drawable           (:drawable component)]
+        {:entity           entity
+         :attribute-value  attribute-value
+         :drawable         drawable
+         :component        component})))
 
 (defn- event-name [decomposed]
    (if (nil? (:entity decomposed))
@@ -119,10 +120,11 @@
   (.scan input (fn [acc,e] (merge acc e (func acc e))) {}))
 
 (defn- enriching-stream [input]
-  (.map input (fn [e] (->> (enrich (or (:drawable @events/state) (first (lookup-all (:left e) (:top e)))))
-                           (merge e)))))
+  (.map input (fn [e]
+                 (->> (enrich (or (:drawable @events/state) (first (lookup-all (:left e) (:top e)))))
+                      (merge e)))))
 
-(defn- dispatch-events [id events patterns]
+(defn- dispatch-events [id events]
   (let [obj (js/document.getElementById id)
         stream (merge-streams obj events)
         onstart    (.map stream (fn [e] (events/on-phase :start) e))
@@ -154,11 +156,14 @@
                       [(fn [e]
                          (let [result (and (not= (:state e) "mousedrag")
                                            (not= (:state e) "mouseout")
-                                           (= (:type e) "mousemove"))
-                               context (events/get-context :mouseout)]
+                                           (=    (:type e)  "mousemove"))
+                               context (events/get-context :mouseout)
+                               get-drawable (fn [uid]
+                                              (when (and (not (nil? uid)) (d/is-drawable uid))
+                                                uid))]
                            (cond
                              (and (= true result) (nil? context)) (do (events/set-context :mouseout {:d (:drawable e) :s true}) false)
-                             (and (= true result) (= true (:s context)) (not= (->> context :d :uid) (->> e :drawable :uid))) true
+                             (and (= true result) (= true (:s context)) (not= (get-drawable (->> context :d :uid)) (->> e :drawable :uid))) true
                              :else false)))]
                       (fn [e]
                         (events/schedule events/clear-state :start)
@@ -187,7 +192,7 @@
     (add-drag-end-pattern)
     (add-mouse-out-pattern)
     (add-point-click-pattern)
-    (dispatch-events id (clojure.string/split source-events #" ") [])
+    (dispatch-events id (clojure.string/split source-events #" "))
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
   ;;(let [canvas (:canvas (proj-page-by-id id))]
   ;;  (do (.setWidth canvas @zoom-page-width)

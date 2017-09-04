@@ -39,17 +39,17 @@
    (setp (:drawable component) :visible show)))
 
 
-(defn intersects-any? [names yes]
+(defn intersects-endpoints? [yes]
  (fn [e]
    (let [entity           (:entity e)
          component        (:component e)
          drawable         (:drawable e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [drwlb @d/drawables]
-          (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
+       (doseq [drwlb (vals @d/drawables)]
+          (when (and (not= drwlb drawable) (= :endpoint (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]
-              (when (intersects? drawable drwlb)
+              (when (d/intersects? drawable drwlb)
                 (yes {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})))))))))
 
 (defn intersects? [target-name yes no]
@@ -58,11 +58,11 @@
          component        (:component e)
          drawable         (:drawable e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [drwlb @d/drawables]
-          (when (and (not (== drwlb drawable)) (= :endpoint (:type (e/lookup drwlb :component))))
+       (doseq [drwlb (vals @d/drawables)]
+          (when (= target-name (:name (e/lookup drwlb :component)))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]
-               (if (intersects? drawable drwlb)
+               (if (d/intersects? drawable drwlb)
                  (yes {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})
                  (no  {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})))))))))
 

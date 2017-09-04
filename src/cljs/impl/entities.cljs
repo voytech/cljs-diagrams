@@ -3,9 +3,10 @@
            [core.options :as defaults]
            [impl.standard-attributes :as stdatr]
            [impl.drawables :as d]
+           [core.drawables :as cd]
            [core.project :as p]
            [core.eventbus :as bus]
-           [core.behaviours :as cb :refer [highlight show all event-wrap moving-entity intersects? intersects-any? relations-validate]]
+           [core.behaviours :as cb :refer [highlight show all event-wrap moving-entity intersects? intersects-endpoints? relations-validate]]
            [core.options :as o]
            [impl.behaviours.standard :as eb :refer [insert-breakpoint dissoc-breakpoint moving-endpoint
                                                     toggle-endpoints position-endpoint position-startpoint]]
@@ -131,6 +132,8 @@
          "relation.breakpoint.mousedrag"] -999 (fn [e]
                                                   (let [event (:context @e)]
                                                     ((moving-endpoint) event)
+                                                    ((intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
+                                                                         (fn [src trg] (toggle-endpoints (:entity trg) false))) (:context @e))
                                                     (bus/fire "uncommited.render")
                                                     (bus/fire "rendering.finish"))))
 
@@ -142,14 +145,16 @@
                                                   (bus/fire "rendering.finish")))
 
 (bus/on ["relation.startpoint.mouseup"] -999 (fn [e]
-                                               ((intersects-any? #{"connector-top"
-                                                                   "connector-bottom"
-                                                                   "connector-left"
-                                                                   "connector-right"}
-                                                                  (fn [src trg]
-                                                                   (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
-                                                                   (toggle-endpoints (:entity trg) false)
-                                                                   (position-startpoint (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg))) (:context @e))))))
+                                               ((intersects-endpoints? (fn [src trg]
+                                                                         (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
+                                                                         (toggle-endpoints (:entity trg) false)
+                                                                         (position-startpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))))
+
+(bus/on ["relation.endpoint.mouseup"] -999 (fn [e]
+                                              ((intersects-endpoints? (fn [src trg]
+                                                                        (e/connect-entities (:entity src) (:entity trg) :entity-link "end" "end")
+                                                                        (toggle-endpoints (:entity trg) false)
+                                                                        (position-endpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))))
 
 (bus/on ["relation.startpoint.mouseout"
          "relation.endpoint.mouseout"

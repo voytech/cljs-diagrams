@@ -148,12 +148,12 @@
                                                  (bus/fire "uncommited.render")
                                                  (bus/fire "rendering.finish")))
 
-(bus/on ["relation.relation.mouseclick"] -999 (fn [e]
-                                                  ((insert-breakpoint) (:context @e))
-                                                  (bus/fire "uncommited.render")
-                                                  (bus/fire "rendering.finish")))
+(bus/on ["relation.relation.mousepointclick"] -999 (fn [e]
+                                                    ((insert-breakpoint) (:context @e))
+                                                    (bus/fire "uncommited.render")
+                                                    (bus/fire "rendering.finish")))
 
-(bus/on ["relation.breakpoint.mouseclick"] -999 (fn [e]
-                                                  ((dissoc-breakpoint) (:context @e))
-                                                  (bus/fire "uncommited.render")
-                                                  (bus/fire "rendering.finish")))
+(bus/on ["relation.breakpoint.mousepointclick"] -999 (fn [e]
+                                                      ((dissoc-breakpoint) (:context @e))
+                                                      (bus/fire "uncommited.render")
+                                                      (bus/fire "rendering.finish")))

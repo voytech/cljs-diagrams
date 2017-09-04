@@ -5,6 +5,7 @@
             [core.layouts :as l]))
 
 (declare render)
+(declare all-rendered)
 
 ; Sets default renderers
 (def RENDERER (atom :fabric))
@@ -100,6 +101,10 @@
                                        (doseq [drawable-id (keys uncommited)]
                                           (render (get @d/drawables drawable-id))))))
 
+(bus/on ["rendering.finish"] -999 (fn [event]
+                                    (all-rendered @rendering-context)))
+
+(defmulti all-rendered (fn [context] @RENDERER))
 
 (defmulti do-render (fn [drawable context] [@RENDERER (:type drawable)]))
 

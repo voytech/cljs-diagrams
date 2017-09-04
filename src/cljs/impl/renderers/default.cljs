@@ -47,6 +47,7 @@
                                   :font-weight "fontWeight"
                                   :font-size "fontSize"
                                   :text-align "textAlign"
+                                  :visible "visible"
                                   :color "color"
                                   :border-width "strokeWidth"})
 
@@ -66,11 +67,9 @@
   (let [source  (:data (d/state drawable))
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
       (fabric-apply drawable source redraw)
-      ;(.setCoords source)
-      ;(.renderAll (:canvas rendering-context))
       (synchronize-bounds drawable)))
 
-(b/on ["rendering.finish"] -999 (fn [e] (.renderAll (get @r/rendering-context :canvas))))
+;(b/on ["rendering.finish"] -999 (fn [e] (.renderAll (get @r/rendering-context :canvas))))
 
 (defn- fabric-create-rendering-state [context drawable create]
   (let [fabric-object (create)]
@@ -83,6 +82,9 @@
 (defn- fabric-destroy-rendering-state [context state]
   (let [canvas (:canvas context)]
     (.remove canvas (:data state))))
+
+(defmethod r/all-rendered :fabric [context]
+  (.renderAll (get context :canvas)))
 
 ;;==========================================================================================================
 ;; rect rendering

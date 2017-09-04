@@ -141,6 +141,16 @@
                                                   (bus/fire "uncommited.render")
                                                   (bus/fire "rendering.finish")))
 
+(bus/on ["relation.startpoint.mouseup"] -999 (fn [e]
+                                               ((intersects-any? #{"connector-top"
+                                                                   "connector-bottom"
+                                                                   "connector-left"
+                                                                   "connector-right"}
+                                                                  (fn [src trg]
+                                                                   (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
+                                                                   (toggle-endpoints (:entity trg) false)
+                                                                   (position-startpoint (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg))) (:context @e))))))
+
 (bus/on ["relation.startpoint.mouseout"
          "relation.endpoint.mouseout"
          "relation.breakpoint.mouseout"] -999 (fn [e]

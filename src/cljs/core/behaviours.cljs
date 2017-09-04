@@ -120,6 +120,8 @@
          (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))
    (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
+(defn default-postion-related-entity [entity ref-component-name relation left top coord-mode])
+
 (defn moving-entity []
  (fn [e]
    (let [entity (:entity e)

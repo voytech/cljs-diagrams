@@ -32,11 +32,6 @@
       (when (nil? cntbbox)
         (throw (Error. "Provide attribute content bounding box parameters!")))
      `(do
-        (doseq [component-type# (keys ~behaviours)]
-          (let [event-map# (get ~behaviours component-type#)]
-            (doseq [event-type# (keys event-map#)]
-              (let [handler# (get event-map# event-type#)]
-                (core.entities/register-event-handler :entity (name '~name) component-type# event-type# handler#)))))
         (defn ~name [data# options#]
            (let [e# (core.entities/create-entity (name '~name) {} ~cntbbox)
                  component-factory# ~components]
@@ -68,12 +63,6 @@
                                                  ~components
                                                  nil))]
            (core.entities/add-attribute attr#)
-           (when (not (nil? ~behaviours))
-             (doseq [component-type# (keys ~behaviours)]
-               (let [event-map# (get ~behaviours component-type#)]
-                 (doseq [event-type# (keys event-map#)]
-                   (let [handler# (get event-map# event-type#)]
-                     (core.entities/register-event-handler :attribute (name '~name) component-type# event-type# handler#))))))
            (defn ~name
              ([entity# data#]
               (~name entity# data# nil))
@@ -84,4 +73,4 @@
 
 (defmacro defdrawable [name options-defaults]
   `(defn ~name [options#]
-     (core.drawables/create-drawable (keyword (name '~name)) (merge options# ~options-defaults))))      
+     (core.drawables/create-drawable (keyword (name '~name)) (merge options# ~options-defaults))))

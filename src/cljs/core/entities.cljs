@@ -14,10 +14,6 @@
 
 (defonce attributes (atom {}))
 
-(defonce entity-events (atom {}))
-
-(defonce attribute-events (atom {}))
-
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
@@ -154,16 +150,6 @@
     (when (or (< i (count coll))
             (= v (last coll)))
       i)))
-
-(defmulti register-event-handler (fn [class type component event handler] class))
-
-(defmethod register-event-handler :entity [class type component event handler]
-  (when (nil? (get-in @entity-events [type component event]))
-    (swap! entity-events assoc-in [type component event] handler)))
-
-(defmethod register-event-handler :attribute [class type component event handler]
-  (when (nil? (get-in @attribute-events [type component event]))
-    (swap! attribute-events assoc-in [type component event] handler)))
 
 (defn get-attribute [name]
   (get @attributes name))

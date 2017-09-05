@@ -136,14 +136,14 @@
         last     (.map pattern  (fn [e] (merge e @events/state {:type (or (:state @events/state) (:type e))})))] ; this could be moved to events/tests at the end
 
       (.subscribe last  (fn [e]
-                          (js/console.log (clj->js e))
+                          ;(js/console.log (clj->js e))
                           (js/console.log (str "on " (event-name e)))
                           (b/fire (event-name e) e)))))
 
 (defn- add-drag-start-pattern []
   (events/add-pattern :mousedrag
                       [(fn [e] (= (:type e) "mousedown"))
-                       (fn [e] (js/console.log (:type e)) (= (:type e) "mousemove"))]
+                       (fn [e] (= (:type e) "mousemove"))]
                       (fn [e] (enrich (:drawable e)))))
 
 (defn- add-drag-end-pattern []

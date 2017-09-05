@@ -8,8 +8,6 @@
 
 (defonce indices (atom {}))
 
-(defonce matches (atom []))
-
 (defonce context (atom {}))
 
 (defonce state (atom {}))
@@ -48,7 +46,6 @@
       :else (swap! indices assoc key 0))))
 
 (defn- after-match [key event]
-  (swap! matches conj key)
   (swap! indices assoc key 0)
   (swap! state assoc :state (name key))
   (swap! state merge ((key @funcs) event)))

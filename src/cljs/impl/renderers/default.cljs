@@ -67,6 +67,7 @@
   (let [source  (:data (d/state drawable))
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
       (fabric-apply drawable source redraw)
+      ;(.setCoords source)
       (synchronize-bounds drawable)))
 
 (defn- fabric-create-rendering-state [context drawable create]

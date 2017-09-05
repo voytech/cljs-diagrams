@@ -143,7 +143,7 @@
 (defn- add-drag-start-pattern []
   (events/add-pattern :mousedrag
                       [(fn [e] (= (:type e) "mousedown"))
-                       (fn [e] (= (:type e) "mousemove"))]
+                       (fn [e] (js/console.log (:type e)) (= (:type e) "mousemove"))]
                       (fn [e] (enrich (:drawable e)))))
 
 (defn- add-drag-end-pattern []

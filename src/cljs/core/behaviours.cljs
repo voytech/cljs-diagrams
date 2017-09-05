@@ -1,7 +1,10 @@
 (ns core.behaviours
   (:require [core.entities :as e]
+            [core.layouts :as layouts]
             [core.drawables :as d]
             [core.eventbus :as bus]))
+
+(defonce hooks (atom {}))
 
 (defn- rerender [drawable]
   (bus/fire "drawable.render" {:drawable drawable}))
@@ -120,7 +123,9 @@
          (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))
    (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
-(defn default-postion-related-entity [entity ref-component-name relation left top coord-mode])
+(defn default-position-related-entity [entity related-entity relation left top coord-mode]
+  (when-let [hook (get-in @hooks [(:type entity) (:type related-entity)])]
+    (hook entity related-entity relation left top coord-mode)))
 
 (defn moving-entity []
  (fn [e]
@@ -135,14 +140,13 @@
                               movementY
                               :offset)
      (doseq [relation (:relationships entity)]
-       (let [related-entity (e/entity-by-id (:entity-id relation))
-             ref-component-name (get-refered-component-name relation)]
-          (default-position-entity-component related-entity
-                                             ref-component-name
+       (let [related-entity (e/entity-by-id (:entity-id relation))]
+          (default-position-related-entity   entity
+                                             related-entity
+                                             relation
                                              movementX
                                              movementY
-                                             :offset)))
-    (bus/fire "rendering.finish"))))
+                                             :offset))))))
 
 (defn relations-validate [entity]
  (doseq [relation (:relationships entity)]
@@ -151,3 +155,6 @@
          source-bbox (layouts/get-bbox entity)]
      (when (not (layouts/intersects? source-bbox target-bbox))
        (e/disconnect-entities entity related-entity)))))
+
+(defn set-relation-movement-hook [sent-type rent-type hook]
+  (swap! hooks assoc-in [sent-type rent-type] hook))

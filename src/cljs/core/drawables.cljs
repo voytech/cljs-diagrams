@@ -84,12 +84,12 @@
                     :height (get-height this)})
   (intersects? [this other]
     (let [tbbox (get-bbox this)
-          obbox (get-bbox other)
-          test (fn [tbbox obbox]
-                 (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
-                      (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox))))]
-      (or (test tbbox obbox)
-          (test obbox tbbox))))
+          obbox (get-bbox other)]
+      (or
+       (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
+            (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))
+       (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
+            (<= (:top obbox) (:top tbbox)) (>= (+ (:top obbox) (:height obbox)) (:top tbbox))))))
 
   (contains? [this other])
   (contains-point? [this x y]

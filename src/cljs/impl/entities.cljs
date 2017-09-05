@@ -47,7 +47,9 @@
 
 (bus/on ["rectangle-node.main.mousedrag"] -999 (fn [e]
                                                   (let [event (:context @e)]
-                                                    ((moving-entity) event))))
+                                                    ((moving-entity) event)
+                                                    (bus/fire "uncommited.render")
+                                                    (bus/fire "rendering.finish"))))
 
 (bus/on ["rectangle-node.main.mousemove"] -999 (fn [e]
                                                   (let [event (:context @e)]
@@ -94,6 +96,7 @@
           :drawable  (d/endpoint conE :moveable true :display "circle" :visible true :opacity 0)
           :props {:end "connector"}}])))
 
+
 (bus/on ["relation.startpoint.mousedrag"
          "relation.endpoint.mousedrag"
          "relation.breakpoint.mousedrag"] -999 (fn [e]
@@ -115,13 +118,15 @@
                                                ((intersects-endpoints? (fn [src trg]
                                                                          (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
                                                                          (toggle-endpoints (:entity trg) false)
-                                                                         (position-startpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))))
+                                                                         (position-startpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
+                                               (relations-validate (->> @e :context :entity))))
 
 (bus/on ["relation.endpoint.mouseup"] -999 (fn [e]
                                               ((intersects-endpoints? (fn [src trg]
                                                                         (e/connect-entities (:entity src) (:entity trg) :entity-link "end" "end")
                                                                         (toggle-endpoints (:entity trg) false)
-                                                                        (position-endpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))))
+                                                                        (position-endpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
+                                              (relations-validate (->> @e :context :entity))))
 
 (bus/on ["relation.startpoint.mouseout"
          "relation.endpoint.mouseout"
@@ -139,3 +144,10 @@
                                                       ((dissoc-breakpoint) (:context @e))
                                                       (bus/fire "uncommited.render")
                                                       (bus/fire "rendering.finish")))
+
+(cb/set-relation-movement-hook "rectangle-node" "relation" (fn [source target relation left top coord-mode]
+                                                             (let [adata (:association-data relation)
+                                                                   target-component (e/get-entity-component target adata)]
+                                                               (cond
+                                                                 (= :startpoint (:type target-component)) (position-startpoint target left top :offset)
+                                                                 (= :endpoint   (:type target-component)) (position-endpoint   target left top :offset)))))

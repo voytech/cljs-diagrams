@@ -60,8 +60,8 @@
 
 (defn- synchronize-bounds [drawable]
   (let [source (:data (d/state drawable))]
-    (d/set-width  drawable (.-width  source))
-    (d/set-height drawable (.-height source))))
+    (when (nil? (d/get-width drawable)) (d/set-width  drawable (.-width  source)))
+    (when (nil? (d/get-height drawable)) (d/set-height drawable (.-height source)))))
 
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (d/state drawable))

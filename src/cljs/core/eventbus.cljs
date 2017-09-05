@@ -41,7 +41,7 @@
    :originalEvent nil
    :context   context
    :timestamp (.getTime (js/Date.))
-   :uid       (str (random-uuid))
+   :uid       0;(str (random-uuid))
    :cancelBubble false
    :defaultPrevented false})
 

@@ -6,9 +6,6 @@
 
 (defonce hooks (atom {}))
 
-(defn- rerender [drawable]
-  (bus/fire "drawable.render" {:drawable drawable}))
-
 (defn to-the-center-of [line x y shape]
   (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
                     y (+ (d/get-top shape) (/ (d/get-height shape) 2))}))
@@ -34,12 +31,11 @@
    (d/set-data (:drawable e) {:border-color (if bln (:highlight-color options)
                                                     (:normal-color options))
                               :border-width (if bln (:highlight-width options)
-                                                    (:normal-width options))})
-   (rerender (:drawable e))))
+                                                    (:normal-width options))})))
 
 (defn show [entity component-name show]
  (let [component (e/get-entity-component entity component-name)]
-   (setp (:drawable component) :visible show)))
+   (d/setp (:drawable component) :visible show)))
 
 
 (defn intersects-endpoints? [yes]
@@ -91,8 +87,7 @@
  ([component set-x get-x set-y get-y x y coord-mode]
   (let [epos (effective-position component get-x get-y x y coord-mode)]
     (set-x (:drawable component) (:x epos))
-    (set-y (:drawable component) (:y epos))
-    (rerender (:drawable component))))
+    (set-y (:drawable component) (:y epos))))
  ([comopnent x y coord-mode]
   (apply-effective-position comopnent
                             #(d/setp %1 :left %2)
@@ -106,8 +101,7 @@
 (defn- position-attributes-components [attributes offset-left offset-top]
   (doseq [src (flatten (mapv #(e/components %) attributes))]
     (d/set-data (:drawable src) {:left (+ (d/getp (:drawable src) :left) offset-left)
-                                 :top  (+ (d/getp (:drawable src) :top) offset-top)})
-    (rerender (:drawable src))))
+                                 :top  (+ (d/getp (:drawable src) :top) offset-top)})))
 
 (defn default-position-entity-component [entity component-name left top coord-mode]
   (let [component (e/get-entity-component entity component-name)]

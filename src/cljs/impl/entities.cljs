@@ -55,12 +55,14 @@
                                                   (let [event (:context @e)]
                                                     ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                                                     (toggle-endpoints (:entity event) true)
+                                                    (bus/fire "uncommited.render")
                                                     (bus/fire "rendering.finish"))))
 
 (bus/on ["rectangle-node.main.mouseout"] -999 (fn [e]
                                                   (let [event (:context @e)]
                                                     ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                                                     (toggle-endpoints (:entity event) false)
+                                                    (bus/fire "uncommited.render")
                                                     (bus/fire "rendering.finish"))))
 
 (defentity relation
@@ -119,14 +121,18 @@
                                                                          (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
                                                                          (toggle-endpoints (:entity trg) false)
                                                                          (position-startpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
-                                               (relations-validate (->> @e :context :entity))))
+                                               (relations-validate (->> @e :context :entity))
+                                               (bus/fire "uncommited.render")
+                                               (bus/fire "rendering.finish")))
 
 (bus/on ["relation.endpoint.mouseup"] -999 (fn [e]
                                               ((intersects-endpoints? (fn [src trg]
                                                                         (e/connect-entities (:entity src) (:entity trg) :entity-link "end" "end")
                                                                         (toggle-endpoints (:entity trg) false)
                                                                         (position-endpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
-                                              (relations-validate (->> @e :context :entity))))
+                                              (relations-validate (->> @e :context :entity))
+                                              (bus/fire "uncommited.render")
+                                              (bus/fire "rendering.finish")))
 
 (bus/on ["relation.startpoint.mouseout"
          "relation.endpoint.mouseout"

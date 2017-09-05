@@ -124,8 +124,7 @@
   (doseq [component (e/components entity)]
     (when (= :endpoint (:type component))
       (let [drawable (:drawable component)]
-         (d/set-data drawable {:visible toggle :border-color "#ff0000"})
-         (b/fire "drawable.render" {:drawable drawable})))))
+         (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))
 
 (defn moving-endpoint []
    (fn [e]

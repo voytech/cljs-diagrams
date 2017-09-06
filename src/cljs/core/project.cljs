@@ -127,7 +127,7 @@
 (defn- dispatch-events [id events]
   (let [obj (js/document.getElementById id)
         stream (merge-streams obj events)
-        onstart    (.map stream (fn [e] (js/console.profile "event stream profiling") (events/on-phase :start) e))
+        onstart    (.map stream (fn [e] (events/on-phase :start) e))
         normalized (.map onstart (fn [e] (normalise-event e obj)))
         delta    (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
                                                        :movement-y (- (:top e) (or (:top acc) 0))}))
@@ -136,8 +136,6 @@
         last     (.map pattern  (fn [e] (merge e @events/state {:type (or (:state @events/state) (:type e))})))] ; this could be moved to events/tests at the end
 
       (.subscribe last  (fn [e]
-                          (js/console.profileEnd)
-                          ;(js/console.log (clj->js e))
                           (js/console.log (str "on " (event-name e)))
                           (b/fire (event-name e) e)))))
 

@@ -3,8 +3,6 @@
 
 (declare invoke-hook)
 
-(defonce watchers (atom {}))
-
 (defonce drawables (atom {}))
 
 (defonce hooks (atom {}))
@@ -42,28 +40,25 @@
   (contains? [this other])
   (contains-point? [this x y]))
 
-(defn- register-watcher [drawable property]
-  (when (nil? (get-in @watchers [(:uid drawable) property]))
-    (let [model (:model drawable)]
-      (add-watch model property (fn [key atom old-state new-state]
-                                  (bus/fire DRAWABLE_CHANGED {:property key
-                                                              :old (property old-state)
-                                                              :new (property new-state)
-                                                              :drawable drawable})))
-      (swap! watchers assoc-in [(:uid drawable) property] true))))
+(defn- changed
+  ([drawable properties]
+   (bus/fire DRAWABLE_CHANGED {:properties properties
+                               :drawable drawable})))
 
 (defrecord Drawable [uid type model rendering-state]
   IDrawable
-  (update-state [this state] (reset! rendering-state state))
+  (update-state [this state] (vreset! rendering-state state))
   (state [this] @rendering-state)
   (model [this] @model)
   (setp [this property value]
-    (register-watcher this property)
-    (swap! model assoc property value)
+    (vswap! model assoc property value)
+    (changed this [property])
     (invoke-hook this :setp property value))
   (set-data [this map_]
-    (doseq [key (keys map_)]
-      (setp this key (get map_ key)))
+    (vswap! model merge map_)
+    (changed this (keys map_))
+    ;(doseq [key (keys map_)]
+    ;  (setp this key (key map_)))
     (invoke-hook this :set-data map_))
   (getp [this property] (get @model property))
   (set-border-color [this value] (setp this :border-color value))
@@ -122,7 +117,7 @@
   ([type]
    (create-drawable type {}))
   ([type data]
-   (let [drawable (Drawable. (str (random-uuid)) type (atom {}) (atom {}) nil)]
+   (let [drawable (Drawable. (str (random-uuid)) type (volatile! {}) (volatile! {}) nil)]
      (set-data drawable data)
      (assert-z-index drawable)
      (add-drawable drawable)

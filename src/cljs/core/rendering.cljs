@@ -15,7 +15,7 @@
 ; :auto - should rendering be triggered automatically in drawable model property  changes or only on 'rendering.execute' events ?
 (def OPTIONS (atom {:auto false}))
 
-(defonce rendering-context (atom {}))
+(defonce rendering-context (volatile! {}))
 
 (defn set-rendering [renderer]
   (reset! RENDERER renderer))
@@ -24,13 +24,13 @@
   @RENDERER)
 
 (defn update-context [value-map]
-  (reset! rendering-context (merge value-map @rendering-context)))
+  (vreset! rendering-context (merge value-map @rendering-context)))
 
 (defn clear-context [path]
-  (swap! rendering-context update-in (drop-last path) dissoc (last path)))
+  (vswap! rendering-context update-in (drop-last path) dissoc (last path)))
 
 (defn assoc-context [path value]
-  (swap! rendering-context assoc-in path value))
+  (vswap! rendering-context assoc-in path value))
 
 (defn- render-components [components]
   (doseq [component components]
@@ -62,14 +62,14 @@
 
 (bus/on ["drawable.added"] -999 (fn [event]))
 
-(defn- update-property-to-redraw [drawable property newvalue oldvalue]
-  (let [properties (conj (or (get-in @rendering-context [:redraw-properties (:uid drawable)]) #{}) property)]
-    (swap! rendering-context assoc-in [:redraw-properties (:uid drawable)] properties))) ;{:new newvalue :old oldvalue}))
+(defn- update-property-to-redraw [drawable properties]
+  (let [properties_ (concat (or (get-in @rendering-context [:redraw-properties (:uid drawable)]) #{}) properties)]
+    (vswap! rendering-context assoc-in [:redraw-properties (:uid drawable)] properties_)))
 
 (bus/on ["drawable.changed"] -999 (fn [event]
                                     (let [context (:context @event)
                                           drawable (:drawable context)]
-                                       (update-property-to-redraw drawable (:property context) (:new context) (:old context)))))
+                                       (update-property-to-redraw drawable (:properties context)))))
 
 (bus/on ["drawable.render" "drawable.layout.finished"] -999 (fn [event]
                                                               (let [context (:context @event)
@@ -115,12 +115,6 @@
 (defmulti destroy-rendering-state (fn [drawable context] [@RENDERER (:type drawable)]))
 
 (defmethod destroy-rendering-state :default [rendering-state context])
-
-(defn- rewrite-redraw-properties [drawable]
-  (when (not (nil? (:redraw-properties @rendering-context)))
-    (let [redraw   (get-in @rendering-context [:redraw-properties (:uid drawable)])
-          update-map (apply merge (mapv (fn [e] {e (:new (get redraw e))}) (keys redraw)))]
-      (assoc-context [:redraw-properties (:uid drawable)] update-map))))
 
 (defn render [drawable]
   (when (not (nil? drawable))

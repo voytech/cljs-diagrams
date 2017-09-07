@@ -24,7 +24,7 @@
    (fn [e]
      (let [entity (:entity e)
            drawable-name (:drawabe e)]
-       (apply f (cons entity (cons drawable-name (vec args))))))))
+       (apply f entity drawable-name args)))))
 
 (defn highlight [bln options]
  (fn [e]

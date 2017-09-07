@@ -6,12 +6,12 @@
 
 (defonce bus (atom {}))
 
-(defonce event-store (atom []))
+(defonce event-store (volatile! []))
 
 (defn add-event [event]
   (when (> (count @event-store) EVENT_STORE_CAPACITY)
-    (swap! event-store subvec 1))
-  (swap! event-store conj event))
+    (vswap! event-store subvec 1))
+  (vswap! event-store conj event))
 
 (defn prev-event []
   (last @event-store))
@@ -20,7 +20,7 @@
   ([event-names priority callback]
    (doseq [name event-names]
      (let [listeners (or (get @bus name) [])]
-       (swap! bus assoc name (->> (cons {:priority priority :callback callback} listeners)
+       (swap! bus assoc name (->> (conj listeners {:priority priority :callback callback})
                                   (sort-by :priority))))))
 
   ([event-names callback]
@@ -41,7 +41,7 @@
    :originalEvent nil
    :context   context
    :timestamp (.getTime (js/Date.))
-   :uid       0;(str (random-uuid))
+   :uid       0;(str (random-uuid)) ; this is very expensive operation for such latency
    :cancelBubble false
    :defaultPrevented false})
 

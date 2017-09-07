@@ -15,7 +15,7 @@
 (defonce phases (volatile! {}))
 
 (defn schedule [function phase]
-  (let [hooks (cons function (or (phase @phases) []))]
+  (let [hooks (conj (or (phase @phases) []) function)]
     (vswap! phases assoc phase hooks)))
 
 (defn on-phase [phase]

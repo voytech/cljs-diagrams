@@ -91,7 +91,7 @@
    Those properties models functions of specific component. Under Component we have only one Drawable wich holds properties for renderer."
   ([type components content-bbox]
    (let [uid (str (random-uuid))
-         _components (apply merge (cons {} (mapv (fn [e] {(:name e) (Component. (:name e) (:type e) (:drawable e) (:props e))}) components)))
+         _components (apply merge (mapv (fn [e] {(:name e) (Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
          entity (Entity. uid type _components [] [] content-bbox)]
      (define-lookups-on-components entity)
      (swap! entities assoc uid entity)

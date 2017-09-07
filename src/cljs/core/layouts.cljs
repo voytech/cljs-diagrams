@@ -26,11 +26,11 @@
 (defn get-bbox [partials-container]
   (when (> (count (get-components partials-container)) 0)
     (let [values (get-components partials-container)
-          sources (mapv :drawable values)
-          leftmost   (apply min-key (cons #(d/get-left %) sources))
-          rightmost  (apply max-key (cons #(+ (d/get-left %) (d/get-width %)) sources))
-          topmost    (apply min-key (cons #(d/get-top %) sources))
-          bottommost (apply max-key (cons #(+ (d/get-top %) (d/get-height %)) sources))]
+          sources (map :drawable values)
+          leftmost   (apply min-key (conj sources #(d/get-left %)))
+          rightmost  (apply max-key (conj sources #(+ (d/get-left %) (d/get-width %))))
+          topmost    (apply min-key (conj sources #(d/get-top %)))
+          bottommost (apply max-key (conj sources #(+ (d/get-top %) (d/get-height %))))]
       {:left (d/get-left leftmost)
        :top  (d/get-top topmost)
        :width (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))

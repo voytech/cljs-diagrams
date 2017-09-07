@@ -193,18 +193,10 @@
     (add-point-click-pattern)
     (dispatch-events id (clojure.string/split source-events #" "))
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
-  ;;(let [canvas (:canvas (proj-page-by-id id))]
-  ;;  (do (.setWidth canvas @zoom-page-width)
-  ;;      (.setHeight canvas @zoom-page-height)
-  ;;  (.setZoom canvas @zoom))
 
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------
-
-;TODO how should we handle dragNdrop events originating from particulaar tool? If not all tools produces entities - some can have different behaviour in canvas context
-; For example : attribute value producing tool will bind attrib value to entity. It in fact can just return entity to which attribute value was added
-; then this entity is going to be synchronized - all changes made are going to be propageted to canvas.
 
 (defmethod dnd/dispatch-drop-event "tool-data" [event]
   (let [tool-id (dnd/get-dnd-data event "tool-data")

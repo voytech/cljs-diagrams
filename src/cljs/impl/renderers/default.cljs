@@ -52,7 +52,7 @@
                                   :border-width "strokeWidth"})
 
 (defn- to-fabric-property-map [input-map]
-  (apply merge (cons LOCKED (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (e input-map)}) (keys input-map)))))
+  (apply merge (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (e input-map)}) (keys input-map))))
 
 (defn- fabric-apply [drawable source properties]
   (doseq [p properties]

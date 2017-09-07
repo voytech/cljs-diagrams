@@ -16,29 +16,7 @@
 
 (defonce project (atom {}))
 
-(defonce bucket-size 50)
-
 (defonce lookup-cache (atom nil))
-
-(defonce dragging-context (atom nil))
-
-(defonce drawable-buckets (atom {}))
-
-(defn- update-buckets [drawable]
-  (doseq [key (get @drawable-buckets (:uid drawable))]
-    (swap! drawable-buckets dissoc key))
-  (swap! drawable-buckets dissoc (:uid drawable))
-  (let [x-s (js/Math.floor (/ (:left drawable) bucket-size))
-        y-s (js/Math.floor (/ (:top drawable) bucket-size))
-        x-e (+ bucket-size (js/Math.floor (/ (+ (:left drawable) (:width drawable)) bucket-size)))
-        y-e (+ bucket-size (js/Math.floor (/ (+ (:top drawable) (:height drawable)) bucket-size)))]
-    (doseq [x (range x-s x-e)
-            y (range y-s y-e)]
-      (let [coord-key (str x "." y)
-            drawables (or (get @drawable-buckets coord-key) [])
-            keys      (or (get @drawable-buckets (:uid drawable)) [])]
-        (swap! drawable-buckets assoc coord-key (cons (:uid drawable) drawables))
-        (swap! drawable-buckets assoc (:uid drawable) (cons coord-key keys))))))
 
 (defn- lookup [x y]
   (if (and (not (nil? @lookup-cache)) (d/contains-point? @lookup-cache x y))
@@ -53,15 +31,6 @@
        vals
        (filter #(d/contains-point? % x y))
        (sort-by #(d/getp % :z-index) >)))
-
-
-(defn- lookup-drawable [x y]
-  (let [x-s (js/Math.floor (/ x bucket-size))
-        y-s (js/Math.floor (/ y bucket-size))]
-    (doseq [drawable (get @drawable-buckets (str x-s "." y-s))]
-      (when (and (>= x (d/get-left drawable)) (<= x (+ (d/get-left drawable) (d/get-width drawable)))
-                 (>= y (d/get-top drawable)) (<= y (+ (d/get-top drawable) (d/get-height drawable))))
-          drawable))))
 
 (defonce event-map {"object:moving" "mousedrag"
                     "mousedown" "mousedown"
@@ -89,15 +58,14 @@
          :component        component})))
 
 (defn- event-name [decomposed]
-   (if (nil? (:entity decomposed))
-     (:type decomposed)
-     (let [entity-type    (str (name (-> decomposed :entity :type)) ".")
-           attribute-type (if (not (nil? (:attribute-value decomposed)))
-                              (str (name (-> decomposed :attribute-value :attribute :name)) ".")
-                              "")
-           component-type (str (name (-> decomposed :component :type)) ".")]
-        (str entity-type attribute-type component-type (:type decomposed)))))
-
+  (if (nil? (:entity decomposed))
+    (:type decomposed)
+    (let [entity-type     (as-> decomposed $ (:entity $) (:type $) (str $ "."))
+          attribute-type  (if (not (nil? (:attribute-value decomposed)))
+                            (as-> decomposed $ (:attribute-value $) (:attribute $) (:name $) (str $ "."))
+                            "")
+          component-type  (as-> decomposed $ (:component $) (:type $) (name $) (str $ "."))]
+       (str entity-type attribute-type component-type (:type decomposed)))))
 
 (defn normalise-event [e obj]
   (let [rect (.getBoundingClientRect obj)

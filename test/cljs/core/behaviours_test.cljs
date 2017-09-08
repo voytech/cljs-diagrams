@@ -12,20 +12,41 @@
 
 (use-fixtures :each behaviours-cleanup)
 
-(defn generic-validator [_definitions]
-  (fn [components]
-    (let [types (set (map :type components))]
-      (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions))))))
-
 (deftest test-create-behaviour []
-  (let [validator (generic-validator [{:tmpl #{:main :endpoint}
-                                       :func (fn [requires types] (= requires types))
-                                       :result [:main]}
-                                      {:tmpl #{:startpoint :endpoint}
-                                       :func (fn [requires types] (= requires types))
-                                       :result [:startpoint :endpoint]}])
-
+  (let [validator (fn [components])
         handler (fn [e])]
       (b/add-behaviour "moving" "Default Entity Moving" :moving validator "mousedrag" handler)
       (let [behaviour (get @b/behaviours "moving")]
-        (is (not (nil? behaviour))))))
+        (is (not (nil? behaviour)))
+        (is (= validator (:validator behaviour)))
+        (is (= handler (:handler behaviour)))
+        (is (= "mousedrag" (:action behaviour)))
+        (is (= :moving (:type behaviour)))
+        (is (= "moving" (:name behaviour)))
+        (is (= "Default Entity Moving" (:display-name behaviour))))))
+
+(deftest test-generic-validator []
+  (let [validator (b/generic-validator [{:tmpl #{:main :endpoint}
+                                         :func (fn [requires types] (= requires types))
+                                         :result [:main]}
+                                        {:tmpl #{:startpoint :endpoint :relation}
+                                         :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                         :result [:startpoint :endpoint]}])
+        relation-components [{:name "start" :type :startpoint}
+                             {:name "end" :type :endpoint}
+                             {:name "connector" :type :relation}]
+        not-a-relation      [{:name "start" :type :startpoint}
+                             {:name "end" :type :endpoint}]
+        rectangle  [{:name "body" :type :main}
+                    {:name "left-top" :type :endpoint}]
+        rectangle2  [{:name "body" :type :main}
+                     {:name "left-top" :type :endpoint}
+                     {:name "left-bottom" :type :endpoint}]
+        not-a-rect [{:name "body" :type :main}]]
+      (is (not (nil? validator)))
+      (is (= [:startpoint :endpoint] (validator relation-components)))
+      (is (not= [:startpoint :endpoint] (validator not-a-relation)))
+      (is (nil? (validator not-a-relation)))
+      (is (= [:main] (validator rectangle)))
+      (is (= [:main] (validator rectangle2)))
+      (is (nil? (validator not-a-rect)))))

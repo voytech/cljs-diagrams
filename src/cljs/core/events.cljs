@@ -77,3 +77,10 @@
   (doseq [key (keys @patterns)]
      (update-test key event))
   event)
+
+(defn event-name [entity-type attribute-name component-type event-type]
+  (clojure.string/join "." (cond-> []
+                             (not (nil? entity-type)) (conj entity-type)
+                             (not (nil? attribute-name)) (conj attribute-name)
+                             (not (nil? component-type)) (conj component-type)
+                             (not (nil? event-type)) (conj event-type))))

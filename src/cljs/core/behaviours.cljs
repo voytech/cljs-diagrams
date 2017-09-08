@@ -1,8 +1,53 @@
 (ns core.behaviours
   (:require [core.entities :as e]
+            [core.events :as ev]
             [core.layouts :as layouts]
             [core.drawables :as d]
             [core.eventbus :as bus]))
+
+(defonce behaviours (volatile! {}))
+
+(defrecord Behaviour [name
+                      display-name
+                      type
+                      validator
+                      action
+                      handler])
+;Validator needs to return targets (keyword of component types for which behaviour can be registered)
+
+(defn add-behaviour [name display-name type validator action handler]
+  (vswap! behaviours assoc name (Behaviour. name display-name type validator action handler)))
+
+(defn- validate-component-input [behaviour input]
+  ((:validator behaviour) input))
+
+(defn- validate-component-instance [behaviour instance]
+  ((:validator behaviour) instance))
+
+(defn validate [behaviour components]
+  (let [component (peek components)
+        behaviour_ (cond
+                    (string? behaviour) (behaviour @behaviours)
+                    (record? behaviour) ((:name behaviour) @behaviours))]
+    (cond
+      (record? component) (validate-component-instance behaviour_ components)
+      (map? component) (validate-component-input behaviour_ components))))
+
+(defn enable [entity component-type behaviour])
+
+(defn disable [entity component-type behaviour])
+
+(defn autowire
+  ([entity-type components-inputs]
+   (doseq [behaviour (val behaviours)]
+      (when-let [targets (validate behaviour components-inputs)]
+         (let [inputs  (into {} (map (fn [e] {(:type e) e}) components-inputs))
+               valid-inputs (vals (select-keys inputs targets))]
+            (bus/on (mapv #(ev/event-name entity-type nil (:type %) (:action behaviour)) valid-inputs) (:handler behaviour))))))
+  ([entity]
+   (let [components (:components entity)
+         type (:type entity)]
+      (autowire type components))))
 
 (defonce hooks (atom {}))
 

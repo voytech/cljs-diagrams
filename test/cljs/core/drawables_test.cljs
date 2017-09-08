@@ -19,9 +19,8 @@
     (is (not (nil? drawable)))
     (is (= :circle (:type drawable)))
     (is (not (nil? (:uid drawable))))
-    (is (nil? (:parent drawable)))
     (is (= {} @(:rendering-state drawable)))
-    (is (= {} @(:model drawable)))))
+    (is (= {:z-index 1} @(:model drawable)))))
 
 (deftest test-create-drawable-with-model []
   (let [drawable (drawables/create-drawable :circle {:radius 20 :left 100 :top 100})]
@@ -35,11 +34,12 @@
     (is (= 100 (:top @(:model drawable))))))
 
 (deftest test-property-change-event []
-  (let [values (atom {})]
+  (let [values (atom [])]
     (bus/on ["drawable.changed"]
       (fn [event]
-        (let [context (:context @event)]
-           (swap! values assoc (:property context) (:new context))
+        (let [context (:context @event)
+              drawable (:drawable context)]
+           (swap! values concat (:properties context))
            nil)))
     (let [drawable (drawables/create-drawable :circle {:radius 20 :left 100 :top 100})]
       (is (not (nil? drawable)))
@@ -50,4 +50,4 @@
       (is (= 20 (:radius @(:model drawable))))
       (is (= 100 (:left @(:model drawable))))
       (is (= 100 (:top @(:model drawable)))))
-    (is (= {:radius 20 :left 100 :top 100} @values))))
+    (is (= [:radius :left :top :z-index] @values))))

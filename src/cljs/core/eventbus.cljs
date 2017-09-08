@@ -16,6 +16,9 @@
 (defn prev-event []
   (last @event-store))
 
+(defn is-listener [name]
+  (not (nil? (get @bus name))))
+  
 (defn on
   ([event-names priority callback]
    (doseq [name event-names]
@@ -46,12 +49,12 @@
    :defaultPrevented false})
 
 (defn prevent-default [event]
-  (swap! event assoc :defaultPrevented true)
+  (vswap! event assoc :defaultPrevented true)
   (when-not (nil? (:originalEvent @event))
     (.preventDefault (:originalEvent @event))))
 
 (defn stop-propagation [event]
-  (swap! event assoc :cancelBubble true)
+  (vswap! event assoc :cancelBubble true)
   (when-not (nil? (:originalEvent @event))
     (.stopPropagation (:originalEvent @event))))
 
@@ -67,7 +70,7 @@
 
 (defn fire
   ([name context]
-   (let [event (atom (make-event name context))
+   (let [event (volatile! (make-event name context))
          listeners (get @bus name)]
      (add-event @event)
      (when-not (nil? listeners)

@@ -25,6 +25,7 @@
   (let [transformed (transform-body body)]
     (let [cntbbox    (last (:with-content-bounding-box transformed))
           components (:with-components transformed)
+          unwrapped-components (last (:with-components transformed))
           behaviours (last (:with-behaviours transformed))
           attributes (last (:with-attributes transformed))]
       (when (nil? components)
@@ -32,6 +33,7 @@
       (when (nil? cntbbox)
         (throw (Error. "Provide attribute content bounding box parameters!")))
      `(do
+        (core.behaviours/autowire (name '~name) ~unwrapped-components)
         (defn ~name [data# options#]
            (let [e# (core.entities/create-entity (name '~name) {} ~cntbbox)
                  component-factory# ~components]
@@ -74,3 +76,6 @@
 (defmacro defdrawable [name options-defaults]
   `(defn ~name [options#]
      (core.drawables/create-drawable (keyword (name '~name)) (merge options# ~options-defaults))))
+
+(defmacro defbehaviour [name display-name type validator action handler]
+  `(core.behaviours/add-behaviour (name '~name) ~display-name ~type ~validator ~action ~handler))

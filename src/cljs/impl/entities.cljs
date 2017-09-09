@@ -10,6 +10,7 @@
            [core.options :as o]
            [impl.behaviours.standard :as eb :refer [insert-breakpoint dissoc-breakpoint moving-endpoint
                                                     toggle-endpoints position-endpoint position-startpoint]]
+           [impl.behaviours.definitions :as bd]                                          
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity with-components]]))
 
@@ -45,25 +46,25 @@
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
 
-(bus/on ["rectangle-node.main.mousedrag"] -999 (fn [e]
-                                                  (let [event (:context @e)]
-                                                    ((moving-entity) event)
-                                                    (bus/fire "uncommited.render")
-                                                    (bus/fire "rendering.finish"))))
-
-(bus/on ["rectangle-node.main.mousemove"] -999 (fn [e]
-                                                  (let [event (:context @e)]
-                                                    ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
-                                                    (toggle-endpoints (:entity event) true)
-                                                    (bus/fire "uncommited.render")
-                                                    (bus/fire "rendering.finish"))))
-
-(bus/on ["rectangle-node.main.mouseout"] -999 (fn [e]
-                                                  (let [event (:context @e)]
-                                                    ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
-                                                    (toggle-endpoints (:entity event) false)
-                                                    (bus/fire "uncommited.render")
-                                                    (bus/fire "rendering.finish"))))
+; (bus/on ["rectangle-node.main.mousedrag"] -999 (fn [e]
+;                                                   (let [event (:context @e)]
+;                                                     ((moving-entity) event)
+;                                                     (bus/fire "uncommited.render")
+;                                                     (bus/fire "rendering.finish"))))
+;
+; (bus/on ["rectangle-node.main.mousemove"] -999 (fn [e]
+;                                                   (let [event (:context @e)]
+;                                                     ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+;                                                     (toggle-endpoints (:entity event) true)
+;                                                     (bus/fire "uncommited.render")
+;                                                     (bus/fire "rendering.finish"))))
+;
+; (bus/on ["rectangle-node.main.mouseout"] -999 (fn [e]
+;                                                   (let [event (:context @e)]
+;                                                     ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+;                                                     (toggle-endpoints (:entity event) false)
+;                                                     (bus/fire "uncommited.render")
+;                                                     (bus/fire "rendering.finish"))))
 
 (defentity relation
   (with-content-bounding-box {:left 15
@@ -98,58 +99,58 @@
           :drawable  (d/endpoint conE :moveable true :display "circle" :visible true :opacity 0)
           :props {:end "connector"}}])))
 
-
-(bus/on ["relation.startpoint.mousedrag"
-         "relation.endpoint.mousedrag"
-         "relation.breakpoint.mousedrag"] -999 (fn [e]
-                                                  (let [event (:context @e)]
-                                                    ((moving-endpoint) event)
-                                                    ((intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
-                                                                         (fn [src trg] (toggle-endpoints (:entity trg) false))) (:context @e))
-                                                    (bus/fire "uncommited.render")
-                                                    (bus/fire "rendering.finish"))))
-
-(bus/on ["relation.startpoint.mousemove"
-         "relation.endpoint.mousemove"
-         "relation.breakpoint.mousemove"] -999 (fn [e]
-                                                  ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) (:context @e))
-                                                  (bus/fire "uncommited.render")
-                                                  (bus/fire "rendering.finish")))
-
-(bus/on ["relation.startpoint.mouseup"] -999 (fn [e]
-                                               ((intersects-endpoints? (fn [src trg]
-                                                                         (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
-                                                                         (toggle-endpoints (:entity trg) false)
-                                                                         (position-startpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
-                                               (relations-validate (->> @e :context :entity))
-                                               (bus/fire "uncommited.render")
-                                               (bus/fire "rendering.finish")))
-
-(bus/on ["relation.endpoint.mouseup"] -999 (fn [e]
-                                              ((intersects-endpoints? (fn [src trg]
-                                                                        (e/connect-entities (:entity src) (:entity trg) :entity-link "end" "end")
-                                                                        (toggle-endpoints (:entity trg) false)
-                                                                        (position-endpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
-                                              (relations-validate (->> @e :context :entity))
-                                              (bus/fire "uncommited.render")
-                                              (bus/fire "rendering.finish")))
-
-(bus/on ["relation.startpoint.mouseout"
-         "relation.endpoint.mouseout"
-         "relation.breakpoint.mouseout"] -999 (fn [e]
-                                                 ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) (:context @e))
-                                                 (bus/fire "uncommited.render")
-                                                 (bus/fire "rendering.finish")))
-
-(bus/on ["relation.relation.mousepointclick"] -999 (fn [e]
-                                                    ((insert-breakpoint) (:context @e))
-                                                    (bus/fire "uncommited.render")
-                                                    (bus/fire "rendering.finish")))
-
-(bus/on ["relation.breakpoint.mousepointclick"] -999 (fn [e]
-                                                      ((dissoc-breakpoint) (:context @e))
-                                                      (bus/fire "uncommited.render")
-                                                      (bus/fire "rendering.finish")))
+;
+; (bus/on ["relation.startpoint.mousedrag"
+;          "relation.endpoint.mousedrag"
+;          "relation.breakpoint.mousedrag"] -999 (fn [e]
+;                                                   (let [event (:context @e)]
+;                                                     ((moving-endpoint) event)
+;                                                     ((intersects? "body" (fn [src trg] (toggle-endpoints (:entity trg) true))
+;                                                                          (fn [src trg] (toggle-endpoints (:entity trg) false))) (:context @e))
+;                                                     (bus/fire "uncommited.render")
+;                                                     (bus/fire "rendering.finish"))))
+;
+; (bus/on ["relation.startpoint.mousemove"
+;          "relation.endpoint.mousemove"
+;          "relation.breakpoint.mousemove"] -999 (fn [e]
+;                                                   ((highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) (:context @e))
+;                                                   (bus/fire "uncommited.render")
+;                                                   (bus/fire "rendering.finish")))
+;
+; (bus/on ["relation.startpoint.mouseup"] -999 (fn [e]
+;                                                ((intersects-endpoints? (fn [src trg]
+;                                                                          (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
+;                                                                          (toggle-endpoints (:entity trg) false)
+;                                                                          (position-startpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
+;                                                (relations-validate (->> @e :context :entity))
+;                                                (bus/fire "uncommited.render")
+;                                                (bus/fire "rendering.finish")))
+;
+; (bus/on ["relation.endpoint.mouseup"] -999 (fn [e]
+;                                               ((intersects-endpoints? (fn [src trg]
+;                                                                         (e/connect-entities (:entity src) (:entity trg) :entity-link "end" "end")
+;                                                                         (toggle-endpoints (:entity trg) false)
+;                                                                         (position-endpoint (:entity src) (cd/get-left (:drawable trg)) (cd/get-top (:drawable trg))))) (:context @e))
+;                                               (relations-validate (->> @e :context :entity))
+;                                               (bus/fire "uncommited.render")
+;                                               (bus/fire "rendering.finish")))
+;
+; (bus/on ["relation.startpoint.mouseout"
+;          "relation.endpoint.mouseout"
+;          "relation.breakpoint.mouseout"] -999 (fn [e]
+;                                                  ((highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) (:context @e))
+;                                                  (bus/fire "uncommited.render")
+;                                                  (bus/fire "rendering.finish")))
+;
+; (bus/on ["relation.relation.mousepointclick"] -999 (fn [e]
+;                                                     ((insert-breakpoint) (:context @e))
+;                                                     (bus/fire "uncommited.render")
+;                                                     (bus/fire "rendering.finish")))
+;
+; (bus/on ["relation.breakpoint.mousepointclick"] -999 (fn [e]
+;                                                       ((dissoc-breakpoint) (:context @e))
+;                                                       (bus/fire "uncommited.render")
+;                                                       (bus/fire "rendering.finish")))
 
 (cb/set-relation-movement-hook "rectangle-node" "relation" (fn [source target relation left top coord-mode]
                                                              (let [adata (:association-data relation)

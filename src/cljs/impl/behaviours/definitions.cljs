@@ -2,6 +2,8 @@
   (:require [core.behaviours :as b]
             [core.eventbus :as bus]
             [core.options :as o]
+            [core.entities :as e]
+            [core.drawables :as d]
             [impl.behaviours.standard :as ib])
   (:require-macros [core.macros :refer [defbehaviour]]))
 
@@ -30,6 +32,22 @@
                                          (fn [src trg] (ib/toggle-endpoints (:entity trg) false))) (:context @e))
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+
+(defbehaviour make-relation
+              "Connect Two Entities" :make-relation
+              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                     :result [:startpoint :endpoint]}])
+              "mouseup"
+              (fn [e]
+                (let [event (:context @e)]
+                  ((b/intersects-endpoints? (fn [src trg]
+                                              (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
+                                              (ib/toggle-endpoints (:entity trg) false)
+                                              (ib/position-startpoint (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg))))) (:context @e))
+                  (b/relations-validate (->> @e :context :entity))
+                  (bus/fire "uncommited.render")
+                  (bus/fire "rendering.finish"))))
 
 (defbehaviour hovering-entity
               "Default Entity Hovering" :hovering

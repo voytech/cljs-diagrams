@@ -51,7 +51,6 @@
 
 (defbehaviour hovering-entity
               "Default Entity Hovering" :hovering
-              ;{:after [:moving]}
               (b/generic-validator [{:tmpl #{:main :endpoint}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}
@@ -67,7 +66,6 @@
 
 (defbehaviour leaving-entity
               "Default Entity Leave" :leaving
-              ;{:after [:moving]}
               (b/generic-validator [{:tmpl #{:main :endpoint}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}
@@ -83,7 +81,6 @@
 
 (defbehaviour show-entity-controls
               "Default Show Controls" :controls-show
-              ;{:after [:hovering]}
               (b/generic-validator [{:tmpl #{:main :endpoint}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}])
@@ -96,11 +93,10 @@
 
 (defbehaviour hide-entity-controls
               "Default Hide Controls" :controls-hide
-              ;{:after [:leaving]}
               (b/generic-validator [{:tmpl #{:main :endpoint}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}])
-              "mousemove"
+              "mouseout"
               (fn [e]
                 (let [event (:context @e)]
                   (ib/toggle-endpoints (:entity event) false)

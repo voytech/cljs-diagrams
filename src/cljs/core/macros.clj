@@ -25,7 +25,6 @@
   (let [transformed (transform-body body)]
     (let [cntbbox    (last (:with-content-bounding-box transformed))
           components (:with-components transformed)
-          unwrapped-components (last (:with-components transformed))
           behaviours (last (:with-behaviours transformed))
           attributes (last (:with-attributes transformed))]
       (when (nil? components)
@@ -33,13 +32,13 @@
       (when (nil? cntbbox)
         (throw (Error. "Provide attribute content bounding box parameters!")))
      `(do
-        (core.behaviours/autowire (name '~name) ~unwrapped-components)
         (defn ~name [data# options#]
            (let [e# (core.entities/create-entity (name '~name) {} ~cntbbox)
                  component-factory# ~components]
              (apply core.entities/add-entity-component e# (component-factory# data# options#))
              (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
+               (core.behaviours/autowire (name '~name) (vals (:components result#)))
                (core.eventbus/fire "entity.render" {:entity result#})
                result#)))))))
 

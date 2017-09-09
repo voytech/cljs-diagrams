@@ -50,3 +50,27 @@
       (is (= [:main] (validator rectangle)))
       (is (= [:main] (validator rectangle2)))
       (is (nil? (validator not-a-rect)))))
+
+(deftest test-autowire []
+  (let [handler-result (volatile! {})
+        validator (b/generic-validator [{:tmpl #{:main :endpoint}
+                                         :func (fn [requires types] (= requires types))
+                                         :result [:main]}
+                                        {:tmpl #{:startpoint :endpoint :relation}
+                                         :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                         :result [:startpoint :endpoint]}])
+        relation-components [{:name "start" :type :startpoint}
+                             {:name "end" :type :endpoint}
+                             {:name "connector" :type :relation}]
+        rectangle  [{:name "body" :type :main}
+                    {:name "left-top" :type :endpoint}
+                    {:name "left-bottom" :type :endpoint}]
+        handler (fn [e] (vreset! handler-result @e))]
+
+      (b/add-behaviour "moving" "Default Entity Moving" :moving validator "mousedrag" handler)
+      (is (= false (bus/is-listener "relation.startpoint.mousedrag")))
+      (b/autowire "relation" relation-components)
+      (is (= true (bus/is-listener "relation.startpoint.mousedrag")))
+      (is (= true (bus/is-listener "relation.endpoint.mousedrag")))
+      (bus/fire "relation.startpoint.mousedrag" "fired!")
+      (is (= "fired!" (:context @handler-result)))))

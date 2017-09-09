@@ -80,7 +80,7 @@
 
 (defn event-name [entity-type attribute-name component-type event-type]
   (clojure.string/join "." (cond-> []
-                             (not (nil? entity-type)) (conj entity-type)
-                             (not (nil? attribute-name)) (conj attribute-name)
-                             (not (nil? component-type)) (conj component-type)
-                             (not (nil? event-type)) (conj event-type))))
+                             (not (nil? entity-type)) (conj (name entity-type))
+                             (not (nil? attribute-name)) (conj (name attribute-name))
+                             (not (nil? component-type)) (conj (name component-type))
+                             (not (nil? event-type)) (conj (name event-type)))))

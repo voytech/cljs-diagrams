@@ -27,24 +27,21 @@
   ((:validator behaviour) instance))
 
 (defn validate [behaviour components]
-  (let [component (peek components)
-        behaviour_ (cond
-                    (string? behaviour) (behaviour @behaviours)
-                    (record? behaviour) ((:name behaviour) @behaviours))]
-    (cond
-      (record? component) (validate-component-instance behaviour_ components)
-      (map? component) (validate-component-input behaviour_ components))))
+  (let [behaviour_ (cond
+                    (string? behaviour) (get @behaviours behaviour)
+                    (record? behaviour) (get @behaviours (:name behaviour)))]
+    ((:validator behaviour_) components)))
 
 (defn enable [entity component-type behaviour])
 
 (defn disable [entity component-type behaviour])
 
 (defn- make-key [entity-type-or-id attribute-name component-type behaviour-type]
-  (let [key (cond-> #{}
-              (not (nil? entity-type-or-id)) (conj entity-type-or-id)
-              (not (nil? attribute-name)) (conj attribute-name)
-              (not (nil? component-type)) (conj component-type)
-              (not (nil? behaviour-type)) (conj behaviour-type))]))
+  (cond-> #{}
+          (not (nil? entity-type-or-id)) (conj entity-type-or-id)
+          (not (nil? attribute-name)) (conj attribute-name)
+          (not (nil? component-type)) (conj component-type)
+          (not (nil? behaviour-type)) (conj behaviour-type)))
 
 (defn get-active-behaviour [entity-type-or-id attribute-name component-type behaviour-type]
   (let [key (make-key entity-type-or-id attribute-name component-type behaviour-type)]
@@ -59,12 +56,12 @@
 
 (defn autowire
   ([entity-type components-inputs]
-   (doseq [behaviour (val behaviours)]
+   (doseq [behaviour (vals @behaviours)]
       (when-let [targets (validate behaviour components-inputs)]
          (let [inputs  (into {} (map (fn [e] {(:type e) e}) components-inputs))
                valid-inputs (vals (select-keys inputs targets))
-               kv (map (fn [e] {:k (make-key entity-type nil (:type e) (:type behaviour)) :v e} valid-inputs))
-               inactive-kv (filter #(nil? ((:k %) @active-behaviours)) kv)]
+               kv (map (fn [e] {:k (make-key entity-type nil (:type e) (:type behaviour)) :v e}) valid-inputs)
+               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)]                        
             (bus/on (mapv #(ev/event-name entity-type nil (-> % :v :type) (:action behaviour)) inactive-kv) (:handler behaviour))
             (doseq [k inactive-kv] (set-active-behaviour entity-type nil (-> k :v :type) (:type behaviour) (:name behaviour)))))))
   ([entity]

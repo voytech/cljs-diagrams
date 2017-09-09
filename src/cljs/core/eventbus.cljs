@@ -83,8 +83,8 @@
          listeners (get @bus name)]
      (add-event @event)
      (when-not (nil? listeners)
-       (next listeners event)
-       (do-after-all event))))
-
+       (let [result (next listeners event)]
+         (do-after-all event)
+         result))))
   ([name]
    (fire name {})))

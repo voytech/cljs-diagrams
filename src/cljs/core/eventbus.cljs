@@ -6,6 +6,8 @@
 
 (defonce bus (atom {}))
 
+(defonce after (atom {}))
+
 (defonce event-store (volatile! []))
 
 (defn add-event [event]
@@ -18,7 +20,14 @@
 
 (defn is-listener [name]
   (not (nil? (get @bus name))))
-  
+
+(defn after-all [event-name handler]
+  (swap! after assoc event-name handler))
+
+(defn- do-after-all [event-name]
+  (when-let [handler (get @after event-name)]
+    (handler)))
+
 (defn on
   ([event-names priority callback]
    (doseq [name event-names]
@@ -74,7 +83,8 @@
          listeners (get @bus name)]
      (add-event @event)
      (when-not (nil? listeners)
-       (next listeners event))))
+       (next listeners event)
+       (do-after-all event))))
 
   ([name]
    (fire name {})))

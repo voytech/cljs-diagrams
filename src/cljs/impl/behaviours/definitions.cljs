@@ -102,3 +102,14 @@
                   (ib/toggle-endpoints (:entity event) false)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+
+
+; (bus/on ["relation.relation.mousepointclick"] -999 (fn [e]
+;                                                     ((insert-breakpoint) (:context @e))
+;                                                     (bus/fire "uncommited.render")
+;                                                     (bus/fire "rendering.finish")))
+;
+; (bus/on ["relation.breakpoint.mousepointclick"] -999 (fn [e]
+;                                                       ((dissoc-breakpoint) (:context @e))
+;                                                       (bus/fire "uncommited.render")
+;                                                       (bus/fire "rendering.finish")))

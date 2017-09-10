@@ -102,7 +102,8 @@
                                           (render (get @d/drawables drawable-id))))))
 
 (bus/on ["rendering.finish"] -999 (fn [event]
-                                    (all-rendered @rendering-context)))
+                                    (all-rendered @rendering-context)
+                                    nil))
 
 (defmulti all-rendered (fn [context] @RENDERER))
 

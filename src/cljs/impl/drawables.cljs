@@ -13,6 +13,12 @@
 (drawables/add-hook :line :setp (fn [drawable p] (setup-bbox drawable p :x1 :x2 :left :width)
                                                  (setup-bbox drawable p :y1 :y2 :top :height)))
 
+(drawables/add-hook :line :set-data (fn [drawable data]
+                                      (doseq [p (keys data)]
+                                       (setup-bbox drawable p :x1 :x2 :left :width)
+                                       (setup-bbox drawable p :y1 :y2 :top :height))))
+
+
 (defdrawable rect {:border-color "black" :border-style :solid :border-width 1})
 
 (defdrawable circle {:border-color "black" :border-style :solid :border-width 1})

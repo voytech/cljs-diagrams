@@ -20,11 +20,9 @@
 (defn add-behaviour [name display-name type validator action handler]
   (vswap! behaviours assoc name (Behaviour. name display-name type validator action handler)))
 
-(defn- validate-component-input [behaviour input]
-  ((:validator behaviour) input))
+(defn entity-behaviours [entity-type])
 
-(defn- validate-component-instance [behaviour instance]
-  ((:validator behaviour) instance))
+(defn component-behaviours [component-type])
 
 (defn validate [behaviour components]
   (let [behaviour_ (cond
@@ -61,7 +59,7 @@
          (let [inputs  (into {} (map (fn [e] {(:type e) e}) components-inputs))
                valid-inputs (vals (select-keys inputs targets))
                kv (map (fn [e] {:k (make-key entity-type nil (:type e) (:type behaviour)) :v e}) valid-inputs)
-               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)]
+               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)]        
             (bus/on (mapv #(ev/event-name entity-type nil (-> % :v :type) (:action behaviour)) inactive-kv) (:handler behaviour))
             (doseq [k inactive-kv] (set-active-behaviour entity-type nil (-> k :v :type) (:type behaviour) (:name behaviour)))))))
   ([entity]

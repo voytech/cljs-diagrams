@@ -17,7 +17,8 @@
                 (let [event (:context @e)]
                   ((b/moving-entity) event)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
 
 (defbehaviour moving-component
               "Moving Entity Component" :component-moving
@@ -31,7 +32,8 @@
                   ((b/intersects? "body" (fn [src trg] (ib/toggle-endpoints (:entity trg) true))
                                          (fn [src trg] (ib/toggle-endpoints (:entity trg) false))) (:context @e))
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
 
 (defbehaviour make-relation
               "Connect Two Entities" :make-relation
@@ -42,12 +44,17 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((b/intersects-endpoints? (fn [src trg]
-                                              (e/connect-entities (:entity src) (:entity trg) :entity-link "start" "start")
-                                              (ib/toggle-endpoints (:entity trg) false)
-                                              (ib/position-startpoint (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg))))) (:context @e))
+                                              (let [ctype (-> event :component :type)
+                                                    end-type (cond
+                                                               (= :endpoint ctype) {:type "end" :f ib/position-endpoint}
+                                                               (= :startpoint ctype) {:type  "start" :f ib/position-startpoint})]
+                                                (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
+                                                (ib/toggle-endpoints (:entity trg) false)
+                                                ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
                   (b/relations-validate (->> @e :context :entity))
                   (bus/fire "uncommited.render")
-                  (bus/fire "rendering.finish"))))
+                  (bus/fire "rendering.finish")
+                  nil)))
 
 (defbehaviour hovering-entity
               "Default Entity Hovering" :hovering
@@ -62,7 +69,8 @@
                 (let [event (:context @e)]
                   ((b/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
 
 (defbehaviour leaving-entity
               "Default Entity Leave" :leaving
@@ -77,7 +85,8 @@
                 (let [event (:context @e)]
                   ((b/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
 
 (defbehaviour show-entity-controls
               "Default Show Controls" :controls-show
@@ -89,7 +98,8 @@
                 (let [event (:context @e)]
                   (ib/toggle-endpoints (:entity event) true)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
 
 (defbehaviour hide-entity-controls
               "Default Hide Controls" :controls-hide
@@ -101,7 +111,8 @@
                 (let [event (:context @e)]
                   (ib/toggle-endpoints (:entity event) false)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")))) ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
 
 
 ; (bus/on ["relation.relation.mousepointclick"] -999 (fn [e]

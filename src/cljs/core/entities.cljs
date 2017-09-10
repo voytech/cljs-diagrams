@@ -10,6 +10,8 @@
 
 (defonce entities (atom {}))
 
+(defonce components (atom {}))
+
 (defonce lookups (atom {}))
 
 (defonce attributes (atom {}))
@@ -27,6 +29,8 @@
                       factory])
 
 (defrecord AttributeValue [id attribute value components])
+
+(defrecord ComponentType [type drawable-ref props init-data])
 
 (defrecord Component [name type drawable props])
 
@@ -203,3 +207,18 @@
 
 (defn get-attribute-value-data [attribute-value]
   (:value attribute-value))
+
+;;=====================================================================================
+;;============================COMPONENT DEFINITIONS====================================
+;;=====================================================================================
+(defn define-component []
+  (swap! components assoc type (ComponentType. type drawable-ref props init-data)))
+
+(defn new-component [type name data]
+  (when-let [component-type (get @components type)
+             drawable-ref (:drawable-ref component-type)
+             _data (merge data (:init-data component-type))]
+    (Component. name type (drawable-ref _data) props)))
+
+(defn get-component-def [type]
+  (get @components type))

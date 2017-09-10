@@ -78,3 +78,8 @@
 
 (defmacro defbehaviour [name display-name type validator action handler]
   `(core.behaviours/add-behaviour (name '~name) ~display-name ~type ~validator ~action ~handler))
+
+(defmacro defcomponent [type drawable-ref props init-data]
+  `(core.entities/define-component (-> '~type name keyword) props drawable-ref init-data)
+   (defn ~type [name# data#]
+     (core.entities/new-component name# (-> '~type name keyword) data#)))

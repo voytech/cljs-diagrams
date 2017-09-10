@@ -28,7 +28,7 @@
           conB    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height defaults/DEFAULT_SIZE_OPTS)))]
       [{:name "connector-left"
         :type :endpoint
-        :drawable (d/endpoint conL :moveable false :display "rect" :visibile false)}
+        :drawable (d/endpoint conL :moveable false :display "rect" :visibile false)} ;(entity-control-endpoint {:drawable d/endpoint :init-data conL})
        {:name "connector-right"
         :type :endpoint
         :drawable (d/endpoint conR :moveable false :display "rect" :visibile false)}

@@ -59,7 +59,7 @@
          (let [inputs  (into {} (map (fn [e] {(:type e) e}) components-inputs))
                valid-inputs (vals (select-keys inputs targets))
                kv (map (fn [e] {:k (make-key entity-type nil (:type e) (:type behaviour)) :v e}) valid-inputs)
-               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)]        
+               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)]
             (bus/on (mapv #(ev/event-name entity-type nil (-> % :v :type) (:action behaviour)) inactive-kv) (:handler behaviour))
             (doseq [k inactive-kv] (set-active-behaviour entity-type nil (-> k :v :type) (:type behaviour) (:name behaviour)))))))
   ([entity]

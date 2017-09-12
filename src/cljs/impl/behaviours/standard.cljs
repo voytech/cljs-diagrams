@@ -121,7 +121,7 @@
   (position-endpoint entity left top :absolute)))
 
 (defn toggle-endpoints [entity toggle]
-  (doseq [component (e/components entity)]
+  (doseq [component (e/components-of entity)]
     (when (= :endpoint (:type component))
       (let [drawable (:drawable component)]
          (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))

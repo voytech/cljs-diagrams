@@ -3,6 +3,7 @@
            [core.options :as defaults]
            [impl.standard-attributes :as stdatr]
            [impl.drawables :as d]
+           [impl.components :as c]
            [core.drawables :as cd]
            [core.project :as p]
            [core.eventbus :as bus]
@@ -13,6 +14,9 @@
            [impl.behaviours.definitions :as bd]
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity with-components]]))
+
+(js/console.log "AAAA")
+(js/console.log (clj->js (c/control "connector-left" {:point [100 100]})))
 
 (defentity rectangle-node
   (with-content-bounding-box {:left 15
@@ -26,21 +30,11 @@
           conR    (vector (+ (:left options) (:width defaults/DEFAULT_SIZE_OPTS)) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
           conT    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
           conB    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height defaults/DEFAULT_SIZE_OPTS)))]
-      [{:name "connector-left"
-        :type :endpoint
-        :drawable (d/endpoint conL :moveable false :display "rect" :visibile false)} ;(entity-control-endpoint {:drawable d/endpoint :init-data conL})
-       {:name "connector-right"
-        :type :endpoint
-        :drawable (d/endpoint conR :moveable false :display "rect" :visibile false)}
-       {:name "connector-top"
-        :type :endpoint
-        :drawable (d/endpoint conT :moveable false :display "rect" :visibile false)}
-       {:name "connector-bottom"
-        :type :endpoint
-        :drawable (d/endpoint conB :moveable false :display "rect" :visibile false)}
-       {:name "body"
-        :type :main
-        :drawable (d/rect enriched-opts)}]))
+      [(c/control "connector-left"   {:point conL})
+       (c/control "connector-right"  {:point conR})
+       (c/control "connector-top"    {:point conT})
+       (c/control "connector-bottom" {:point conB})
+       (c/main "body" enriched-opts)]))
   (with-attributes [#(stdatr/name % "<Enter name here>")
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
@@ -59,24 +53,10 @@
           points-pairs-offset (map #(vector (+ (first %) offset-x) (+ (last %) offset-y)) points-pairs)
           conS (first points-pairs-offset)
           conE (last points-pairs-offset)]
-        [{:name "connector"
-          :type :relation
-          :drawable  (d/relation-line (first conS) (last conS) (first conE) (last conE) enriched-opts)
-          :props {:start "start" :end "end"}}
-
-         {:name "start"
-          :type :startpoint
-          :drawable  (d/endpoint conS :moveable true :display "circle" :visible true :opacity 1)
-          :props {:start "connector" :penultimate true}}
-
-         {:name "arrow"
-          :type :decorator
-          :drawable  (d/arrow data options)}
-
-         {:name "end"
-          :type :endpoint
-          :drawable  (d/endpoint conE :moveable true :display "circle" :visible true :opacity 0)
-          :props {:end "connector"}}])))
+        [(c/relation "connector" {:x1 (first conS) :y1 (last conS) :x2 (first conE) :y2 (last conE)} {:start "start" :end "end"})
+         (c/startpoint "start" {:point conS})
+         (c/arrow "arrow" {:data data :options options})
+         (c/endpoint "end" {:point conE :opacity 0})])))
 
 (cb/set-relation-movement-hook "rectangle-node" "relation" (fn [source target relation left top coord-mode]
                                                              (let [adata (:association-data relation)

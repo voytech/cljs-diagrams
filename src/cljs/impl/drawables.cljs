@@ -39,20 +39,7 @@
 
 (defdrawable text {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
 
-(defmulti endpoint (fn [point & {:keys [moveable display visible]}] display))
-
-(defmethod endpoint "circle" [point & {:keys [moveable display visible opacity]}]
-  (let [options (merge {:left (- (first point) 8)
-                        :top (- (last point)   8)
-                        :radius 8
-                        :background-color "white"
-                        :border-color "black"
-                        :visible visible
-                        :opacity opacity})]
-
-      (circle options)))
-
-(defmethod endpoint "rect" [point & {:keys [moveable display visible]}]
+(defn control [{:keys [point moveable visible]}]
   (let [options (merge {:left (- (first point) 8)
                         :top (- (last point)   8)
                         :width 16
@@ -62,7 +49,17 @@
                         :visible visible})]
       (rect options)))
 
-(defn arrow [data options]
+(defn endpoint [{:keys [point moveable visible opacity]}]
+  (let [options (merge {:left (- (first point) 8)
+                        :top (- (last point)   8)
+                        :radius 8
+                        :background-color "white"
+                        :border-color "black"
+                        :visible visible
+                        :opacity opacity})]
+      (circle options)))
+
+(defn arrow [{:keys [data options]}]
   (let [x1 (+ (:left options))
         y1 (+ (:top options))
         x2 (+ (:left options) (first (last (partition 2 data))))
@@ -79,5 +76,5 @@
                  :width 20
                  :height 20})))
 
-(defn relation-line [x1 y1 x2 y2]
+(defn relation-line [{:keys [x1 y1 x2 y2]}]
   (line {:x1 x1 :y1 y1 :x2 x2 :y2 y2 :left x1 :top y1 :width (+ x1 x2) :height (+ y1 y2)}))

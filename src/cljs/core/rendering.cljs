@@ -38,9 +38,9 @@
        (render drawable))))
 
 (defn- render-entity [entity]
-  (render-components  (e/components entity))
+  (render-components  (e/components-of entity))
   (doseq [attribute-value (:attributes entity)]
-    (render-components (e/components attribute-value)))
+    (render-components (e/components-of attribute-value)))
   (let [bbox (l/get-bbox entity)
         cbox {:left (+ (:left (e/get-entity-content-bbox entity)) (:left bbox))
               :top  (+ (:top (e/get-entity-content-bbox entity)) (:top bbox))

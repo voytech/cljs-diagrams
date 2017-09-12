@@ -3,6 +3,7 @@
            [core.behaviours :as behaviours]
            [core.project :as p]
            [impl.drawables :as d]
+           [impl.components :as c]
            [core.options :as o])
 
  (:require-macros [core.macros :refer [defattribute with-components value]]))
@@ -16,9 +17,7 @@
     {:cardinality 1
      :index 0})
   (with-components data options
-    [{:name "value"
-      :type :value
-      :drawable (d/text {:text data})}])
+    [(c/value "value" {:text data})])
   (with-behaviours
     {:value highlight-hovering}))
 
@@ -27,12 +26,8 @@
     {:cardinality 1
      :index 1})
   (with-components data options
-    [{:name "desc"
-      :type :description
-      :drawable  (d/text {:text "Description"})}
-     {:name "value"
-      :type :value
-      :drawable (d/text {:text data :left 60})}])
+    [(c/description "desc" {:text "Description"})
+     (c/value "value" {:text data :left 60})])
   (with-behaviours
     {:value highlight-hovering}))
 
@@ -46,16 +41,10 @@
   (with-domain
      [(value :open
         (with-components data options
-          [{:name "value-open"
-            :type :value
-            :drawable (d/text {:text "OPEN"})}]))
+          [(c/value "value-open" {:text "OPEN"})]))
       (value :progress
         (with-components data options
-          [{:name "value-progress"
-            :type :value
-            :drawable (d/text {:text "PROGRESS"})}]))
+          [(c/value "value-progress" {:text "PROGRESS"})]))
       (value :closed
         (with-components data options
-          [{:name "value-closed"
-            :type :value
-            :drawable (d/text {:text "CLOSED"})}]))]))
+          [(c/value "value-closed" {:text "CLOSED"})]))]))

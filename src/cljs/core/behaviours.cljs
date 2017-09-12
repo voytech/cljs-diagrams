@@ -167,7 +167,7 @@
                             coord-mode)))
 
 (defn- position-attributes-components [attributes offset-left offset-top]
-  (doseq [src (flatten (mapv #(e/components %) attributes))]
+  (doseq [src (flatten (mapv #(e/components-of %) attributes))]
     (d/set-data (:drawable src) {:left (+ (d/getp (:drawable src) :left) offset-left)
                                  :top  (+ (d/getp (:drawable src) :top) offset-top)})))
 
@@ -177,7 +177,7 @@
 
 (defn default-position-entity [entity ref-component-name left top coord-mode]
  (let [effective-offset (calculate-effective-offset entity ref-component-name left top coord-mode)]
-   (doseq [component (e/components entity)]
+   (doseq [component (e/components-of entity)]
      (let [effective-left  (+ (d/getp (:drawable component) :left) (:left effective-offset))
            effective-top   (+ (d/getp (:drawable component) :top) (:top effective-offset))]
        (if (= ref-component-name (:name component))

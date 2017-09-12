@@ -41,7 +41,7 @@
                    relationships
                    content-bbox])
 
-(defn components [holder]
+(defn components-of [holder]
  (vals (:components holder)))
 
 (defn entity-by-id [id]
@@ -211,14 +211,20 @@
 ;;=====================================================================================
 ;;============================COMPONENT DEFINITIONS====================================
 ;;=====================================================================================
-(defn define-component []
+(defn define-component [type drawable-ref props init-data]
   (swap! components assoc type (ComponentType. type drawable-ref props init-data)))
 
-(defn new-component [type name data]
-  (when-let [component-type (get @components type)
-             drawable-ref (:drawable-ref component-type)
-             _data (merge data (:init-data component-type))]
-    (Component. name type (drawable-ref _data) props)))
+(defn new-component
+  ([type name data props]
+   (when-let [component-type (get @components type)]
+     (let [dref (:drawable-ref component-type)
+           _data (merge  (:init-data component-type) data)
+           _props (merge (:props component-type) props)]
+       (Component. name type (dref _data) _props))))
+  ([type name data]
+   (new-component type name data {}))
+  ([type name]
+   (new-component type name {} {})))
 
 (defn get-component-def [type]
   (get @components type))

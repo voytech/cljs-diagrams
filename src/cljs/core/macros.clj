@@ -7,12 +7,17 @@
 (defmacro value [value drawables]
   `(core.entities/AttributeDomain. ~value ~drawables))
 
+;(defmacro with-components [data options & components-vector]
+;  (let [components (if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
+;    `(fn [~data ~options] (mapv (fn [dd#] (core.entities/Component. (:name dd#)
+;                                                                    (:type dd#)
+;                                                                    (:drawable dd#)
+;                                                                    (:props dd#))) ~components
+
 (defmacro with-components [data options & components-vector]
   (let [components (if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
-    `(fn [~data ~options] (mapv (fn [dd#] (core.entities/Component. (:name dd#)
-                                                                    (:type dd#)
-                                                                    (:drawable dd#)
-                                                                    (:props dd#))) ~components))))
+    `(fn [~data ~options] ~components)))
+
 (defmacro with-domain [name body])
 
 (defmacro with-behaviours [name body])
@@ -80,6 +85,11 @@
   `(core.behaviours/add-behaviour (name '~name) ~display-name ~type ~validator ~action ~handler))
 
 (defmacro defcomponent [type drawable-ref props init-data]
-  `(core.entities/define-component (-> '~type name keyword) props drawable-ref init-data)
-   (defn ~type [name# data#]
-     (core.entities/new-component name# (-> '~type name keyword) data#)))
+  `(do (core.entities/define-component (-> '~type name keyword) ~drawable-ref ~props ~init-data)
+       (defn ~type
+         ([name# data# p#]
+          (core.entities/new-component (-> '~type name keyword) name# data# p#))
+         ([name# data#]
+          (core.entities/new-component (-> '~type name keyword) name# data# {}))
+         ([name#]
+          (core.entities/new-component (-> '~type name keyword) name# {} {})))))

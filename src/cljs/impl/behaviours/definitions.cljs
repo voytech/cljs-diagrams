@@ -9,7 +9,7 @@
 
 (defbehaviour moving-entity
               "Default Entity Moving" :moving
-              (b/generic-validator [{:tmpl #{:main :endpoint}
+              (b/generic-validator [{:tmpl #{:main :control}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}])
               "mousedrag"
@@ -22,6 +22,21 @@
 
 (defbehaviour moving-component
               "Moving Entity Component" :component-moving
+              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                     :result [:startpoint :endpoint]}])
+              "mousedrag"
+              (fn [e]
+                (let [event (:context @e)]
+                  ((ib/moving-endpoint) event)
+                  ((b/intersects? "body" (fn [src trg] (ib/toggle-endpoints (:entity trg) true))
+                                         (fn [src trg] (ib/toggle-endpoints (:entity trg) false))) (:context @e))
+                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
+
+(defbehaviour manhattan-moving-endpoint
+              "Manhattan Entity Endpoint Movement" :component-moving
               (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
                                      :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
                                      :result [:startpoint :endpoint]}])
@@ -58,7 +73,7 @@
 
 (defbehaviour hovering-entity
               "Default Entity Hovering" :hovering
-              (b/generic-validator [{:tmpl #{:main :endpoint}
+              (b/generic-validator [{:tmpl #{:main :control}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}
                                     {:tmpl #{:startpoint :endpoint}
@@ -74,7 +89,7 @@
 
 (defbehaviour leaving-entity
               "Default Entity Leave" :leaving
-              (b/generic-validator [{:tmpl #{:main :endpoint}
+              (b/generic-validator [{:tmpl #{:main :control}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}
                                     {:tmpl #{:startpoint :endpoint}
@@ -90,7 +105,7 @@
 
 (defbehaviour show-entity-controls
               "Default Show Controls" :controls-show
-              (b/generic-validator [{:tmpl #{:main :endpoint}
+              (b/generic-validator [{:tmpl #{:main :control}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}])
               "mousemove"
@@ -103,7 +118,7 @@
 
 (defbehaviour hide-entity-controls
               "Default Hide Controls" :controls-hide
-              (b/generic-validator [{:tmpl #{:main :endpoint}
+              (b/generic-validator [{:tmpl #{:main :control}
                                      :func (fn [requires types] (= requires types))
                                      :result [:main]}])
               "mouseout"

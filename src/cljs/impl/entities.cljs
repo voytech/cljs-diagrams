@@ -5,18 +5,14 @@
            [impl.drawables :as d]
            [impl.components :as c]
            [core.drawables :as cd]
+           [core.behaviours :as cb]
+           [impl.behaviours.standard :as ib]
            [core.project :as p]
            [core.eventbus :as bus]
-           [core.behaviours :as cb :refer [highlight show all event-wrap moving-entity intersects? intersects-endpoints? relations-validate]]
            [core.options :as o]
-           [impl.behaviours.standard :as eb :refer [insert-breakpoint dissoc-breakpoint moving-endpoint
-                                                    toggle-endpoints position-endpoint position-startpoint]]
            [impl.behaviours.definitions :as bd]
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity with-components]]))
-
-(js/console.log "AAAA")
-(js/console.log (clj->js (c/control "connector-left" {:point [100 100]})))
 
 (defentity rectangle-node
   (with-content-bounding-box {:left 15
@@ -62,5 +58,5 @@
                                                              (let [adata (:association-data relation)
                                                                    target-component (e/get-entity-component target adata)]
                                                                (cond
-                                                                 (= :startpoint (:type target-component)) (position-startpoint target left top :offset)
-                                                                 (= :endpoint   (:type target-component)) (position-endpoint   target left top :offset)))))
+                                                                 (= :startpoint (:type target-component)) (ib/position-startpoint target left top :offset)
+                                                                 (= :endpoint   (:type target-component)) (ib/position-endpoint   target left top :offset)))))

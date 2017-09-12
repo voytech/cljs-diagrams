@@ -16,8 +16,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((b/moving-entity) event)
-                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  (bus/fire "uncommited.render") ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish")  ;TODO Fire on after all handlers executed.
                   nil)))
 
 (defbehaviour moving-component
@@ -29,23 +29,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((ib/moving-endpoint) event)
-                  ((b/intersects? "body" (fn [src trg] (ib/toggle-endpoints (:entity trg) true))
-                                         (fn [src trg] (ib/toggle-endpoints (:entity trg) false))) (:context @e))
-                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
-                  nil)))
-
-(defbehaviour manhattan-moving-endpoint
-              "Manhattan Entity Endpoint Movement" :component-moving
-              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                     :result [:startpoint :endpoint]}])
-              "mousedrag"
-              (fn [e]
-                (let [event (:context @e)]
-                  ((ib/moving-endpoint) event)
-                  ((b/intersects? "body" (fn [src trg] (ib/toggle-endpoints (:entity trg) true))
-                                         (fn [src trg] (ib/toggle-endpoints (:entity trg) false))) (:context @e))
+                  ((b/intersects? "body" (fn [src trg] (ib/toggle-controls (:entity trg) true))
+                                         (fn [src trg] (ib/toggle-controls (:entity trg) false))) (:context @e))
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
@@ -58,13 +43,13 @@
               "mouseup"
               (fn [e]
                 (let [event (:context @e)]
-                  ((b/intersects-endpoints? (fn [src trg]
+                  ((b/intersects-controls? (fn [src trg]
                                               (let [ctype (-> event :component :type)
                                                     end-type (cond
                                                                (= :endpoint ctype) {:type "end" :f ib/position-endpoint}
                                                                (= :startpoint ctype) {:type  "start" :f ib/position-startpoint})]
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
-                                                (ib/toggle-endpoints (:entity trg) false)
+                                                (ib/toggle-controls (:entity trg) false)
                                                 ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
                   (b/relations-validate (->> @e :context :entity))
                   (bus/fire "uncommited.render")
@@ -111,7 +96,7 @@
               "mousemove"
               (fn [e]
                 (let [event (:context @e)]
-                  (ib/toggle-endpoints (:entity event) true)
+                  (ib/toggle-controls (:entity event) true)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
@@ -124,7 +109,7 @@
               "mouseout"
               (fn [e]
                 (let [event (:context @e)]
-                  (ib/toggle-endpoints (:entity event) false)
+                  (ib/toggle-controls (:entity event) false)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))

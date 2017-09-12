@@ -106,14 +106,14 @@
    (d/setp (:drawable component) :visible show)))
 
 
-(defn intersects-endpoints? [yes]
+(defn intersects-controls? [yes]
  (fn [e]
    (let [entity           (:entity e)
          component        (:component e)
          drawable         (:drawable e)]
      (when (contains? #{"end" "start"} (:name component))
        (doseq [drwlb (vals @d/drawables)]
-          (when (and (not= drwlb drawable) (= :endpoint (:type (e/lookup drwlb :component))))
+          (when (and (not= drwlb drawable) (= :control (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]
               (when (d/intersects? drawable drwlb)

@@ -12,7 +12,7 @@
 (declare calculate-angle)
 (declare dissoc-breakpoint)
 
-(defn- refresh-arrow-angle [relation-component arrow-component]
+(defn refresh-arrow-angle [relation-component arrow-component]
   (let [x1 (-> relation-component :drawable (d/getp :x1))
         y1 (-> relation-component :drawable (d/getp :y1))
         x2 (-> relation-component :drawable (d/getp :x2))
@@ -39,15 +39,8 @@
           (let [relation-id   (str (random-uuid))
                 breakpoint-id (str (random-uuid))
                 is-penultimate (= true (:penultimate (:props line-start-breakpoint)))]
-            (e/add-entity-component entity
-              {:name     relation-id
-               :type     :relation
-               :drawable (dimpl/relation-line eX eY oeX oeY)
-               :props    {:start breakpoint-id :end (:name line-end-breakpoint)}}
-              {:name     breakpoint-id
-               :type     :breakpoint
-               :drawable (dimpl/endpoint [eX eY] :moveable true :display "circle" :visible true :opacity 1)
-               :props    {:end (:name line) :start relation-id :penultimate is-penultimate}})
+            (e/add-entity-component entity (e/new-component relation-id :relation {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
+                                           (e/new-component breakpoint-id :breakpoint {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
             (e/update-component-prop entity (:name line) :end breakpoint-id)
             (e/update-component-prop entity (:name line-end-breakpoint) :end relation-id)
             (when (= true is-penultimate)

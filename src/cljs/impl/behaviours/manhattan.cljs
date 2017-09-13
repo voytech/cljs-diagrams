@@ -11,11 +11,11 @@
 
 (defn assert-component
   ([entity name type data]
-   (js/console.log (clj->js data))
    (let [component (e/get-entity-component entity name)]
      (if (or (nil? component) (not= type (:type component)))
        (e/add-entity-component entity (e/new-component type name data))
-       (d/set-data (:drawable component) data))))
+       (d/set-data (:drawable component) data))
+     (e/get-entity-component entity name)))
   ([entity name type]
    (assert-component entity name type {})))
 
@@ -47,13 +47,11 @@
   (assert-component entity (str "line-" idx) :relation {:x1 sx :y1 sy :x2 ex :y2 ey}))
 
 (defn- update-line-components [entity path]
-  (let [idx (volatile! 0)]
-    (doseq [entry path]
-     (update-line-component entity @idx (:x (first entry))
-                                        (:y (first entry))
-                                        (:x (peek entry))
-                                        (:y (peek entry)))
-     (vswap! idx inc))))
+  (-> (map-indexed (fn [idx e] (update-line-component entity idx (:x (first e))
+                                                                 (:y (first e))
+                                                                 (:x (peek e))
+                                                                 (:y (peek e)))) path)
+      last))
 
 (defn update-manhattan-layout [entity s-normal e-normal]
   (let [start (e/get-entity-component entity "start")
@@ -61,7 +59,8 @@
         connector (e/get-entity-component entity "connector")
         mid-points (compute-mid-points entity start end s-normal e-normal)
         path (compute-path (center-point start) (center-point end) mid-points)]
-     (update-line-components entity path)))
+     (-> (update-line-components entity path)
+         (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))
 
 (defn calculate-normals [entity startpoint endpoint]
   [:h :h])
@@ -75,6 +74,7 @@
            end (e/get-entity-component entity "end")
            connector (e/get-entity-component entity "connector")
            normals (calculate-normals entity start end)]
+        (d/setp (:drawable connector) :visible false)   
         (cond
           (= :startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset)
           (= :endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset))

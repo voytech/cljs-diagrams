@@ -13,7 +13,7 @@
    (let [component (e/get-entity-component entity name)]
      (if (or (nil? component)) (not= type (:type component))
        (e/add-entity-component entity (e/new-component type name data {}))
-       (d/set-data (:drawable component) data))))     
+       (d/set-data (:drawable component) data))))
   ([entity name type]
    (assert-component entity name type {})))
 
@@ -42,7 +42,7 @@
     [[start-point (first mid-points)] [(last mid-points end-point)]]))
 
 (defn- update-line-component [entity idx sx sy ex ey]
-  (let [line (assert-component entity (str "line-" idx) :relation {:x1 sx :y1 sy :x2 ex :y2 ey})]))
+  (assert-component entity (str "line-" idx) :relation {:x1 sx :y1 sy :x2 ex :y2 ey}))
 
 (defn- update-line-components [entity path]
   (map (fn [idx item] (update-line-component entity idx (first (first item))

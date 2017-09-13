@@ -4,7 +4,8 @@
             [core.options :as o]
             [core.entities :as e]
             [core.drawables :as d]
-            [impl.behaviours.standard :as ib])
+            [impl.behaviours.standard :as ib]
+            [impl.behaviours.manhattan :as m])
   (:require-macros [core.macros :refer [defbehaviour]]))
 
 (defbehaviour moving-entity
@@ -29,6 +30,21 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((ib/moving-endpoint) event)
+                  ((b/intersects? "body" (fn [src trg] (ib/toggle-controls (:entity trg) true))
+                                         (fn [src trg] (ib/toggle-controls (:entity trg) false))) (:context @e))
+                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
+
+(defbehaviour manhattan-moving-component
+              "Manhattan Layout" :component-moving
+              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                     :result [:startpoint :endpoint]}])
+              "mousedrag"
+              (fn [e]
+                (let [event (:context @e)]
+                  ((m/manhattan-layout-moving-behaviour) event)
                   ((b/intersects? "body" (fn [src trg] (ib/toggle-controls (:entity trg) true))
                                          (fn [src trg] (ib/toggle-controls (:entity trg) false))) (:context @e))
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.

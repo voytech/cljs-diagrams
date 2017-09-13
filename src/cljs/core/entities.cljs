@@ -218,7 +218,7 @@
   ([type name data props]
    (when-let [component-type (get @components type)]
      (let [dref (:drawable-ref component-type)
-           _data (merge  (:init-data component-type) data)
+           _data  (merge (:init-data component-type) data)
            _props (merge (:props component-type) props)]
        (Component. name type (dref _data) _props))))
   ([type name data]

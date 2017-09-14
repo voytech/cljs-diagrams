@@ -224,7 +224,7 @@
    (position-breakpoint entity name left top :absolute)))
 
 (defn position-startpoint
-  ([entity left top coord-mode]
+  ([entity left top coord-mode skip?]
    (let [startpoint-component (e/get-entity-component entity "start")
          position (effective-position startpoint-component left top coord-mode)
          effective-left (:x position)
@@ -232,14 +232,15 @@
          starts-relation-component (e/get-entity-component entity (:start (:props startpoint-component)))
          arrow-component (e/get-entity-component entity "arrow")]
      (d/set-data (:drawable startpoint-component) {:left effective-left :top  effective-top})
-     (to-the-center-of (:drawable starts-relation-component) :x1 :y1 (:drawable startpoint-component))
-     (when (= true (:penultimate (:props startpoint-component)))
-       (refresh-arrow-angle starts-relation-component arrow-component))))
+     (when (= false skip?)
+      (to-the-center-of (:drawable starts-relation-component) :x1 :y1 (:drawable startpoint-component))
+      (when (= true (:penultimate (:props startpoint-component)))
+        (refresh-arrow-angle starts-relation-component arrow-component)))))
   ([entity left top]
-   (position-startpoint entity left top :absolute)))
+   (position-startpoint entity left top :absolute false)))
 
 (defn position-endpoint
-  ([entity left top coord-mode]
+  ([entity left top coord-mode skip?]
    (let [endpoint-component   (e/get-entity-component entity "end")
          position (effective-position endpoint-component left top coord-mode)
          effective-left (:x position)
@@ -248,11 +249,12 @@
 
          arrow-component      (e/get-entity-component entity "arrow")]
     (d/set-data (:drawable endpoint-component) {:left effective-left  :top  effective-top})
-    (to-the-center-of (:drawable ends-relation-component) :x2 :y2 (:drawable endpoint-component))
     (to-the-center-of (:drawable arrow-component) :left :top (:drawable endpoint-component))
-    (refresh-arrow-angle ends-relation-component arrow-component)))
+    (when (= false skip?)
+     (to-the-center-of (:drawable ends-relation-component) :x2 :y2 (:drawable endpoint-component))
+     (refresh-arrow-angle ends-relation-component arrow-component))))
  ([entity left top]
-  (position-endpoint entity left top :absolute)))
+  (position-endpoint entity left top :absolute false)))
 
 (defn toggle-controls [entity toggle]
   (doseq [component (e/components-of entity)]
@@ -267,8 +269,8 @@
             drawable (:drawable endpoint)]
          (cond
            (= :breakpoint (:type endpoint)) (position-breakpoint entity (:name endpoint) (:movement-x e) (:movement-y e) :offset)
-           (= :startpoint (:type endpoint)) (position-startpoint entity (:movement-x e) (:movement-y e) :offset)
-           (= :endpoint   (:type endpoint)) (position-endpoint   entity (:movement-x e) (:movement-y e) :offset)))))
+           (= :startpoint (:type endpoint)) (position-startpoint entity (:movement-x e) (:movement-y e) :offset false)
+           (= :endpoint   (:type endpoint)) (position-endpoint   entity (:movement-x e) (:movement-y e) :offset false)))))
 
 (defn calculate-angle [x1 y1 x2 y2]
    (let [PI 3.14

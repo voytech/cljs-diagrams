@@ -84,7 +84,7 @@
      (add-event @event)
      (when-not (nil? listeners)
        (let [result (next listeners event)]
-         (do-after-all event)
+         (do-after-all name)
          result))))
   ([name]
    (fire name {})))

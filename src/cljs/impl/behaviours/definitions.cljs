@@ -17,8 +17,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((std/moving-entity) event)
-                  (bus/fire "uncommited.render") ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")  ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "uncommited.render") ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "rendering.finish")  ;TODO Fire on after all handlers executed.
                   nil)))
 
 (defbehaviour moving-entity-by
@@ -30,11 +30,26 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((m/manhattan-layout-moving-behaviour) event)
-                  (bus/fire "uncommited.render") ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish")  ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "uncommited.render") ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "rendering.finish")  ;TODO Fire on after all handlers executed.
                   nil)))
 
-;(defbehaviour moving-component
+(defbehaviour manhattan-moving-component
+              "Manhattan Layout" :component-moving
+              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                     :result [:startpoint :endpoint]}])
+              "mousedrag"
+              (fn [e]
+                (let [event (:context @e)]
+                  ((m/manhattan-layout-moving-behaviour) event)
+                  ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
+                                           (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context @e))
+                  ;(bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  nil)))
+
+;(defbehaviour free-moving-component
 ;              "Moving Entity Component" :component-moving
 ;              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
 ;                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
@@ -48,21 +63,6 @@
 ;                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
 ;                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
 ;                  nil)))
-
-(defbehaviour manhattan-moving-component
-              "Manhattan Layout" :component-moving
-              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                     :result [:startpoint :endpoint]}])
-              "mousedrag"
-              (fn [e]
-                (let [event (:context @e)]
-                  ((m/manhattan-layout-moving-behaviour) event)
-                  ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
-                                           (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context @e))
-                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
-                  nil)))
 
 (defbehaviour make-relation
               "Connect Two Entities" :make-relation
@@ -79,10 +79,10 @@
                                                                 (= :startpoint ctype) {:type  "start" :f std/position-startpoint})]
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
                                                 (std/toggle-controls (:entity trg) false)
-                                                ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
+                                                ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg))) ))) (:context @e))
                   (std/relations-validate (->> @e :context :entity))
-                  (bus/fire "uncommited.render")
-                  (bus/fire "rendering.finish")
+                  ;(bus/fire "uncommited.render")
+                  ;(bus/fire "rendering.finish")
                   nil)))
 
 (defbehaviour hovering-entity
@@ -97,8 +97,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((std/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
-                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
 
 (defbehaviour leaving-entity
@@ -113,8 +113,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
-                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
 
 (defbehaviour show-entity-controls
@@ -126,8 +126,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-controls (:entity event) true)
-                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
 
 (defbehaviour hide-entity-controls
@@ -139,8 +139,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-controls (:entity event) false)
-                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+                  ;(bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
 
 

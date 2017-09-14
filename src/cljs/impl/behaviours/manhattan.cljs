@@ -75,6 +75,6 @@
            normals (calculate-normals entity start end)]
         (d/setp (:drawable connector) :visible false)
         (cond
-          (= :startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset)
-          (= :endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset))
+          (= :startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
+          (= :endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
         (update-manhattan-layout entity (first normals) (last normals)))))

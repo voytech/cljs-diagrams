@@ -52,6 +52,12 @@
   (let [key (make-key entity-type-or-id attribute-name component-type behaviour-type)]
     (vswap! active-behaviours assoc key behaviour-name)))
 
+(defn- render-changes [events]
+  (doseq [e events]
+    (bus/after-all e (fn [ev]
+                       (bus/fire "uncommited.render")
+                       (bus/fire "rendering.finish")))))
+
 (defn autowire
   ([entity-type components-inputs]
    (doseq [behaviour (vals @behaviours)]
@@ -59,8 +65,10 @@
          (let [inputs  (into {} (map (fn [e] {(:type e) e}) components-inputs))
                valid-inputs (vals (select-keys inputs targets))
                kv (map (fn [e] {:k (make-key entity-type nil (:type e) (:type behaviour)) :v e}) valid-inputs)
-               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)]
-            (bus/on (mapv #(ev/event-name entity-type nil (-> % :v :type) (:action behaviour)) inactive-kv) (:handler behaviour))
+               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)
+               events (mapv #(ev/event-name entity-type nil (-> % :v :type) (:action behaviour)) inactive-kv)]
+            (bus/on events (:handler behaviour))
+            (render-changes events)
             (doseq [k inactive-kv] (set-active-behaviour entity-type nil (-> k :v :type) (:type behaviour) (:name behaviour)))))))
   ([entity]
    (let [components (:components entity)

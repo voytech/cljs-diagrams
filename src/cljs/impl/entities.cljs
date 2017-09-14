@@ -5,8 +5,6 @@
            [impl.drawables :as d]
            [impl.components :as c]
            [core.drawables :as cd]
-           [core.behaviours :as cb]
-           [impl.behaviours.standard :as ib]
            [core.project :as p]
            [core.eventbus :as bus]
            [core.options :as o]
@@ -53,10 +51,3 @@
          (c/startpoint "start" {:point conS})
          (c/arrow "arrow" {:data data :options options})
          (c/endpoint "end" {:point conE :opacity 0})])))
-
-(cb/set-relation-movement-hook "rectangle-node" "relation" (fn [source target relation left top coord-mode]
-                                                             (let [adata (:association-data relation)
-                                                                   target-component (e/get-entity-component target adata)]
-                                                               (cond
-                                                                 (= :startpoint (:type target-component)) (ib/position-startpoint target left top :offset)
-                                                                 (= :endpoint   (:type target-component)) (ib/position-endpoint   target left top :offset)))))

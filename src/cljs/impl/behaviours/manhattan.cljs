@@ -3,8 +3,7 @@
             [core.layouts :as layouts]
             [core.drawables :as d]
             [core.eventbus :as b]
-            [core.behaviours :as cb]
-            [impl.behaviours.standard :as std]
+            [impl.behaviours.standard-api :as std]
             [impl.drawables :as dimpl]))
 
 ;; component assertion may be some abstraction in behabviours.
@@ -74,7 +73,7 @@
            end (e/get-entity-component entity "end")
            connector (e/get-entity-component entity "connector")
            normals (calculate-normals entity start end)]
-        (d/setp (:drawable connector) :visible false)   
+        (d/setp (:drawable connector) :visible false)
         (cond
           (= :startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset)
           (= :endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset))

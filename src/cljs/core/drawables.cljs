@@ -57,8 +57,6 @@
   (set-data [this map_]
     (vswap! model merge map_)
     (changed this (keys map_))
-    ;(doseq [key (keys map_)]
-    ;  (setp this key (key map_)))
     (invoke-hook this :set-data map_))
   (getp [this property] (get @model property))
   (set-border-color [this value] (setp this :border-color value))

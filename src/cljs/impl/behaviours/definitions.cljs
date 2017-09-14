@@ -4,7 +4,7 @@
             [core.options :as o]
             [core.entities :as e]
             [core.drawables :as d]
-            [impl.behaviours.standard :as ib]
+            [impl.behaviours.standard-api :as std]
             [impl.behaviours.manhattan :as m])
   (:require-macros [core.macros :refer [defbehaviour]]))
 
@@ -16,7 +16,20 @@
               "mousedrag"
               (fn [e]
                 (let [event (:context @e)]
-                  ((b/moving-entity) event)
+                  ((std/moving-entity) event)
+                  (bus/fire "uncommited.render") ;TODO Fire on after all handlers executed.
+                  (bus/fire "rendering.finish")  ;TODO Fire on after all handlers executed.
+                  nil)))
+
+(defbehaviour moving-entity-by
+              "Default Entity Moving By" :moving-by
+              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                     :result [:startpoint :endpoint]}])
+              "moveby"
+              (fn [e]
+                (let [event (:context @e)]
+                  ((m/manhattan-layout-moving-behaviour) event)
                   (bus/fire "uncommited.render") ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish")  ;TODO Fire on after all handlers executed.
                   nil)))
@@ -45,8 +58,8 @@
               (fn [e]
                 (let [event (:context @e)]
                   ((m/manhattan-layout-moving-behaviour) event)
-                  ((b/intersects? "body" (fn [src trg] (ib/toggle-controls (:entity trg) true))
-                                         (fn [src trg] (ib/toggle-controls (:entity trg) false))) (:context @e))
+                  ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
+                                           (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context @e))
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
@@ -59,15 +72,15 @@
               "mouseup"
               (fn [e]
                 (let [event (:context @e)]
-                  ((b/intersects-controls? (fn [src trg]
-                                              (let [ctype (-> event :component :type)
-                                                    end-type (cond
-                                                               (= :endpoint ctype) {:type "end" :f ib/position-endpoint}
-                                                               (= :startpoint ctype) {:type  "start" :f ib/position-startpoint})]
+                  ((std/intersects-controls? (fn [src trg]
+                                               (let [ctype (-> event :component :type)
+                                                     end-type (cond
+                                                                (= :endpoint ctype) {:type "end" :f std/position-endpoint}
+                                                                (= :startpoint ctype) {:type  "start" :f std/position-startpoint})]
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
-                                                (ib/toggle-controls (:entity trg) false)
+                                                (std/toggle-controls (:entity trg) false)
                                                 ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
-                  (b/relations-validate (->> @e :context :entity))
+                  (std/relations-validate (->> @e :context :entity))
                   (bus/fire "uncommited.render")
                   (bus/fire "rendering.finish")
                   nil)))
@@ -83,7 +96,7 @@
               "mousemove"
               (fn [e]
                 (let [event (:context @e)]
-                  ((b/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                  ((std/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
@@ -99,7 +112,7 @@
               "mouseout"
               (fn [e]
                 (let [event (:context @e)]
-                  ((b/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                  ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
@@ -112,7 +125,7 @@
               "mousemove"
               (fn [e]
                 (let [event (:context @e)]
-                  (ib/toggle-controls (:entity event) true)
+                  (std/toggle-controls (:entity event) true)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))
@@ -125,7 +138,7 @@
               "mouseout"
               (fn [e]
                 (let [event (:context @e)]
-                  (ib/toggle-controls (:entity event) false)
+                  (std/toggle-controls (:entity event) false)
                   (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
                   (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
                   nil)))

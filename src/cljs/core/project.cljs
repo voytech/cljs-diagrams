@@ -27,86 +27,13 @@
 (defn clear-selection []
   (vswap! data dissoc :selection))
 
-(defn- lookup-all [x y]
-  (->> @d/drawables
-       vals
-       (filter #(d/contains-point? % x y))
-       (sort-by #(d/getp % :z-index) >)))
-
-(defonce event-map {"object:moving" "mousedrag"
-                    "mousedown" "mousedown"
-                    "mouseup" "mouseup"
-                    "click" "mouseclick"
-                    "dbclick" "mousedbclick"
-                    "mousemove" "mousemove"
-                    "mouseenter" "mouseenter"
-                    "mouseleave" "mouseleave"})
-
 (defonce source-events "click dbclick mousemove mousedown mouseup mouseenter mouseleave keypress keydown keyup")
-
-(defn- normalise-event-type [event]
-  (get event-map event))
-
-(defn- enrich [drawable]
-  (when (d/is-drawable (:uid drawable))
-    (let [entity             (e/lookup drawable :entity)
-          component          (e/lookup drawable :component)
-          attribute-value    (e/lookup drawable :attribute)
-          drawable           (:drawable component)]
-        {:entity           entity
-         :attribute-value  attribute-value
-         :drawable         drawable
-         :component        component})))
-
-(defn normalise-event [e obj]
-  (let [rect (.getBoundingClientRect obj)
-        left (- (.-clientX e) (.-left rect))
-        top (- (.-clientY e) (.-top rect))]
-     {:source e
-      :ctrl-key (.-ctrlKey e)
-      :target (.-target e)
-      :type (normalise-event-type (.-type e))
-      :state (or (:state @events/state) (normalise-event-type (.-type e)))
-      :left left
-      :top  top
-      :movement-x 0
-      :movement-y 0}))
-
-(defn- merge-streams [obj events]
-  (apply js/Rx.Observable.merge (mapv (fn [e] (js/Rx.Observable.fromEvent obj e)) events)))
-
-(defn- delta-stream [input func]
-  (.scan input (fn [acc,e] (merge acc e (func acc e))) {}))
-
-(defn- enriching-stream [input]
-  (.map input (fn [e]
-                 (->> (enrich (or (:drawable @events/state) (first (lookup-all (:left e) (:top e)))))
-                      (merge e)))))
-
-(defn- dispatch-events [id events]
-  (let [obj (js/document.getElementById id)
-        stream (merge-streams obj events)
-        onstart    (.map stream (fn [e] (events/on-phase :start) e))
-        normalized (.map onstart (fn [e] (normalise-event e obj)))
-        delta    (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
-                                                       :movement-y (- (:top e) (or (:top acc) 0))}))
-        enriched (enriching-stream delta)
-        pattern  (.map enriched (fn [e] (events/test e)))
-        last     (.map pattern  (fn [e] (merge e @events/state {:type (or (:state @events/state) (:type e))})))] ; this could be moved to events/tests at the end
-
-      (.subscribe last  (fn [e]
-                          (let [event-name (events/loose-event-name (-> e :entity :type)
-                                                                    (-> e :attribute-value :attribute :name)
-                                                                    (-> e :component :type)
-                                                                    (-> e :type))]
-                           (js/console.log (str "on " event-name))
-                           (b/fire event-name e))))))
 
 (defn- add-drag-start-pattern []
   (events/add-pattern :mousedrag
                       [(fn [e] (= (:type e) "mousedown"))
                        (fn [e] (= (:type e) "mousemove"))]
-                      (fn [e] (enrich (:drawable e)))))
+                      (fn [e] (events/enrich (:drawable e)))))
 
 (defn- add-drag-end-pattern []
   (events/add-pattern :mousemove
@@ -129,7 +56,7 @@
                              :else false)))]
                       (fn [e]
                         (events/schedule events/clear-state :start)
-                        (enrich (:d (events/remove-context :mouseout))))))
+                        (events/enrich (:d (events/remove-context :mouseout))))))
 
 (defn- add-point-click-pattern []
   (events/add-pattern :mousepointclick
@@ -154,7 +81,7 @@
     (add-drag-end-pattern)
     (add-mouse-out-pattern)
     (add-point-click-pattern)
-    (dispatch-events id (clojure.string/split source-events #" "))
+    (events/dispatch-events id (clojure.string/split source-events #" "))
     (b/fire "rendering.context.update" {:canvas (:canvas data)})))
 
 ;;--------------------------------

@@ -108,15 +108,11 @@
    (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
 
 (defn move-related-entity [entity related-entity relation left top coord-mode]
-  (let [adata (:association-data relation)
-        target-component (e/get-entity-component related-entity adata)
-        event-data {:entity related-entity
-                    :component target-component
-                    :drawable (:drawable target-component)
+  (let [event-data {:entity related-entity
                     :relation relation
                     :movement-x left
                     :movement-y top}]
-     (bhv/trigger-behaviour related-entity nil target-component "moveby" event-data)))
+     (bhv/trigger-behaviour related-entity nil nil "moveby" event-data)))
 
 (defn default-position-related-entity [entity related-entity relation left top coord-mode]
   (move-related-entity entity related-entity relation left top coord-mode))

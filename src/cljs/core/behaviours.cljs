@@ -52,33 +52,51 @@
   (let [key (make-key entity-type-or-id attribute-name component-type behaviour-type)]
     (vswap! active-behaviours assoc key behaviour-name)))
 
+(defn- inactive-beahviours [keys]
+  (filter #(nil? (get @active-behaviours  %)) keys))
+
 (defn- render-changes [events]
   (doseq [e events]
     (bus/after-all e (fn [ev]
                        (bus/fire "uncommited.render")
                        (bus/fire "rendering.finish")))))
 
-(defn autowire
-  ([entity-type components-inputs]
+(defn- reg [events behaviour]
+  (bus/on events (:handler behaviour))
+  (render-changes events))
+
+(defn- attach-to-entity [entity-type attribute-name behaviour]
+  (when (not (is-active entity-type attribute-name nil (:type behaviour)))
+    (let [event-name (ev/loose-event-name entity-type attribute-name nil (:action behaviour))]
+      (reg [event-name] behaviour)
+      (set-active-behaviour entity-type attribute-name nil (:type behaviour) (:name behaviour)))))
+
+(defn- attach-to-components [entity-type attribute-name components-inputs results behaviour]
+  (let [inputs (into {} (map (fn [e] {(:type e) e}) components-inputs))
+        valid-inputs (vals (select-keys inputs results))
+        kv (map (fn [e] {:k (make-key entity-type attribute-name (:type e) (:type behaviour)) :v e}) valid-inputs)
+        inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)
+        events (mapv #(ev/loose-event-name entity-type attribute-name (-> % :v :type) (:action behaviour)) inactive-kv)]
+    (js/console.log (clj->js events))
+    (reg events behaviour)
+    (doseq [k inactive-kv]
+      (set-active-behaviour entity-type attribute-name (-> k :v :type) (:type behaviour) (:name behaviour)))))
+
+(defn autowire [entity-type attribute-name components-inputs]
    (doseq [behaviour (vals @behaviours)]
-      (when-let [targets (validate behaviour components-inputs)]
-         (let [inputs  (into {} (map (fn [e] {(:type e) e}) components-inputs))
-               valid-inputs (vals (select-keys inputs targets))
-               kv (map (fn [e] {:k (make-key entity-type nil (:type e) (:type behaviour)) :v e}) valid-inputs)
-               inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)
-               events (mapv #(ev/event-name entity-type nil (-> % :v :type) (:action behaviour)) inactive-kv)]
-            (bus/on events (:handler behaviour))
-            (render-changes events)
-            (doseq [k inactive-kv] (set-active-behaviour entity-type nil (-> k :v :type) (:type behaviour) (:name behaviour)))))))
-  ([entity]
-   (let [components (:components entity)
-         type (:type entity)]
-      (autowire type components))))
+      (when-let [results (validate behaviour components-inputs)]
+         (cond
+           (= true results) (attach-to-entity entity-type attribute-name behaviour)
+           (coll? results)  (attach-to-components entity-type attribute-name components-inputs results behaviour)))))
 
 (defn generic-validator [_definitions]
   (fn [components]
     (let [types (set (map :type components))]
       (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions))))))
+
+(defn having-all [])
+
+(defn having-strict [])
 
 (defonce hooks (atom {}))
 

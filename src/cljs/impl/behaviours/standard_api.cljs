@@ -116,7 +116,7 @@
                     :relation relation
                     :movement-x left
                     :movement-y top}]
-     (bhv/trigger-behaviour related-entity target-component "moveby" event-data)))
+     (bhv/trigger-behaviour related-entity nil target-component "moveby" event-data)))
 
 (defn default-position-related-entity [entity related-entity relation left top coord-mode]
   (move-related-entity entity related-entity relation left top coord-mode))

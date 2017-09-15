@@ -82,6 +82,5 @@
 
 (defonce hooks (atom {}))
 
-(defn trigger-behaviour [entity component event-suffix data]
-  (js/console.log (str (:type entity) "." (:type component) "." event-suffix))
-  (bus/fire (str (name (:type entity)) "." (name (:type component)) "." event-suffix) data))
+(defn trigger-behaviour [entity avalue component event-suffix data]
+  (bus/fire (ev/loose-event-name (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))

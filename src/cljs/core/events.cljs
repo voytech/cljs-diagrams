@@ -79,8 +79,19 @@
   event)
 
 (defn event-name [entity-type attribute-name component-type event-type]
-  (clojure.string/join "." (cond-> []
-                             (not (nil? entity-type)) (conj (name entity-type))
-                             (not (nil? attribute-name)) (conj (name attribute-name))
-                             (not (nil? component-type)) (conj (name component-type))
-                             (not (nil? event-type)) (conj (name event-type)))))
+  (let [event-descriptor (clojure.string/join "" (cond-> []
+                                                   (not (nil? entity-type)) (conj "e")
+                                                   (not (nil? attribute-name)) (conj "a")
+                                                   (not (nil? component-type)) (conj "c")))]
+    (clojure.string/join "." (cond-> [event-descriptor]
+                               (not (nil? entity-type)) (conj (name entity-type))
+                               (not (nil? attribute-name)) (conj (name attribute-name))
+                               (not (nil? component-type)) (conj (name component-type))
+                               (not (nil? event-type)) (conj (name event-type))))))
+
+(defn loose-event-name [entity-type attribute-name component-type event-type]
+ (let [has-attribute  (and (not (nil? attribute-name)) (not (nil? entity-type)))]
+    (event-name (if has-attribute nil entity-type)
+                attribute-name
+                component-type
+                event-type)))                               

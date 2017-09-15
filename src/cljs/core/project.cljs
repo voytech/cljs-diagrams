@@ -16,15 +16,16 @@
 
 (defonce project (atom {}))
 
-(defonce lookup-cache (atom nil))
+(defonce data (volatile! {}))
 
-(defn- lookup [x y]
-  (if (and (not (nil? @lookup-cache)) (d/contains-point? @lookup-cache x y))
-      @lookup-cache
-      (do
-        (reset! lookup-cache nil)
-        (let [drawable (first (filter (fn [e] (d/contains-point? e x y)) (vals @d/drawables)))]
-         (reset! lookup-cache drawable)))))
+(defn make-selection [targets]
+  (vswap! data assoc :selection targets))
+
+(defn get-selection []
+  (get @data :selection))
+
+(defn clear-selection []
+  (vswap! data dissoc :selection))
 
 (defn- lookup-all [x y]
   (->> @d/drawables
@@ -56,16 +57,6 @@
          :attribute-value  attribute-value
          :drawable         drawable
          :component        component})))
-
-(defn- event-name [decomposed]
-  (if (nil? (:entity decomposed))
-    (:type decomposed)
-    (let [entity-type     (as-> decomposed $ (:entity $) (:type $) (str $ "."))
-          attribute-type  (if (not (nil? (:attribute-value decomposed)))
-                            (as-> decomposed $ (:attribute-value $) (:attribute $) (:name $) (str $ "."))
-                            "")
-          component-type  (as-> decomposed $ (:component $) (:type $) (name $) (str $ "."))]
-       (str entity-type attribute-type component-type (:type decomposed)))))
 
 (defn normalise-event [e obj]
   (let [rect (.getBoundingClientRect obj)
@@ -104,8 +95,12 @@
         last     (.map pattern  (fn [e] (merge e @events/state {:type (or (:state @events/state) (:type e))})))] ; this could be moved to events/tests at the end
 
       (.subscribe last  (fn [e]
-                          (js/console.log (str "on " (event-name e)))
-                          (b/fire (event-name e) e)))))
+                          (let [event-name (events/loose-event-name (-> e :entity :type)
+                                                                    (-> e :attribute-value :attribute :name)
+                                                                    (-> e :component :type)
+                                                                    (-> e :type))]
+                           (js/console.log (str "on " event-name))
+                           (b/fire event-name e))))))
 
 (defn- add-drag-start-pattern []
   (events/add-pattern :mousedrag

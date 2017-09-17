@@ -24,32 +24,28 @@
 
 (defn component-behaviours [component-type])
 
-(defn validate [behaviour components]
+(defn validate [behaviour target]
   (let [behaviour_ (cond
                     (string? behaviour) (get @behaviours behaviour)
                     (record? behaviour) (get @behaviours (:name behaviour)))]
-    ((:validator behaviour_) components)))
+    ((:validator behaviour_) target behaviour_)))
 
 (defn enable [entity component-type behaviour])
 
 (defn disable [entity component-type behaviour])
 
-(defn- make-key [entity-type-or-id attribute-name component-type behaviour-type]
-  (cond-> #{}
-          (not (nil? entity-type-or-id)) (conj entity-type-or-id)
-          (not (nil? attribute-name)) (conj attribute-name)
-          (not (nil? component-type)) (conj component-type)
-          (not (nil? behaviour-type)) (conj behaviour-type)))
+(defn- make-key [behaviour-type event-name]
+   #{behaviour-type event-name})
 
-(defn get-active-behaviour [entity-type-or-id attribute-name component-type behaviour-type]
-  (let [key (make-key entity-type-or-id attribute-name component-type behaviour-type)]
+(defn get-active-behaviour [behaviour-type event-name]
+  (let [key (make-key behaviour-type event-name)]
     (get @active-behaviours key)))
 
-(defn- is-active [entity-type-or-id attribute-name component-type behaviour-type]
-  (not (nil? (get-active-behaviour entity-type-or-id attribute-name component-type behaviour-type))))
+(defn- is-active [behaviour-type event-name]
+  (not (nil? (get-active-behaviour behaviour-type event-name))))
 
-(defn- set-active-behaviour [entity-type-or-id attribute-name component-type behaviour-type behaviour-name]
-  (let [key (make-key entity-type-or-id attribute-name component-type behaviour-type)]
+(defn- set-active-behaviour [behaviour-type event-name behaviour-name]
+  (let [key (make-key behaviour-type event-name)]
     (vswap! active-behaviours assoc key behaviour-name)))
 
 (defn- inactive-beahviours [keys]
@@ -65,34 +61,29 @@
   (bus/on events (:handler behaviour))
   (render-changes events))
 
-(defn- attach-to-entity [entity-type attribute-name behaviour]
-  (when (not (is-active entity-type attribute-name nil (:type behaviour)))
-    (let [event-name (ev/loose-event-name entity-type attribute-name nil (:action behaviour))]
-      (reg [event-name] behaviour)
-      (set-active-behaviour entity-type attribute-name nil (:type behaviour) (:name behaviour)))))
+(defn- with-check-if-already-attached [behaviour events]
+  (let [_new (filter #(nil? (get @active-behaviours (make-key (:type behaviour) %))) events)]
+    (reg _new behaviour)
+    (doseq [n _new]
+       (set-active-behaviour (:type behaviour) n (:name behaviour)))))
 
-(defn- attach-to-components [entity-type attribute-name components-inputs results behaviour]
-  (let [inputs (into {} (map (fn [e] {(:type e) e}) components-inputs))
-        valid-inputs (vals (select-keys inputs results))
-        kv (map (fn [e] {:k (make-key entity-type attribute-name (:type e) (:type behaviour)) :v e}) valid-inputs)
-        inactive-kv (filter #(nil? (get @active-behaviours (:k %))) kv)
-        events (mapv #(ev/loose-event-name entity-type attribute-name (-> % :v :type) (:action behaviour)) inactive-kv)]
-    (js/console.log (clj->js events))
-    (reg events behaviour)
-    (doseq [k inactive-kv]
-      (set-active-behaviour entity-type attribute-name (-> k :v :type) (:type behaviour) (:name behaviour)))))
+(defn autowire [entity]
+  (doseq [behaviour (vals @behaviours)]
+     (when-let [results (validate behaviour entity)]
+        (with-check-if-already-attached behaviour results))))
 
-(defn autowire [entity-type attribute-name components-inputs]
-   (doseq [behaviour (vals @behaviours)]
-      (when-let [results (validate behaviour components-inputs)]
-         (cond
-           (= true results) (attach-to-entity entity-type attribute-name behaviour)
-           (coll? results)  (attach-to-components entity-type attribute-name components-inputs results behaviour)))))
-
-(defn generic-validator [_definitions]
-  (fn [components]
-    (let [types (set (map :type components))]
-      (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions))))))
+(defn generic-components-validator
+  ([_definitions transform]
+   (fn [entity behaviour]
+     (let [components (vals (:components entity))
+           types (set (map :type components))]
+       (let [attach-to (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions)))]
+           (if (coll? attach-to)
+             (map #(transform entity behaviour %) attach-to)
+             (transform entity behaviour attach-to))))))
+  ([_definitions]
+   (generic-components-validator _definitions (fn [entity behaviour result]
+                                                 (ev/loose-event-name (:type entity) nil result (:action behaviour))))))
 
 (defn having-all [])
 

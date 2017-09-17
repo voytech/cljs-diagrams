@@ -55,7 +55,6 @@
 (defn update-manhattan-layout [entity s-normal e-normal]
   (let [start (e/get-entity-component entity "start")
         end (e/get-entity-component entity "end")
-        connector (e/get-entity-component entity "connector")
         mid-points (compute-mid-points entity start end s-normal e-normal)
         path (compute-path (center-point start) (center-point end) mid-points)]
      (-> (update-line-components entity path)
@@ -73,7 +72,7 @@
            end (e/get-entity-component entity "end")
            connector (e/get-entity-component entity "connector")
            normals (calculate-normals entity start end)]
-        (d/setp (:drawable connector) :visible false)
+        (e/remove-entity-component entity "connector")
         (cond
           (= :startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
           (= :endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))

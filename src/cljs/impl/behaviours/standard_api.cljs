@@ -150,15 +150,17 @@
   (swap! hooks assoc-in [sent-type rent-type] hook))
 
 (defn refresh-arrow-angle [relation-component arrow-component]
-  (let [x1 (-> relation-component :drawable (d/getp :x1))
-        y1 (-> relation-component :drawable (d/getp :y1))
-        x2 (-> relation-component :drawable (d/getp :x2))
-        y2 (-> relation-component :drawable (d/getp :y2))]
-     (d/setp (:drawable arrow-component) :angle (calculate-angle x1 y1 x2 y2))))
+  (when (not (nil? relation-component))
+    (let [x1 (-> relation-component :drawable (d/getp :x1))
+          y1 (-> relation-component :drawable (d/getp :y1))
+          x2 (-> relation-component :drawable (d/getp :x2))
+          y2 (-> relation-component :drawable (d/getp :y2))]
+       (d/setp (:drawable arrow-component) :angle (calculate-angle x1 y1 x2 y2)))))
 
 (defn- to-the-center-of [line x y shape]
-  (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
-                    y (+ (d/get-top shape) (/ (d/get-height shape) 2))}))
+  (when (not (nil? line))
+    (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
+                      y (+ (d/get-top shape) (/ (d/get-height shape) 2))})))
 
 (defn insert-breakpoint []
   (fn [e]

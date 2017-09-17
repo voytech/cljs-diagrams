@@ -36,7 +36,7 @@
              (apply core.entities/add-entity-component e# (component-factory# data# options#))
              (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
-               (core.behaviours/autowire (name '~name) nil (vals (:components result#)))
+               (core.behaviours/autowire result#)
                (core.eventbus/fire "entity.render" {:entity result#})
                result#)))))))
 

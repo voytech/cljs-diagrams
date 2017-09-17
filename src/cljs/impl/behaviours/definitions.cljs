@@ -3,6 +3,7 @@
             [core.eventbus :as bus]
             [core.options :as o]
             [core.entities :as e]
+            [core.events :as ev]
             [core.drawables :as d]
             [impl.behaviours.standard-api :as std]
             [impl.behaviours.manhattan :as m])
@@ -10,9 +11,9 @@
 
 (defbehaviour moving-entity
               "Default Entity Moving" :moving
-              (b/generic-validator [{:tmpl #{:main :control}
-                                     :func (fn [requires types] (= requires types))
-                                     :result [:main]}])
+              (b/generic-components-validator [{:tmpl #{:main :control}
+                                                :func (fn [requires types] (= requires types))
+                                                :result [:main]}])
               "mousedrag"
               (fn [e]
                 (let [event (:context @e)]
@@ -21,9 +22,10 @@
 
 (defbehaviour moving-entity-by
               "Default Relation Link Moving By" :moving-by
-              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                     :result true}])
+              (b/generic-components-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                                :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                                :result true}]
+                                              (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil (:action behaviour))))
               "moveby"
               (fn [e]
                 (let [event (:context @e)
@@ -37,9 +39,9 @@
 
 (defbehaviour manhattan-moving-component
               "Manhattan Layout" :component-moving
-              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                     :result [:startpoint :endpoint]}])
+              (b/generic-components-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                                :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                                :result [:startpoint :endpoint]}])
               "mousedrag"
               (fn [e]
                 (let [event (:context @e)]
@@ -65,9 +67,9 @@
 
 (defbehaviour make-relation
               "Connect Two Entities" :make-relation
-              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                     :result [:startpoint :endpoint]}])
+              (b/generic-components-validator [{:tmpl #{:startpoint :endpoint :relation}
+                                                :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                                :result [:startpoint :endpoint]}])
               "mouseup"
               (fn [e]
                 (let [event (:context @e)]
@@ -84,12 +86,12 @@
 
 (defbehaviour hovering-entity
               "Default Entity Hovering" :hovering
-              (b/generic-validator [{:tmpl #{:main :control}
-                                     :func (fn [requires types] (= requires types))
-                                     :result [:main]}
-                                    {:tmpl #{:startpoint :endpoint}
-                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                     :result [:startpoint :endpoint]}])
+              (b/generic-components-validator [{:tmpl #{:main :control}
+                                                :func (fn [requires types] (= requires types))
+                                                :result [:main]}
+                                               {:tmpl #{:startpoint :endpoint}
+                                                :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                                :result [:startpoint :endpoint]}])
               "mousemove"
               (fn [e]
                 (let [event (:context @e)]
@@ -98,12 +100,12 @@
 
 (defbehaviour leaving-entity
               "Default Entity Leave" :leaving
-              (b/generic-validator [{:tmpl #{:main :control}
-                                     :func (fn [requires types] (= requires types))
-                                     :result [:main]}
-                                    {:tmpl #{:startpoint :endpoint}
-                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                     :result [:startpoint :endpoint]}])
+              (b/generic-components-validator  [{:tmpl #{:main :control}
+                                                 :func (fn [requires types] (= requires types))
+                                                 :result [:main]}
+                                                {:tmpl #{:startpoint :endpoint}
+                                                 :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+                                                 :result [:startpoint :endpoint]}])
               "mouseout"
               (fn [e]
                 (let [event (:context @e)]
@@ -112,9 +114,9 @@
 
 (defbehaviour show-entity-controls
               "Default Show Controls" :controls-show
-              (b/generic-validator [{:tmpl #{:main :control}
-                                     :func (fn [requires types] (= requires types))
-                                     :result [:main]}])
+              (b/generic-components-validator [{:tmpl #{:main :control}
+                                                :func (fn [requires types] (= requires types))
+                                                :result [:main]}])
               "mousemove"
               (fn [e]
                 (let [event (:context @e)]
@@ -123,9 +125,9 @@
 
 (defbehaviour hide-entity-controls
               "Default Hide Controls" :controls-hide
-              (b/generic-validator [{:tmpl #{:main :control}
-                                     :func (fn [requires types] (= requires types))
-                                     :result [:main]}])
+              (b/generic-components-validator [{:tmpl #{:main :control}
+                                                :func (fn [requires types] (= requires types))
+                                                :result [:main]}])
               "mouseout"
               (fn [e]
                 (let [event (:context @e)]

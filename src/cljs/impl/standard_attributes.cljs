@@ -4,13 +4,11 @@
            [core.project :as p]
            [impl.drawables :as d]
            [impl.components :as c]
+           [core.behaviours :as b]
+           [core.events :as ev]
            [core.options :as o])
 
- (:require-macros [core.macros :refer [defattribute with-components value]]))
-
-(def highlight-hovering
-  {"mouse:over" (behaviours/highlight true  (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7}))
-   "mouse:out"  (behaviours/highlight false (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7}))})
+ (:require-macros [core.macros :refer [defattribute defbehaviour with-components value]]))
 
 (defattribute name
   (with-definition
@@ -18,8 +16,7 @@
      :index 0})
   (with-components data options
     [(c/value "value" {:text data})])
-  (with-behaviours
-    {:value highlight-hovering}))
+  (with-behaviours))
 
 (defattribute description
   (with-definition
@@ -28,11 +25,7 @@
   (with-components data options
     [(c/description "desc" {:text "Description"})
      (c/value "value" {:text data :left 60})])
-  (with-behaviours
-    {:value highlight-hovering}))
-
-(defn status-components [status])
-
+  (with-behaviours))
 
 (defattribute state
   (with-definition
@@ -48,3 +41,31 @@
       (value :closed
         (with-components data options
           [(c/value "value-closed" {:text "CLOSED"})]))]))
+
+
+(defbehaviour attribute-hovering
+              "Default Attribute Hover" :attribute-hovering
+              (b/generic-components-validator [{:tmpl #{:value}
+                                                :func b/having-all-components
+                                                :result [:value]}]
+                                              (fn [target behaviour result]
+                                                (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
+              "mousemove"
+              (fn [e]
+                (let [event (:context @e)]
+                  ((behaviours/highlight true (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7})) event)
+                  nil)))
+
+(defbehaviour leaving-attribute
+            "Default Entity Leave" :leaving
+            (b/generic-components-validator  [{:tmpl #{:value}
+                                               :func b/having-all-components
+                                               :result [:value]}]
+                                             (fn [target behaviour result]
+                                               (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
+
+            "mouseout"
+            (fn [e]
+              (let [event (:context @e)]
+                ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                nil)))

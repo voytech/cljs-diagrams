@@ -9,6 +9,26 @@
             [impl.behaviours.manhattan :as m])
   (:require-macros [core.macros :refer [defbehaviour]]))
 
+;(defbehaviour moving-entity
+;              "Default Entity Moving" :moving
+;              (having-strict-components #{:main :control} attach-to #{:main}
+;              "mousedrag"
+;              (fn [e]
+;                (let [event (:context @e)]
+;                  ((std/moving-entity) event)
+;                  nil))
+
+;(defbehaviour moving-entity
+;              "Default Entity Moving" :moving
+;              (validate
+;                 (having-strict :main :control)
+;                 (bind-to :main))
+;              "mousedrag"
+;              (fn [e]
+;                (let [event (:context @e)]
+;                  ((std/moving-entity) event)
+;                  nil))
+
 (defbehaviour moving-entity
               "Default Entity Moving" :moving
               (b/generic-components-validator [{:tmpl #{:main :control}

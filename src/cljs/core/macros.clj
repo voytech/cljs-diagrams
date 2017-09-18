@@ -68,21 +68,41 @@
              ([entity# data# options#]
               (let [attribute#   (core.entities/get-attribute (name '~name))
                     attr-value#  (core.entities/create-attribute-value attribute# data# options#)]
+                (core.behaviours/autowire attr-value#)
                 (core.entities/add-entity-attribute-value entity# attr-value#))))))))
+
 
 (defmacro defdrawable [name options-defaults]
   `(defn ~name [options#]
      (core.drawables/create-drawable (keyword (name '~name)) (merge options# ~options-defaults))))
 
+(defmacro defcomponent [type drawable-ref props init-data]
+ `(do (core.entities/define-component (-> '~type name keyword) ~drawable-ref ~props ~init-data)
+      (defn ~type
+        ([name# data# p#]
+         (core.entities/new-component (-> '~type name keyword) name# data# p#))
+        ([name# data#]
+         (core.entities/new-component (-> '~type name keyword) name# data# {}))
+        ([name#]
+         (core.entities/new-component (-> '~type name keyword) name# {} {})))))
+
+
 (defmacro defbehaviour [name display-name type validator action handler]
   `(core.behaviours/add-behaviour (name '~name) ~display-name ~type ~validator ~action ~handler))
 
-(defmacro defcomponent [type drawable-ref props init-data]
-  `(do (core.entities/define-component (-> '~type name keyword) ~drawable-ref ~props ~init-data)
-       (defn ~type
-         ([name# data# p#]
-          (core.entities/new-component (-> '~type name keyword) name# data# p#))
-         ([name# data#]
-          (core.entities/new-component (-> '~type name keyword) name# data# {}))
-         ([name#]
-          (core.entities/new-component (-> '~type name keyword) name# {} {})))))
+(defmacro having-all [& test-types]
+  `{:tmpl (set ~test-types)
+    :func core.behaviours/having-all-components
+    :result true})
+
+(defmacro having-strict [& test-types]
+  `{:tmpl (set ~test-types)
+    :func core.behaviours/having-strict-components
+    :result true})
+
+(defmacro bind-to [& targets]
+  `{:result (set ~targets)})
+
+(defmacro validate [condition bind]
+  `(-> (merge ~condition ~bind)
+       (core.behaviours/generic-components-validator)))

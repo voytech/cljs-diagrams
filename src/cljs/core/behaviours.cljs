@@ -67,27 +67,28 @@
     (doseq [n _new]
        (set-active-behaviour (:type behaviour) n (:name behaviour)))))
 
-(defn autowire [entity]
+(defn autowire [target]
   (doseq [behaviour (vals @behaviours)]
-     (when-let [results (validate behaviour entity)]
+     (when-let [results (validate behaviour target)]
         (with-check-if-already-attached behaviour (if (not (coll? results)) [results] results)))))
 
 (defn generic-components-validator
   ([_definitions transform]
-   (fn [entity behaviour]
-     (let [components (vals (:components entity))
+   (fn [target behaviour]
+     (let [components (vals (:components target))
            types (set (map :type components))]
        (let [attach-to (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions)))]
-           (if (coll? attach-to)
-             (map #(transform entity behaviour %) attach-to)
-             (transform entity behaviour attach-to))))))
+           (when (not (nil? attach-to))
+             (if (coll? attach-to)
+               (map #(transform target behaviour %) attach-to)
+               (transform target behaviour attach-to)))))))
   ([_definitions]
-   (generic-components-validator _definitions (fn [entity behaviour result]
-                                                 (ev/loose-event-name (:type entity) nil result (:action behaviour))))))
+   (generic-components-validator _definitions (fn [target behaviour result]
+                                                 (ev/loose-event-name (:type target) nil result (:action behaviour))))))
 
-(defn having-all [])
+(defn having-strict-components [test-types actual-types] (= test-types actual-types))
 
-(defn having-strict [])
+(defn having-all-components [test-types actual-types] (= test-types (clojure.set/intersection test-types actual-types)))
 
 (defonce hooks (atom {}))
 

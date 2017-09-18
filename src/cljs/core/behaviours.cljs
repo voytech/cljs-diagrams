@@ -70,7 +70,7 @@
 (defn autowire [entity]
   (doseq [behaviour (vals @behaviours)]
      (when-let [results (validate behaviour entity)]
-        (with-check-if-already-attached behaviour results))))
+        (with-check-if-already-attached behaviour (if (not (coll? results)) [results] results)))))
 
 (defn generic-components-validator
   ([_definitions transform]

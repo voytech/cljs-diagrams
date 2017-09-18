@@ -7,6 +7,7 @@
 (declare get-entity-component)
 (declare get-attribute-value)
 (declare get-attribute-value-component)
+(declare new-component)
 
 (defonce entities (atom {}))
 
@@ -125,6 +126,16 @@
 
 (defn get-entity-component [entity name]
  (get-in @entities [(:uid entity) :components name]))
+
+(defn assert-component
+ ([entity name type data]
+  (let [component (get-entity-component entity name)]
+    (if (or (nil? component) (not= type (:type component)))
+      (add-entity-component entity (new-component type name data))
+      (d/set-data (:drawable component) data))
+    (get-entity-component entity name)))
+ ([entity name type]
+  (assert-component entity name type {})))
 
 (defn get-entity-content-bbox [entity]
    (:content-bbox entity))

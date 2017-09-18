@@ -25,7 +25,8 @@
               (b/generic-components-validator [{:tmpl #{:startpoint :endpoint :relation}
                                                 :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
                                                 :result true}]
-                                              (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil (:action behaviour))))
+                                              (fn [entity behaviour result]
+                                                (ev/loose-event-name (:type entity) nil nil (:action behaviour))))
               "moveby"
               (fn [e]
                 (let [event (:context @e)

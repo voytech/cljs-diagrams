@@ -67,6 +67,7 @@
   (when-not (nil? (:originalEvent @event))
     (.stopPropagation (:originalEvent @event))))
 
+;; as long as listeners are vector we should rather use peek and it should be sorted in reversed order.
 (defn- next [listeners event]
   (let [listener (first listeners)]
     (when-not (nil? listener)

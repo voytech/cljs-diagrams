@@ -103,6 +103,9 @@
 (defmacro bind-to [& targets]
   `{:result (set ~targets)})
 
-(defmacro validate [condition bind]
-  `(-> (merge ~condition ~bind)
+(defmacro with-transform [transform]
+  `{:transform ~transform})
+
+(defmacro validate [& body]
+  `(-> [(merge ~@body)]
        (core.behaviours/generic-components-validator)))

@@ -16,16 +16,19 @@
 
 (defonce project (atom {}))
 
-(defonce data (volatile! {}))
+(defonce project-state (volatile! {}))
+
+(defn get-container []
+  (dom/parent (dom/j-query-id (-> @project :id))))
 
 (defn make-selection [targets]
-  (vswap! data assoc :selection targets))
+  (vswap! project-state assoc :selection targets))
 
 (defn get-selection []
-  (get @data :selection))
+  (get @project-state :selection))
 
 (defn clear-selection []
-  (vswap! data dissoc :selection))
+  (vswap! project-state dissoc :selection))
 
 (defonce source-events "click dbclick mousemove mousedown mouseup mouseenter mouseleave keypress keydown keyup")
 

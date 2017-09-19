@@ -1,6 +1,5 @@
 (ns core.project
- (:require [reagent.core :as reagent :refer [atom]]
-           [cljsjs.jquery]
+ (:require [cljsjs.jquery]
            [cljsjs.fabric]
            [cljsjs.rx]
            [core.utils.dom :as dom]

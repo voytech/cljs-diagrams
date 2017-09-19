@@ -4,7 +4,6 @@
 (def TRANSPARENT_FILL {:background-color "rgb(255,255,255)"})
 (def DEFAULT_FILL {:background-color "black"})
 (def DEFAULT_STROKE {:border-color "black" :border-width 1.5})
-(def LOCKED (merge LOCKED_MOVEMENT LOCKED_ROTATION LOCKED_SCALING NO_DEFAULT_CONTROLS))
 (def INVISIBLE {:visible false})
 (def HANDLER_SMALL {:radius 8 :background-color "#fff" :border-color "black" :border-width 1.5})
 (def HANDLER_SMALLEST {:radius 8 :background-color "#fff" :border-color "black" :border-width 1.5})
@@ -12,7 +11,8 @@
                                 :normal-color "black"
                                 :highlight-width 3
                                 :normal-width 1.5})
-(def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE RESTRICTED_BEHAVIOUR NO_DEFAULT_CONTROLS))
+
+(def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE))
 
 (def TEXT_DEFAULT_FONT {:font-family "calibri"})
 (def TEXT_NORMAL_SIZE  {:font-size 12})

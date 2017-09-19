@@ -7,24 +7,14 @@
             [core.drawables :as d]
             [impl.behaviours.standard-api :as std]
             [impl.behaviours.manhattan :as m])
-  (:require-macros [core.macros :refer [defbehaviour]]))
+  (:require-macros [core.macros :refer [defbehaviour having-all having-strict with-transform validate bind-to]]))
 
-;(defbehaviour moving-entity
-;              "Default Entity Moving" :moving
-;              (validate
-;                 (having-strict :main :control)
-;                 (bind-to :main))
-;              "mousedrag"
-;              (fn [e]
-;                (let [event (:context @e)]
-;                  ((std/moving-entity) event)
-;                  nil))
 
 (defbehaviour moving-entity
               "Default Entity Moving" :moving
-              (b/generic-components-validator [{:tmpl #{:main :control}
-                                                :func (fn [requires types] (= requires types))
-                                                :result [:main]}])
+              (validate
+                (having-strict :main :control)
+                (bind-to :main))
               "mousedrag"
               (fn [e]
                 (let [event (:context @e)]
@@ -33,11 +23,9 @@
 
 (defbehaviour moving-entity-by
               "Default Relation Link Moving By" :moving-by
-              (b/generic-components-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                                :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                                :result true}]
-                                              (fn [entity behaviour result]
-                                                (ev/loose-event-name (:type entity) nil nil (:action behaviour))))
+              (validate
+                (having-all :startpoint :endpoint :relation)
+                (with-transform (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil (:action behaviour)))))
               "moveby"
               (fn [e]
                 (let [event (:context @e)
@@ -51,9 +39,9 @@
 
 (defbehaviour manhattan-moving-component
               "Manhattan Layout" :component-moving
-              (b/generic-components-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                                :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                                :result [:startpoint :endpoint]}])
+              (validate
+                (having-all :startpoint :endpoint :relation)
+                (bind-to :startpoint :endpoint))
               "mousedrag"
               (fn [e]
                 (let [event (:context @e)]
@@ -79,9 +67,9 @@
 
 (defbehaviour make-relation
               "Connect Two Entities" :make-relation
-              (b/generic-components-validator [{:tmpl #{:startpoint :endpoint :relation}
-                                                :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-                                                :result [:startpoint :endpoint]}])
+              (validate
+                (having-all :startpoint :endpoint :relation)
+                (bind-to :startpoint :endpoint))
               "mouseup"
               (fn [e]
                 (let [event (:context @e)]
@@ -126,9 +114,9 @@
 
 (defbehaviour show-entity-controls
               "Default Show Controls" :controls-show
-              (b/generic-components-validator [{:tmpl #{:main :control}
-                                                :func (fn [requires types] (= requires types))
-                                                :result [:main]}])
+              (validate
+                (having-strict :main :control)
+                (bind-to :main))
               "mousemove"
               (fn [e]
                 (let [event (:context @e)]
@@ -137,9 +125,9 @@
 
 (defbehaviour hide-entity-controls
               "Default Hide Controls" :controls-hide
-              (b/generic-components-validator [{:tmpl #{:main :control}
-                                                :func (fn [requires types] (= requires types))
-                                                :result [:main]}])
+              (validate
+                (having-strict :main :control)
+                (bind-to :main))
               "mouseout"
               (fn [e]
                 (let [event (:context @e)]

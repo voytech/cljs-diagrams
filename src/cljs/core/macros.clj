@@ -102,13 +102,17 @@
 (defmacro bind-to [& targets]
   `{:result (vector ~@targets)})
 
-(defmacro with-transform [transform]
-  `{:transform ~transform})
+(defmacro make-event [transform]
+  `~transform)
+
+(defmacro -- [& body]
+  `(merge ~@body))
 
 (defmacro validate [& body]
-  `(let [validator-def# (merge ~@body)
-         transform#  (:transform validator-def#)
-         def# (dissoc validator-def# :transform)]
-     (if (nil? transform#)
-       (core.behaviours/generic-components-validator [def#])
-       (core.behaviours/generic-components-validator [def#] transform#))))
+  (let [lst (last body)
+        f? (= 'fn (first lst))
+        defi (if f? (butlast body) body)]
+    `(let [def# (vector ~@defi)]
+       (if (= true ~f?)
+         (core.behaviours/generic-components-validator def# ~lst)
+         (core.behaviours/generic-components-validator def#)))))

@@ -18,13 +18,22 @@
 (defonce project-state (volatile! {}))
 
 (defn get-container []
-  (dom/parent (dom/j-query-id (-> @project :id))))
+  (aget (dom/parent (dom/j-query-id (-> @project :id))) 0))
 
 (defn make-selection [targets]
   (vswap! project-state assoc :selection targets))
 
 (defn get-selection []
   (get @project-state :selection))
+
+(defn append-state [key value]
+  (vswap! project-state assoc key value))
+
+(defn get-state [key]
+  (get @project-state key))
+
+(defn remove-state [key]
+  (vswap! project-state dissoc key))  
 
 (defn clear-selection []
   (vswap! project-state dissoc :selection))

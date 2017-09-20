@@ -6,9 +6,10 @@
            [impl.components :as c]
            [core.behaviours :as b]
            [core.events :as ev]
-           [core.options :as o])
+           [core.options :as o]
+           [impl.behaviours.editor :as editor])
 
- (:require-macros [core.macros :refer [defattribute defbehaviour with-components value]]))
+ (:require-macros [core.macros :refer [defattribute defbehaviour having-all having-strict make-event validate bind-to -- with-components value]]))
 
 (defattribute name
   (with-definition
@@ -45,11 +46,11 @@
 
 (defbehaviour attribute-hovering
               "Default Attribute Hover" :attribute-hovering
-              (b/generic-components-validator [{:tmpl #{:value}
-                                                :func b/having-all-components
-                                                :result [:value]}]
-                                              (fn [target behaviour result]
-                                                (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
+              (validate
+                (-- (having-all :value)
+                    (bind-to :value))
+                (fn [target behaviour result]
+                  (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
               "mousemove"
               (fn [e]
                 (let [event (:context @e)]
@@ -58,14 +59,26 @@
 
 (defbehaviour leaving-attribute
             "Default Entity Leave" :leaving
-            (b/generic-components-validator  [{:tmpl #{:value}
-                                               :func b/having-all-components
-                                               :result [:value]}]
-                                             (fn [target behaviour result]
-                                               (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
-
+            (validate
+              (-- (having-all :value)
+                  (bind-to :value))
+              (fn [target behaviour result]
+                (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
             "mouseout"
             (fn [e]
               (let [event (:context @e)]
                 ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                 nil)))
+
+(defbehaviour text-attribute-editing
+              "Attribute Edit" :attribute-editing
+              (validate
+                (-- (having-all :value)
+                    (bind-to :value))
+                (fn [target behaviour result]
+                  (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
+              "mousepointclick"
+              (fn [e]
+                (let [event (:context @e)]
+                  (editor/open event)
+                  nil)))

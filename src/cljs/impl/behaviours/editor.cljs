@@ -24,7 +24,10 @@
 
 (defn commit []
   (when-let [editor (p/get-state :editor)]
-    (let [value (aget (:input editor) "value")]
+    (let [value (aget (:input editor) "value")
+          eid (-> editor :entity :uid)
+          aid (-> editor :attribute-value :id)]
+       (e/set-attribute-value eid aid value)
        (.removeChild (p/get-container) (:input editor)))))
 
 (defn open [event]
@@ -32,11 +35,10 @@
         drawable (:drawable event)
         input (js/document.createElement "input")
         style (.-style input)]
-    (commit)
+    (.addEventListener input "change" commit)
     (set-editor-pos input drawable)
     (aset input "value" (e/get-attribute-value-data (:attribute-value event)))
-    (p/append-state :editor {:input input :attribute-value (:attribute-value event)})
-    (js/console.log (clj->js event))
-    (js/console.log root)
-    (js/console.log input)
+    (p/append-state :editor {:input input
+                             :entity (:entity event)
+                             :attribute-value (:attribute-value event)})
     (.appendChild root input)))

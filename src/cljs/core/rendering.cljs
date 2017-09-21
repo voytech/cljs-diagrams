@@ -39,7 +39,7 @@
 
 (defn- render-entity [entity]
   (render-components  (e/components-of entity))
-  (doseq [attribute-value (:attributes entity)]
+  (doseq [attribute-value (e/get-attributes-values entity)]
     (render-components (e/components-of attribute-value)))
   (let [bbox (l/get-bbox entity)
         cbox {:left (+ (:left (e/get-entity-content-bbox entity)) (:left bbox))

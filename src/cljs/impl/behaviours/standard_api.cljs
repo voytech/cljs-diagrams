@@ -106,7 +106,7 @@
        (if (= ref-component-name (:name component))
          (default-position-entity-component entity (:name component) left top :offset)
          (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))
-   (position-attributes-components (:attributes entity) (:left effective-offset) (:top effective-offset))))
+   (position-attributes-components (vals (:attributes entity)) (:left effective-offset) (:top effective-offset))))
 
 (defn move-related-entity [entity related-entity relation left top coord-mode]
   (let [event-data {:entity related-entity

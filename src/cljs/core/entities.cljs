@@ -26,6 +26,7 @@
                       cardinality
                       index
                       domain
+                      sync
                       bbox
                       factory])
 
@@ -59,7 +60,7 @@
                           :component (:name component)}))))
 
 (defn- define-lookups-on-attributes [entity]
-  (doseq [attribute (:attributes entity)]
+  (doseq [attribute (vals (:attributes entity))]
     (doseq [component (vals (:components attribute))]
       (let [did (:uid (:drawable component))]
         (define-lookup did {:entity (:uid entity)
@@ -97,7 +98,7 @@
   ([type components content-bbox]
    (let [uid (str (random-uuid))
          _components (apply merge (mapv (fn [e] {(:name e) (Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
-         entity (Entity. uid type _components [] [] content-bbox)]
+         entity (Entity. uid type _components {} [] content-bbox)]
      (define-lookups-on-components entity)
      (swap! entities assoc uid entity)
      (bus/fire "entity.added" {:entity entity})
@@ -176,6 +177,12 @@
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
+(defn- sorted-attributes-map [input]
+  (into (sorted-map-by (fn [k1 k2]
+                         (compare [(-> (get input k1) :attribute :index) k1]
+                                  [(-> (get input k2) :attribute :index) k2])))
+    input))
+
 (defn create-attribute-value [attribute_ data options]
   (let [attribute (get-attribute (:name attribute_))
         domain (:domain attribute)
@@ -188,20 +195,20 @@
 (defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]
     (let [entity-fetch (entity-by-id (:uid entity))
-          existing-cardinality (count (filter #(= (-> % :attribute :name) (-> attribute-value :attribute :name)) (:attributes entity-fetch)))
+          existing-cardinality (count (filter #(= (-> % :attribute :name) (-> attribute-value :attribute :name)) (vals (:attributes entity-fetch))))
           cardinality (:cardinality (:attribute attribute-value))]
       (if (> cardinality existing-cardinality)
-        (let [attributes (conj (:attributes entity-fetch) attribute-value)
-              sorted (sort-by #(:index (:attribute %)) attributes)]
+        (let [attributes (:attributes entity-fetch)
+              sorted (sorted-attributes-map (assoc attributes (:id attribute-value) attribute-value))]
            (swap! entities assoc-in [(:uid entity) :attributes] sorted)
            (define-lookups-on-attributes (entity-by-id (:uid entity))))
         (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
 
 (defn get-attribute-value [entity id]
-  (first (filter #(= (:id %) id) (:attributes entity))))
+  (get-in @entities [(:uid entity) :attributes id]))
 
 (defn get-attributes-values [entity]
-  (:attributes (entity-by-id (:uid entity))))
+  (vals (:attributes (entity-by-id (:uid entity)))))
 
 (defn get-attribute-value-component
   ([attribute-value component-name]
@@ -219,6 +226,15 @@
 (defn get-attribute-value-data [attribute-value]
   (:value attribute-value))
 
+(defn set-attribute-value [entity-id av-id value]
+  (let [entity (entity-by-id entity-id)
+        attribute-value (get-attribute-value entity av-id)
+        attribute (:attribute attribute-value)]
+    (swap! entities assoc-in [entity-id :attributes av-id :value] value)
+    (when-let [sync (:sync attribute)]
+      (sync (get-attribute-value entity av-id))
+      (bus/fire "uncommited.render")
+      (bus/fire "rendering.finish"))))
 ;;=====================================================================================
 ;;============================COMPONENT DEFINITIONS====================================
 ;;=====================================================================================

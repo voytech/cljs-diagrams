@@ -2,6 +2,7 @@
  (:require [core.entities :as e]
            [impl.behaviours.standard-api :as behaviours]
            [core.project :as p]
+           [core.drawables :as cd]
            [impl.drawables :as d]
            [impl.components :as c]
            [core.behaviours :as b]
@@ -14,7 +15,10 @@
 (defattribute name
   (with-definition
     {:cardinality 1
-     :index 0})
+     :index 0
+     :sync (fn [av]
+             (cd/setp (e/get-attribute-value-drawable av "value") :text (:value av)))})
+
   (with-components data options
     [(c/value "value" {:text data})])
   (with-behaviours))

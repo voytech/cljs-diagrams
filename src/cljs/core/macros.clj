@@ -57,6 +57,7 @@
                                                (if ~has-domain
                                                  ~domain
                                                  nil)
+                                               (:sync ~dfinition)   
                                                (:bbox ~dfinition)
                                                (if ~has-components
                                                  ~components

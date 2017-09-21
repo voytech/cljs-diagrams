@@ -28,17 +28,25 @@
           eid (-> editor :entity :uid)
           aid (-> editor :attribute-value :id)]
        (e/set-attribute-value eid aid value)
-       (.removeChild (p/get-container) (:input editor)))))
+       (.removeChild (p/get-container) (:input editor))
+       (p/remove-state :editor))))
+
+(defn- events [root input]
+  (.addEventListener input "change" commit)
+  (.addEventListener input "blur" commit))
+
 
 (defn open [event]
+  (commit)
   (let [root (p/get-container)
         drawable (:drawable event)
         input (js/document.createElement "input")
         style (.-style input)]
-    (.addEventListener input "change" commit)
+    (events root input)
     (set-editor-pos input drawable)
     (aset input "value" (e/get-attribute-value-data (:attribute-value event)))
     (p/append-state :editor {:input input
                              :entity (:entity event)
                              :attribute-value (:attribute-value event)})
-    (.appendChild root input)))
+    (.appendChild root input)
+    (.focus input)))

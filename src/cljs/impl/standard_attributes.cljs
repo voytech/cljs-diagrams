@@ -26,7 +26,9 @@
 (defattribute description
   (with-definition
     {:cardinality 1
-     :index 1})
+     :index 1
+     :sync (fn [av]
+             (cd/setp (e/get-attribute-value-drawable av "value") :text (:value av)))})
   (with-components data options
     [(c/description "desc" {:text "Description"})
      (c/value "value" {:text data :left 60})])

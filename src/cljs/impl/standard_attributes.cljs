@@ -88,11 +88,10 @@
 
 (defbehaviour state-attribute-editing
               "Attribute Edit" :attribute-editing
-              (validate
-                (-- (having-all :state)
-                    (bind-to :state))
-                (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
+              (fn [target this]
+                (let [attribute (:attribute target)]
+                  (when-let [domain (:domain attribute)]
+                    (ev/loose-event-name nil (-> attribute :name) :value "mousepointclick"))))
               (fn [e]
                 (let [event (:context @e)]
                   (ed/domain-editor event)

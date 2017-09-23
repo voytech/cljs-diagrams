@@ -63,8 +63,6 @@
     (aset style "height" (str (+ (d/get-height drawable) 5) "px"))))
 
 (defn commit [type]
-  (js/console.log (clj->js type))
-  (js/console.log (clj->js (get-state type)))
   (when-let [editor (get-state type)]
     (let [value (get-element-value type editor)
           eid (-> editor :entity :uid)

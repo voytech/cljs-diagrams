@@ -8,7 +8,7 @@
            [core.behaviours :as b]
            [core.events :as ev]
            [core.options :as o]
-           [impl.behaviours.editor :as editor])
+           [impl.behaviours.editors :as ed])
 
  (:require-macros [core.macros :refer [defattribute defbehaviour having-all having-strict make-event validate bind-to -- with-components value]]))
 
@@ -83,5 +83,17 @@
                   (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
               (fn [e]
                 (let [event (:context @e)]
-                  (editor/open event)
+                  (ed/editor event)
+                  nil)))
+
+(defbehaviour state-attribute-editing
+              "Attribute Edit" :attribute-editing
+              (validate
+                (-- (having-all :state)
+                    (bind-to :state))
+                (fn [target behaviour result]
+                  (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
+              (fn [e]
+                (let [event (:context @e)]
+                  (ed/domain-editor event)
                   nil)))

@@ -13,12 +13,11 @@
                       display-name
                       type
                       validator
-                      action
                       handler])
 ;Validator needs to return targets (keyword of component types for which behaviour can be registered)
 
-(defn add-behaviour [name display-name type validator action handler]
-  (vswap! behaviours assoc name (Behaviour. name display-name type validator action handler)))
+(defn add-behaviour [name display-name type validator handler]
+  (vswap! behaviours assoc name (Behaviour. name display-name type validator handler)))
 
 (defn entity-behaviours [entity-type])
 
@@ -72,19 +71,22 @@
      (when-let [results (validate behaviour target)]
         (with-check-if-already-attached behaviour (if (not (coll? results)) [results] results)))))
 
-(defn generic-components-validator
-  ([_definitions transform]
-   (fn [target behaviour]
-     (let [components (vals (:components target))
-           types (set (map :type components))]
-       (let [attach-to (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions)))]
-           (when (not (nil? attach-to))
-             (if (coll? attach-to)
-               (map #(transform target behaviour %) attach-to)
-               (transform target behaviour attach-to)))))))
-  ([_definitions]
-   (generic-components-validator _definitions (fn [target behaviour result]
-                                                 (ev/loose-event-name (:type target) nil result (:action behaviour))))))
+(defn- to-event [action-fn?]
+  (if (fn? action-fn?)
+    action-fn?
+    (fn [target behaviour result]
+       (ev/loose-event-name (:type target) nil result action-fn?))))
+
+(defn generic-components-validator [_definitions action-fn?]
+  (fn [target behaviour]
+    (let [components (vals (:components target))
+          types (set (map :type components))
+          transform (to-event action-fn?)]
+      (let [attach-to (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions)))]
+          (when (not (nil? attach-to))
+            (if (coll? attach-to)
+              (map #(transform target behaviour %) attach-to)
+              (transform target behaviour attach-to)))))))
 
 (defn having-strict-components [test-types actual-types] (= test-types actual-types))
 

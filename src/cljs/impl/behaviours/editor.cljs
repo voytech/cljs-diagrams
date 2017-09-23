@@ -17,9 +17,9 @@
 (defn- set-editor-pos [input drawable]
   (let [style (.-style input)]
     (aset style "position" "absolute")
-    (aset style "left" (str (d/get-left drawable) "px"))
+    (aset style "left" (str (+ (d/get-left drawable) 5) "px"))
     (aset style "top" (str (d/get-top drawable) "px"))
-    (aset style "width" (str (+ (d/get-width drawable) 25) "px"))
+    (aset style "width" (str (+ (d/get-width drawable) 15) "px"))
     (aset style "height" (str (+ (d/get-height drawable) 5) "px"))))
 
 (defn commit []

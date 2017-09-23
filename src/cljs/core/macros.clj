@@ -57,7 +57,7 @@
                                                (if ~has-domain
                                                  ~domain
                                                  nil)
-                                               (:sync ~dfinition)   
+                                               (:sync ~dfinition)
                                                (:bbox ~dfinition)
                                                (if ~has-components
                                                  ~components
@@ -87,8 +87,8 @@
         ([name#]
          (core.entities/new-component (-> '~type name keyword) name# {} {})))))
 
-(defmacro defbehaviour [name display-name type validator action handler]
-  `(core.behaviours/add-behaviour (name '~name) ~display-name ~type ~validator ~action ~handler))
+(defmacro defbehaviour [name display-name type validator handler]
+  `(core.behaviours/add-behaviour (name '~name) ~display-name ~type ~validator ~handler))
 
 (defmacro having-all [& test-types]
   `{:tmpl #{~@test-types}
@@ -111,9 +111,6 @@
 
 (defmacro validate [& body]
   (let [lst (last body)
-        f? (= 'fn (first lst))
-        defi (if f? (butlast body) body)]
+        defi (butlast body)]
     `(let [def# (vector ~@defi)]
-       (if (= true ~f?)
-         (core.behaviours/generic-components-validator def# ~lst)
-         (core.behaviours/generic-components-validator def#)))))
+       (core.behaviours/generic-components-validator def# ~lst))))        

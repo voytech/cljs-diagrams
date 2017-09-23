@@ -56,8 +56,7 @@
                 (-- (having-all :value)
                     (bind-to :value))
                 (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
-              "mousemove"
+                  (ev/loose-event-name nil (-> target :attribute :name) result "mousemove")))
               (fn [e]
                 (let [event (:context @e)]
                   ((behaviours/highlight true (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7})) event)
@@ -69,8 +68,7 @@
               (-- (having-all :value)
                   (bind-to :value))
               (fn [target behaviour result]
-                (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
-            "mouseout"
+                (ev/loose-event-name nil (-> target :attribute :name) result "mouseout")))
             (fn [e]
               (let [event (:context @e)]
                 ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -82,8 +80,7 @@
                 (-- (having-all :value)
                     (bind-to :value))
                 (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result (:action behaviour))))
-              "mousepointclick"
+                  (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
               (fn [e]
                 (let [event (:context @e)]
                   (editor/open event)

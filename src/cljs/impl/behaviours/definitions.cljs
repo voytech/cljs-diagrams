@@ -14,8 +14,8 @@
               "Default Entity Moving" :moving
               (validate
                 (-- (having-strict :main :control)
-                    (bind-to :main)))
-              "mousedrag"
+                    (bind-to :main))
+                "mousedrag")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/moving-entity) event)
@@ -25,8 +25,7 @@
               "Default Relation Link Moving By" :moving-by
               (validate
                 (-- (having-all :startpoint :endpoint :relation))
-                (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil (:action behaviour))))
-              "moveby"
+                (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil "moveby")))
               (fn [e]
                 (let [event (:context @e)
                       entity (:entity event)
@@ -41,8 +40,8 @@
               "Manhattan Layout" :component-moving
               (validate
                 (-- (having-all :startpoint :endpoint :relation)
-                    (bind-to :startpoint :endpoint)))
-              "mousedrag"
+                    (bind-to :startpoint :endpoint))
+                "mousedrag")
               (fn [e]
                 (let [event (:context @e)]
                   ((m/manhattan-layout-moving-behaviour) event)
@@ -69,8 +68,8 @@
               "Connect Two Entities" :make-relation
               (validate
                 (-- (having-all :startpoint :endpoint :relation)
-                    (bind-to :startpoint :endpoint)))
-              "mouseup"
+                    (bind-to :startpoint :endpoint))
+                "mouseup")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/intersects-controls? (fn [src trg]
@@ -90,8 +89,8 @@
                 (-- (having-strict :main :control)
                     (bind-to :main))
                 (-- (having-all :startpoint :endpoint)
-                    (bind-to :startpoint :endpoint)))
-              "mousemove"
+                    (bind-to :startpoint :endpoint))
+                "mousemove")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -103,8 +102,8 @@
                 (-- (having-strict :main :control)
                     (bind-to :main))
                 (-- (having-all :startpoint :endpoint)
-                    (bind-to :startpoint :endpoint)))
-              "mouseout"
+                    (bind-to :startpoint :endpoint))
+                "mouseout")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -114,8 +113,8 @@
               "Default Show Controls" :controls-show
               (validate
                 (-- (having-strict :main :control)
-                    (bind-to :main)))
-              "mousemove"
+                    (bind-to :main))
+                "mousemove")
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-controls (:entity event) true)
@@ -125,8 +124,8 @@
               "Default Hide Controls" :controls-hide
               (validate
                 (-- (having-strict :main :control)
-                    (bind-to :main)))
-              "mouseout"
+                    (bind-to :main))
+                "mouseout")
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-controls (:entity event) false)

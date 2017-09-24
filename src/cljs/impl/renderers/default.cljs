@@ -60,14 +60,13 @@
 
 (defn- synchronize-bounds [drawable]
   (let [source (:data (d/state drawable))]
-    (when (nil? (d/get-width drawable)) (d/set-width  drawable (.-width  source)))
-    (when (nil? (d/get-height drawable)) (d/set-height drawable (.-height source)))))
+    (when (or (nil? (d/get-width drawable)) (= :text (:type drawable))) (d/set-width  drawable (.-width  source)))
+    (when (or (nil? (d/get-height drawable)) (= :text (:type drawable))) (d/set-height drawable (.-height source)))))
 
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (d/state drawable))
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
       (fabric-apply drawable source redraw)
-      ;(.setCoords source)
       (synchronize-bounds drawable)))
 
 (defn- fabric-create-rendering-state [context drawable create]

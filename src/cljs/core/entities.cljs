@@ -49,6 +49,42 @@
 (defn entity-by-id [id]
  (get @entities id))
 
+
+;;Utility functions for getting expected data on type non-deterministic argument
+(defn- id [input fetch]
+  (cond
+    (record? input) (fetch input)
+    (string? input) input))
+
+(defn- record [input fetch]
+  (cond
+    (record? input) input
+    (string? input) (fetch input)))
+
+(defn- entity-id [input]
+  (id input :uid))
+
+(defn- entity-record [input]
+  (record input entity-by-id))
+
+(defn- component-id [input]
+  (id input :name))
+
+(defn- component-record [input entity]
+  (record input #(get-in @entities [(entity-id entity) :components %])))
+
+(defn- attribute-id [input]
+  (id input :name))
+
+(defn- attribute-record [input]
+  (record input #(get @attributes %)))
+
+(defn- attribute-value-id [input]
+  (id input :id))
+
+(defn- attribute-value-record [input entity]
+  (record input #(get-in @entities [(entity-id entity) :attributes %])))
+
 (defn- define-lookup [drawable-id parent]
   (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
     (swap! lookups assoc drawable-id lookup)))
@@ -192,6 +228,7 @@
         components-map (into {} (map (fn [d] {(:name d) d}) components))]
     (AttributeValue. (str (random-uuid)) attribute data components-map)))
 
+;TODO Should rahter internally invoke create-attribute-value which should be not public instead of taking attribute-value as an argument.
 (defn add-entity-attribute-value [entity & attributes]
   (doseq [attribute-value (vec attributes)]
     (let [entity-fetch (entity-by-id (:uid entity))
@@ -203,6 +240,14 @@
            (swap! entities assoc-in [(:uid entity) :attributes] sorted)
            (define-lookups-on-attributes (entity-by-id (:uid entity))))
         (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
+
+(defn remove-attribute-value [entity-or-id attribute-value-or-id]
+  (let [eid (entity-id entity-or-id)
+        avid (attribute-value-id attribute-value-or-id)
+        attribute-value (get-in @entities [eid :attributes avid])]
+    (doseq [component (components-of attribute-value)]
+      (d/remove-drawable (:drawable component)))
+    (swap! entities update-in [eid :attributes] dissoc avid)))
 
 (defn get-attribute-value [entity id]
   (get-in @entities [(:uid entity) :attributes id]))
@@ -226,15 +271,29 @@
 (defn get-attribute-value-data [attribute-value]
   (:value attribute-value))
 
-(defn set-attribute-value [entity-id av-id value]
-  (let [entity (entity-by-id entity-id)
-        attribute-value (get-attribute-value entity av-id)
-        attribute (:attribute attribute-value)]
-    (swap! entities assoc-in [entity-id :attributes av-id :value] value)
+(defn- replace-attribute-value [entity attribute-value new-value]
+  (remove-attribute-value entity attribute-value)
+  (add-entity-attribute-value entity (create-attribute-value (:attribute attribute-value) new-value))
+  (bus/fire "layout.attributes" (entity-record entity)))
+
+(defn- update-attribute-value-value [entity attribute-value new-value]
+  (let [eid  (entity-id entity)
+        avid (attribute-value-id attribute-value)
+        attribute (:attribute (attribute-value-record attribute-value entity))]
+    (swap! entities assoc-in [eid :attributes avid :value] new-value)
     (when-let [sync (:sync attribute)]
-      (sync (get-attribute-value entity av-id))
+      (sync (get-attribute-value entity avid))
       (bus/fire "uncommited.render")
       (bus/fire "rendering.finish"))))
+
+(defn update-attribute-value [entity_or_id attribute-value_or_id value]
+  (let [entity (entity-record entity_or_id)
+        attribute-value (attribute-value-record attribute-value_or_id entity)
+        attribute (:attribute attribute-value)]
+    (if (not (nil? (:domain attribute)))
+      (replace-attribute-value entity attribute-value value)
+      (update-attribute-value-value entity attribute-value value))))
+
 ;;=====================================================================================
 ;;============================COMPONENT DEFINITIONS====================================
 ;;=====================================================================================

@@ -90,7 +90,7 @@
               "Attribute Edit" :attribute-editing
               (fn [target this]
                 (let [attribute (:attribute target)]
-                  (when-let [domain (:domain attribute)]
+                  (when-let [domain (:domain attribute)] ;; needs to find a way how to obtain a component name for domain entry.
                     (ev/loose-event-name nil (-> attribute :name) :value "mousepointclick"))))
               (fn [e]
                 (let [event (:context @e)]

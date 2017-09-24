@@ -1,6 +1,7 @@
 (ns core.layouts
   (:require [core.drawables :as d]
-            [core.eventbus :as b]))
+            [core.eventbus :as b]
+            [core.entities :as e]))
 
 (defn align-center [src trg]
   (let [srcCx   (+ (d/get-left src) (/ (d/get-width src) 2))
@@ -69,6 +70,14 @@
       (layout-row bbox layout-buffer partials-aware))
     (b/fire "entries.layout" {:entries (:entries entries)})))
 
+(defn layout-attributes [entity]
+  (let [bbox (get-bbox entity)
+        cbox {:left (+ (:left (e/get-entity-content-bbox entity)) (:left bbox))
+              :top  (+ (:top (e/get-entity-content-bbox entity)) (:top bbox))
+              :width (:width (e/get-entity-content-bbox entity))
+              :height (:height (e/get-entity-content-bbox entity))}]
+    (layout cbox (e/get-attributes-values entity))))
+
 (defn intersects? [tbbox obbox]
   (or
    (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
@@ -79,3 +88,8 @@
         (<= (:top obbox) (:top tbbox)) (>= (+ (:top obbox) (:height obbox)) (:top tbbox)))
    (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
         (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))))
+
+(b/on ["layout.attributes"] -999 (fn [event]
+                                     (layout-attributes (-> @event :context))
+                                     (b/fire "uncommited.render")
+                                     (b/fire "rendering.finish")))

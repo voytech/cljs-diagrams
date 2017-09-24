@@ -34,8 +34,8 @@
     (doseq [entry domain]
       (let [option (js/document.createElement "option")
             is-selected (= (:value entry) (:value av))]
-       (.setAttribute option "value" (:value entry))
-       (aset option "textContent" (:value entry))
+       (.setAttribute option "value" (name (:value entry)))
+       (aset option "textContent" (name (:value entry)))
        (when is-selected
          (.setAttribute option "selected" true))
        (.appendChild select option)))
@@ -47,7 +47,7 @@
 (defmethod get-element-value :domain-editor [type editor]
   (let [select (:element editor)
         option (aget (.-options select) (.-selectedIndex select))]
-    (aget option "text")))
+    (keyword (aget option "text"))))
 
 (defn- set-editor-style [input drawable]
   (let [style (.-style input)]
@@ -67,12 +67,12 @@
     (let [value (get-element-value type editor)
           eid (-> editor :entity :uid)
           aid (-> editor :attribute-value :id)]
-       (e/set-attribute-value eid aid value)
+       (e/update-attribute-value eid aid value)
        (.removeChild (p/get-container) (:element editor))
        (p/remove-state type))))
 
 (defn- events [root element type]
-  (.addEventListener element "change" #(commit type))
+  ;(.addEventListener element "change" #(commit type))
   (.addEventListener element "blur" #(commit type)))
 
 (defn- open [event type]

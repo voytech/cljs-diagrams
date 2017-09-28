@@ -272,14 +272,12 @@
 (defn get-attribute-value-data [attribute-value]
   (:value attribute-value))
 
-(defn- cached-create-attribute-value []
-  (memoize create-attribute-value))
+;(defn- cached-create-attribute-value []
+;  (memoize create-attribute-value))
 
 (defn- replace-attribute-value [entity attribute-value new-value]
   (remove-attribute-value entity attribute-value)
-  (add-entity-attribute-value entity (create-attribute-value (:attribute attribute-value) new-value))
-  (js/console.log (clj->js @lookups))
-  (bus/fire "layout.attributes" (entity-record entity)))
+  (add-entity-attribute-value entity (create-attribute-value (:attribute attribute-value) new-value)))
 
 (defn- update-attribute-value-value [entity attribute-value new-value]
   (let [eid  (entity-id entity)
@@ -287,8 +285,7 @@
         attribute (:attribute (attribute-value-record attribute-value entity))]
     (swap! entities assoc-in [eid :attributes avid :value] new-value)
     (when-let [sync (:sync attribute)]
-      (sync (get-attribute-value entity avid))
-      (bus/fire "layout.attributes" (entity-record entity)))))
+      (sync (get-attribute-value entity avid)))))
 
 (defn update-attribute-value [entity-or-id attribute-value-or-id value]
   (let [entity (entity-record entity-or-id)
@@ -296,7 +293,8 @@
         attribute (:attribute attribute-value)]
     (if (not (nil? (:domain attribute)))
       (replace-attribute-value entity attribute-value value)
-      (update-attribute-value-value entity attribute-value value))))
+      (update-attribute-value-value entity attribute-value value))
+    (bus/fire "layout.attributes" (entity-record entity))))
 
 ;;=====================================================================================
 ;;============================COMPONENT DEFINITIONS====================================

@@ -45,10 +45,8 @@
    (bus/fire DRAWABLE_CHANGED {:properties properties
                                :drawable drawable})))
 
-(defrecord Drawable [uid type model rendering-state]
+(defrecord Drawable [uid type model]
   IDrawable
-  (update-state [this state] (vreset! rendering-state state))
-  (state [this] @rendering-state)
   (model [this] @model)
   (setp [this property value]
     (vswap! model assoc property value)

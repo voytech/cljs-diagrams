@@ -17,6 +17,14 @@
 
 (defonce rendering-context (volatile! {}))
 
+(defonce drawable-states (volatile! {}))
+
+(defn get-state-of [drawable]
+  (get @drawable-states (if (record? drawable) (:uid drawable) drawable)))
+
+(defn update-state [drawable state]
+  (vswap! drawable-states assoc (if (record? drawable) (:uid drawable) drawable) state))
+
 (defn set-rendering [renderer]
   (reset! RENDERER renderer))
 
@@ -51,9 +59,7 @@
 
 (bus/on ["rendering.context.update"] -999 (fn [event]
                                             (let [context (:context @event)]
-                                              (js/console.log "rendering.context.update handled")
-                                              (update-context context)
-                                              (js/console.log (clj->js @rendering-context)))))
+                                              (update-context context))))
 
 (bus/on ["drawable.created"] -999 (fn [event]
                                     (let [context (:context @event)
@@ -119,8 +125,8 @@
 
 (defn render [drawable]
   (when (not (nil? drawable))
-    (let [rendering-state (d/state drawable)]
+    (let [rendering-state (get-state-of drawable)]
       (when (or (nil? rendering-state) (empty? rendering-state))
-        (d/update-state drawable (create-rendering-state drawable @rendering-context)))
+        (update-state drawable (create-rendering-state drawable @rendering-context)))
       (do-render drawable @rendering-context)
       (clear-context [:redraw-properties (:uid drawable)]))))

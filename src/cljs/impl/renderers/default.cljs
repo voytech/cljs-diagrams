@@ -59,12 +59,12 @@
     (fabric-set source (or (p fabric-property-mapping) p) (d/getp drawable p))))
 
 (defn- synchronize-bounds [drawable]
-  (let [source (:data (d/state drawable))]
+  (let [source (:data (r/get-state-of drawable))]
     (when (or (nil? (d/get-width drawable)) (= :text (:type drawable))) (d/set-width  drawable (.-width  source)))
     (when (or (nil? (d/get-height drawable)) (= :text (:type drawable))) (d/set-height drawable (.-height source)))))
 
 (defn- property-change-render [drawable rendering-context]
-  (let [source  (:data (d/state drawable))
+  (let [source  (:data (r/get-state-of drawable))
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
       (fabric-apply drawable source redraw)
       (synchronize-bounds drawable)))
@@ -95,7 +95,7 @@
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Rect. (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :rect] [drawable context]
-  (fabric-destroy-rendering-state context (d/state drawable)))
+  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
 ;; circle rendering
@@ -108,7 +108,7 @@
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Circle. (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :circle] [drawable context]
-  (fabric-destroy-rendering-state context (d/state drawable)))
+  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
 ;; line rendering (must be improved ... changes to x1 x2 y1 y2 on static canvas not working as expected)
@@ -116,11 +116,11 @@
 ;; x1 x2 y1 y2 properties. Also take into account that synchronization of x1 x2 y1 y2 with left top widht height must be better.
 ;;==========================================================================================================
 (defmethod r/do-render [:fabric :line] [drawable rendering-context]
-  (fabric-destroy-rendering-state rendering-context (d/state drawable))
+  (fabric-destroy-rendering-state rendering-context (r/get-state-of drawable))
   (let [data (dissoc (to-fabric-property-map (d/model drawable)) :width :height :left :top)
         state (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))]
     (.moveTo (:data state) (get data "zIndex"))
-    (d/update-state drawable state)))
+    (r/update-state drawable state)))
   ;(property-change-render drawable rendering-context))
 
 (defmethod r/create-rendering-state [:fabric :line] [drawable context]
@@ -129,7 +129,7 @@
 
 
 (defmethod r/destroy-rendering-state [:fabric :line] [drawable context]
-  (fabric-destroy-rendering-state context (d/state drawable)))
+  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
 ;; triangle rendering
@@ -142,7 +142,7 @@
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Triangle. (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :triangle] [drawable context]
-  (fabric-destroy-rendering-state context (d/state drawable)))
+  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
 ;; text rendering
@@ -155,4 +155,4 @@
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric :text] [drawable context]
-  (fabric-destroy-rendering-state context (d/state drawable)))
+  (fabric-destroy-rendering-state context (r/get-state-of drawable)))

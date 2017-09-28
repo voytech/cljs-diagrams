@@ -169,4 +169,5 @@
                                                              (-> e :component :type)
                                                              (-> e :type))]
                            (js/console.log (str "on " event-name))
+                           (js/console.log (clj->js (-> e :entity)))
                            (b/fire event-name e))))))

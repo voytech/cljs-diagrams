@@ -13,7 +13,7 @@
 
 (defonce components (atom {}))
 
-(defonce lookups (atom {}))
+(defonce lookups (volatile! {}))
 
 (defonce attributes (atom {}))
 
@@ -87,7 +87,7 @@
 
 (defn- define-lookup [drawable-id parent]
   (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
-    (swap! lookups assoc drawable-id lookup)))
+    (vswap! lookups assoc drawable-id lookup)))
 
 (defn- define-lookups-on-components [entity]
   (doseq [component (vals (:components entity))]
@@ -236,7 +236,7 @@
           cardinality (:cardinality (:attribute attribute-value))]
       (if (> cardinality existing-cardinality)
         (let [attributes (:attributes entity-fetch)
-              sorted (sorted-attributes-map (assoc attributes (:id attribute-value) attribute-value))]
+              sorted  (assoc attributes (:id attribute-value) attribute-value)] ;(sorted-attributes-map (assoc attributes (:id attribute-value) attribute-value))]
            (swap! entities assoc-in [(:uid entity) :attributes] sorted)
            (define-lookups-on-attributes (entity-by-id (:uid entity))))
         (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
@@ -247,7 +247,8 @@
         attribute-value (get-in @entities [eid :attributes avid])]
     (doseq [component (components-of attribute-value)]
       (d/remove-drawable (:drawable component)))
-    (swap! entities update-in [eid :attributes] dissoc avid)))
+    (swap! entities update-in [eid :attributes] dissoc avid)
+    (js/console.log (clj->js (entity-by-id eid)))))
 
 (defn get-attribute-value [entity id]
   (get-in @entities [(:uid entity) :attributes id]))
@@ -271,9 +272,13 @@
 (defn get-attribute-value-data [attribute-value]
   (:value attribute-value))
 
+(defn- cached-create-attribute-value []
+  (memoize create-attribute-value))
+
 (defn- replace-attribute-value [entity attribute-value new-value]
   (remove-attribute-value entity attribute-value)
   (add-entity-attribute-value entity (create-attribute-value (:attribute attribute-value) new-value))
+  (js/console.log (clj->js @lookups))
   (bus/fire "layout.attributes" (entity-record entity)))
 
 (defn- update-attribute-value-value [entity attribute-value new-value]
@@ -283,12 +288,11 @@
     (swap! entities assoc-in [eid :attributes avid :value] new-value)
     (when-let [sync (:sync attribute)]
       (sync (get-attribute-value entity avid))
-      (bus/fire "uncommited.render")
-      (bus/fire "rendering.finish"))))
+      (bus/fire "layout.attributes" (entity-record entity)))))
 
-(defn update-attribute-value [entity_or_id attribute-value_or_id value]
-  (let [entity (entity-record entity_or_id)
-        attribute-value (attribute-value-record attribute-value_or_id entity)
+(defn update-attribute-value [entity-or-id attribute-value-or-id value]
+  (let [entity (entity-record entity-or-id)
+        attribute-value (attribute-value-record attribute-value-or-id entity)
         attribute (:attribute attribute-value)]
     (if (not (nil? (:domain attribute)))
       (replace-attribute-value entity attribute-value value)

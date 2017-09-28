@@ -68,11 +68,11 @@
           eid (-> editor :entity :uid)
           aid (-> editor :attribute-value :id)]
        (e/update-attribute-value eid aid value)
-       (.removeChild (p/get-container) (:element editor))
-       (p/remove-state type))))
+       (p/remove-state type)
+       (.removeChild (p/get-container) (:element editor)))))
 
 (defn- events [root element type]
-  ;(.addEventListener element "change" #(commit type))
+  (.addEventListener element "change" #(commit type))
   (.addEventListener element "blur" #(commit type)))
 
 (defn- open [event type]

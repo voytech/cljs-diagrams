@@ -89,15 +89,18 @@
      (update-test key event))
   event)
 
+(defn- ns-qualified-element-name [type]
+  (str (namespace type) "." (name type)))
+
 (defn event-name [entity-type attribute-name component-type event-type]
   (let [event-descriptor (clojure.string/join "" (cond-> []
                                                    (not (nil? entity-type)) (conj "e")
                                                    (not (nil? attribute-name)) (conj "a")
                                                    (not (nil? component-type)) (conj "c")))]
-    (clojure.string/join "." (cond-> [event-descriptor]
-                               (not (nil? entity-type)) (conj (name entity-type))
-                               (not (nil? attribute-name)) (conj (name attribute-name))
-                               (not (nil? component-type)) (conj (name component-type))
+    (clojure.string/join ":" (cond-> [event-descriptor]
+                               (not (nil? entity-type)) (conj (ns-qualified-element-name entity-type))
+                               (not (nil? attribute-name)) (conj (ns-qualified-element-name attribute-name))
+                               (not (nil? component-type)) (conj (ns-qualified-element-name component-type))
                                (not (nil? event-type)) (conj (name event-type))))))
 
 (defn loose-event-name [entity-type attribute-name component-type event-type]
@@ -169,5 +172,5 @@
                                                              (-> e :component :type)
                                                              (-> e :type))]
                            (js/console.log (str "on " event-name))
-                           (js/console.log (clj->js (-> e :entity)))
+                           (js/console.log (clj->js (:entity e)))
                            (b/fire event-name e))))))

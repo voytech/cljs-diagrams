@@ -4,7 +4,8 @@
             [core.drawables :as d]
             [core.eventbus :as b]
             [impl.behaviours.standard-api :as std]
-            [impl.drawables :as dimpl]))
+            [impl.drawables :as dimpl]
+            [impl.components :as c]))
 
 ;; component assertion may be some abstraction in behabviours.
 
@@ -31,7 +32,7 @@
     [[start-point (first mid-points)] [(last mid-points) end-point]]))
 
 (defn- update-line-component [entity idx sx sy ex ey]
-  (e/assert-component entity (str "line-" idx) :relation {:x1 sx :y1 sy :x2 ex :y2 ey}))
+  (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey}))
 
 (defn- update-line-components [entity path]
   (-> (map-indexed (fn [idx e] (update-line-component entity idx (:x (first e))
@@ -62,6 +63,6 @@
            normals (calculate-normals entity start end)]
         (e/remove-entity-component entity "connector")
         (cond
-          (= :startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
-          (= :endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
+          (= ::c/startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
+          (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
         (update-manhattan-layout entity (first normals) (last normals)))))

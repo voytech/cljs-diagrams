@@ -49,6 +49,8 @@
 (defn entity-by-id [id]
  (get @entities id))
 
+(defn entity-by-type [type])
+
 
 ;;Utility functions for getting expected data on type non-deterministic argument
 (defn- id [input fetch]

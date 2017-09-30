@@ -6,15 +6,16 @@
             [core.events :as ev]
             [core.drawables :as d]
             [impl.behaviours.standard-api :as std]
-            [impl.behaviours.manhattan :as m])
+            [impl.behaviours.manhattan :as m]
+            [impl.components :as c])
   (:require-macros [core.macros :refer [defbehaviour having-all having-strict make-event validate bind-to --]]))
 
 
 (defbehaviour moving-entity
               "Default Entity Moving" :moving
               (validate
-                (-- (having-strict :main :control)
-                    (bind-to :main))
+                (-- (having-strict ::c/main ::c/control)
+                    (bind-to ::c/main))
                 "mousedrag")
               (fn [e]
                 (let [event (:context @e)]
@@ -24,7 +25,7 @@
 (defbehaviour moving-entity-by
               "Default Relation Link Moving By" :moving-by
               (validate
-                (-- (having-all :startpoint :endpoint :relation))
+                (-- (having-all ::c/startpoint ::c/endpoint ::c/relation))
                 (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil "moveby")))
               (fn [e]
                 (let [event (:context @e)
@@ -39,8 +40,8 @@
 (defbehaviour manhattan-moving-component
               "Manhattan Layout" :component-moving
               (validate
-                (-- (having-all :startpoint :endpoint :relation)
-                    (bind-to :startpoint :endpoint))
+                (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
+                    (bind-to ::c/startpoint ::c/endpoint))
                 "mousedrag")
               (fn [e]
                 (let [event (:context @e)]
@@ -67,16 +68,16 @@
 (defbehaviour make-relation
               "Connect Two Entities" :make-relation
               (validate
-                (-- (having-all :startpoint :endpoint :relation)
-                    (bind-to :startpoint :endpoint))
+                (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
+                    (bind-to ::c/startpoint ::c/endpoint))
                 "mouseup")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/intersects-controls? (fn [src trg]
                                                (let [ctype (-> event :component :type)
                                                      end-type (cond
-                                                                (= :endpoint ctype) {:type "end" :f std/position-endpoint}
-                                                                (= :startpoint ctype) {:type  "start" :f std/position-startpoint})]
+                                                                (= ::c/endpoint ctype) {:type "end" :f std/position-endpoint}
+                                                                (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
                                                 (std/toggle-controls (:entity trg) false)
                                                 ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg))) ))) (:context @e))
@@ -86,10 +87,10 @@
 (defbehaviour hovering-entity
               "Default Entity Hovering" :hovering
               (validate
-                (-- (having-strict :main :control)
-                    (bind-to :main))
-                (-- (having-all :startpoint :endpoint)
-                    (bind-to :startpoint :endpoint))
+                (-- (having-strict ::c/main ::c/control)
+                    (bind-to ::c/main))
+                (-- (having-all ::c/startpoint ::c/endpoint)
+                    (bind-to ::c/startpoint ::c/endpoint))
                 "mousemove")
               (fn [e]
                 (let [event (:context @e)]
@@ -99,10 +100,10 @@
 (defbehaviour leaving-entity
               "Default Entity Leave" :leaving
               (validate
-                (-- (having-strict :main :control)
-                    (bind-to :main))
-                (-- (having-all :startpoint :endpoint)
-                    (bind-to :startpoint :endpoint))
+                (-- (having-strict ::c/main ::c/control)
+                    (bind-to ::c/main))
+                (-- (having-all ::c/startpoint ::c/endpoint)
+                    (bind-to ::c/startpoint ::c/endpoint))
                 "mouseout")
               (fn [e]
                 (let [event (:context @e)]
@@ -112,8 +113,8 @@
 (defbehaviour show-entity-controls
               "Default Show Controls" :controls-show
               (validate
-                (-- (having-strict :main :control)
-                    (bind-to :main))
+                (-- (having-strict ::c/main ::c/control)
+                    (bind-to ::c/main))
                 "mousemove")
               (fn [e]
                 (let [event (:context @e)]
@@ -123,8 +124,8 @@
 (defbehaviour hide-entity-controls
               "Default Hide Controls" :controls-hide
               (validate
-                (-- (having-strict :main :control)
-                    (bind-to :main))
+                (-- (having-strict ::c/main ::c/control)
+                    (bind-to ::c/main))
                 "mouseout")
               (fn [e]
                 (let [event (:context @e)]

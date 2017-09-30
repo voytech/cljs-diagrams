@@ -53,8 +53,8 @@
 (defbehaviour attribute-hovering
               "Default Attribute Hover" :attribute-hovering
               (validate
-                (-- (having-all :value)
-                    (bind-to :value))
+                (-- (having-all ::c/value)
+                    (bind-to ::c/value))
                 (fn [target behaviour result]
                   (ev/loose-event-name nil (-> target :attribute :name) result "mousemove")))
               (fn [e]
@@ -65,8 +65,8 @@
 (defbehaviour leaving-attribute
             "Default Entity Leave" :leaving
             (validate
-              (-- (having-all :value)
-                  (bind-to :value))
+              (-- (having-all ::c/value)
+                  (bind-to ::c/value))
               (fn [target behaviour result]
                 (ev/loose-event-name nil (-> target :attribute :name) result "mouseout")))
             (fn [e]
@@ -77,8 +77,8 @@
 (defbehaviour text-attribute-editing
               "Attribute Edit" :attribute-editing
               (validate
-                (-- (having-all :value)
-                    (bind-to :value))
+                (-- (having-all ::c/value)
+                    (bind-to ::c/value))
                 (fn [target behaviour result]
                   (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
               (fn [e]

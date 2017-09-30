@@ -5,7 +5,8 @@
             [core.eventbus :as b]
             [core.events :as ev]
             [core.behaviours :as bhv]
-            [impl.drawables :as dimpl]))
+            [impl.drawables :as dimpl]
+            [impl.components :as c]))
 
 (declare position-endpoint)
 (declare position-startpoint)
@@ -36,7 +37,7 @@
          drawable         (:drawable e)]
      (when (contains? #{"end" "start"} (:name component))
        (doseq [drwlb (vals @d/drawables)]
-          (when (and (not= drwlb drawable) (= :control (:type (e/lookup drwlb :component))))
+          (when (and (not= drwlb drawable) (= ::c/control (:type (e/lookup drwlb :component))))
             (let [trg-ent  (e/lookup drwlb :entity)
                   trg-comp (e/lookup drwlb :component)]
               (when (d/intersects? drawable drwlb)
@@ -174,7 +175,7 @@
             oeY  (d/getp drawable :y2)
             eX   (:left e)
             eY   (:top e)]
-        (when (= :relation (:type line))
+        (when (= ::c/relation (:type line))
           (d/set-data drawable {:x2 eX :y2 eY})
           (let [relation-id   (str (random-uuid))
                 breakpoint-id (str (random-uuid))
@@ -257,7 +258,7 @@
 
 (defn toggle-controls [entity toggle]
   (doseq [component (e/components-of entity)]
-    (when (= :control (:type component))
+    (when (= ::c/control (:type component))
       (let [drawable (:drawable component)]
          (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))
 
@@ -267,9 +268,9 @@
             entity   (:entity e)
             drawable (:drawable endpoint)]
          (cond
-           (= :breakpoint (:type endpoint)) (position-breakpoint entity (:name endpoint) (:movement-x e) (:movement-y e) :offset)
-           (= :startpoint (:type endpoint)) (position-startpoint entity (:movement-x e) (:movement-y e) :offset false)
-           (= :endpoint   (:type endpoint)) (position-endpoint   entity (:movement-x e) (:movement-y e) :offset false)))))
+           (= ::c/breakpoint (:type endpoint)) (position-breakpoint entity (:name endpoint) (:movement-x e) (:movement-y e) :offset)
+           (= ::c/startpoint (:type endpoint)) (position-startpoint entity (:movement-x e) (:movement-y e) :offset false)
+           (= ::c/endpoint   (:type endpoint)) (position-endpoint   entity (:movement-x e) (:movement-y e) :offset false)))))
 
 (defn calculate-angle [x1 y1 x2 y2]
    (let [PI 3.14

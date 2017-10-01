@@ -109,6 +109,16 @@
     :func core.behaviours/having-strict-components
     :result true})
 
+(defmacro invalid-when [func]
+  `{:tmpl ~func
+    :func core.behaviours/invalid-when
+    :result false})
+
+(defmacro any-of-target-types [& test-types]
+  `{:tmpl #{~@test-types}
+    :func core.behaviours/any-of-types
+    :result true})
+
 (defmacro bind-to [& targets]
   `{:result (vector ~@targets)})
 

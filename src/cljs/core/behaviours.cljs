@@ -77,20 +77,34 @@
     (fn [target behaviour result]
        (ev/loose-event-name (:type target) nil result action-fn?))))
 
+(defn- is-all-valid [targets]
+  (= 0 (count (filter #(= % false) targets))))
+
 (defn generic-components-validator [_definitions action-fn?]
   (fn [target behaviour]
-    (let [components (vals (:components target))
-          types (set (map :type components))
-          transform (to-event action-fn?)]
-      (let [attach-to (first (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) types) (:result e))) _definitions)))]
-          (when (not (nil? attach-to))
-            (if (coll? attach-to)
-              (map #(transform target behaviour %) attach-to)
-              (transform target behaviour attach-to)))))))
+    (let [transform (to-event action-fn?)]
+      (let [attach-targets (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) target) (:result e))) _definitions))]
+        (when (is-all-valid attach-targets)
+          (flatten (mapv (fn [attach-to]
+                           (when (not (nil? attach-to))
+                             (if (coll? attach-to)
+                               (map #(transform target behaviour %) attach-to)
+                               (transform target behaviour attach-to)))) attach-targets)))))))
 
-(defn having-strict-components [test-types actual-types] (= test-types actual-types))
+(defn- components-types [target]
+  (->> target
+       :components
+       (vals)
+       (map :type)
+       (set)))
 
-(defn having-all-components [test-types actual-types] (= test-types (clojure.set/intersection test-types actual-types)))
+(defn having-strict-components [test-types target] (= test-types (components-types target)))
+
+(defn having-all-components [test-types target] (= test-types (clojure.set/intersection test-types (components-types target))))
+
+(defn any-of-types [test-types target] (contains? test-types (or (:type target) (:name target))))
+
+(defn invalid-when [func target] (func target))
 
 (defonce hooks (atom {}))
 

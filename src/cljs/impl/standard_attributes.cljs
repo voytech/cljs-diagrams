@@ -10,7 +10,7 @@
            [core.options :as o]
            [impl.behaviours.editors :as ed])
 
- (:require-macros [core.macros :refer [defattribute defbehaviour having-all having-strict make-event validate bind-to -- with-components value]]))
+ (:require-macros [core.macros :refer [defattribute defbehaviour having-all having-strict make-event validate bind-to -- with-components value invalid-when]]))
 
 (defattribute name
   (with-definition
@@ -74,25 +74,26 @@
                 ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                 nil)))
 
-(defbehaviour text-attribute-editing
-              "Attribute Edit" :attribute-editing
-              (validate
-                (-- (having-all ::c/value)
-                    (bind-to ::c/value))
-                (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
-              (fn [e]
-                (let [event (:context @e)]
-                  (ed/editor event)
-                  nil)))
-
 (defbehaviour state-attribute-editing
               "Attribute Edit" :attribute-editing
               (fn [target this]
                 (let [attribute (:attribute target)]
                   (when-let [domain (:domain attribute)] ;; needs to find a way how to obtain a component name for domain entry.
-                    (ev/loose-event-name nil (-> attribute :name) :value "mousepointclick"))))
+                    (ev/loose-event-name nil (-> attribute :name) ::c/value "mousepointclick"))))
               (fn [e]
                 (let [event (:context @e)]
                   (ed/domain-editor event)
+                  nil)))
+
+(defbehaviour text-attribute-editing
+              "Attribute Edit" :attribute-editing
+              (validate
+                (-- (having-all ::c/value)
+                    (bind-to ::c/value))
+                (-- (invalid-when #(< 0 (count (-> % :attribute :domain)))))
+                (fn [target behaviour result]
+                  (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
+              (fn [e]
+                (let [event (:context @e)]
+                  (ed/editor event)
                   nil)))

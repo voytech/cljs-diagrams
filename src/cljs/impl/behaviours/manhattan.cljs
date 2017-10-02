@@ -21,10 +21,10 @@
         dx (- (:x ep) (:x sp))
         dy (- (:y ep) (:y sp))]
      (cond
-       (and (= (:h e-normal)) (= (:h s-normal))) [{:x (+ (:x sp) (/ dx 2)) :y (:y sp)} {:x (+ (:x sp) (/ dx 2)) :y (:y ep)}]
-       (and (= (:v e-normal)) (= (:v s-normal))) [{:x (:x sp) :y (+ (:y sp) (/ dy 2))} {:x (:x ep) :y (+ (:y sp) (/ dy 2))}]
-       (and (= (:v s-normal)) (= (:h e-normal))) [{:x (:x ep) :y (:y sp)}]
-       (and (= (:h s-normal)) (= (:v e-normal))) [{:x (:x ep) :y (:y sp)}])))
+       (and (= :h e-normal) (= :h s-normal)) [{:x (+ (:x sp) (/ dx 2)) :y (:y sp)} {:x (+ (:x sp) (/ dx 2)) :y (:y ep)}]
+       (and (= :v e-normal) (= :v s-normal)) [{:x (:x sp) :y (+ (:y sp) (/ dy 2))} {:x (:x ep) :y (+ (:y sp) (/ dy 2))}]
+       (and (= :v s-normal) (= :h e-normal)) [{:x (:x ep) :y (:y sp)}]
+       (and (= :h s-normal) (= :v e-normal)) [{:x (:x ep) :y (:y sp)}])))
 
 (defn- compute-path [start-point end-point mid-points]
   (if (= 2 (count mid-points))
@@ -46,11 +46,14 @@
         end (e/get-entity-component entity "end")
         mid-points (compute-mid-points entity start end s-normal e-normal)
         path (compute-path (center-point start) (center-point end) mid-points)]
+     (js/console.log (clj->js path))
      (-> (update-line-components entity path)
          (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))
 
 (defn calculate-normals [entity startpoint endpoint]
-  [:h :h])
+  (let [start-c-point (center-point startpoint)
+        end-c-point (center-point endpoint)]
+    (if (> (- (:x end-c-point) (:x start-c-point)) (- (:y end-c-point) (:y start-c-point))) [:h :h] [:v :v])))
 
 (defn manhattan-layout-moving-behaviour []
   (fn [e]
@@ -65,4 +68,4 @@
         (cond
           (= ::c/startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
           (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
-        (update-manhattan-layout entity (first normals) (last normals)))))
+        (update-manhattan-layout entity (normals 0) (normals 1)))))

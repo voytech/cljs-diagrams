@@ -163,6 +163,9 @@
 (defn remove-component-prop [entity name prop]
  (swap! entities update-in [(:uid entity) :components name :props ] dissoc prop))
 
+(defn component-property [entity name prop]
+  (get-in @entities [(:uid entity) :components name :props prop]))
+  
 (defn get-entity-component [entity name]
  (get-in @entities [(:uid entity) :components name]))
 

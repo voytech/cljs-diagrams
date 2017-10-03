@@ -80,7 +80,10 @@
                                                                 (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
                                                 (std/toggle-controls (:entity trg) false)
-                                                ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg))) ))) (:context @e))
+                                                (let [connector-side (e/component-property (:entity trg) (:name (:component trg)) :side)]
+                                                  (e/update-component-prop (:entity src) (:type end-type) :rel-connector connector-side)
+                                                  (e/update-component-prop (:entity src) (:type end-type) :rel-entity-uid (-> trg :entity :uid)))
+                                                ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
                   (std/relations-validate (->> @e :context :entity))
                   nil)))
 

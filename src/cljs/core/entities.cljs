@@ -165,9 +165,11 @@
 
 (defn component-property [entity name prop]
   (get-in @entities [(:uid entity) :components name :props prop]))
-  
-(defn get-entity-component [entity name]
- (get-in @entities [(:uid entity) :components name]))
+
+(defn get-entity-component [entity name-or-type]
+  (if (keyword? name-or-type)
+   (filter #(= name-or-type (:type %)) (componets-of entity))
+   (get-in @entities [(:uid entity) :components name])))
 
 (defn assert-component
  ([entity name type data]

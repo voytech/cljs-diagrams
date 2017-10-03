@@ -15,13 +15,27 @@
         my (+ (d/get-top d) (/ (d/get-height d) 2))]
     {:x mx :y my}))
 
-(defn- compute-node-points [node-entity])
+(defn- compute-node-points [node-entity inset-width]
+  (let [main (e/get-entity-component node-entity :main)
+        drwbl (:drawable main)
+        lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
+        lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
+        lb {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
+        rt {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
+        rm {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
+        rb {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
+        tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
+        bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}]
+      {:clockwise [lt tm rt rm rb bm lb lm]
+       :cclockwise [lt lm lb bm rb rm rt tm]}))
 
 (defn- compute-candidate-points [entity start end]
   (let [sp (center-point start)
         ep (center-point end)
         source-node-id (e/component-property entity (:name start) :rel-entity-uid)
-        target-node-id (e/component-property entity (:name end) :rel-entity-uid)]
+        target-node-id (e/component-property entity (:name end) :rel-entity-uid)
+        source-node (e/entity-by-id source-node-id)
+        target-node (e/entity-by-id target-node-id)]
     (when-not (nil? source-node-id))
 
     (when-not (nil? target-node-id))))

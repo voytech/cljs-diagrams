@@ -169,7 +169,7 @@
 (defn get-entity-component [entity name-or-type]
   (if (keyword? name-or-type)
    (filter #(= name-or-type (:type %)) (componets-of entity))
-   (get-in @entities [(:uid entity) :components name])))
+   (get-in @entities [(:uid entity) :components name-or-type])))
 
 (defn assert-component
  ([entity name type data]

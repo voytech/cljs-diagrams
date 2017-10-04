@@ -15,32 +15,7 @@
         my (+ (d/get-top d) (/ (d/get-height d) 2))]
     {:x mx :y my}))
 
-(defn- compute-node-points [node-entity inset-width]
-  (let [main (e/get-entity-component node-entity :main)
-        drwbl (:drawable main)
-        lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
-        lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
-        lb {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
-        rt {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
-        rm {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
-        rb {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
-        tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
-        bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}]
-      {:clockwise [lt tm rt rm rb bm lb lm]
-       :cclockwise [lt lm lb bm rb rm rt tm]}))
-
-(defn- compute-candidate-points [entity start end]
-  (let [sp (center-point start)
-        ep (center-point end)
-        source-node-id (e/component-property entity (:name start) :rel-entity-uid)
-        target-node-id (e/component-property entity (:name end) :rel-entity-uid)
-        source-node (e/entity-by-id source-node-id)
-        target-node (e/entity-by-id target-node-id)]
-    (when-not (nil? source-node-id))
-
-    (when-not (nil? target-node-id))))
-
-(defn- compute-mid-points [entity start end s-normal e-normal]
+(defn- compute-mid-points [start end s-normal e-normal]
   (let [sp (center-point start)
         ep (center-point end)
         dx (- (:x ep) (:x sp))
@@ -51,10 +26,50 @@
        (and (= :v s-normal) (= :h e-normal)) [{:x (:x sp) :y (:y ep)}]
        (and (= :h s-normal) (= :v e-normal)) [{:x (:x ep) :y (:y sp)}])))
 
+(defn- compute-node-points [node-entity inset-width]
+  (let [main (e/get-entity-component node-entity :main)
+        drwbl (:drawable main)]
+   {:lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
+    :lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
+    :lb {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
+    :rt {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
+    :rm {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
+    :rb {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
+    :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
+    :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}}))
+
+
+(defn- sercterc-src-above-trg [s-conn-side t-conn-side source-main-c target-main-c]
+  (and (= :right s-conn-side)
+       (= :right t-conn-side)
+       (< (d/get-left (:drawable target-main-c)) (d/get-left (:drawable source-main-c)))
+       (< (d/get-top (:drawable target-main-c)) (d/get-top (:drawable source-main-c)))))
+
+(defn- compute-candidate-points [entity start end s-normal e-normal]
+  (let [sp (center-point start)
+        ep (center-point end)
+        source-node-id (e/component-property entity (:name start) :rel-entity-uid)
+        target-node-id (e/component-property entity (:name end) :rel-entity-uid)]
+    (if-not (or (nil? source-node-id) (nil? target-node-id))
+      (let [source-c-side (e/component-property entity (:name start) :rel-connector)
+            target-c-side (e/component-property entity (:name end) :rel-connector)
+            source-node (e/entity-by-id source-node-id)
+            target-node (e/entity-by-id target-node-id)
+            source-n-points (compute-node-points source-node 100)
+            target-n-points (compute-node-points target-node 100)
+            source-main-c (e/get-entity-component source-node :main)
+            target-main-c (e/get-entity-component target-node :main)]
+        (when-not (or (nil? source-node) (nil? target-node))
+          (cond
+            (sercterc-src-above-trg source-c-side target-c-side source-main-c target-main-c)
+            (concat [sp (:rm source-n-points) (:rt source-n-points) (:lt source-n-points)] (compute-mid-points (:lt source-n-points) ep :h :h))
+            :esle
+            (compute-mid-points start end s-normal e-normal))))
+      (compute-mid-points start end s-normal e-normal))))
+
 (defn- compute-path [start-point end-point mid-points]
-  (if (= 2 (count mid-points))
-    [[start-point (first mid-points)] mid-points [(last mid-points) end-point]]
-    [[start-point (first mid-points)] [(last mid-points) end-point]]))
+  (let [all-points (flatten [start-point mid-points end-point])]
+     (partition 2 1 all-points)))
 
 (defn- update-line-component [entity idx sx sy ex ey]
   (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey}))
@@ -66,16 +81,17 @@
                                         (>= (cljs.reader/read-string (splt 1)) (count path))))) (e/components-of entity))]
     (if (> (count remove-components) 0)
       (doseq [component remove-components] (e/remove-entity-component entity (:name component))))
-    (-> (map-indexed (fn [idx e] (update-line-component entity idx (:x (first e))
-                                                                   (:y (first e))
-                                                                   (:x (peek e))
-                                                                   (:y (peek e)))) path)
+    (-> (map-indexed (fn [idx e]
+                         (update-line-component entity idx (:x (first e))
+                                                           (:y (first e))
+                                                           (:x (last e))
+                                                           (:y (last e)))) path)
         last)))
 
 (defn update-manhattan-layout [entity s-normal e-normal]
   (let [start (e/get-entity-component entity "start")
         end (e/get-entity-component entity "end")
-        mid-points (compute-mid-points entity start end s-normal e-normal)
+        mid-points (compute-candidate-points entity start end s-normal e-normal)
         path (compute-path (center-point start) (center-point end) mid-points)]
      (-> (update-line-components entity path)
          (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))

@@ -7,18 +7,14 @@
             [impl.drawables :as dimpl]
             [impl.components :as c]))
 
-;; component assertion may be some abstraction in behabviours.
-
 (defn- center-point [cmp]
-  (let [d (:drawable cmp)
-        mx (+ (d/get-left d) (/ (d/get-width d) 2))
-        my (+ (d/get-top d) (/ (d/get-height d) 2))]
+  (let [drwbl (:drawable cmp)
+        mx (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2))
+        my (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))]
     {:x mx :y my}))
 
-(defn- compute-mid-points [start end s-normal e-normal]
-  (let [sp (center-point start)
-        ep (center-point end)
-        dx (- (:x ep) (:x sp))
+(defn- compute-mid-points [sp ep s-normal e-normal]
+  (let [dx (- (:x ep) (:x sp))
         dy (- (:y ep) (:y sp))]
      (cond
        (and (= :h e-normal) (= :h s-normal)) [{:x (+ (:x sp) (/ dx 2)) :y (:y sp)} {:x (+ (:x sp) (/ dx 2)) :y (:y ep)}]
@@ -27,7 +23,7 @@
        (and (= :h s-normal) (= :v e-normal)) [{:x (:x ep) :y (:y sp)}])))
 
 (defn- compute-node-points [node-entity inset-width]
-  (let [main (e/get-entity-component node-entity :main)
+  (let [main (first (e/get-entity-component node-entity ::c/main))
         drwbl (:drawable main)]
    {:lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
     :lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
@@ -55,17 +51,17 @@
             target-c-side (e/component-property entity (:name end) :rel-connector)
             source-node (e/entity-by-id source-node-id)
             target-node (e/entity-by-id target-node-id)
-            source-n-points (compute-node-points source-node 100)
-            target-n-points (compute-node-points target-node 100)
-            source-main-c (e/get-entity-component source-node :main)
-            target-main-c (e/get-entity-component target-node :main)]
+            source-n-points (compute-node-points source-node 50)
+            target-n-points (compute-node-points target-node 50)
+            source-main-c (first (e/get-entity-component source-node ::c/main))
+            target-main-c (first (e/get-entity-component target-node ::c/main))]
         (when-not (or (nil? source-node) (nil? target-node))
           (cond
             (sercterc-src-above-trg source-c-side target-c-side source-main-c target-main-c)
             (concat [sp (:rm source-n-points) (:rt source-n-points) (:lt source-n-points)] (compute-mid-points (:lt source-n-points) ep :h :h))
             :esle
-            (compute-mid-points start end s-normal e-normal))))
-      (compute-mid-points start end s-normal e-normal))))
+            (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
+      (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
 
 (defn- compute-path [start-point end-point mid-points]
   (let [all-points (flatten [start-point mid-points end-point])]

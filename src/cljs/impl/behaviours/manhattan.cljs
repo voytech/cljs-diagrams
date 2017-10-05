@@ -7,6 +7,33 @@
             [impl.drawables :as dimpl]
             [impl.components :as c]))
 
+(def directions {:right-down           (juxt :rm :rb)
+                 :right-down-half-left (juxt :rm :rb :bm)
+                 :right-down-full-left (juxt :rm :rb :lb)
+                 :right-up             (juxt :rm :rt)
+                 :right-up-half-left   (juxt :rm :rt :tm)
+                 :right-up-full-left   (juxt :rm :rt :lt)
+                 :left-down            (juxt :lm :lb)
+                 :left-down-half-right (juxt :lm :lb :bm)
+                 :left-down-full-right (juxt :lm :lb :rb)
+                 :left-up              (juxt :lm :lt)
+                 :left-up-half-right   (juxt :lm :lt :tm)
+                 :left-up-full-right   (juxt :lm :lt :rt)
+                 :top-left             (juxt :tm :lt)
+                 :top-left-half-down   (juxt :tm :lt :lm)
+                 :top-left-full-down   (juxt :tm :lt :lb)
+                 :top-right            (juxt :tm :rt)
+                 :top-right-half-down  (juxt :tm :rt :rm)
+                 :top-right-full-down  (juxt :tm :rt :rb)
+                 :bottom-left          (juxt :bm :lb)
+                 :bottom-left-half-up  (juxt :bm :lb :lm)
+                 :bottom-left-full-up  (juxt :bm :lb :lt)
+                 :bottom-right         (juxt :bm :rb)
+                 :bottom-right-half-up (juxt :bm :rb :rm)
+                 :bottom-right-full-up (juxt :bm :rb :rt)})
+
+
+
 (defn- center-point [cmp]
   (let [drwbl (:drawable cmp)
         mx (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2))

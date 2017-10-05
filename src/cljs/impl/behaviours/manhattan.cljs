@@ -7,6 +7,8 @@
             [impl.drawables :as dimpl]
             [impl.components :as c]))
 
+(def INSET-WIDTH 20)
+
 (def directions {:right-down           (juxt :rm :rb)
                  :right-down-half-left (juxt :rm :rb :bm)
                  :right-down-full-left (juxt :rm :rb :lb)
@@ -32,13 +34,21 @@
                  :bottom-right-half-up (juxt :bm :rb :rm)
                  :bottom-right-full-up (juxt :bm :rb :rt)})
 
-
+(defn- follow-direction [dir node-points]
+  ((get directions dir) node-points))
 
 (defn- center-point [cmp]
   (let [drwbl (:drawable cmp)
         mx (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2))
         my (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))]
     {:x mx :y my}))
+
+(defn- control-side-2-node-point-type [control-side]
+  (cond
+    (= control-side :left)   :lm
+    (= control-side :right)  :rm
+    (= control-side :top)    :tm
+    (= control-side :bottom) :bm))
 
 (defn- compute-mid-points [sp ep s-normal e-normal]
   (let [dx (- (:x ep) (:x sp))
@@ -49,8 +59,10 @@
        (and (= :v s-normal) (= :h e-normal)) [{:x (:x sp) :y (:y ep)}]
        (and (= :h s-normal) (= :v e-normal)) [{:x (:x ep) :y (:y sp)}])))
 
-(defn- compute-node-points [node-entity inset-width]
-  (let [main (first (e/get-entity-component node-entity ::c/main))
+(defn- compute-node-points [node-entity-or-main-cmpnt inset-width]
+  (let [main (if (instance? e/Entity node-entity-or-main-cmpnt)
+               (first (e/get-entity-component node-entity-or-main-cmpnt ::c/main))
+               node-entity-or-main-cmpnt)
         drwbl (:drawable main)]
    {:lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
     :lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
@@ -61,6 +73,12 @@
     :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
     :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}}))
 
+(defn node-path-selector [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
+  (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
+        trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)]))
+    ;(cond
+    ;   (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+    ;        (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y))]))
 
 (defn- sercterc-src-above-trg [s-conn-side t-conn-side source-main-c target-main-c]
   (and (= :right s-conn-side)

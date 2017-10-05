@@ -34,7 +34,7 @@
                       adata (:association-data relation)
                       component (e/get-entity-component entity adata)
                       enriched (merge event {:component component :drawable (:drawable component)})]
-                  ((m/manhattan-layout-moving-behaviour) enriched)
+                  ((m/do-manhattan-layout) enriched)
                   nil)))
 
 (defbehaviour manhattan-moving-component
@@ -45,7 +45,7 @@
                 "mousedrag")
               (fn [e]
                 (let [event (:context @e)]
-                  ((m/manhattan-layout-moving-behaviour) event)
+                  ((m/do-manhattan-layout) event)
                   ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
                                            (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context @e))
                   nil)))
@@ -80,11 +80,10 @@
                                                                 (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
                                                 (std/toggle-controls (:entity trg) false)
-                                                (let [connector-side (e/component-property (:entity trg) (:name (:component trg)) :side)]
-                                                  (e/update-component-prop (:entity src) (:type end-type) :rel-connector connector-side)
-                                                  (e/update-component-prop (:entity src) (:type end-type) :rel-entity-uid (-> trg :entity :uid)))
+                                                (std/set-endpoint-relation-data (:entity src) (:component src) (:entity trg) (:component trg))                                                
                                                 ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
                   (std/relations-validate (->> @e :context :entity))
+                  ((m/do-manhattan-layout) event)
                   nil)))
 
 (defbehaviour hovering-entity

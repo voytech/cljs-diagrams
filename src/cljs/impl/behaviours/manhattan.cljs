@@ -73,48 +73,20 @@
     :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
     :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}}))
 
-(defn node-path-selector [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
+(defn node-path-begining [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
   (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
-        trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)]))
-    ;(cond
-    ;   (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-    ;        (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y))]))
-
-(defn- sercterc-src-above-trg [s-conn-side t-conn-side source-main-c target-main-c]
-  (and (= :right s-conn-side)
-       (= :right t-conn-side)
-       (< (d/get-left (:drawable target-main-c)) (d/get-left (:drawable source-main-c)))
-       (< (d/get-top (:drawable target-main-c)) (d/get-top (:drawable source-main-c)))))
-
-(defn- sercterc-src-below-trg [s-conn-side t-conn-side source-main-c target-main-c]
-  (and (= :right s-conn-side)
-       (= :right t-conn-side)
-       (< (d/get-left (:drawable target-main-c)) (d/get-left (:drawable source-main-c)))
-       (>= (d/get-top (:drawable target-main-c)) (d/get-top (:drawable source-main-c)))))
-
-(defn- selctelc-src-above-trg [s-conn-side t-conn-side source-main-c target-main-c]
-  (and (= :left s-conn-side)
-       (= :left t-conn-side)
-       (< (d/get-left (:drawable target-main-c)) (d/get-left (:drawable source-main-c)))
-       (< (d/get-top (:drawable target-main-c)) (d/get-top (:drawable source-main-c)))))
-
-(defn- selctelc-src-below-trg [s-conn-side t-conn-side source-main-c target-main-c]
-  (and (= :left s-conn-side)
-       (= :left t-conn-side)
-       (< (d/get-left (:drawable target-main-c)) (d/get-left (:drawable source-main-c)))
-       (>= (d/get-top (:drawable target-main-c)) (d/get-top (:drawable source-main-c)))))
-
-(defn- serctelc-src-above-trg [s-conn-side t-conn-side source-main-c target-main-c]
-  (and (= :right s-conn-side)
-       (= :left t-conn-side)
-       (< (d/get-left (:drawable target-main-c)) (d/get-left (:drawable source-main-c)))
-       (< (d/get-top (:drawable target-main-c)) (d/get-top (:drawable source-main-c)))))
-
-(defn- serctelc-src-below-trg [s-conn-side t-conn-side source-main-c target-main-c]
-  (and (= :right s-conn-side)
-       (= :left t-conn-side)
-       (< (d/get-left (:drawable target-main-c)) (d/get-left (:drawable source-main-c)))
-       (>= (d/get-top (:drawable target-main-c)) (d/get-top (:drawable source-main-c)))))
+        trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)]
+    (cond
+       (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+            (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
+       {:src (cond (= :left source-control-side) (follow-direction :left-up src-node-points)
+                   (= :top source-control-side)  (follow-direction :top-left src-node-points)
+                   (= :bottom source-control-side) (follow-direction :bottom-left-full-up src-node-points)
+                   (= :right source-control-side) (follow-direction :right-up-full-left src-node-points))
+        :trg (cond (= :left target-control-side) (follow-direction :left-down-full-right trg-node-points)
+                   (= :top target-control-side) (follow-direction :top-right-full-down trg-node-points)
+                   (= :bottom target-control-side) (follow-direction :bottom-left trg-node-points)
+                   (= :right target-control-side) (follow-direction :right-down trg-node-points))})))
 
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]
@@ -127,26 +99,13 @@
             target-c-side (e/component-property entity (:name end) :rel-connector)
             source-node (e/entity-by-id source-node-id)
             target-node (e/entity-by-id target-node-id)
-            source-n-points (compute-node-points source-node 25)
-            target-n-points (compute-node-points target-node 25)
-            source-main-c (first (e/get-entity-component source-node ::c/main))
-            target-main-c (first (e/get-entity-component target-node ::c/main))]
-        (when-not (or (nil? source-node) (nil? target-node))
-          (cond
-            (sercterc-src-above-trg source-c-side target-c-side source-main-c target-main-c)
-            (concat [sp (:rm source-n-points) (:rt source-n-points) (:lt source-n-points)] (compute-mid-points (:lt source-n-points) ep :h :h))
-            (sercterc-src-below-trg source-c-side target-c-side source-main-c target-main-c)
-            (concat [sp (:rm source-n-points) (:rb source-n-points) (:lb source-n-points)] (compute-mid-points (:lb source-n-points) ep :h :h))
-            (selctelc-src-above-trg source-c-side target-c-side source-main-c target-main-c)
-            (concat [sp (:lm source-n-points)] (compute-mid-points (:lm source-n-points) (:rt target-n-points) :h :h) [(:rt target-n-points) (:lt target-n-points) (:lm target-n-points) ep])
-            (selctelc-src-below-trg source-c-side target-c-side source-main-c target-main-c)
-            (concat [sp (:lm source-n-points)] (compute-mid-points (:lm source-n-points) (:rb target-n-points) :h :h) [(:rb target-n-points) (:lb target-n-points) (:lm target-n-points) ep])
-            (serctelc-src-above-trg source-c-side target-c-side source-main-c target-main-c)
-            (concat [sp (:rm source-n-points) (:rt source-n-points) (:lt source-n-points)] (compute-mid-points (:lt source-n-points) (:rt target-n-points) :h :h) [(:rt target-n-points) (:lt target-n-points) (:lm target-n-points) ep])
-            (serctelc-src-below-trg source-c-side target-c-side source-main-c target-main-c)
-            (concat [sp (:rm source-n-points) (:rb source-n-points) (:lb source-n-points)] (compute-mid-points (:lb source-n-points) (:rb target-n-points) :h :h) [(:rb target-n-points) (:lb target-n-points) (:lm target-n-points) ep])
-            :esle
-            (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
+            path-beginings (node-path-begining source-node source-c-side target-node target-c-side)
+            src-path-begin (:src path-beginings)
+            trg-path-begin (:trg path-beginings)
+            src-path-begin-point (last src-path-begin)
+            trg-path-begin-point (last trg-path-begin)
+            mid-points (compute-mid-points src-path-begin-point trg-path-begin-point :h :h)]
+        (concat src-path-begin mid-points (rseq trg-path-begin)))
       (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
 
 (defn- compute-path [start-point end-point mid-points]

@@ -73,27 +73,35 @@
     :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
     :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}}))
 
+(defn- top-right-path [src-node-points trg-node-points]
+  (cond
+    (and (< (-> trg-node-points :rm :x) (-> src-node-points  :tm :x))
+         (< (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
+    {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
+    (and (>= (-> trg-node-points :tm :x) (-> src-node-points  :lm :x))
+         (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
+    {:src [(:tm src-node-points)] :trg (follow-direction :right-down trg-node-points)}
+    (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+         (>= (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
+    {:src (follow-direction :top-left src-node-points) :trg [(:rm trg-node-points)]}
+    (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+         (>= (-> trg-node-points :tm :y) (-> src-node-points  :bm :y)))
+    {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :right-up trg-node-points)} ;; not right-up -> only right ?
+    (and (>= (-> trg-node-points :lm :x) (-> src-node-points  :rm :x))
+         (>= (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
+    {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}))
+
 (defn node-path-begining [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
   (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
         trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)]
     (cond
        (and (= :top source-control-side) (= :right target-control-side))
-       (cond
-         (and (< (-> trg-node-points :rm :x) (-> src-node-points  :tm :x))
-              (< (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
-         {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
-         (and (>= (-> trg-node-points :tm :x) (-> src-node-points  :lm :x))
-              (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
-         {:src [(:tm src-node-points)] :trg (follow-direction :right-down trg-node-points)}
-         (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-              (>= (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
-         {:src (follow-direction :top-left src-node-points) :trg [(:rm trg-node-points)]}
-         (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-              (>= (-> trg-node-points :tm :y) (-> src-node-points  :bm :y)))
-         {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :right-up trg-node-points)}
-         (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-              (< (-> trg-node-points :tm :y) (-> src-node-points  :bm :y)))
-         {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}))))
+       (assoc (top-right-path src-node-points trg-node-points) :reversed false)
+       (and (= :right source-control-side) (= :top target-control-side))
+       (assoc (top-right-path trg-node-points src-node-points) :reversed true))))
+        ; (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+        ;      (< (-> trg-node-points :tm :y) (-> src-node-points  :bm :y))}
+         ;{:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}))))
 
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]
@@ -109,10 +117,12 @@
             path-beginings (node-path-begining source-node source-c-side target-node target-c-side)
             src-path-begin (:src path-beginings)
             trg-path-begin (:trg path-beginings)
+            reversed (:reversed path-beginings)
             src-path-begin-point (last src-path-begin)
             trg-path-begin-point (last trg-path-begin)
             mid-points (compute-mid-points src-path-begin-point trg-path-begin-point :h :h)]
-        (concat src-path-begin mid-points (rseq trg-path-begin)))
+        (if reversed (reverse (concat src-path-begin mid-points (rseq trg-path-begin)))
+                     (concat src-path-begin mid-points (rseq trg-path-begin))))
       (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
 
 (defn- compute-path [start-point end-point mid-points]

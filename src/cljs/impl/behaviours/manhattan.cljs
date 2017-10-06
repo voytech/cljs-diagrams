@@ -77,16 +77,23 @@
   (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
         trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)]
     (cond
-       (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-            (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
-       {:src (cond (= :left source-control-side) (follow-direction :left-up src-node-points)
-                   (= :top source-control-side)  (follow-direction :top-left src-node-points)
-                   (= :bottom source-control-side) (follow-direction :bottom-left-full-up src-node-points)
-                   (= :right source-control-side) (follow-direction :right-up-full-left src-node-points))
-        :trg (cond (= :left target-control-side) (follow-direction :left-down-full-right trg-node-points)
-                   (= :top target-control-side) (follow-direction :top-right-full-down trg-node-points)
-                   (= :bottom target-control-side) (follow-direction :bottom-left trg-node-points)
-                   (= :right target-control-side) (follow-direction :right-down trg-node-points))})))
+       (and (= :top source-control-side) (= :right target-control-side))
+       (cond
+         (and (< (-> trg-node-points :rm :x) (-> src-node-points  :tm :x))
+              (< (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
+         {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
+         (and (>= (-> trg-node-points :tm :x) (-> src-node-points  :lm :x))
+              (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
+         {:src [(:tm src-node-points)] :trg (follow-direction :right-down trg-node-points)}
+         (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+              (>= (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
+         {:src (follow-direction :top-left src-node-points) :trg [(:rm trg-node-points)]}
+         (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+              (>= (-> trg-node-points :tm :y) (-> src-node-points  :bm :y)))
+         {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :right-up trg-node-points)}
+         (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+              (< (-> trg-node-points :tm :y) (-> src-node-points  :bm :y)))
+         {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}))))
 
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]

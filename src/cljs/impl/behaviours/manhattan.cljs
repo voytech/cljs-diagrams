@@ -50,6 +50,9 @@
     (= control-side :top)    :tm
     (= control-side :bottom) :bm))
 
+(defn- eval-normals [start end]
+   (if (> (- (:x end) (:x start)) (- (:y end) (:y start))) [:h :h] [:v :v]))
+
 (defn- compute-mid-points [sp ep s-normal e-normal]
   (let [dx (- (:x ep) (:x sp))
         dy (- (:y ep) (:y sp))]
@@ -73,23 +76,230 @@
     :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
     :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}}))
 
+(defn- from-leftmost-to-tright-sleft-edge-match [trg-node-points src-node-points]
+  (<  (-> trg-node-points :rm :x) (-> src-node-points  :lm :x)))
+
+(defn- from-tright-sleft-edge-match-to-tright-in-middle [trg-node-points src-node-points]
+  (and (>=  (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
+       (< (-> trg-node-points :rm :x) (-> src-node-points :tm :x))))
+
+(defn- from-tright-in-middle-to-tleft-in-middle  [trg-node-points src-node-points]
+  (and (>=  (-> trg-node-points :rm :x) (-> src-node-points  :tm :x))
+       (< (-> trg-node-points :tm :x) (-> src-node-points :rm :x))))
+
+(defn- from-tleft-in-middle-to-tleft-sright-edge-match  [trg-node-points src-node-points]
+  (and (>=  (-> trg-node-points :tm :x) (-> src-node-points  :rm :x))
+       (<= (-> trg-node-points :lm :x) (-> src-node-points :rm :x))))
+
+(defn- from-tleft-sright-edge-match-to-rightmost  [trg-node-points src-node-points]
+  (> (-> trg-node-points :lm :x) (-> src-node-points :rm :x)))
+
+(defn- from-topmost-to-tbottom-stop-edge-match [trg-node-points src-node-points]
+  (<  (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
+
+(defn- from-tbottom-stop-edge-match-to-tbottom-in-middle   [trg-node-points src-node-points]
+  (and (>=  (-> trg-node-points :bm :y) (-> src-node-points  :tm :y))
+       (< (-> trg-node-points :bm :y) (-> src-node-points :lm :y))))
+
+(defn- from-tbottom-in-middle-to-ttop-in-middle  [trg-node-points src-node-points]
+  (and (>= (-> trg-node-points :bm :y) (-> src-node-points :lm :y))
+       (< (-> trg-node-points :lm :y) (-> src-node-points :bm :y))))
+
+(defn- from-ttop-in-middle-to-ttop-sbottom-edge-match  [trg-node-points src-node-points]
+  (and (>= (-> trg-node-points :lm :y) (-> src-node-points :bm :y))
+       (<= (-> trg-node-points :tm :y) (-> src-node-points :bm :y))))
+
+(defn- from-ttop-sbottom-edge-match-to-bottommost  [trg-node-points src-node-points]
+  (> (-> trg-node-points :tm :y) (-> src-node-points :bm :y)))
+
 (defn- top-right-path [src-node-points trg-node-points]
   (cond
-    (and (< (-> trg-node-points :rm :x) (-> src-node-points  :tm :x))
-         (< (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
-    {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
-    (and (>= (-> trg-node-points :tm :x) (-> src-node-points  :lm :x))
-         (< (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
-    {:src [(:tm src-node-points)] :trg (follow-direction :right-down trg-node-points)}
-    (and (< (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-         (>= (-> trg-node-points :rm :y) (-> src-node-points  :tm :y)))
-    {:src (follow-direction :top-left src-node-points) :trg [(:rm trg-node-points)]}
-    (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-         (>= (-> trg-node-points :tm :y) (-> src-node-points  :bm :y)))
-    {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :right-up trg-node-points)} ;; not right-up -> only right ?
-    (and (>= (-> trg-node-points :lm :x) (-> src-node-points  :rm :x))
-         (>= (-> trg-node-points :bm :y) (-> src-node-points  :tm :y)))
-    {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}))
+    (from-leftmost-to-tright-sleft-edge-match trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-left src-node-points) :trg [(:rm trg-node-points)]}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-left src-node-points) :trg [(:rm trg-node-points)]}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-left-half-down src-node-points) :trg [(:rm trg-node-points)]}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-left-full-down src-node-points) :trg [(:rm trg-node-points)]})
+    (from-tright-sleft-edge-match-to-tright-in-middle trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg [(:rm trg-node-points)]}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-left-full-down src-node-points) :trg (follow-direction :right-up trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-left-full-down src-node-points) :trg (follow-direction :right-up trg-node-points)})
+    (from-tright-in-middle-to-tleft-in-middle trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src  [(:tm src-node-points)] :trg (follow-direction :right-down trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src  [(:tm src-node-points)] :trg (follow-direction :right-down trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src  [(:tm src-node-points)] :trg (follow-direction :right-up trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src  (follow-direction :top-right-full-down src-node-points) :trg [(:rm trg-node-points)]}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :right-up trg-node-points)})
+    (from-tleft-in-middle-to-tleft-sright-edge-match trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-down-half-left trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-down-half-left trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-half-left trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-right-half-down src-node-points) :trg (follow-direction :right-up-half-left trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :right-up-half-left trg-node-points)})
+    (from-tleft-sright-edge-match-to-rightmost trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-down-full-left trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)})))
+
+(defn- top-top-path [src-node-points trg-node-points]
+  (cond
+    (from-leftmost-to-tright-sleft-edge-match trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-left src-node-points) :trg (follow-direction :top-right trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-left src-node-points) :trg (follow-direction :top-right trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-left src-node-points) :trg (follow-direction :top-right trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-left-half-down src-node-points) :trg (follow-direction :top-right trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-left-full-down src-node-points) :trg (follow-direction :top-right trg-node-points)})
+    (from-tright-sleft-edge-match-to-tright-in-middle trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg (follow-direction :top-right trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg (follow-direction :top-right trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg (follow-direction :top-right trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-left src-node-points) :trg (follow-direction :top-right trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-left src-node-points) :trg (follow-direction :top-right trg-node-points)})
+    (from-tright-in-middle-to-tleft-in-middle trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src  [(:tm src-node-points)] :trg (follow-direction :top-right-full-down trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src  [(:tm src-node-points)] :trg (follow-direction :top-right-full-down trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src  [(:tm src-node-points)] :trg (follow-direction :top-right-half-down trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src  (follow-direction :top-right src-node-points) :trg [(:tm trg-node-points)]}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :top-right trg-node-points)})
+    (from-tleft-in-middle-to-tleft-sright-edge-match trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg (follow-direction :top-right-full-down trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg (follow-direction :top-left-half-down trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src [(:tm src-node-points)] :trg (follow-direction :top-left trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-right-half-down src-node-points) :trg (follow-direction :top-left trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :top-left trg-node-points)})
+    (from-tleft-sright-edge-match-to-rightmost trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :top-left trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :top-left trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :top-left trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :top-right src-node-points) :trg (follow-direction :top-left trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :top-right-full-down src-node-points) :trg (follow-direction :top-left trg-node-points)})))
+
+(defn- bottom-bottom-path [src-node-points trg-node-points]
+  (cond
+    (from-leftmost-to-tright-sleft-edge-match trg-node-points src-node-points)
+    (cond
+       (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :bottom-left src-node-points) :trg (follow-direction :bottom-right trg-node-points)}
+       (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :bottom-left src-node-points) :trg (follow-direction :bottom-right trg-node-points)}
+       (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+       {:src (follow-direction :bottom-left src-node-points) :trg (follow-direction :bottom-right trg-node-points)}
+       (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+       {:src (follow-direction :bottom-left src-node-points) :trg (follow-direction :bottom-right trg-node-points)}
+       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+       {:src (follow-direction :bottom-left src-node-points) :trg (follow-direction :bottom-right trg-node-points)})
+    (from-tright-sleft-edge-match-to-tright-in-middle trg-node-points src-node-points)
+    (cond
+      (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+      {:src (follow-direction :bottom-left src-node-points) :trg [(:bm trg-node-points)]}
+      (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+      {:src (follow-direction :bottom-left src-node-points) :trg [(:bm trg-node-points)]}
+      (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+      {:src [(:bm src-node-points)] :trg (follow-direction :bottom-right trg-node-points)}
+      (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+      {:src [(:bm src-node-points)] :trg (follow-direction :bottom-right trg-node-points)}
+      (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+      {:src [(:bm src-node-points)] :trg (follow-direction :bottom-right trg-node-points)})
+    (from-tright-in-middle-to-tleft-in-middle trg-node-points src-node-points)
+    (cond
+      (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right-full-up src-node-points) :trg [(:bm trg-node-points)]}
+      (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+      {:src [(:bm src-node-points)] :trg  [(:bm trg-node-points)]}
+      (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+      {:src [(:bm src-node-points)] :trg  [(:bm trg-node-points)]}
+      (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+      {:src [(:bm src-node-points)] :trg (follow-direction :bottom-right-full-up trg-node-points)}
+      (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+      {:src [(:bm src-node-points)] :trg (follow-direction :bottom-right-full-up trg-node-points)})
+    (from-tleft-in-middle-to-tleft-sright-edge-match trg-node-points src-node-points)
+    (cond
+      (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg [(:bm trg-node-points)]}
+      (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg  [(:bm trg-node-points)]}
+      (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg (follow-direction :bottom-left trg-node-points)}
+      (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg (follow-direction :bottom-left trg-node-points)}
+      (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg (follow-direction :bottom-left trg-node-points)})
+    (from-tleft-sright-edge-match-to-rightmost trg-node-points src-node-points)
+    (cond
+      (from-topmost-to-tbottom-stop-edge-match trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg  (follow-direction :bottom-left trg-node-points)}
+      (from-tbottom-stop-edge-match-to-tbottom-in-middle trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg  (follow-direction :bottom-left trg-node-points)}
+      (from-tbottom-in-middle-to-ttop-in-middle trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg (follow-direction :bottom-left trg-node-points)}
+      (from-ttop-in-middle-to-ttop-sbottom-edge-match trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg (follow-direction :bottom-left trg-node-points)}
+      (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
+      {:src (follow-direction :bottom-right src-node-points) :trg (follow-direction :bottom-left trg-node-points)})))
 
 (defn node-path-begining [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
   (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
@@ -98,11 +308,11 @@
        (and (= :top source-control-side) (= :right target-control-side))
        (assoc (top-right-path src-node-points trg-node-points) :reversed false)
        (and (= :right source-control-side) (= :top target-control-side))
-       (assoc (top-right-path trg-node-points src-node-points) :reversed true))))
-        ; (and (>= (-> trg-node-points :rm :x) (-> src-node-points  :lm :x))
-        ;      (< (-> trg-node-points :tm :y) (-> src-node-points  :bm :y))}
-         ;{:src (follow-direction :top-right src-node-points) :trg (follow-direction :right-up-full-left trg-node-points)}))))
-
+       (assoc (top-right-path trg-node-points src-node-points) :reversed true)
+       (and (= :top source-control-side) (= :top target-control-side))
+       (assoc (top-top-path src-node-points trg-node-points) :reversed false)
+       (and (= :bottom source-control-side) (= :bottom target-control-side))
+       (assoc (bottom-bottom-path src-node-points trg-node-points) :reversed false))))
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]
   (let [sp (center-point start)
@@ -120,7 +330,8 @@
             reversed (:reversed path-beginings)
             src-path-begin-point (last src-path-begin)
             trg-path-begin-point (last trg-path-begin)
-            mid-points (compute-mid-points src-path-begin-point trg-path-begin-point :h :h)]
+            normals (eval-normals src-path-begin-point trg-path-begin-point)
+            mid-points (compute-mid-points src-path-begin-point trg-path-begin-point (normals 0) (normals 1))]
         (if reversed (reverse (concat src-path-begin mid-points (rseq trg-path-begin)))
                      (concat src-path-begin mid-points (rseq trg-path-begin))))
       (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))

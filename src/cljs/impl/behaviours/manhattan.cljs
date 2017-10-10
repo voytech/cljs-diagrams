@@ -67,14 +67,28 @@
                (first (e/get-entity-component node-entity-or-main-cmpnt ::c/main))
                node-entity-or-main-cmpnt)
         drwbl (:drawable main)]
-   {:lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
-    :lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
-    :lb {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
-    :rt {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (- (d/get-top drwbl) inset-width)}
-    :rm {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))}
-    :rb {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}
-    :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width)}
-    :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width)}}))
+   (array-map :lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width) :i 0}
+              :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width) :i 1}
+              :rt {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (- (d/get-top drwbl) inset-width) :i 2}
+              :rm {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2)) :i 3}
+              :rb {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 4}
+              :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 5}
+              :lb {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 6}
+              :lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2)) :i 7})))
+
+(defn- contextualise-node-points [node-points]
+  {:keyed node-points
+   :clock-wise (array-map)})
+
+(defn- distance [p1 p2]
+  (js/Math.sqrt (+ (js/Math.pow (- (:x p2) (:x p1)) 2) (js/Math.pow (- (:y p2) (:y p1)) 2))))
+
+(defn- nearest-point [node-points rel-point]
+  (let [bag (vals node-points)]
+   (apply min-key (fn [src-point] (distance src-point rel-point)) bag)))
+
+(defn- internal-path [node-points src-point dst-point])
+
 
 (defn- from-leftmost-to-tright-sleft-edge-match [trg-node-points src-node-points]
   (<  (-> trg-node-points :rm :x) (-> src-node-points  :lm :x)))
@@ -496,32 +510,47 @@
 
 (defn node-path-begining [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
   (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
-        trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)]
-    (cond
-       (and (= :top source-control-side) (= :right target-control-side))
-       (assoc (top-right-path src-node-points trg-node-points) :reversed false)
-       (and (= :right source-control-side) (= :top target-control-side))
-       (assoc (top-right-path trg-node-points src-node-points) :reversed true)
-       (and (= :top source-control-side) (= :left target-control-side))
-       (assoc (top-left-path src-node-points trg-node-points) :reversed false)
-       (and (= :left source-control-side) (= :top target-control-side))
-       (assoc (top-left-path src-node-points trg-node-points) :reversed true)
-       (and (= :bottom source-control-side) (= :left target-control-side))
-       (assoc (bottom-left-path src-node-points trg-node-points) :reversed false)
-       (and (= :left source-control-side) (= :bottom target-control-side))
-       (assoc (bottom-left-path src-node-points trg-node-points) :reversed true)
-       (and (= :bottom source-control-side) (= :right target-control-side))
-       (assoc (bottom-right-path src-node-points trg-node-points) :reversed false)
-       (and (= :right source-control-side) (= :bottom target-control-side))
-       (assoc (bottom-right-path src-node-points trg-node-points) :reversed true)
-       (and (= :top source-control-side) (= :top target-control-side))
-       (assoc (top-top-path src-node-points trg-node-points) :reversed false)
-       (and (= :bottom source-control-side) (= :bottom target-control-side))
-       (assoc (bottom-bottom-path src-node-points trg-node-points) :reversed false)
-       (and (= :top source-control-side) (= :bottom target-control-side))
-       (assoc (top-bottom-path src-node-points trg-node-points) :reversed false)
-       (and (= :bottom source-control-side) (= :top target-control-side))
-       (assoc (top-bottom-path src-node-points trg-node-points) :reversed true))))
+        trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)
+        src-ctrl-point (get src-node-points (control-side-2-node-point-type source-control-side))
+        trg-ctrl-point (get trg-node-points (control-side-2-node-point-type target-control-side))
+        nearest-src-point (nearest-point src-node-points trg-ctrl-point)
+        nearest-trg-point (nearest-point trg-node-points src-ctrl-point)
+        src-node-points-vec (vec (vals src-node-points))
+        trg-node-points-vec (vec (vals trg-node-points))]
+    (let [beginings {:src
+                     (if (< (:i nearest-src-point) (:i src-ctrl-point))
+                       (vec (rseq (subvec src-node-points-vec (:i nearest-src-point) (inc (:i src-ctrl-point)))))
+                       (subvec src-node-points-vec (:i src-ctrl-point) (inc (:i nearest-src-point))))
+                     :trg
+                     (if (< (:i nearest-trg-point) (:i trg-ctrl-point))
+                       (vec (rseq (subvec trg-node-points-vec (:i nearest-trg-point) (inc (:i trg-ctrl-point)))))
+                       (subvec trg-node-points-vec (:i trg-ctrl-point) (inc (:i nearest-trg-point))))}]
+      beginings)))
+    ; (cond
+    ;    (and (= :top source-control-side) (= :right target-control-side))
+    ;    (assoc (top-right-path src-node-points trg-node-points) :reversed false)
+    ;    (and (= :right source-control-side) (= :top target-control-side))
+    ;    (assoc (top-right-path trg-node-points src-node-points) :reversed true)
+    ;    (and (= :top source-control-side) (= :left target-control-side))
+    ;    (assoc (top-left-path src-node-points trg-node-points) :reversed false)
+    ;    (and (= :left source-control-side) (= :top target-control-side))
+    ;    (assoc (top-left-path src-node-points trg-node-points) :reversed true)
+    ;    (and (= :bottom source-control-side) (= :left target-control-side))
+    ;    (assoc (bottom-left-path src-node-points trg-node-points) :reversed false)
+    ;    (and (= :left source-control-side) (= :bottom target-control-side))
+    ;    (assoc (bottom-left-path src-node-points trg-node-points) :reversed true)
+    ;    (and (= :bottom source-control-side) (= :right target-control-side))
+    ;    (assoc (bottom-right-path src-node-points trg-node-points) :reversed false)
+    ;    (and (= :right source-control-side) (= :bottom target-control-side))
+    ;    (assoc (bottom-right-path src-node-points trg-node-points) :reversed true)
+    ;    (and (= :top source-control-side) (= :top target-control-side))
+    ;    (assoc (top-top-path src-node-points trg-node-points) :reversed false)
+    ;    (and (= :bottom source-control-side) (= :bottom target-control-side))
+    ;    (assoc (bottom-bottom-path src-node-points trg-node-points) :reversed false)
+    ;    (and (= :top source-control-side) (= :bottom target-control-side))
+    ;    (assoc (top-bottom-path src-node-points trg-node-points) :reversed false)
+    ;    (and (= :bottom source-control-side) (= :top target-control-side))
+    ;    (assoc (top-bottom-path src-node-points trg-node-points) :reversed true))))
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]
   (let [sp (center-point start)

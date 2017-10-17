@@ -508,6 +508,19 @@
       (from-ttop-sbottom-edge-match-to-bottommost trg-node-points src-node-points)
       {:src (follow-direction :bottom-right src-node-points) :trg (follow-direction :bottom-left trg-node-points)})))
 
+(defn- shortest-path [points local-src local-trg]
+  (let [distance (- (:i local-trg) (:i local-src))
+        dist-a (js/Math.abs distance)
+        dist-b (- (count points) dist-a)]
+    (if (< dist-a dist-b)
+      (if (> distance 0)
+        (subvec points (:i local-src) (inc (:i local-trg)))
+        (vec (rseq (subvec points (:i local-trg) (inc (:i local-src))))))
+      (let [path-b (concat (subvec points (:i local-trg) (count points)) (subvec points 0 (inc (:i local-src))))]
+        (if (> distance 0)
+          (vec (rseq (vec path-b)))
+          path-b)))))
+
 (defn node-path-begining [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
   (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
         trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)
@@ -517,14 +530,14 @@
         nearest-trg-point (nearest-point trg-node-points src-ctrl-point)
         src-node-points-vec (vec (vals src-node-points))
         trg-node-points-vec (vec (vals trg-node-points))]
-    (let [beginings {:src
-                     (if (< (:i nearest-src-point) (:i src-ctrl-point))
-                       (vec (rseq (subvec src-node-points-vec (:i nearest-src-point) (inc (:i src-ctrl-point)))))
-                       (subvec src-node-points-vec (:i src-ctrl-point) (inc (:i nearest-src-point))))
-                     :trg
-                     (if (< (:i nearest-trg-point) (:i trg-ctrl-point))
-                       (vec (rseq (subvec trg-node-points-vec (:i nearest-trg-point) (inc (:i trg-ctrl-point)))))
-                       (subvec trg-node-points-vec (:i trg-ctrl-point) (inc (:i nearest-trg-point))))}]
+    (let [beginings {:src (shortest-path src-node-points-vec src-ctrl-point nearest-src-point)
+                     ;(if (< (:i nearest-src-point) (:i src-ctrl-point))
+                    ;   (vec (rseq (subvec src-node-points-vec (:i nearest-src-point) (inc (:i src-ctrl-point)))))
+                    ;   (subvec src-node-points-vec (:i src-ctrl-point) (inc (:i nearest-src-point)))
+                     :trg (shortest-path trg-node-points-vec trg-ctrl-point nearest-trg-point)}]
+                     ;(if (< (:i nearest-trg-point) (:i trg-ctrl-point))
+                      ; (vec (rseq (subvec trg-node-points-vec (:i nearest-trg-point) (inc (:i trg-ctrl-point)))))
+                       ;(subvec trg-node-points-vec (:i trg-ctrl-point) (inc (:i nearest-trg-point)))}]
       beginings)))
     ; (cond
     ;    (and (= :top source-control-side) (= :right target-control-side))

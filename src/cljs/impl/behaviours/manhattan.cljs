@@ -95,7 +95,7 @@
       (if (> distance 0)
         (subvec points (:i local-src) (inc (:i local-trg)))
         (vec (rseq (subvec points (:i local-trg) (inc (:i local-src))))))
-      (let [path-b (concat (subvec points (:i local-trg) (count points)) (subvec points 0 (inc (:i local-src))))]
+      (let [path-b (concat (subvec points (:i local-src) (count points)) (subvec points 0 (inc (:i local-trg))))]
         (if (> distance 0)
           (vec (rseq (vec path-b)))
           (vec path-b))))))
@@ -127,7 +127,6 @@
             path-beginings (node-path-begining source-node source-c-side target-node target-c-side)
             src-path-begin (:src path-beginings)
             trg-path-begin (:trg path-beginings)
-            ;;reversed (:reversed path-beginings)
             src-path-begin-point (peek src-path-begin)
             trg-path-begin-point (peek trg-path-begin)
             normals (eval-normals src-path-begin-point trg-path-begin-point)
@@ -142,7 +141,6 @@
                                         (= (:y trg-path-begin-point) (:y last-mid-point) (:y (last (drop-last trg-path-begin)))))
                                     (vec (drop-last trg-path-begin))
                                     trg-path-begin)]
-        ;;(if reversed (reverse (concat src-path-begin mid-points (rseq trg-path-begin)))
         (concat src-path-normalised mid-points (rseq trg-path-normalised)))
       (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
 

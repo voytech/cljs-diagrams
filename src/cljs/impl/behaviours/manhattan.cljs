@@ -9,34 +9,6 @@
 
 (def INSET-WIDTH 20)
 
-(def directions {:right-down           (juxt :rm :rb)
-                 :right-down-half-left (juxt :rm :rb :bm)
-                 :right-down-full-left (juxt :rm :rb :lb)
-                 :right-up             (juxt :rm :rt)
-                 :right-up-half-left   (juxt :rm :rt :tm)
-                 :right-up-full-left   (juxt :rm :rt :lt)
-                 :left-down            (juxt :lm :lb)
-                 :left-down-half-right (juxt :lm :lb :bm)
-                 :left-down-full-right (juxt :lm :lb :rb)
-                 :left-up              (juxt :lm :lt)
-                 :left-up-half-right   (juxt :lm :lt :tm)
-                 :left-up-full-right   (juxt :lm :lt :rt)
-                 :top-left             (juxt :tm :lt)
-                 :top-left-half-down   (juxt :tm :lt :lm)
-                 :top-left-full-down   (juxt :tm :lt :lb)
-                 :top-right            (juxt :tm :rt)
-                 :top-right-half-down  (juxt :tm :rt :rm)
-                 :top-right-full-down  (juxt :tm :rt :rb)
-                 :bottom-left          (juxt :bm :lb)
-                 :bottom-left-half-up  (juxt :bm :lb :lm)
-                 :bottom-left-full-up  (juxt :bm :lb :lt)
-                 :bottom-right         (juxt :bm :rb)
-                 :bottom-right-half-up (juxt :bm :rb :rm)
-                 :bottom-right-full-up (juxt :bm :rb :rt)})
-
-(defn- follow-direction [dir node-points]
-  ((get directions dir) node-points))
-
 (defn- center-point [cmp]
   (let [drwbl (:drawable cmp)
         mx (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2))
@@ -51,7 +23,7 @@
     (= control-side :bottom) :bm))
 
 (defn- eval-normals [start end]
-   (if (> (- (:x end) (:x start)) (- (:y end) (:y start))) [:h :h] [:v :v]))
+   (if (> (- (:x end) (:x start)) (- (:y end) (:y start))) [:h :v] [:v :h]))
 
 (defn- compute-mid-points [sp ep s-normal e-normal]
   (let [dx (- (:x ep) (:x sp))
@@ -75,10 +47,6 @@
               :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 5}
               :lb {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 6}
               :lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2)) :i 7})))
-
-(defn- contextualise-node-points [node-points]
-  {:keyed node-points
-   :clock-wise (array-map)})
 
 (defn- distance [p1 p2]
   (js/Math.sqrt (+ (js/Math.pow (- (:x p2) (:x p1)) 2) (js/Math.pow (- (:y p2) (:y p1)) 2))))
@@ -108,10 +76,12 @@
         nearest-src-point (nearest-point src-node-points trg-ctrl-point)
         nearest-trg-point (nearest-point trg-node-points src-ctrl-point)
         src-node-points-vec (vec (vals src-node-points))
-        trg-node-points-vec (vec (vals trg-node-points))]
-    (let [beginings {:src (shortest-path src-node-points-vec src-ctrl-point nearest-src-point)
-                     :trg (shortest-path trg-node-points-vec trg-ctrl-point nearest-trg-point)}]
-      beginings)))
+        trg-node-points-vec (vec (vals trg-node-points))
+        src-path (shortest-path src-node-points-vec src-ctrl-point nearest-src-point)
+        trg-path (shortest-path trg-node-points-vec trg-ctrl-point nearest-trg-point)]
+     {:src src-path
+      :trg trg-path}))
+
 
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]
@@ -133,13 +103,25 @@
             mid-points (compute-mid-points src-path-begin-point trg-path-begin-point (normals 0) (normals 1))
             first-mid-point (mid-points 0)
             last-mid-point (peek mid-points)
-            src-path-normalised (if (or (= (:x src-path-begin-point) (:x first-mid-point) (:x (last (drop-last src-path-begin))))
-                                        (= (:y src-path-begin-point) (:y first-mid-point) (:y (last (drop-last src-path-begin)))))
-                                    (vec (drop-last src-path-begin))
+            src-outgoing-axis (cond
+                                (= (:x src-path-begin-point) (:x first-mid-point) (:x (last (drop-last src-path-begin))))
+                                :v
+                                (= (:y src-path-begin-point) (:y first-mid-point) (:y (last (drop-last src-path-begin))))
+                                :h
+                                :else
+                                false)
+            trg-outgoing-axis (cond
+                                (= (:x trg-path-begin-point) (:x last-mid-point) (:x (last (drop-last trg-path-begin))))
+                                :v
+                                (= (:y trg-path-begin-point) (:y last-mid-point) (:y (last (drop-last trg-path-begin))))
+                                :h
+                                :else
+                                false)
+            src-path-normalised (if src-outgoing-axis
+                                    (vec (take-while #(or (< (:x first-mid-point) (:x %)) (< (:y first-mid-point) (:y %))) src-path-begin))
                                     src-path-begin)
-            trg-path-normalised (if (or (= (:x trg-path-begin-point) (:x last-mid-point) (:x (last (drop-last trg-path-begin))))
-                                        (= (:y trg-path-begin-point) (:y last-mid-point) (:y (last (drop-last trg-path-begin)))))
-                                    (vec (drop-last trg-path-begin))
+            trg-path-normalised (if trg-outgoing-axis
+                                    (vec (take-while #(or (< (:x last-mid-point) (:x %)) (< (:y last-mid-point) (:y %))) trg-path-begin))
                                     trg-path-begin)]
         (concat src-path-normalised mid-points (rseq trg-path-normalised)))
       (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
@@ -179,7 +161,7 @@
         startpoint-connector (e/component-property entity (:name startpoint) :rel-connector)
         endpoint-connector (e/component-property entity (:name endpoint) :rel-connector)]
     (cond
-       (and (= :right startpoint-connector)  (= :left endpoint-connector)) [:h :h]
+       (and (= :right startpoint-connector)  (= :left endpoint-connector)) [:v :h]
        (and (= :top startpoint-connector)    (= :left endpoint-connector)) [:v :h]
        (and (= :bottom startpoint-connector) (= :left endpoint-connector)) [:v :h]
        :else (if (> (- (:x end-c-point) (:x start-c-point)) (- (:y end-c-point) (:y start-c-point))) [:h :h] [:v :v]))))

@@ -74,7 +74,7 @@
         src-ctrl-point (get src-node-points (control-side-2-node-point-type source-control-side))
         trg-ctrl-point (get trg-node-points (control-side-2-node-point-type target-control-side))
         nearest-src-point (nearest-point src-node-points trg-ctrl-point)
-        nearest-trg-point (nearest-point trg-node-points src-ctrl-point)
+        nearest-trg-point (nearest-point trg-node-points nearest-src-point)
         src-node-points-vec (vec (vals src-node-points))
         trg-node-points-vec (vec (vals trg-node-points))
         src-path (shortest-path src-node-points-vec src-ctrl-point nearest-src-point)
@@ -82,7 +82,30 @@
      {:src src-path
       :trg trg-path}))
 
+(defn- find-axis [points]
+  (let [point (peek points)
+        yaxis (filter #(= (:x point) (:x %)) points)
+        xaxis (filter #(= (:y point) (:y %)) points)]
+    (if (> (count yaxis) (count xaxis))
+       {:points (vec yaxis) :axis :y}
+       {:points (vec xaxis) :axis :x})))
 
+(defn- direction
+  ([points]
+   (when (> (count points) 1)
+     (let [fst (peek (vec (drop-last points)))
+           scn (peek points)]
+       (direction fst scn))))
+  ([point-a point-b]
+   (+ (- (:x point-b) (:x point-a))
+      (- (:y point-b) (:y point-a)))))
+
+(defn- complement-axis [axis]
+  (if (= :x axis) :y :x))
+
+(defn- cut-off [points cutoff on-axis compare]
+  (let [c-axis (complement-axis on-axis)]
+    (vec (filter #(or (compare (on-axis %) (on-axis cutoff)) (not= (c-axis %) (c-axis cutoff))) points))))
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]
   (let [sp (center-point start)
@@ -103,27 +126,33 @@
             mid-points (compute-mid-points src-path-begin-point trg-path-begin-point (normals 0) (normals 1))
             first-mid-point (mid-points 0)
             last-mid-point (peek mid-points)
-            src-outgoing-axis (cond
-                                (= (:x src-path-begin-point) (:x first-mid-point) (:x (last (drop-last src-path-begin))))
-                                :v
-                                (= (:y src-path-begin-point) (:y first-mid-point) (:y (last (drop-last src-path-begin))))
-                                :h
-                                :else
-                                false)
-            trg-outgoing-axis (cond
-                                (= (:x trg-path-begin-point) (:x last-mid-point) (:x (last (drop-last trg-path-begin))))
-                                :v
-                                (= (:y trg-path-begin-point) (:y last-mid-point) (:y (last (drop-last trg-path-begin))))
-                                :h
-                                :else
-                                false)
-            src-path-normalised (if src-outgoing-axis
-                                    (vec (take-while #(or (< (:x first-mid-point) (:x %)) (< (:y first-mid-point) (:y %))) src-path-begin))
-                                    src-path-begin)
-            trg-path-normalised (if trg-outgoing-axis
-                                    (vec (take-while #(or (< (:x last-mid-point) (:x %)) (< (:y last-mid-point) (:y %))) trg-path-begin))
-                                    trg-path-begin)]
-        (concat src-path-normalised mid-points (rseq trg-path-normalised)))
+            src-axis (find-axis src-path-begin)
+            trg-axis (find-axis trg-path-begin)
+            n-src-path-begin (cond
+                               (and (< (direction (:points src-axis)) 0) (> (direction src-path-begin-point first-mid-point) 0))
+                               (cut-off src-path-begin first-mid-point (:axis src-axis) >);(vec (filter #(not (< ((:axis src-axis) %) ((:axis src-axis) first-mid-point))) src-path-begin))
+                               (and (> (direction (:points src-axis)) 0) (< (direction src-path-begin-point first-mid-point) 0))
+                               (cut-off src-path-begin first-mid-point (:axis src-axis) <);(vec (filter #(not (> ((:axis src-axis) %) ((:axis src-axis) first-mid-point))) src-path-begin))
+                               :else
+                               src-path-begin)
+            n-trg-path-begin (cond
+                               (and (< (direction (:points trg-axis)) 0) (> (direction trg-path-begin-point last-mid-point) 0))
+                               (cut-off trg-path-begin last-mid-point (:axis trg-axis) >);(vec (filter #(not (< ((:axis trg-axis) %) ((:axis trg-axis) last-mid-point))) trg-path-begin))
+                               (and (> (direction (:points trg-axis)) 0) (< (direction trg-path-begin-point last-mid-point) 0))
+                               (cut-off trg-path-begin last-mid-point (:axis trg-axis) <);(vec (filter #(not (> ((:axis trg-axis) %) ((:axis trg-axis) last-mid-point))) trg-path-begin))
+                               :else
+                               trg-path-begin)]
+         (js/console.log "source control")
+         (js/console.log (clj->js src-path-begin))
+         (js/console.log (clj->js first-mid-point))
+         (js/console.log (clj->js src-axis))
+         (js/console.log (clj->js n-src-path-begin))
+         (js/console.log "target control")
+         (js/console.log (clj->js trg-path-begin))
+         (js/console.log (clj->js last-mid-point))
+         (js/console.log (clj->js trg-axis))
+         (js/console.log (clj->js n-trg-path-begin))
+         (concat n-src-path-begin mid-points (rseq n-trg-path-begin)))
       (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
 
 (defn- compute-path [start-point end-point mid-points]

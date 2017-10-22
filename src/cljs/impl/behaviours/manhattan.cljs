@@ -59,7 +59,7 @@
   (let [distance (- (:i local-trg) (:i local-src))
         dist-a (js/Math.abs distance)
         dist-b (- (count points) dist-a)]
-    (if (< dist-a dist-b)
+    (if (<= dist-a dist-b)
       (if (> distance 0)
         (subvec points (:i local-src) (inc (:i local-trg)))
         (vec (rseq (subvec points (:i local-trg) (inc (:i local-src))))))
@@ -100,11 +100,11 @@
    (+ (- (:x point-b) (:x point-a))
       (- (:y point-b) (:y point-a)))))
 
-(defn- complement-axis [axis]
+(defn- second-axis [axis]
   (if (= :x axis) :y :x))
 
 (defn- cut-off [points cutoff on-axis compare]
-  (let [c-axis (complement-axis on-axis)]
+  (let [c-axis (second-axis on-axis)]
     (vec (filter #(or (compare (on-axis %) (on-axis cutoff)) (not= (c-axis %) (c-axis cutoff))) points))))
 
 (defn- compute-candidate-points [entity start end s-normal e-normal]
@@ -130,28 +130,18 @@
             trg-axis (find-axis trg-path-begin)
             n-src-path-begin (cond
                                (and (< (direction (:points src-axis)) 0) (> (direction src-path-begin-point first-mid-point) 0))
-                               (cut-off src-path-begin first-mid-point (:axis src-axis) >);(vec (filter #(not (< ((:axis src-axis) %) ((:axis src-axis) first-mid-point))) src-path-begin))
+                               (cut-off src-path-begin first-mid-point (:axis src-axis) >)
                                (and (> (direction (:points src-axis)) 0) (< (direction src-path-begin-point first-mid-point) 0))
-                               (cut-off src-path-begin first-mid-point (:axis src-axis) <);(vec (filter #(not (> ((:axis src-axis) %) ((:axis src-axis) first-mid-point))) src-path-begin))
+                               (cut-off src-path-begin first-mid-point (:axis src-axis) <)
                                :else
                                src-path-begin)
             n-trg-path-begin (cond
                                (and (< (direction (:points trg-axis)) 0) (> (direction trg-path-begin-point last-mid-point) 0))
-                               (cut-off trg-path-begin last-mid-point (:axis trg-axis) >);(vec (filter #(not (< ((:axis trg-axis) %) ((:axis trg-axis) last-mid-point))) trg-path-begin))
+                               (cut-off trg-path-begin last-mid-point (:axis trg-axis) >)
                                (and (> (direction (:points trg-axis)) 0) (< (direction trg-path-begin-point last-mid-point) 0))
-                               (cut-off trg-path-begin last-mid-point (:axis trg-axis) <);(vec (filter #(not (> ((:axis trg-axis) %) ((:axis trg-axis) last-mid-point))) trg-path-begin))
+                               (cut-off trg-path-begin last-mid-point (:axis trg-axis) <)
                                :else
                                trg-path-begin)]
-         (js/console.log "source control")
-         (js/console.log (clj->js src-path-begin))
-         (js/console.log (clj->js first-mid-point))
-         (js/console.log (clj->js src-axis))
-         (js/console.log (clj->js n-src-path-begin))
-         (js/console.log "target control")
-         (js/console.log (clj->js trg-path-begin))
-         (js/console.log (clj->js last-mid-point))
-         (js/console.log (clj->js trg-axis))
-         (js/console.log (clj->js n-trg-path-begin))
          (concat n-src-path-begin mid-points (rseq n-trg-path-begin)))
       (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
 
@@ -198,6 +188,7 @@
 (defn clear-orphan-components [entity start end]
   (e/remove-entity-component entity "connector"))
 
+;; Main behaviour function exposed by manhattan.
 (defn do-manhattan-layout []
   (fn [e]
      (let [endpoint (:component e)

@@ -25,7 +25,7 @@
 (defn- eval-normals [start end]
    (if (> (- (:x end) (:x start)) (- (:y end) (:y start))) [:h :v] [:v :h]))
 
-(defn- compute-mid-points [sp ep s-normal e-normal]
+(defn- find-connection-points [sp ep s-normal e-normal]
   (let [dx (- (:x ep) (:x sp))
         dy (- (:y ep) (:y sp))]
      (cond
@@ -34,7 +34,7 @@
        (and (= :v s-normal) (= :h e-normal)) [{:x (:x sp) :y (:y ep)}]
        (and (= :h s-normal) (= :v e-normal)) [{:x (:x ep) :y (:y sp)}])))
 
-(defn- compute-node-points [node-entity-or-main-cmpnt inset-width]
+(defn- find-node-wrapping-points [node-entity-or-main-cmpnt inset-width]
   (let [main (if (instance? e/Entity node-entity-or-main-cmpnt)
                (first (e/get-entity-component node-entity-or-main-cmpnt ::c/main))
                node-entity-or-main-cmpnt)
@@ -68,9 +68,9 @@
           (vec (rseq (vec path-b)))
           (vec path-b))))))
 
-(defn node-path-begining [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
-  (let [src-node-points (compute-node-points source-node-main-cmpnt INSET-WIDTH)
-        trg-node-points (compute-node-points target-node-main-cmpnt INSET-WIDTH)
+(defn find-node-paths [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
+  (let [src-node-points (find-node-wrapping-points source-node-main-cmpnt INSET-WIDTH)
+        trg-node-points (find-node-wrapping-points target-node-main-cmpnt INSET-WIDTH)
         src-ctrl-point (get src-node-points (control-side-2-node-point-type source-control-side))
         trg-ctrl-point (get trg-node-points (control-side-2-node-point-type target-control-side))
         nearest-src-point (nearest-point src-node-points trg-ctrl-point)
@@ -107,7 +107,7 @@
   (let [c-axis (second-axis on-axis)]
     (vec (filter #(or (compare (on-axis %) (on-axis cutoff)) (not= (c-axis %) (c-axis cutoff))) points))))
 
-(defn- compute-candidate-points [entity start end s-normal e-normal]
+(defn- find-path [entity start end s-normal e-normal]
   (let [sp (center-point start)
         ep (center-point end)
         source-node-id (e/component-property entity (:name start) :rel-entity-uid)
@@ -117,13 +117,13 @@
             target-c-side (e/component-property entity (:name end) :rel-connector)
             source-node (e/entity-by-id source-node-id)
             target-node (e/entity-by-id target-node-id)
-            path-beginings (node-path-begining source-node source-c-side target-node target-c-side)
-            src-path-begin (:src path-beginings)
-            trg-path-begin (:trg path-beginings)
+            node-paths (find-node-paths source-node source-c-side target-node target-c-side)
+            src-path-begin (:src node-paths)
+            trg-path-begin (:trg node-paths)
             src-path-begin-point (peek src-path-begin)
             trg-path-begin-point (peek trg-path-begin)
             normals (eval-normals src-path-begin-point trg-path-begin-point)
-            mid-points (compute-mid-points src-path-begin-point trg-path-begin-point (normals 0) (normals 1))
+            mid-points (find-connection-points src-path-begin-point trg-path-begin-point (normals 0) (normals 1))
             first-mid-point (mid-points 0)
             last-mid-point (peek mid-points)
             src-axis (find-axis src-path-begin)
@@ -143,9 +143,9 @@
                                :else
                                trg-path-begin)]
          (concat n-src-path-begin mid-points (rseq n-trg-path-begin)))
-      (compute-mid-points (center-point start) (center-point end) s-normal e-normal))))
+      (find-connection-points (center-point start) (center-point end) s-normal e-normal))))
 
-(defn- compute-path [start-point end-point mid-points]
+(defn- find-path-lines [start-point end-point mid-points]
   (let [all-points (flatten [start-point mid-points end-point])]
      (partition 2 1 all-points)))
 
@@ -169,8 +169,8 @@
 (defn update-manhattan-layout [entity s-normal e-normal]
   (let [start (e/get-entity-component entity "start")
         end (e/get-entity-component entity "end")
-        mid-points (compute-candidate-points entity start end s-normal e-normal)
-        path (compute-path (center-point start) (center-point end) mid-points)]
+        points (find-path entity start end s-normal e-normal)
+        path (find-path-lines (center-point start) (center-point end) points)]
      (-> (update-line-components entity path)
          (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))
 

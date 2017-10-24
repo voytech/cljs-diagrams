@@ -149,7 +149,10 @@
 (defn add-entity-component [entity & components]
  (doseq [component (flatten components)]
    (swap! entities assoc-in [(:uid entity) :components (:name component)] component))
- (define-lookups-on-components (entity-by-id (:uid entity))))
+ (let [entity-reloaded (entity-by-id (:uid entity))]
+   (define-lookups-on-components entity-reloaded)
+   (bus/fire "entity.component.added" {:entity entity-reloaded})))
+
 
 (defn remove-entity-component [entity component-name]
   (let [component (get-in @entities [(:uid entity) :components component-name])
@@ -232,8 +235,10 @@
         domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))
         component-factory (or (:factory domain-value) (:factory attribute))
         components (component-factory data options)
-        components-map (into {} (map (fn [d] {(:name d) d}) components))]
-    (AttributeValue. (str (random-uuid)) attribute data components-map)))
+        components-map (into {} (map (fn [d] {(:name d) d}) components))
+        result (AttributeValue. (str (random-uuid)) attribute data components-map)]
+    (bus/fire "attribute-value.created" {:attribute-value result})
+    result))
 
 ;TODO Should rahter internally invoke create-attribute-value which should be not public instead of taking attribute-value as an argument.
 (defn add-entity-attribute-value [entity & attributes]

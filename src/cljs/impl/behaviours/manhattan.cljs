@@ -9,6 +9,11 @@
 
 (def INSET-WIDTH 20)
 
+(defn config []
+  {:inset-width INSET-WIDTH
+   :path-editing true
+   :points-editing true})
+
 (defn- center-point [cmp]
   (let [drwbl (:drawable cmp)
         mx (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2))
@@ -149,8 +154,25 @@
   (let [all-points (flatten [start-point mid-points end-point])]
      (partition 2 1 all-points)))
 
+(defn- set-editable [entity line]
+  (let [line-drwbl (:drawable line)
+        x1 (d/getp line-drwbl :x1)
+        x2 (d/getp line-drwbl :x2)
+        y1 (d/getp line-drwbl :y1)
+        y2 (d/getp line-drwbl :y2)
+        axis (if (= x1 x2) :y :x)
+        ctrl-name (str (:name line) "-ctrl")
+        width (if (= :x axis) (/ (- x2 x1) 2) 8)
+        height (if (= :x axis) 8 (/ (- y2 y1) 2))
+        left  (if (= :x axis) (+ x1 (/ width 2)) (- x1 4))
+        top   (if (= :x axis) (- y1 4) (+ y1 (/ height 2)))]
+    (e/assert-component entity ctrl-name ::c/control {:left left :top top :width width :height height :visible false :border-color "green"})))
+
 (defn- update-line-component [entity idx sx sy ex ey]
-  (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey}))
+  (let [line (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey})]
+    (when (= true (:path-editing (config)))
+       (set-editable entity line))
+    line))
 
 (defn- update-line-components [entity path]
   (let [remove-components (filter (fn [c]
@@ -203,3 +225,6 @@
           (= ::c/startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
           (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
         (update-manhattan-layout entity (normals 0) (normals 1)))))
+
+(defn do-path-editing []
+  (fn [e]))

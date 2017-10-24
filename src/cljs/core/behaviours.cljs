@@ -1,8 +1,5 @@
 (ns core.behaviours
-  (:require [core.entities :as e]
-            [core.events :as ev]
-            [core.layouts :as layouts]
-            [core.drawables :as d]
+  (:require [core.events :as ev]
             [core.eventbus :as bus]))
 
 (defonce behaviours (volatile! {}))
@@ -82,6 +79,8 @@
 
 (defn generic-components-validator [_definitions action-fn?]
   (fn [target behaviour]
+    ;(js/console.log (clj->js target))
+    ;(js/console.log (clj->js _definitions))
     (let [transform (to-event action-fn?)]
       (let [attach-targets (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) target) (:result e))) _definitions))]
         (when (is-all-valid attach-targets)
@@ -110,3 +109,13 @@
 
 (defn trigger-behaviour [entity avalue component event-suffix data]
   (bus/fire (ev/loose-event-name (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))
+
+(bus/on ["entity.component.added"] -999 (fn [event]
+                                            (let [context (:context @event)
+                                                  entity  (:entity context)]
+                                              (autowire entity))))
+
+(bus/on ["attribute-value.created"] -999 (fn [event]
+                                            (let [context (:context @event)
+                                                  attribute-value (:attribute-value context)]
+                                              (autowire attribute-value))))

@@ -42,7 +42,7 @@
              (apply core.entities/add-entity-component e# (component-factory# data# options#))
              (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
-               (core.behaviours/autowire result#)
+               ;(core.behaviours/autowire result#)
                (core.eventbus/fire "entity.render" {:entity result#})
                result#)))))))
 
@@ -76,7 +76,7 @@
              ([entity# data# options#]
               (let [attribute#   (core.entities/get-attribute (keyword ~nsname (name '~name)))
                     attr-value#  (core.entities/create-attribute-value attribute# data# options#)]
-                (core.behaviours/autowire attr-value#)
+                ;(core.behaviours/autowire attr-value#)
                 (core.entities/add-entity-attribute-value entity# attr-value#))))))))
 
 (defmacro defdrawable [name options-defaults]

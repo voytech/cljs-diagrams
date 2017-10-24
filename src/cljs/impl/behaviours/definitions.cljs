@@ -11,8 +11,8 @@
   (:require-macros [core.macros :refer [defbehaviour having-all having-strict make-event validate bind-to --]]))
 
 
-(defbehaviour moving-entity
-              "Default Entity Moving" :moving
+(defbehaviour moving-node-entity
+              "Default Entity Moving" :node-moving
               (validate
                 (-- (having-strict ::c/main ::c/control)
                     (bind-to ::c/main))
@@ -22,7 +22,7 @@
                   ((std/moving-entity) event)
                   nil)))
 
-(defbehaviour moving-entity-by
+(defbehaviour moving-connector-entity-by
               "Default Relation Link Moving By" :moving-by
               (validate
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation))
@@ -37,8 +37,8 @@
                   ((m/do-manhattan-layout) enriched)
                   nil)))
 
-(defbehaviour manhattan-moving-component
-              "Manhattan Layout" :component-moving
+(defbehaviour moving-connector-endpoints
+              "Connector's endpoints moving [Manhattan]" :connector-endpoint-moving
               (validate
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
                     (bind-to ::c/startpoint ::c/endpoint))
@@ -49,21 +49,6 @@
                   ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
                                            (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context @e))
                   nil)))
-
-;(defbehaviour free-moving-component
-;              "Moving Entity Component" :component-moving
-;              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
-;                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-;                                     :result [:startpoint :endpoint]))
-;              "mousedrag"
-;              (fn [e]
-;                (let [event (:context @e)]
-;                  ((ib/moving-endpoint) event)
-;                  ((b/intersects? "body" (fn [src trg] (ib/toggle-controls (:entity trg) true))
-;                                         (fn [src trg] (ib/toggle-controls (:entity trg) false))) (:context @e)
-;                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-;                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
-;                  nil)))
 
 (defbehaviour make-relation
               "Connect Two Entities" :make-relation
@@ -80,7 +65,7 @@
                                                                 (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
                                                 (std/toggle-controls (:entity trg) false)
-                                                (std/set-endpoint-relation-data (:entity src) (:component src) (:entity trg) (:component trg))                                                
+                                                (std/set-endpoint-relation-data (:entity src) (:component src) (:entity trg) (:component trg))
                                                 ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
                   (std/relations-validate (->> @e :context :entity))
                   ((m/do-manhattan-layout) event)
@@ -112,7 +97,7 @@
                   ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                   nil)))
 
-(defbehaviour show-entity-controls
+(defbehaviour show-all-entity-controls
               "Default Show Controls" :controls-show
               (validate
                 (-- (having-strict ::c/main ::c/control)
@@ -123,7 +108,7 @@
                   (std/toggle-controls (:entity event) true)
                   nil)))
 
-(defbehaviour hide-entity-controls
+(defbehaviour hide-all-entity-controls
               "Default Hide Controls" :controls-hide
               (validate
                 (-- (having-strict ::c/main ::c/control)
@@ -132,6 +117,32 @@
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-controls (:entity event) false)
+                  nil)))
+
+(defbehaviour show-entity-control
+              "Default Show Controls" :control-show
+              (validate
+                (-- (having-strict ::c/main ::c/control)
+                    (bind-to ::c/control))
+                (-- (having-all ::c/relation ::c/control)
+                    (bind-to ::c/control))
+                "mousemove")
+              (fn [e]
+                (let [event (:context @e)]
+                  (std/toggle-control (:entity event) (-> event :component :name) true)
+                  nil)))
+
+(defbehaviour hide-entity-control
+              "Default Hide Controls" :control-hide
+              (validate
+                (-- (having-strict ::c/main ::c/control)
+                    (bind-to ::c/control))
+                (-- (having-all ::c/relation ::c/control)
+                    (bind-to ::c/control))
+                "mouseout")
+              (fn [e]
+                (let [event (:context @e)]
+                  (std/toggle-control (:entity event) (-> event :component :name) false)
                   nil)))
 
 
@@ -144,3 +155,17 @@
 ;                                                       ((dissoc-breakpoint) (:context @e))
 ;                                                       (bus/fire "uncommited.render")
 ;                                                       (bus/fire "rendering.finish")))
+;(defbehaviour free-moving-component
+;              "Moving Entity Component" :component-moving
+;              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
+;                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
+;                                     :result [:startpoint :endpoint]))
+;              "mousedrag"
+;              (fn [e]
+;                (let [event (:context @e)]
+;                  ((ib/moving-endpoint) event)
+;                  ((b/intersects? "body" (fn [src trg] (ib/toggle-controls (:entity trg) true))
+;                                         (fn [src trg] (ib/toggle-controls (:entity trg) false))) (:context @e)
+;                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
+;                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
+;                  nil)))

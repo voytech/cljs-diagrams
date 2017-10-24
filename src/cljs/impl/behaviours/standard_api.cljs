@@ -277,6 +277,12 @@
       (let [drawable (:drawable component)]
          (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))
 
+(defn toggle-control [entity control-name toggle]
+  (let [component (e/get-entity-component entity control-name)]
+    (when (= ::c/control (:type component))
+      (let [drawable (:drawable component)]
+         (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))
+
 (defn moving-endpoint []
    (fn [e]
       (let [endpoint (:component e)

@@ -181,6 +181,10 @@
   (let [all-points (flatten [start-point mid-points end-point])]
      (partition 2 1 all-points)))
 
+(defn- connector-idx [name]
+  (let [splt (clojure.string/split name #"-")]
+    (if (> (count splt) 1) (cljs.reader/read-string (splt 1)) -1)))
+
 (defn- set-editable [entity line]
   (let [line-drwbl (:drawable line)
         x1 (d/getp line-drwbl :x1)
@@ -192,8 +196,12 @@
         width (if (= :x axis) (/ (js/Math.abs (- x2 x1)) 2) 8)
         height (if (= :x axis) 8 (/ (js/Math.abs (- y2 y1)) 2))
         left  (if (= :x axis) (+ (if (<= x1 x2) x1 x2) (/ width 2)) (- x1 4))
-        top   (if (= :x axis) (- y1 4) (+ (if (<= y1 y2) y1 y2) (/ height 2)))]
-    (e/assert-component entity ctrl-name ::c/control {:left left :top top :width width :height height :visible false :border-color "green"})))
+        top   (if (= :x axis) (- y1 4) (+ (if (<= y1 y2) y1 y2) (/ height 2)))
+        conn-idx (connector-idx (:name line))]
+    (e/assert-component entity ctrl-name ::c/control {:left left :top top :width width :height height :visible false :border-color "green"})
+    (e/update-component-prop entity ctrl-name :target-connector (:name line))
+    (e/update-component-prop entity ctrl-name :prev-connector  (str "line-" (dec conn-idx)))
+    (e/update-component-prop entity ctrl-name :next-connector  (str "line-" (inc conn-idx)))))
 
 (defn- update-line-component [entity idx sx sy ex ey]
   (let [line (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey})]
@@ -253,5 +261,65 @@
           (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
         (update-manhattan-layout entity (normals 0) (normals 1)))))
 
-(defn do-path-editing []
-  (fn [e]))
+(defn position-connector [connector m-x m-y]
+  (let [drwbl (:drawable connector)]
+    (when (not= m-x 0) (d/setp drwbl :x1 (+ (d/getp drwbl :x1) m-x)))
+    (when (not= m-y 0) (d/setp drwbl :y1 (+ (d/getp drwbl :y1) m-y)))
+    (when (not= m-x 0) (d/setp drwbl :x2 (+ (d/getp drwbl :x2) m-x)))
+    (when (not= m-y 0) (d/setp drwbl :y2 (+ (d/getp drwbl :y2) m-y)))))
+
+(defn position-connector-end [connector xp yp m-x m-y]
+  (js/console.log (clj->js {:x xp :y yp}))
+  (let [drwbl (:drawable connector)]
+    (d/setp drwbl xp (+ (d/getp drwbl xp) m-x))
+    (d/setp drwbl yp (+ (d/getp drwbl yp) m-y))))
+
+(defn control-connector []
+  (fn [e]
+    (let [movement-x (:movement-x e)
+          movement-y (:movement-y e)
+          control (:component e)
+          entity   (:entity e)
+          drawable (:drawable endpoint)
+          prev-conn-name (e/component-property entity (:name control) :prev-connector)
+          trg-conn-name  (e/component-property entity  (:name control) :target-connector)
+          next-conn-name (e/component-property entity (:name control) :next-connector)
+          prev-conn   (e/get-entity-component entity prev-conn-name)
+          trg-conn    (e/get-entity-component entity trg-conn-name)
+          next-conn   (e/get-entity-component entity next-conn-name)
+          axis (find-axis {:x (d/getp (:drawable trg-conn) :x1)
+                           :y (d/getp (:drawable trg-conn) :y1)}
+                          {:x (d/getp (:drawable trg-conn) :x2)
+                           :y (d/getp (:drawable trg-conn) :y2)})
+          constr-movement-x (if (= :x axis) 0 movement-x)
+          constr-movement-y (if (= :x axis) movement-y 0)]
+       (std/apply-effective-position control constr-movement-x constr-movement-y :offset)
+       (when (not (nil? prev-conn))
+          (cond
+            (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable prev-conn) :x1))
+                 (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable prev-conn) :y1)))
+            (position-connector-end prev-conn :x1 :y1 constr-movement-x constr-movement-y)
+            (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable prev-conn) :x2))
+                 (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable prev-conn) :y2)))
+            (position-connector-end prev-conn :x2 :y2 constr-movement-x constr-movement-y)
+            (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable prev-conn) :x1))
+                 (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable prev-conn) :y1)))
+            (position-connector-end prev-conn :x1 :y1 constr-movement-x constr-movement-y)
+            (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable prev-conn) :x2))
+                 (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable prev-conn) :y2)))
+            (position-connector-end prev-conn :x2 :y2 constr-movement-x constr-movement-y)))
+       (when (not (nil? next-conn))
+         (cond
+           (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable next-conn) :x1))
+                (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable next-conn) :y1)))
+           (position-connector-end next-conn :x1 :y1 constr-movement-x constr-movement-y)
+           (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable next-conn) :x2))
+                (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable next-conn) :y2)))
+           (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)
+           (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable next-conn) :x1))
+                (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable next-conn) :y1)))
+           (position-connector-end next-conn :x1 :y1 constr-movement-x constr-movement-y)
+           (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable next-conn) :x2))
+                (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable next-conn) :y2)))
+           (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)))
+       (position-connector trg-conn constr-movement-x constr-movement-y))))

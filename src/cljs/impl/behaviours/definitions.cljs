@@ -50,6 +50,17 @@
                                            (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context @e))
                   nil)))
 
+(defbehaviour moving-connector-control
+              "Connector's control moving [Manhattan]" :connector-control-moving
+              (validate
+                (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
+                    (bind-to ::c/control))
+                "mousedrag")
+              (fn [e]
+                (let [event (:context @e)]
+                  ((m/control-connector) event)
+                  nil)))
+
 (defbehaviour make-relation
               "Connect Two Entities" :make-relation
               (validate

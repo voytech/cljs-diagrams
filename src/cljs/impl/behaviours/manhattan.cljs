@@ -60,7 +60,25 @@
   (let [bag (vals node-points)]
    (apply min-key (fn [src-point] (distance src-point rel-point)) bag)))
 
-(defn- shortest-path [points local-src local-trg]
+(defn- dist-b-path [points local-src local-trg]
+  (cond
+    (> (:i local-src ) (:i local-trg))
+    (vec (concat (subvec points (:i local-src) (count points)) (subvec points 0 (inc (:i local-trg)))))
+    (> (:i local-trg) (:i local-src))
+    (vec (rseq (vec (concat (subvec points (:i local-trg) (count points)) (subvec points 0 (inc (:i local-scr)))))))
+    :else
+    [local-src]))
+
+(defn- dist-a-path [points local-src local-trg]
+  (cond
+    (> (:i local-src ) (:i local-trg))
+    (vec (rseq (subvec points (:i local-trg) (inc (:i local-src)))))
+    (> (:i local-trg) (:i local-src))
+    (subvec points (:i local-src) (inc (:i local-trg)))
+    :else
+    [local-src]))
+
+(defn- shortest-path-old [points local-src local-trg]
   (let [distance (- (:i local-trg) (:i local-src))
         dist-a (js/Math.abs distance)
         dist-b (- (count points) dist-a)]
@@ -68,10 +86,18 @@
       (if (> distance 0)
         (subvec points (:i local-src) (inc (:i local-trg)))
         (vec (rseq (subvec points (:i local-trg) (inc (:i local-src))))))
-      (let [path-b (concat (subvec points (:i local-src) (count points)) (subvec points 0 (inc (:i local-trg))))]
+      (let [path-b (concat (subvec points (:i local-trg) (count points)) (subvec points 0 (inc (:i local-src))))]
         (if (> distance 0)
           (vec (rseq (vec path-b)))
           (vec path-b))))))
+
+(defn- shortest-path [points local-src local-trg]
+  (let [distance (- (:i local-trg) (:i local-src))
+        dist-a (js/Math.abs distance)
+        dist-b (- (count points) dist-a)]
+    (if (<= dist-a dist-b)
+      (dist-a-path points local-src local-trg)
+      (dist-b-path points local-src local-trg))))
 
 (defn find-node-paths [source-node-main-cmpnt source-control-side target-node-main-cmpnt target-control-side]
   (let [src-node-points (find-node-wrapping-points source-node-main-cmpnt INSET-WIDTH)
@@ -84,6 +110,10 @@
         trg-node-points-vec (vec (vals trg-node-points))
         src-path (shortest-path src-node-points-vec src-ctrl-point nearest-src-point)
         trg-path (shortest-path trg-node-points-vec trg-ctrl-point nearest-trg-point)]
+     (js/console.log "source path")
+     (js/console.log (clj->js src-path))
+     (js/console.log "target path")
+     (js/console.log (clj->js trg-path))
      {:src src-path
       :trg trg-path}))
 

@@ -23,6 +23,10 @@ A minimal plan is to have following functionalities:
 
 Need to reach minimal set of functionalities to be usable.
 
+## Screenshots
+
+![Alt text](/screenshots.gif?raw=true "Screenshots")
+
 ## License
 
 Copyright © 2017, **Wojciech Maka**

@@ -78,19 +78,6 @@
     :else
     [local-src]))
 
-(defn- shortest-path-old [points local-src local-trg]
-  (let [distance (- (:i local-trg) (:i local-src))
-        dist-a (js/Math.abs distance)
-        dist-b (- (count points) dist-a)]
-    (if (<= dist-a dist-b)
-      (if (> distance 0)
-        (subvec points (:i local-src) (inc (:i local-trg)))
-        (vec (rseq (subvec points (:i local-trg) (inc (:i local-src))))))
-      (let [path-b (concat (subvec points (:i local-trg) (count points)) (subvec points 0 (inc (:i local-src))))]
-        (if (> distance 0)
-          (vec (rseq (vec path-b)))
-          (vec path-b))))))
-
 (defn- shortest-path [points local-src local-trg]
   (let [distance (- (:i local-trg) (:i local-src))
         dist-a (js/Math.abs distance)
@@ -110,20 +97,22 @@
         trg-node-points-vec (vec (vals trg-node-points))
         src-path (shortest-path src-node-points-vec src-ctrl-point nearest-src-point)
         trg-path (shortest-path trg-node-points-vec trg-ctrl-point nearest-trg-point)]
-     (js/console.log "source path")
-     (js/console.log (clj->js src-path))
-     (js/console.log "target path")
-     (js/console.log (clj->js trg-path))
      {:src src-path
       :trg trg-path}))
 
-(defn- find-axis [points]
-  (let [point (peek points)
-        yaxis (filter #(= (:x point) (:x %)) points)
-        xaxis (filter #(= (:y point) (:y %)) points)]
-    (if (> (count yaxis) (count xaxis))
-       {:points (vec yaxis) :axis :y}
-       {:points (vec xaxis) :axis :x})))
+(defn- find-axis
+  ([points]
+   (let [point (peek points)
+         yaxis (filter #(= (:x point) (:x %)) points)
+         xaxis (filter #(= (:y point) (:y %)) points)]
+     (if (> (count yaxis) (count xaxis))
+        {:points (vec yaxis) :axis :y}
+        {:points (vec xaxis) :axis :x})))
+  ([point-a point-b]
+   (cond
+     (= (:x point-a) (:x point-b)) :y
+     (= (:y point-a) (:y point-b)) :x
+     :else :xy)))
 
 (defn- direction
   ([points]
@@ -141,6 +130,12 @@
 (defn- cut-off [points cutoff on-axis compare]
   (let [c-axis (second-axis on-axis)]
     (vec (filter #(or (compare (on-axis %) (on-axis cutoff)) (not= (c-axis %) (c-axis cutoff))) points))))
+
+(defn- normalize-path [path]
+  (let [y-align (flatten (mapv (fn [e] [(e 0) (peek e)]) (filter (fn [e] (> (count e) 1)) (vals (group-by :x path)))))
+        x-align (flatten (mapv (fn [e] [(e 0) (peek e)]) (filter (fn [e] (> (count e) 1)) (vals (group-by :y path)))))
+        preserve (set (concat x-align y-align))]
+    (vec (filter #(contains? preserve %) path))))
 
 (defn- find-path [entity start end s-normal e-normal]
   (let [sp (center-point start)
@@ -177,8 +172,10 @@
                                (cut-off trg-path-begin last-mid-point (:axis trg-axis) <)
                                :else
                                trg-path-begin)]
-         (concat n-src-path-begin mid-points (rseq n-trg-path-begin)))
-      (find-connection-points (center-point start) (center-point end) s-normal e-normal))))
+         (-> (concat n-src-path-begin mid-points (rseq n-trg-path-begin))
+             normalize-path))
+      (-> (find-connection-points (center-point start) (center-point end) s-normal e-normal)
+          normalize-path))))
 
 (defn- find-path-lines [start-point end-point mid-points]
   (let [all-points (flatten [start-point mid-points end-point])]

@@ -65,7 +65,7 @@
     (> (:i local-src ) (:i local-trg))
     (vec (concat (subvec points (:i local-src) (count points)) (subvec points 0 (inc (:i local-trg)))))
     (> (:i local-trg) (:i local-src))
-    (vec (rseq (vec (concat (subvec points (:i local-trg) (count points)) (subvec points 0 (inc (:i local-scr)))))))
+    (vec (rseq (vec (concat (subvec points (:i local-trg) (count points)) (subvec points 0 (inc (:i local-src)))))))
     :else
     [local-src]))
 

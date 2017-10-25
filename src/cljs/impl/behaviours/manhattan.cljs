@@ -189,10 +189,10 @@
         y2 (d/getp line-drwbl :y2)
         axis (if (= x1 x2) :y :x)
         ctrl-name (str (:name line) "-ctrl")
-        width (if (= :x axis) (/ (- x2 x1) 2) 8)
-        height (if (= :x axis) 8 (/ (- y2 y1) 2))
-        left  (if (= :x axis) (+ x1 (/ width 2)) (- x1 4))
-        top   (if (= :x axis) (- y1 4) (+ y1 (/ height 2)))]
+        width (if (= :x axis) (/ (js/Math.abs (- x2 x1)) 2) 8)
+        height (if (= :x axis) 8 (/ (js/Math.abs (- y2 y1)) 2))
+        left  (if (= :x axis) (+ (if (<= x1 x2) x1 x2) (/ width 2)) (- x1 4))
+        top   (if (= :x axis) (- y1 4) (+ (if (<= y1 y2) y1 y2) (/ height 2)))]
     (e/assert-component entity ctrl-name ::c/control {:left left :top top :width width :height height :visible false :border-color "green"})))
 
 (defn- update-line-component [entity idx sx sy ex ey]

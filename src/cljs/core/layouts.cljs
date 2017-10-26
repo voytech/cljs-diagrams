@@ -1,5 +1,5 @@
 (ns core.layouts
-  (:require [core.drawables :as d]
+  (:require [core.components :as d]
             [core.eventbus :as b]
             [core.entities :as e]))
 
@@ -26,8 +26,7 @@
 
 (defn get-bbox [partials-container]
   (when (> (count (get-components partials-container)) 0)
-    (let [values (get-components partials-container)
-          sources (map :drawable values)
+    (let [sources (get-components partials-container)
           leftmost   (apply min-key (conj sources #(d/get-left %)))
           rightmost  (apply max-key (conj sources #(+ (d/get-left %) (d/get-width %))))
           topmost    (apply min-key (conj sources #(d/get-top %)))
@@ -41,8 +40,8 @@
   (when (> (count (get-components partials-aware)) 0)
     (let [partials (get-components partials-aware)
           partials-bbox (get-bbox partials-aware)
-          relative-left #(- (d/get-left (:drawable %)) (:left partials-bbox))
-          relative-top  #(- (d/get-top (:drawable %)) (:top partials-bbox))
+          relative-left #(- (d/get-left  %) (:left partials-bbox))
+          relative-top  #(- (d/get-top %) (:top partials-bbox))
           absolute-left (:left @layout-buffer)
           absolute-top  (:top  @layout-buffer)
           exceeds-bbox? (>= (+ absolute-left (:width partials-bbox)) (+ (:left bbox) (:width bbox)))
@@ -53,9 +52,9 @@
         (swap! layout-buffer assoc-in [:top] (+ absolute-top (:row-height @layout-buffer)))
         (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))
       (doseq [partial partials]
-        (d/set-data (:drawable partial) {:left (+ (:left @layout-buffer) (relative-left partial))
-                                         :top  (+ (:top @layout-buffer) (relative-top partial))})
-        (b/fire "drawable.layout.finished" {:drawable (:drawable partial)}))
+        (d/set-data partial {:left (+ (:left @layout-buffer) (relative-left partial))
+                             :top  (+ (:top @layout-buffer)  (relative-top partial))})
+        (b/fire "component.layout.finished" {:component partial}))
       (swap! layout-buffer assoc-in [:left] (+ (:left @layout-buffer) (:width partials-bbox)))
       (let [replace? (> (:height partials-bbox) (:row-height @layout-buffer))]
         (when replace? (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))))))

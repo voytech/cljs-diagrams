@@ -1,20 +1,15 @@
-(ns core.drawables
+(ns core.components
   (:require [core.eventbus :as bus]))
 
 (declare invoke-hook)
 
-(defonce drawables (atom {}))
+(defonce components (atom {}))
+
+(defonce component-types (atom {}))
 
 (defonce hooks (atom {}))
 
-(defonce standard-properties [:left :top :width :height :border-color :border-width
-                              :border-style :color :background-color :opacity
-                              :fill :fill-type :angle :z-index])
-
-(defonce standard-property-values {:border-style [:dotted :dashed :solid]
-                                   :fill-type [:border-only :full :gradient :no-fill]})
-
-(defonce DRAWABLE_CHANGED "drawable.changed")
+(defonce COMPONENT_CHANGED "component.changed")
 
 (defprotocol IDrawable
   (update-state [this state])
@@ -41,11 +36,13 @@
   (contains-point? [this x y]))
 
 (defn- changed
-  ([drawable properties]
-   (bus/fire DRAWABLE_CHANGED {:properties properties
-                               :drawable drawable})))
+  ([component properties]
+   (bus/fire COMPONENT_CHANGED {:properties properties
+                                :component component})))
 
-(defrecord Drawable [uid type model]
+(defrecord ComponentType [type rendering-method props init-data])
+
+(defrecord Component [uid name type model rendering-method props]
   IDrawable
   (model [this] @model)
   (setp [this property value]
@@ -93,36 +90,50 @@
 
 (defn- next-z-index []
   (or
-    (let [vs (vals @drawables)]
+    (let [vs (vals @components)]
       (when (and (not (nil? vs)) (< 0 (count vs)));
          (when-let [e (apply max-key #(getp % :z-index) vs)]
             (inc (getp e :z-index)))))
     1))
 
-(defn- assert-z-index [drawable]
-  (when (nil? (getp drawable :z-index))
-    (setp drawable :z-index (next-z-index))))
+(defn- assert-z-index [component]
+  (when (nil? (getp component :z-index))
+    (setp component :z-index (next-z-index))))
 
-(defn- add-drawable [drawable]
-  (swap! drawables assoc (:uid drawable) drawable))
+(defn- add-component [component]
+  (swap! components assoc (:uid component) component)
+  (bus/fire "component.added" {:component component}))
 
-(defn remove-drawable [drawable]
-  (swap! drawables dissoc (:uid drawable))
-  (bus/fire "drawable.removed" {:drawable drawable}))
+(defn remove-component [component]
+  (swap! components dissoc (:uid component))
+  (bus/fire "component.removed" {:component component}))
 
-(defn is-drawable [uid]
-  (not (nil? (get @drawables uid))))
+(defn is-component [uid]
+  (not (nil? (get @components uid))))
 
-(defn create-drawable
-  ([type]
-   (create-drawable type {}))
-  ([type data]
-   (let [drawable (Drawable. (str (random-uuid)) type (volatile! {}) (volatile! {}) nil)]
-     (set-data drawable data)
-     (assert-z-index drawable)
-     (add-drawable drawable)
-     (bus/fire "drawable.created" {:drawable drawable})
-     drawable)))
+(defn define-component [type rendering-method props init-data]
+ (swap! component-types assoc type (ComponentType. type rendering-method props init-data)))
+
+(defn new-component
+ ([type name data props method]
+  (when-let [component-type (get @component-types type)]
+    (let [_method (or method (:rendering-method component-type))
+          _data  (merge (:init-data component-type) data)
+          _props (merge (:props component-type) props)
+          component (Component. (str (random-uuid)) name type (volatile! _data) _method _props)]
+      (assert-z-index component)
+      (bus/fire "component.created" {:component component})
+      (add-component component)
+      component)))
+ ([type name data props]
+  (new-component type name data props :default))
+ ([type name data]
+  (new-component type name data {} :default))
+ ([type name]
+  (new-component type name {} {} :default)))
+
+(defn get-component-def [type]
+ (get @components-types type))
 
 (defn add-hook [type function hook]
   (swap! hooks assoc-in [type function] hook))

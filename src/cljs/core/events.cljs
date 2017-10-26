@@ -2,7 +2,7 @@
   (:require [cljsjs.rx]
             [core.eventbus :as b]
             [core.entities :as e]
-            [core.drawables :as d]))
+            [core.components :as d]))
 
 
 (defonce event-map {"mousedown"  "mousedown"
@@ -111,7 +111,7 @@
                 event-type)))
 
 (defn- lookup-all [x y]
-  (->> @d/drawables
+  (->> @d/components
        vals
        (filter #(d/contains-point? % x y))
        (sort-by #(d/getp % :z-index) >)))
@@ -119,15 +119,12 @@
 (defn- normalise-event-type [event]
   (get event-map event))
 
-(defn enrich [drawable]
-  (when (d/is-drawable (:uid drawable))
-    (let [entity             (e/lookup drawable :entity)
-          component          (e/lookup drawable :component)
-          attribute-value    (e/lookup drawable :attribute)
-          drawable           (:drawable component)]
+(defn enrich [component]
+  (when (d/is-component (:uid component))
+    (let [entity             (e/lookup component :entity)
+          attribute-value    (e/lookup component :attribute)]
         {:entity           entity
          :attribute-value  attribute-value
-         :drawable         drawable
          :component        component})))
 
 (defn normalise-event [e obj]
@@ -152,7 +149,7 @@
 
 (defn- enriching-stream [input]
   (.map input (fn [e]
-                 (->> (enrich (or (:drawable @state) (first (lookup-all (:left e) (:top e)))))
+                 (->> (enrich (or (:component @state) (first (lookup-all (:left e) (:top e)))))
                       (merge e)))))
 
 (defn- dispatch-events [id events]

@@ -1,10 +1,9 @@
 (ns impl.behaviours.manhattan
   (:require [core.entities :as e]
             [core.layouts :as layouts]
-            [core.drawables :as d]
+            [core.components :as d]
             [core.eventbus :as b]
             [impl.behaviours.standard-api :as std]
-            [impl.drawables :as dimpl]
             [impl.components :as c]))
 
 (def INSET-WIDTH 20)
@@ -15,9 +14,8 @@
    :points-editing true})
 
 (defn- center-point [cmp]
-  (let [drwbl (:drawable cmp)
-        mx (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2))
-        my (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2))]
+  (let [mx (+ (d/get-left cmp) (/ (d/get-width cmp) 2))
+        my (+ (d/get-top cmp) (/ (d/get-height cmp) 2))]
     {:x mx :y my}))
 
 (defn- control-side-2-node-point-type [control-side]
@@ -42,16 +40,15 @@
 (defn- find-node-wrapping-points [node-entity-or-main-cmpnt inset-width]
   (let [main (if (instance? e/Entity node-entity-or-main-cmpnt)
                (first (e/get-entity-component node-entity-or-main-cmpnt ::c/main))
-               node-entity-or-main-cmpnt)
-        drwbl (:drawable main)]
-   (array-map :lt {:x (- (d/get-left drwbl) inset-width) :y (- (d/get-top drwbl) inset-width) :i 0}
-              :tm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (- (d/get-top drwbl) inset-width) :i 1}
-              :rt {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (- (d/get-top drwbl) inset-width) :i 2}
-              :rm {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2)) :i 3}
-              :rb {:x (+ (d/get-left drwbl) (d/get-width drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 4}
-              :bm {:x (+ (d/get-left drwbl) (/ (d/get-width drwbl) 2)) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 5}
-              :lb {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (d/get-height drwbl) inset-width) :i 6}
-              :lm {:x (- (d/get-left drwbl) inset-width) :y (+ (d/get-top drwbl) (/ (d/get-height drwbl) 2)) :i 7})))
+               node-entity-or-main-cmpnt)]
+   (array-map :lt {:x (- (d/get-left main) inset-width) :y (- (d/get-top main) inset-width) :i 0}
+              :tm {:x (+ (d/get-left main) (/ (d/get-width main) 2)) :y (- (d/get-top main) inset-width) :i 1}
+              :rt {:x (+ (d/get-left main) (d/get-width main) inset-width) :y (- (d/get-top main) inset-width) :i 2}
+              :rm {:x (+ (d/get-left main) (d/get-width main) inset-width) :y (+ (d/get-top main) (/ (d/get-height main) 2)) :i 3}
+              :rb {:x (+ (d/get-left main) (d/get-width main) inset-width) :y (+ (d/get-top main) (d/get-height main) inset-width) :i 4}
+              :bm {:x (+ (d/get-left main) (/ (d/get-width main) 2)) :y (+ (d/get-top main) (d/get-height main) inset-width) :i 5}
+              :lb {:x (- (d/get-left main) inset-width) :y (+ (d/get-top main) (d/get-height main) inset-width) :i 6}
+              :lm {:x (- (d/get-left main) inset-width) :y (+ (d/get-top main) (/ (d/get-height main) 2)) :i 7})))
 
 (defn- distance [p1 p2]
   (js/Math.sqrt (+ (js/Math.pow (- (:x p2) (:x p1)) 2) (js/Math.pow (- (:y p2) (:y p1)) 2))))
@@ -186,11 +183,10 @@
     (if (> (count splt) 1) (cljs.reader/read-string (splt 1)) -1)))
 
 (defn- set-editable [entity line]
-  (let [line-drwbl (:drawable line)
-        x1 (d/getp line-drwbl :x1)
-        x2 (d/getp line-drwbl :x2)
-        y1 (d/getp line-drwbl :y1)
-        y2 (d/getp line-drwbl :y2)
+  (let [x1 (d/getp line :x1)
+        x2 (d/getp line :x2)
+        y1 (d/getp line :y1)
+        y2 (d/getp line :y2)
         axis (if (= x1 x2) :y :x)
         ctrl-name (str (:name line) "-ctrl")
         width (if (= :x axis) (/ (js/Math.abs (- x2 x1)) 2) 8)
@@ -250,7 +246,6 @@
   (fn [e]
      (let [endpoint (:component e)
            entity   (:entity e)
-           drawable (:drawable endpoint)
            start (e/get-entity-component entity "start")
            end (e/get-entity-component entity "end")
            connector (e/get-entity-component entity "connector")
@@ -262,17 +257,14 @@
         (update-manhattan-layout entity (normals 0) (normals 1)))))
 
 (defn position-connector [connector m-x m-y]
-  (let [drwbl (:drawable connector)]
-    (when (not= m-x 0) (d/setp drwbl :x1 (+ (d/getp drwbl :x1) m-x)))
-    (when (not= m-y 0) (d/setp drwbl :y1 (+ (d/getp drwbl :y1) m-y)))
-    (when (not= m-x 0) (d/setp drwbl :x2 (+ (d/getp drwbl :x2) m-x)))
-    (when (not= m-y 0) (d/setp drwbl :y2 (+ (d/getp drwbl :y2) m-y)))))
+  (when (not= m-x 0) (d/setp connector :x1 (+ (d/getp connector :x1) m-x)))
+  (when (not= m-y 0) (d/setp connector :y1 (+ (d/getp connector :y1) m-y)))
+  (when (not= m-x 0) (d/setp connector :x2 (+ (d/getp connector :x2) m-x)))
+  (when (not= m-y 0) (d/setp connector :y2 (+ (d/getp connector :y2) m-y))))
 
 (defn position-connector-end [connector xp yp m-x m-y]
-  (js/console.log (clj->js {:x xp :y yp}))
-  (let [drwbl (:drawable connector)]
-    (d/setp drwbl xp (+ (d/getp drwbl xp) m-x))
-    (d/setp drwbl yp (+ (d/getp drwbl yp) m-y))))
+  (d/setp connector xp (+ (d/getp connector xp) m-x))
+  (d/setp connector yp (+ (d/getp connector yp) m-y)))
 
 (defn control-connector []
   (fn [e]
@@ -280,46 +272,45 @@
           movement-y (:movement-y e)
           control (:component e)
           entity   (:entity e)
-          drawable (:drawable endpoint)
           prev-conn-name (e/component-property entity (:name control) :prev-connector)
           trg-conn-name  (e/component-property entity  (:name control) :target-connector)
           next-conn-name (e/component-property entity (:name control) :next-connector)
           prev-conn   (e/get-entity-component entity prev-conn-name)
           trg-conn    (e/get-entity-component entity trg-conn-name)
           next-conn   (e/get-entity-component entity next-conn-name)
-          axis (find-axis {:x (d/getp (:drawable trg-conn) :x1)
-                           :y (d/getp (:drawable trg-conn) :y1)}
-                          {:x (d/getp (:drawable trg-conn) :x2)
-                           :y (d/getp (:drawable trg-conn) :y2)})
+          axis (find-axis {:x (d/getp trg-conn :x1)
+                           :y (d/getp trg-conn :y1)}
+                          {:x (d/getp trg-conn :x2)
+                           :y (d/getp trg-conn :y2)})
           constr-movement-x (if (= :x axis) 0 movement-x)
           constr-movement-y (if (= :x axis) movement-y 0)]
        (std/apply-effective-position control constr-movement-x constr-movement-y :offset)
        (when (not (nil? prev-conn))
           (cond
-            (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable prev-conn) :x1))
-                 (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable prev-conn) :y1)))
+            (and (= (d/getp trg-conn :x1) (d/getp prev-conn :x1))
+                 (= (d/getp trg-conn :y1) (d/getp prev-conn :y1)))
             (position-connector-end prev-conn :x1 :y1 constr-movement-x constr-movement-y)
-            (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable prev-conn) :x2))
-                 (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable prev-conn) :y2)))
+            (and (= (d/getp trg-conn :x1) (d/getp prev-conn :x2))
+                 (= (d/getp trg-conn :y1) (d/getp prev-conn :y2)))
             (position-connector-end prev-conn :x2 :y2 constr-movement-x constr-movement-y)
-            (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable prev-conn) :x1))
-                 (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable prev-conn) :y1)))
+            (and (= (d/getp trg-conn :x2) (d/getp prev-conn :x1))
+                 (= (d/getp trg-conn :y2) (d/getp prev-conn :y1)))
             (position-connector-end prev-conn :x1 :y1 constr-movement-x constr-movement-y)
-            (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable prev-conn) :x2))
-                 (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable prev-conn) :y2)))
+            (and (= (d/getp trg-conn :x2) (d/getp prev-conn :x2))
+                 (= (d/getp trg-conn :y2) (d/getp prev-conn :y2)))
             (position-connector-end prev-conn :x2 :y2 constr-movement-x constr-movement-y)))
        (when (not (nil? next-conn))
          (cond
-           (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable next-conn) :x1))
-                (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable next-conn) :y1)))
+           (and (= (d/getp trg-conn :x1) (d/getp next-conn :x1))
+                (= (d/getp trg-conn :y1) (d/getp next-conn :y1)))
            (position-connector-end next-conn :x1 :y1 constr-movement-x constr-movement-y)
-           (and (= (d/getp (:drawable trg-conn) :x1) (d/getp (:drawable next-conn) :x2))
-                (= (d/getp (:drawable trg-conn) :y1) (d/getp (:drawable next-conn) :y2)))
+           (and (= (d/getp trg-conn :x1) (d/getp next-conn :x2))
+                (= (d/getp trg-conn :y1) (d/getp next-conn :y2)))
            (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)
-           (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable next-conn) :x1))
-                (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable next-conn) :y1)))
+           (and (= (d/getp trg-conn :x2) (d/getp next-conn :x1))
+                (= (d/getp trg-conn :y2) (d/getp next-conn :y1)))
            (position-connector-end next-conn :x1 :y1 constr-movement-x constr-movement-y)
-           (and (= (d/getp (:drawable trg-conn) :x2) (d/getp (:drawable next-conn) :x2))
-                (= (d/getp (:drawable trg-conn) :y2) (d/getp (:drawable next-conn) :y2)))
+           (and (= (d/getp trg-conn :x2) (d/getp next-conn :x2))
+                (= (d/getp trg-conn :y2) (d/getp next-conn :y2)))
            (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)))
        (position-connector trg-conn constr-movement-x constr-movement-y))))

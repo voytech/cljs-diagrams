@@ -1,13 +1,8 @@
 (ns impl.behaviours.editors
  (:require [core.entities :as e]
-           [impl.behaviours.standard-api :as behaviours]
            [core.project :as p]
-           [impl.drawables :as di]
-           [core.drawables :as d]
-           [impl.components :as c]
-           [core.behaviours :as b]
-           [core.events :as ev]
-           [core.options :as o]))
+           [core.components :as d]))
+
 
 (defn- append-state [type element event]
   (p/append-state type {:element element
@@ -49,18 +44,18 @@
         option (aget (.-options select) (.-selectedIndex select))]
     (keyword (aget option "text"))))
 
-(defn- set-editor-style [input drawable]
+(defn- set-editor-style [input component]
   (let [style (.-style input)]
-    (aset style "font-size" (str (d/getp drawable :font-size) "px"))
-    (aset style "font-family" (str (d/getp drawable :font-family)))))
+    (aset style "font-size" (str (d/getp component :font-size) "px"))
+    (aset style "font-family" (str (d/getp component :font-family)))))
 
-(defn- set-editor-pos [input drawable]
+(defn- set-editor-pos [input component]
   (let [style (.-style input)]
     (aset style "position" "absolute")
-    (aset style "left" (str (+ (d/get-left drawable) 5) "px"))
-    (aset style "top" (str (d/get-top drawable) "px"))
-    (aset style "width" (str (+ (d/get-width drawable) 15) "px"))
-    (aset style "height" (str (+ (d/get-height drawable) 5) "px"))))
+    (aset style "left" (str (+ (d/get-left component) 5) "px"))
+    (aset style "top" (str (d/get-top component) "px"))
+    (aset style "width" (str (+ (d/get-width component) 15) "px"))
+    (aset style "height" (str (+ (d/get-height component) 5) "px"))))
 
 (defn commit [type]
   (when-let [editor (get-state type)]
@@ -78,12 +73,12 @@
 (defn- open [event type]
   (commit)
   (let [root (p/get-container)
-        drawable (:drawable event)
+        component (:component event)
         av (:attribute-value event)
         element (create-element type av)
         style (.-style element)]
     (events root element type)
-    (set-editor-pos element drawable)
+    (set-editor-pos element component)
     (append-state type element event)
     (.appendChild root element)
     (.focus element)))

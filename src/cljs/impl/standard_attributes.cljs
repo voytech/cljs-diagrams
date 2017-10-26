@@ -2,8 +2,7 @@
  (:require [core.entities :as e]
            [impl.behaviours.standard-api :as behaviours]
            [core.project :as p]
-           [core.drawables :as cd]
-           [impl.drawables :as d]
+           [core.components :as d]
            [impl.components :as c]
            [core.behaviours :as b]
            [core.events :as ev]
@@ -17,7 +16,7 @@
     {:cardinality 1
      :index 0
      :sync (fn [av]
-             (cd/setp (e/get-attribute-value-drawable av "value") :text (:value av)))})
+             (d/setp (e/get-attribute-value-component av "value") :text (:value av)))})
 
   (with-components data options
     [(c/value "value" {:text data})])
@@ -28,7 +27,7 @@
     {:cardinality 1
      :index 1
      :sync (fn [av]
-             (cd/setp (e/get-attribute-value-drawable av "value") :text (:value av)))})
+             (d/setp (e/get-attribute-value-component av "value") :text (:value av)))})
   (with-components data options
     [(c/description "desc" {:text "Description"})
      (c/value "value" {:text data :left 60})])

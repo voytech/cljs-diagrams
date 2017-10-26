@@ -1,25 +1,41 @@
 (ns impl.components
-  (:require [impl.drawables :as d]
-            [core.entities :as e])
+  (:require [core.entities :as e]
+            [core.components :as d])
   (:require-macros [core.macros :refer [defcomponent]]))
 
 
-(defcomponent relation d/relation-line {} {})
+(defn- setup-bbox [drawable p p1 p2 p3 p4]
+  (when (or (= p p1) (= p p2))
+    (if (>= (d/getp drawable p1) (d/getp drawable p2))
+       (do (d/setp drawable p3 (d/getp drawable p2))
+           (d/setp drawable p4 (- (d/getp drawable p1) (d/getp drawable p2))))
+       (do (d/setp drawable p3 (d/getp drawable p1))
+           (d/setp drawable p4 (- (d/getp drawable p2) (d/getp drawable p1)))))))
 
-(defcomponent arrow d/arrow {} {})
+(d/add-hook ::relation :setp (fn [drawable p] (setup-bbox drawable p :x1 :x2 :left :width)
+                                              (setup-bbox drawable p :y1 :y2 :top :height)))
 
-(defcomponent startpoint d/endpoint {:start "connector" :penultimate true} {:moveable true :visible true :opacity 1})
+(d/add-hook ::relation :set-data (fn [drawable data]
+                                     (doseq [p (keys data)]
+                                      (setup-bbox drawable p :x1 :x2 :left :width)
+                                      (setup-bbox drawable p :y1 :y2 :top :height))))
 
-(defcomponent endpoint d/endpoint {:end "connector"} {:moveable true :visible false :opacity 1})
+(defcomponent relation :default {} {:border-color "black" :border-style :solid :border-width 1})
 
-(defcomponent breakpoint d/endpoint {} {:moveable true :visible true :opacity 1})
+(defcomponent arrow :default {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center})
 
-(defcomponent control d/control {} {:moveable false :visible false :opacity 1})
+(defcomponent startpoint :default {:start "connector" :penultimate true} {:moveable true :visible true :opacity 1})
 
-(defcomponent main d/rect {} {})
+(defcomponent endpoint :default {:end "connector"} {:moveable true :visible false :opacity 1})
+
+(defcomponent breakpoint :default {} {:moveable true :visible true :opacity 1})
+
+(defcomponent control :default {} {:moveable false :visible false :opacity 1 :background-color "white"})
+
+(defcomponent main :default {} {:border-color "black" :border-style :solid :border-width 1})
 
 ;; Attribute components.
 
-(defcomponent value d/text {} {})
+(defcomponent value :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
 
-(defcomponent description d/text {} {})
+(defcomponent description :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})

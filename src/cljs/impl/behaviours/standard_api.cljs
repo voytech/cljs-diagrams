@@ -1,11 +1,10 @@
 (ns impl.behaviours.standard-api
   (:require [core.entities :as e]
             [core.layouts :as layouts]
-            [core.drawables :as d]
+            [core.components :as d]
             [core.eventbus :as b]
             [core.events :as ev]
             [core.behaviours :as bhv]
-            [impl.drawables :as dimpl]
             [impl.components :as c]))
 
 (declare position-endpoint)
@@ -14,52 +13,47 @@
 (declare calculate-angle)
 (declare dissoc-breakpoint)
 
-
 (defn to-the-center-of [line x y shape]
   (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
                     y (+ (d/get-top shape) (/ (d/get-height shape) 2))}))
 
 (defn highlight [bln options]
  (fn [e]
-   (d/set-data (:drawable e) {:border-color (if bln (:highlight-color options)
-                                                    (:normal-color options))
-                              :border-width (if bln (:highlight-width options)
-                                                    (:normal-width options))})))
+   (d/set-data (:component e) {:border-color (if bln (:highlight-color options)
+                                                     (:normal-color options))
+                               :border-width (if bln (:highlight-width options)
+                                                     (:normal-width options))})))
 
 (defn show [entity component-name show]
  (let [component (e/get-entity-component entity component-name)]
-   (d/setp (:drawable component) :visible show)))
+   (d/setp component :visible show)))
 
 (defn intersects-controls? [yes]
  (fn [e]
    (let [entity           (:entity e)
-         component        (:component e)
-         drawable         (:drawable e)]
+         component        (:component e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [drwlb (vals @d/drawables)]
-          (when (and (not= drwlb drawable) (= ::c/control (:type (e/lookup drwlb :component))))
-            (let [trg-ent  (e/lookup drwlb :entity)
-                  trg-comp (e/lookup drwlb :component)]
-              (when (d/intersects? drawable drwlb)
-                (yes {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})))))))))
+       (doseq [trg-comp (vals @d/components)]
+          (when (and (not= trg-comp component) (= ::c/control (:type trg-comp)))
+            (let [trg-ent  (e/lookup trg-comp :entity)]
+              (when (d/intersects? component trg-comp)
+                (yes {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))))
 
 (defn intersects? [target-name yes no]
  (fn [e]
    (let [entity           (:entity e)
-         component        (:component e)
-         drawable         (:drawable e)]
+         component        (:component e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [drwlb (vals @d/drawables)]
-          (when (= target-name (:name (e/lookup drwlb :component)))
-            (let [trg-ent  (e/lookup drwlb :entity)
-                  trg-comp (e/lookup drwlb :component)]
-               (if (d/intersects? drawable drwlb)
-                 (yes {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})
-                 (no  {:drawable drawable :component component :entity entity} {:drawable drwlb :component trg-comp :entity trg-ent})))))))))
+       (doseq [trg-comp (vals @d/components)]
+          (when (= target-name (:name trg-comp))
+            (let [trg-ent  (e/lookup trg-comp :entity)]
+               (if (d/intersects? component trg-comp)
+                 (yes {:component component :entity entity} {:component trg-comp :entity trg-ent})
+                 (no  {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))))
 
 (defn calculate-offset [component left top]
- {:left (- left (d/getp (:drawable component) :left))
-  :top  (- top  (d/getp (:drawable component) :top))})
+ {:left (- left (d/getp component :left))
+  :top  (- top  (d/getp component :top))})
 
 (defn calculate-effective-offset [entity component-name left top coord-mode]
  (if (= :offset coord-mode)
@@ -69,8 +63,8 @@
 
 (defn effective-position
  ([component get-x get-y x y coord-mode]
-  (let [effective-x (if (= :offset coord-mode) (+ (get-x (:drawable component)) x) x)
-        effective-y  (if (= :offset coord-mode) (+ (get-y (:drawable component)) y) y)]
+  (let [effective-x (if (= :offset coord-mode) (+ (get-x component) x) x)
+        effective-y  (if (= :offset coord-mode) (+ (get-y component) y) y)]
     {:x effective-x :y effective-y}))
  ([component x y coord-mode]
   (effective-position component #(d/getp % :left) #(d/getp % :top) x y coord-mode)))
@@ -78,8 +72,8 @@
 (defn apply-effective-position
  ([component set-x get-x set-y get-y x y coord-mode]
   (let [epos (effective-position component get-x get-y x y coord-mode)]
-    (set-x (:drawable component) (:x epos))
-    (set-y (:drawable component) (:y epos))))
+    (set-x component (:x epos))
+    (set-y component (:y epos))))
  ([comopnent x y coord-mode]
   (apply-effective-position comopnent
                             #(d/setp %1 :left %2)
@@ -92,8 +86,8 @@
 
 (defn- position-attributes-components [attributes offset-left offset-top]
   (doseq [src (flatten (mapv #(e/components-of %) attributes))]
-    (d/set-data (:drawable src) {:left (+ (d/getp (:drawable src) :left) offset-left)
-                                 :top  (+ (d/getp (:drawable src) :top) offset-top)})))
+    (d/set-data src {:left (+ (d/getp src :left) offset-left)
+                     :top  (+ (d/getp src :top) offset-top)})))
 
 (defn default-position-entity-component [entity component-name left top coord-mode]
   (let [component (e/get-entity-component entity component-name)]
@@ -102,8 +96,8 @@
 (defn default-position-entity [entity ref-component-name left top coord-mode]
  (let [effective-offset (calculate-effective-offset entity ref-component-name left top coord-mode)]
    (doseq [component (e/components-of entity)]
-     (let [effective-left  (+ (d/getp (:drawable component) :left) (:left effective-offset))
-           effective-top   (+ (d/getp (:drawable component) :top) (:top effective-offset))]
+     (let [effective-left  (+ (d/getp component :left) (:left effective-offset))
+           effective-top   (+ (d/getp component :top) (:top effective-offset))]
        (if (= ref-component-name (:name component))
          (default-position-entity-component entity (:name component) left top :offset)
          (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))
@@ -158,7 +152,7 @@
                           (= "end" end-type) ::c/endpoint)
          endpoint (first (e/get-entity-component entity component-type))
          controls (e/get-entity-component related-entity ::c/control)
-         component-intersections (filter #(d/intersects? (:drawable %) (:drawable endpoint)) controls)]
+         component-intersections (filter #(d/intersects? % endpoint) controls)]
      (when (= 0 (count component-intersections))
        (dissoc-endpoint-relation-data entity (:name endpoint))
        (e/disconnect-entities entity related-entity)))))
@@ -168,11 +162,11 @@
 
 (defn refresh-arrow-angle [relation-component arrow-component]
   (when (not (nil? relation-component))
-    (let [x1 (-> relation-component :drawable (d/getp :x1))
-          y1 (-> relation-component :drawable (d/getp :y1))
-          x2 (-> relation-component :drawable (d/getp :x2))
-          y2 (-> relation-component :drawable (d/getp :y2))]
-       (d/setp (:drawable arrow-component) :angle (calculate-angle x1 y1 x2 y2)))))
+    (let [x1 (-> relation-component  (d/getp :x1))
+          y1 (-> relation-component  (d/getp :y1))
+          x2 (-> relation-component  (d/getp :x2))
+          y2 (-> relation-component  (d/getp :y2))]
+       (d/setp arrow-component :angle (calculate-angle x1 y1 x2 y2)))))
 
 (defn- to-the-center-of [line x y shape]
   (when (not (nil? line))
@@ -185,18 +179,17 @@
             line (:component e)
             line-start-breakpoint (e/get-entity-component entity (:start (:props line)))
             line-end-breakpoint   (e/get-entity-component entity (:end (:props line)))
-            drawable  (:drawable line)
-            oeX  (d/getp drawable :x2)
-            oeY  (d/getp drawable :y2)
+            oeX  (d/getp line :x2)
+            oeY  (d/getp line :y2)
             eX   (:left e)
             eY   (:top e)]
         (when (= ::c/relation (:type line))
-          (d/set-data drawable {:x2 eX :y2 eY})
+          (d/set-data line {:x2 eX :y2 eY})
           (let [relation-id   (str (random-uuid))
                 breakpoint-id (str (random-uuid))
                 is-penultimate (= true (:penultimate (:props line-start-breakpoint)))]
-            (e/add-entity-component entity (e/new-component relation-id :relation {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
-                                           (e/new-component breakpoint-id :breakpoint {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
+            (e/add-entity-component entity (d/new-component relation-id :relation {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
+                                           (d/new-component breakpoint-id :breakpoint {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
             (e/update-component-prop entity (:name line) :end breakpoint-id)
             (e/update-component-prop entity (:name line-end-breakpoint) :end relation-id)
             (when (= true is-penultimate)
@@ -216,10 +209,8 @@
        (e/update-component-prop entity (:name line-start) :end (:name line-endpoint))
        (e/update-component-prop entity (:name line-endpoint) :end (:name line-start))
        (e/update-component-prop entity (:name line-startpoint) :penultimate is-penultimate?)
-       (let [drawable (:drawable line-start)
-             endpoint-drawable (:drawable line-endpoint)]
-         (d/set-data drawable {:x2 (+ (d/getp endpoint-drawable :left) (/ (d/getp endpoint-drawable :width) 2))
-                               :y2 (+ (d/getp endpoint-drawable :top) (/ (d/getp endpoint-drawable :height) 2))})))))
+       (d/set-data drawable {:x2 (+ (d/getp line-endpoint :left) (/ (d/getp line-endpointe :width) 2))
+                             :y2 (+ (d/getp line-endpoint :top) (/ (d/getp line-endpoint :height) 2))}))))
 
 (defn position-breakpoint
   ([entity name left top coord-mode]
@@ -230,9 +221,9 @@
          starts-relation-component (e/get-entity-component entity (:start (:props breakpoint-component)))
          ends-relation-component (e/get-entity-component entity (:end (:props breakpoint-component)))
          arrow-component (e/get-entity-component entity "arrow")]
-     (d/set-data (:drawable breakpoint-component)  {:left effective-left :top  effective-top})
-     (to-the-center-of (:drawable starts-relation-component) :x1 :y1 (:drawable breakpoint-component))
-     (to-the-center-of (:drawable ends-relation-component)  :x2 :y2 (:drawable breakpoint-component))
+     (d/set-data  breakpoint-component {:left effective-left :top  effective-top})
+     (to-the-center-of starts-relation-component  :x1 :y1 breakpoint-component)
+     (to-the-center-of ends-relation-component :x2 :y2 breakpoint-component)
      (when (= true (:penultimate (:props breakpoint-component)))
        (refresh-arrow-angle starts-relation-component arrow-component))))
   ([entity name left top]
@@ -246,9 +237,9 @@
          effective-top  (:y position)
          starts-relation-component (e/get-entity-component entity (:start (:props startpoint-component)))
          arrow-component (e/get-entity-component entity "arrow")]
-     (d/set-data (:drawable startpoint-component) {:left effective-left :top  effective-top})
+     (d/set-data startpoint-component {:left effective-left :top  effective-top})
      (when (= false skip?)
-      (to-the-center-of (:drawable starts-relation-component) :x1 :y1 (:drawable startpoint-component))
+      (to-the-center-of starts-relation-component :x1 :y1 startpoint-component)
       (when (= true (:penultimate (:props startpoint-component)))
         (refresh-arrow-angle starts-relation-component arrow-component)))))
   ([entity left top]
@@ -263,10 +254,10 @@
          ends-relation-component  (e/get-entity-component entity (:end (:props endpoint-component)))
 
          arrow-component      (e/get-entity-component entity "arrow")]
-    (d/set-data (:drawable endpoint-component) {:left effective-left  :top  effective-top})
-    (to-the-center-of (:drawable arrow-component) :left :top (:drawable endpoint-component))
+    (d/set-data endpoint-component {:left effective-left  :top  effective-top})
+    (to-the-center-of arrow-component :left :top endpoint-component)
     (when (= false skip?)
-     (to-the-center-of (:drawable ends-relation-component) :x2 :y2 (:drawable endpoint-component))
+     (to-the-center-of ends-relation-component :x2 :y2 endpoint-component)
      (refresh-arrow-angle ends-relation-component arrow-component))))
  ([entity left top]
   (position-endpoint entity left top :absolute false)))
@@ -274,20 +265,17 @@
 (defn toggle-controls [entity toggle]
   (doseq [component (e/components-of entity)]
     (when (= ::c/control (:type component))
-      (let [drawable (:drawable component)]
-         (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))
+       (d/set-data component {:visible toggle :border-color "#ff0000"}))))
 
 (defn toggle-control [entity control-name toggle]
   (let [component (e/get-entity-component entity control-name)]
     (when (= ::c/control (:type component))
-      (let [drawable (:drawable component)]
-         (d/set-data drawable {:visible toggle :border-color "#ff0000"})))))
+        (d/set-data component {:visible toggle :border-color "#ff0000"}))))
 
 (defn moving-endpoint []
    (fn [e]
       (let [endpoint (:component e)
-            entity   (:entity e)
-            drawable (:drawable endpoint)]
+            entity   (:entity e)]
          (cond
            (= ::c/breakpoint (:type endpoint)) (position-breakpoint entity (:name endpoint) (:movement-x e) (:movement-y e) :offset)
            (= ::c/startpoint (:type endpoint)) (position-startpoint entity (:movement-x e) (:movement-y e) :offset false)

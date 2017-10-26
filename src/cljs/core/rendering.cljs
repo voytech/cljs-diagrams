@@ -1,7 +1,7 @@
 (ns core.rendering
   (:require [core.eventbus :as bus]
             [core.entities :as e]
-            [core.drawables :as d]
+            [core.components :as d]
             [core.layouts :as l]))
 
 (declare render)
@@ -41,9 +41,7 @@
   (vswap! rendering-context assoc-in path value))
 
 (defn- render-components [components]
-  (doseq [component components]
-     (let [drawable (:drawable component)]
-       (render drawable))))
+  (doseq [component components] (render component)))
 
 (defn- render-entity [entity]
   (render-components  (e/components-of entity))
@@ -61,31 +59,33 @@
                                             (let [context (:context @event)]
                                               (update-context context))))
 
-(bus/on ["drawable.created"] -999 (fn [event]
+(bus/on ["component.created"] -999 (fn [event]
                                     (let [context (:context @event)
-                                          drawable (:drawable context)])))
+                                          component (:component context)]
+                                        (js/console.log "component created:")
+                                        (js/console.log (clj->js (merge component (d/model component)))))))
 
 
-(bus/on ["drawable.added"] -999 (fn [event]))
+(bus/on ["component.added"] -999 (fn [event]))
 
-(defn- update-property-to-redraw [drawable properties]
-  (let [properties_ (concat (or (get-in @rendering-context [:redraw-properties (:uid drawable)]) #{}) properties)]
-    (vswap! rendering-context assoc-in [:redraw-properties (:uid drawable)] properties_)))
+(defn- update-property-to-redraw [component properties]
+  (let [properties_ (concat (or (get-in @rendering-context [:redraw-properties (:uid component)]) #{}) properties)]
+    (vswap! rendering-context assoc-in [:redraw-properties (:uid component)] properties_)))
 
-(bus/on ["drawable.changed"] -999 (fn [event]
+(bus/on ["component.changed"] -999 (fn [event]
                                     (let [context (:context @event)
-                                          drawable (:drawable context)]
-                                       (update-property-to-redraw drawable (:properties context)))))
+                                          component (:component context)]
+                                       (update-property-to-redraw component (:properties context)))))
 
-(bus/on ["drawable.render" "drawable.layout.finished"] -999 (fn [event]
-                                                              (let [context (:context @event)
-                                                                    drawable (:drawable context)]
-                                                                 (render drawable))))
+(bus/on ["component.render" "component.layout.finished"] -999 (fn [event]
+                                                                (let [context (:context @event)
+                                                                      component (:component context)]
+                                                                   (render component))))
 
-(bus/on ["drawable.removed"] -999 (fn [event]
+(bus/on ["component.removed"] -999 (fn [event]
                                     (let [context (:context @event)
-                                          drawable (:drawable context)]
-                                       (destroy-rendering-state drawable @rendering-context))))
+                                          component (:component context)]
+                                       (destroy-rendering-state component @rendering-context))))
 
 (bus/on ["entities.render"] -999 (fn [event]
                                      (let [context (:context @event)
@@ -105,7 +105,7 @@
 (bus/on ["uncommited.render"] -999 (fn [event]
                                      (let [uncommited (get @rendering-context :redraw-properties)]
                                        (doseq [drawable-id (keys uncommited)]
-                                          (render (get @d/drawables drawable-id))))))
+                                          (render (get @d/components drawable-id))))))
 
 (bus/on ["rendering.finish"] -999 (fn [event]
                                     (all-rendered @rendering-context)
@@ -113,20 +113,20 @@
 
 (defmulti all-rendered (fn [context] @RENDERER))
 
-(defmulti do-render (fn [drawable context] [@RENDERER (:type drawable)]))
+(defmulti do-render (fn [component context] [@RENDERER (:type component) (:rendering-method component)]))
 
-(defmulti create-rendering-state (fn [drawable context] [@RENDERER (:type drawable)]))
+(defmulti create-rendering-state (fn [component context] [@RENDERER (:type component) (:rendering-method component)]))
 
-(defmethod create-rendering-state :default [drawable context])
+(defmethod create-rendering-state :default [component context])
 
-(defmulti destroy-rendering-state (fn [drawable context] [@RENDERER (:type drawable)]))
+(defmulti destroy-rendering-state (fn [component context] [@RENDERER (:type component) (:rendering-method component)]))
 
 (defmethod destroy-rendering-state :default [rendering-state context])
 
-(defn render [drawable]
-  (when (not (nil? drawable))
-    (let [rendering-state (get-state-of drawable)]
+(defn render [component]
+  (when (not (nil? component))
+    (let [rendering-state (get-state-of component)]
       (when (or (nil? rendering-state) (empty? rendering-state))
-        (update-state drawable (create-rendering-state drawable @rendering-context)))
-      (do-render drawable @rendering-context)
-      (clear-context [:redraw-properties (:uid drawable)]))))
+        (update-state component (create-rendering-state component @rendering-context)))
+      (do-render component @rendering-context)
+      (clear-context [:redraw-properties (:uid component)]))))

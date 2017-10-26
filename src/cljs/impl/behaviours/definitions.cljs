@@ -4,7 +4,7 @@
             [core.options :as o]
             [core.entities :as e]
             [core.events :as ev]
-            [core.drawables :as d]
+            [core.components :as d]
             [impl.behaviours.standard-api :as std]
             [impl.behaviours.manhattan :as m]
             [impl.components :as c])
@@ -33,7 +33,7 @@
                       relation (:relation event)
                       adata (:association-data relation)
                       component (e/get-entity-component entity adata)
-                      enriched (merge event {:component component :drawable (:drawable component)})]
+                      enriched (merge event {:component component})]
                   ((m/do-manhattan-layout) enriched)
                   nil)))
 
@@ -77,7 +77,7 @@
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
                                                 (std/toggle-controls (:entity trg) false)
                                                 (std/set-endpoint-relation-data (:entity src) (:component src) (:entity trg) (:component trg))
-                                                ((:f end-type) (:entity src) (d/get-left (:drawable trg)) (d/get-top (:drawable trg)))))) (:context @e))
+                                                ((:f end-type) (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context @e))
                   (std/relations-validate (->> @e :context :entity))
                   ((m/do-manhattan-layout) event)
                   nil)))

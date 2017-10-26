@@ -9,7 +9,7 @@
            [core.eventbus :as b]
            [core.events :as events]
            [core.rendering :as r]
-           [core.drawables :as d]
+           [core.components :as d]
            [impl.renderers.default :as dd]
            [core.layouts :as layouts]))
 
@@ -33,7 +33,7 @@
   (get @project-state key))
 
 (defn remove-state [key]
-  (vswap! project-state dissoc key))  
+  (vswap! project-state dissoc key))
 
 (defn clear-selection []
   (vswap! project-state dissoc :selection))
@@ -44,7 +44,7 @@
   (events/add-pattern :mousedrag
                       [(fn [e] (= (:type e) "mousedown"))
                        (fn [e] (= (:type e) "mousemove"))]
-                      (fn [e] (events/enrich (:drawable e)))))
+                      (fn [e] (events/enrich (:component e)))))
 
 (defn- add-drag-end-pattern []
   (events/add-pattern :mousemove
@@ -59,11 +59,11 @@
                                            (=    (:type e)  "mousemove"))
                                context (events/get-context :mouseout)
                                get-drawable (fn [uid]
-                                              (when (and (not (nil? uid)) (d/is-drawable uid))
+                                              (when (and (not (nil? uid)) (d/is-component uid))
                                                 uid))]
                            (cond
-                             (and (= true result) (nil? context)) (do (events/set-context :mouseout {:d (:drawable e) :s true}) false)
-                             (and (= true result) (= true (:s context)) (not= (get-drawable (->> context :d :uid)) (->> e :drawable :uid))) true
+                             (and (= true result) (nil? context)) (do (events/set-context :mouseout {:d (:component e) :s true}) false)
+                             (and (= true result) (= true (:s context)) (not= (get-drawable (->> context :d :uid)) (->> e :component :uid))) true
                              :else false)))]
                       (fn [e]
                         (events/schedule events/clear-state :start)

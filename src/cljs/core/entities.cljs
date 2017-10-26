@@ -1,17 +1,14 @@
 (ns core.entities
   (:require [reagent.core :as reagent :refer [atom]]
             [core.eventbus :as bus]
-            [core.drawables :as d]
+            [core.components :as d]
             [core.utils.general :as utils :refer [make-js-property]]))
 
 (declare get-entity-component)
 (declare get-attribute-value)
 (declare get-attribute-value-component)
-(declare new-component)
 
 (defonce entities (atom {}))
-
-(defonce components (atom {}))
 
 (defonce lookups (volatile! {}))
 
@@ -31,10 +28,6 @@
                       factory])
 
 (defrecord AttributeValue [id attribute value components])
-
-(defrecord ComponentType [type drawable-ref props init-data])
-
-(defrecord Component [name type drawable props])
 
 (defrecord Entity [uid
                    type
@@ -91,22 +84,20 @@
   (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
     (vswap! lookups assoc drawable-id lookup)))
 
-(defn- define-lookups-on-components [entity]
+(defn- define-lookups-on-entities [entity]
   (doseq [component (vals (:components entity))]
-    (let [uid (:uid (:drawable component))]
-      (define-lookup uid {:entity (:uid entity)
-                          :component (:name component)}))))
+    (let [uid (:uid component)]
+      (define-lookup uid {:entity (:uid entity)}))))
 
 (defn- define-lookups-on-attributes [entity]
   (doseq [attribute (vals (:attributes entity))]
     (doseq [component (vals (:components attribute))]
-      (let [did (:uid (:drawable component))]
-        (define-lookup did {:entity (:uid entity)
-                            :component (:name component)
+      (let [cid (:uid  component)]
+        (define-lookup cid {:entity (:uid entity)
                             :attribute (:id attribute)})))))
 
 (defn- define-lookups [entity]
-  (define-lookups-on-components entity)
+  (define-lookups-on-entities entity)
   (define-lookups-on-attributes entity))
 
 (defmulti do-lookup (fn [lookup-for entity lookup] lookup-for))
@@ -114,16 +105,11 @@
 (defmethod do-lookup :entity [lookup-for entity lookup]
   entity)
 
-(defmethod do-lookup :component [lookup-for entity lookup]
-  (if (not (nil? (:attribute lookup)))
-    (get-attribute-value-component entity (:attribute lookup) (:component lookup))
-    (get-entity-component entity (:component lookup))))
-
 (defmethod do-lookup :attribute [lookup-for entity lookup]
   (get-attribute-value entity (:attribute lookup)))
 
-(defn lookup [drawable lookup-for]
-  (let [uid (if (record? drawable) (:uid drawable) drawable)
+(defn lookup [component lookup-for]
+  (let [uid (if (record? component) (:uid component) component)
         lookup (get @lookups uid)
         entity (entity-by-id (:entity lookup))]
     (do-lookup lookup-for entity lookup)))
@@ -135,9 +121,9 @@
    Those properties models functions of specific component. Under Component we have only one Drawable wich holds properties for renderer."
   ([type components content-bbox]
    (let [uid (str (random-uuid))
-         _components (apply merge (mapv (fn [e] {(:name e) (Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
+         _components (apply merge (mapv (fn [e] {(:name e) (d/Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
          entity (Entity. uid type _components {} [] content-bbox)]
-     (define-lookups-on-components entity)
+     (define-lookups-on-entities entity)
      (swap! entities assoc uid entity)
      (bus/fire "entity.added" {:entity entity})
      (get @entities uid)))
@@ -150,14 +136,12 @@
  (doseq [component (flatten components)]
    (swap! entities assoc-in [(:uid entity) :components (:name component)] component))
  (let [entity-reloaded (entity-by-id (:uid entity))]
-   (define-lookups-on-components entity-reloaded)
+   (define-lookups-on-entities entity-reloaded)
    (bus/fire "entity.component.added" {:entity entity-reloaded})))
 
-
 (defn remove-entity-component [entity component-name]
-  (let [component (get-in @entities [(:uid entity) :components component-name])
-        drawable (:drawable component)]
-    (d/remove-drawable drawable)
+  (let [component (get-in @entities [(:uid entity) :components component-name])]
+    (d/remove-component component)
     (swap! entities update-in [(:uid entity) :components ] dissoc component-name)))
 
 (defn update-component-prop [entity name prop value]
@@ -178,8 +162,8 @@
  ([entity name type data]
   (let [component (get-entity-component entity name)]
     (if (or (nil? component) (not= type (:type component)))
-      (add-entity-component entity (new-component type name data))
-      (d/set-data (:drawable component) data))
+      (add-entity-component entity (d/new-component type name data))
+      (d/set-data component data))
     (get-entity-component entity name)))
  ([entity name type]
   (assert-component entity name type {})))
@@ -258,7 +242,7 @@
         avid (attribute-value-id attribute-value-or-id)
         attribute-value (get-in @entities [eid :attributes avid])]
     (doseq [component (components-of attribute-value)]
-      (d/remove-drawable (:drawable component)))
+      (d/remove-component component))
     (swap! entities update-in [eid :attributes] dissoc avid)
     (js/console.log (clj->js (entity-by-id eid)))))
 
@@ -274,11 +258,8 @@
   ([entity attr-id component-name]
    (get-attribute-value-component (get-attribute-value entity attr-id) component-name)))
 
-(defn get-attribute-value-drawable [attribute-value component-name]
-  (:drawable (get-attribute-value-component attribute-value component-name)))
-
 (defn get-attribute-value-property [attribute-value component-name property]
-  (let [drawable (:drawable (get-attribute-value-component attribute-value component-name))]
+  (let [drawable (get-attribute-value-component attribute-value component-name)]
     (d/getp drawable property)))
 
 (defn get-attribute-value-data [attribute-value]
@@ -307,24 +288,3 @@
       (replace-attribute-value entity attribute-value value)
       (update-attribute-value-value entity attribute-value value))
     (bus/fire "layout.attributes" (entity-record entity))))
-
-;;=====================================================================================
-;;============================COMPONENT DEFINITIONS====================================
-;;=====================================================================================
-(defn define-component [type drawable-ref props init-data]
-  (swap! components assoc type (ComponentType. type drawable-ref props init-data)))
-
-(defn new-component
-  ([type name data props]
-   (when-let [component-type (get @components type)]
-     (let [dref (:drawable-ref component-type)
-           _data  (merge (:init-data component-type) data)
-           _props (merge (:props component-type) props)]
-       (Component. name type (dref _data) _props))))
-  ([type name data]
-   (new-component type name data {}))
-  ([type name]
-   (new-component type name {} {})))
-
-(defn get-component-def [type]
-  (get @components type))

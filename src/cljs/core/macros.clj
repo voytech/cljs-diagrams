@@ -25,7 +25,7 @@
 (defmacro with-attributes [body])
 
 (defmacro defentity [name & body]
-  (let [transformed (transform-body body)]
+  (let [transformed  (transform-body body)]
     (let [nsname     (resolve-namespace-name)
           cntbbox    (last (:with-content-bounding-box transformed))
           components (:with-components transformed)
@@ -42,7 +42,6 @@
              (apply core.entities/add-entity-component e# (component-factory# data# options#))
              (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
-               ;(core.behaviours/autowire result#)
                (core.eventbus/fire "entity.render" {:entity result#})
                result#)))))))
 
@@ -76,24 +75,18 @@
              ([entity# data# options#]
               (let [attribute#   (core.entities/get-attribute (keyword ~nsname (name '~name)))
                     attr-value#  (core.entities/create-attribute-value attribute# data# options#)]
-                ;(core.behaviours/autowire attr-value#)
                 (core.entities/add-entity-attribute-value entity# attr-value#))))))))
 
-(defmacro defdrawable [name options-defaults]
+(defmacro defcomponent [type rendering-method props init-data]
   (let [nsname (resolve-namespace-name)]
-   `(defn ~name [options#]
-      (core.drawables/create-drawable (keyword ~nsname (name '~name)) (merge options# ~options-defaults)))))
-
-(defmacro defcomponent [type drawable-ref props init-data]
-  (let [nsname (resolve-namespace-name)]
-   `(do (core.entities/define-component (keyword ~nsname (name '~type)) ~drawable-ref ~props ~init-data)
+   `(do (core.components/define-component (keyword ~nsname (name '~type)) ~rendering-method ~props ~init-data)
         (defn ~type
           ([name# data# p#]
-           (core.entities/new-component (keyword ~nsname (name '~type)) name# data# p#))
+           (core.components/new-component (keyword ~nsname (name '~type)) name# data# p#))
           ([name# data#]
-           (core.entities/new-component (keyword ~nsname (name '~type)) name# data# {}))
+           (core.components/new-component (keyword ~nsname (name '~type)) name# data# {}))
           ([name#]
-           (core.entities/new-component (keyword ~nsname (name '~type)) name# {} {}))))))
+           (core.components/new-component (keyword ~nsname (name '~type)) name# {} {}))))))
 
 (defmacro defbehaviour [name display-name type validator handler]
   (let [nsname (resolve-namespace-name)]

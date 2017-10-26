@@ -31,17 +31,3 @@
  (let [tags (set (concat [:type component] :tags component))]
    (when-let [prop-def (get drawable-properties property)]
       (or (= 0 (count (:dor prop-def))) (> (count (intersection (:for prop-def) tags)) 0)))))
-
-(defn canonical-event-names {".move"   {}
-                             "component.hover"  {}
-                             "component.out"    {}
-                             "component.select" {}
-                             "component.enter"  {}
-                             "component.unselect" {}
-                             "component.create" {}
-                             "component.delete" {}
-                             "entity.move" {}
-                             "entity.select" {}
-                             "entity.unselect" {}
-                             "entity.create" {}
-                             "entity.delete" {}})

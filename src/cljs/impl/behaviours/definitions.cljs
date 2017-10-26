@@ -16,7 +16,7 @@
               (validate
                 (-- (having-strict ::c/main ::c/control)
                     (bind-to ::c/main))
-                "mousedrag")
+                "move")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/moving-entity) event)
@@ -42,7 +42,7 @@
               (validate
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
                     (bind-to ::c/startpoint ::c/endpoint))
-                "mousedrag")
+                "move")
               (fn [e]
                 (let [event (:context @e)]
                   ((m/do-manhattan-layout) event)
@@ -55,7 +55,7 @@
               (validate
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
                     (bind-to ::c/control))
-                "mousedrag")
+                "move")
               (fn [e]
                 (let [event (:context @e)]
                   ((m/control-connector) event)
@@ -102,7 +102,7 @@
                     (bind-to ::c/main))
                 (-- (having-all ::c/startpoint ::c/endpoint)
                     (bind-to ::c/startpoint ::c/endpoint))
-                "mouseout")
+                "blur")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -124,7 +124,7 @@
               (validate
                 (-- (having-strict ::c/main ::c/control)
                     (bind-to ::c/main))
-                "mouseout")
+                "blur")
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-controls (:entity event) false)
@@ -150,7 +150,7 @@
                     (bind-to ::c/control))
                 (-- (having-all ::c/relation ::c/control)
                     (bind-to ::c/control))
-                "mouseout")
+                "blur")
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-control (:entity event) (-> event :component :name) false)

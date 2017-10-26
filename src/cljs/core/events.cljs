@@ -5,13 +5,17 @@
             [core.components :as d]))
 
 
-(defonce event-map {"mousedown"  "mousedown"
-                    "mouseup"    "mouseup"
-                    "click"      "mouseclick"
-                    "dbclick"    "mousedbclick"
-                    "mousemove"  "mousemove"
-                    "mouseenter" "mouseenter"
-                    "mouseleave" "mouseleave"})
+(defonce event-bindings (atom {}))
+
+(defonce  event-codes {"noop"     {:desc "No operation event code"}
+                       "move"     {:desc "Event code reserved for moving components"}
+                       "focus"    {:desc "Event should be triggered when entity should get focus"}
+                       "blur"     {:desc "Event should be triggered when entity should loose focus"}
+                       "select"   {:desc "Event should be triggered when entity has been activated and activation state should be preserved in project buffer"}
+                       "activate" {:decc "Event should be triggered when entity has been activated but activation state should not be preserved"}
+                       "unselect" {:desc "Event should be triggered when activation state should be retained"}
+                       "delete"   {:desc "Event should be triggered when an element is going to be deleted"}
+                       "create"   {:desc "Event should be triggered when creating an element"}})
 
 (defonce patterns (atom {}))
 
@@ -24,6 +28,9 @@
 (defonce state (atom {}))
 
 (defonce phases (volatile! {}))
+
+(defn set-event-bindings [bindings]
+  (reset! event-bindings bindings))
 
 (defn schedule [function phase]
   (let [hooks (conj (or (phase @phases) []) function)]
@@ -117,7 +124,7 @@
        (sort-by #(d/getp % :z-index) >)))
 
 (defn- normalise-event-type [event]
-  (get event-map event))
+  (or (get @event-bindings event) event))
 
 (defn enrich [component]
   (when (d/is-component (:uid component))

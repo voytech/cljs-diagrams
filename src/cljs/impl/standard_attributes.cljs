@@ -67,7 +67,7 @@
               (-- (having-all ::c/value)
                   (bind-to ::c/value))
               (fn [target behaviour result]
-                (ev/loose-event-name nil (-> target :attribute :name) result "mouseout")))
+                (ev/loose-event-name nil (-> target :attribute :name) result "blur")))
             (fn [e]
               (let [event (:context @e)]
                 ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -78,7 +78,7 @@
               (fn [target this]
                 (let [attribute (:attribute target)]
                   (when-let [domain (:domain attribute)] ;; needs to find a way how to obtain a component name for domain entry.
-                    (ev/loose-event-name nil (-> attribute :name) ::c/value "mousepointclick"))))
+                    (ev/loose-event-name nil (-> attribute :name) ::c/value "activate"))))
               (fn [e]
                 (let [event (:context @e)]
                   (ed/domain-editor event)
@@ -91,7 +91,7 @@
                     (bind-to ::c/value))
                 (-- (invalid-when #(< 0 (count (-> % :attribute :domain)))))
                 (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result "mousepointclick")))
+                  (ev/loose-event-name nil (-> target :attribute :name) result "activate")))
               (fn [e]
                 (let [event (:context @e)]
                   (ed/editor event)

@@ -41,36 +41,36 @@
 (defonce source-events "click dbclick mousemove mousedown mouseup mouseenter mouseleave keypress keydown keyup")
 
 (defn- add-drag-start-pattern []
-  (events/add-pattern :mousedrag
+  (events/add-pattern :move
                       [(fn [e] (= (:type e) "mousedown"))
                        (fn [e] (= (:type e) "mousemove"))]
                       (fn [e] (events/enrich (:component e)))))
 
 (defn- add-drag-end-pattern []
   (events/add-pattern :mousemove
-                      [(fn [e] (and (= (:state e) "mousedrag") (= (:type e) "mouseup")))]
+                      [(fn [e] (and (= (:state e) "move") (= (:type e) "mouseup")))]
                       (fn [e] (events/clear-state))))
 
 (defn- add-mouse-out-pattern []
-  (events/add-pattern :mouseout
+  (events/add-pattern :blur
                       [(fn [e]
-                         (let [result (and (not= (:state e) "mousedrag")
-                                           (not= (:state e) "mouseout")
+                         (let [result (and (not= (:state e) "move")
+                                           (not= (:state e) "blur")
                                            (=    (:type e)  "mousemove"))
-                               context (events/get-context :mouseout)
+                               context (events/get-context :blur)
                                get-drawable (fn [uid]
                                               (when (and (not (nil? uid)) (d/is-component uid))
                                                 uid))]
                            (cond
-                             (and (= true result) (nil? context)) (do (events/set-context :mouseout {:d (:component e) :s true}) false)
+                             (and (= true result) (nil? context)) (do (events/set-context :blur {:d (:component e) :s true}) false)
                              (and (= true result) (= true (:s context)) (not= (get-drawable (->> context :d :uid)) (->> e :component :uid))) true
                              :else false)))]
                       (fn [e]
                         (events/schedule events/clear-state :start)
-                        (events/enrich (:d (events/remove-context :mouseout))))))
+                        (events/enrich (:d (events/remove-context :blur))))))
 
 (defn- add-point-click-pattern []
-  (events/add-pattern :mousepointclick
+  (events/add-pattern :activate
                       [(fn [e] (= (:type e) "mousedown"))
                        (fn [e] (= (:type e) "mouseup"))]
                       (fn [e]
@@ -88,6 +88,13 @@
     (.setWidth (:canvas data) width)
     (.setHeight (:canvas data) height)
     (reset! project data)
+    (events/set-event-bindings  {"mousedown"  "mousedown"
+                                 "mouseup"    "mouseup"
+                                 "click"      "mouseclick"
+                                 "dbclick"    "mousedbclick"
+                                 "mousemove"  "mousemove"
+                                 "mouseenter" "mouseenter"
+                                 "mouseleave" "mouseleave"})
     (add-drag-start-pattern)
     (add-drag-end-pattern)
     (add-mouse-out-pattern)

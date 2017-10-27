@@ -55,7 +55,7 @@
                 (-- (having-all ::c/value)
                     (bind-to ::c/value))
                 (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result "mousemove")))
+                  (ev/loose-event-name nil (-> target :attribute :name) result "focus")))
               (fn [e]
                 (let [event (:context @e)]
                   ((behaviours/highlight true (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7})) event)

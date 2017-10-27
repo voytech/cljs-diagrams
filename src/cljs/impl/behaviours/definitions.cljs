@@ -66,7 +66,7 @@
               (validate
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
                     (bind-to ::c/startpoint ::c/endpoint))
-                "mouseup")
+                "mouse-up")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/intersects-controls? (fn [src trg]
@@ -89,7 +89,7 @@
                     (bind-to ::c/main))
                 (-- (having-all ::c/startpoint ::c/endpoint)
                     (bind-to ::c/startpoint ::c/endpoint))
-                "mousemove")
+                "focus")
               (fn [e]
                 (let [event (:context @e)]
                   ((std/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -113,7 +113,7 @@
               (validate
                 (-- (having-strict ::c/main ::c/control)
                     (bind-to ::c/main))
-                "mousemove")
+                "focus")
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-controls (:entity event) true)
@@ -137,7 +137,7 @@
                     (bind-to ::c/control))
                 (-- (having-all ::c/relation ::c/control)
                     (bind-to ::c/control))
-                "mousemove")
+                "focus")
               (fn [e]
                 (let [event (:context @e)]
                   (std/toggle-control (:entity event) (-> event :component :name) true)

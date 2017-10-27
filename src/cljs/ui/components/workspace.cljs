@@ -3,6 +3,7 @@
             [core.utils.dnd :as dnd]
             [ui.components.generic.basic :as cmp :refer [DynamicPagination]]
             [core.project :as p :refer [project]]
+            [impl.synthetic-events :as s]
             [core.tools :as t :refer [tools]]))
 
 

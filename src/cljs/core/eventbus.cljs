@@ -10,6 +10,10 @@
 
 (defonce event-store (volatile! []))
 
+(defonce ^:private event-cnt (volatile! 0))
+
+(defn total-events [] @event-cnt)
+
 (defn add-event [event]
   (when (> (count @event-store) EVENT_STORE_CAPACITY)
     (vswap! event-store subvec 1))
@@ -53,7 +57,7 @@
    :originalEvent nil
    :context   context
    :timestamp (.getTime (js/Date.))
-   :uid       0;(str (random-uuid)) ; this is very expensive operation for such latency
+   :uid       (vswap! event-cnt inc)
    :cancelBubble false
    :defaultPrevented false})
 

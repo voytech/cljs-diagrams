@@ -5,7 +5,9 @@
             [core.components :as d]))
 
 
-(defonce event-bindings (atom {}))
+(defonce events-bindings (atom {}))
+
+(defonce application-events-bindings (atom {}))
 
 (defonce  event-codes {"noop"     {:desc "No operation event code"}
                        "move"     {:desc "Event code reserved for moving components"}
@@ -29,8 +31,17 @@
 
 (defonce phases (volatile! {}))
 
-(defn set-event-bindings [bindings]
-  (reset! event-bindings bindings))
+(defn set-original-events-bindings [bindings]
+  (reset! events-bindings bindings))
+
+(defn- normalise-event-type [event]
+  (or (get @events-bindings event) event))
+
+(defn set-application-events-bindings [bindings]
+  (reset! application-events-bindings bindings))
+
+(defn- convert-to-application-event [event]
+  (or (get @application-events-bindings event) event))
 
 (defn schedule [function phase]
   (let [hooks (conj (or (phase @phases) []) function)]
@@ -123,9 +134,6 @@
        (filter #(d/contains-point? % x y))
        (sort-by #(d/getp % :z-index) >)))
 
-(defn- normalise-event-type [event]
-  (or (get @event-bindings event) event))
-
 (defn enrich [component]
   (when (d/is-component (:uid component))
     (let [entity             (e/lookup component :entity)
@@ -159,6 +167,18 @@
                  (->> (enrich (or (:component @state) (first (lookup-all (:left e) (:top e)))))
                       (merge e)))))
 
+(defn trigger-bus-event
+  ([e]
+   (let [_e (assoc e :type (convert-to-application-event (:type e)))
+         event-name (loose-event-name (-> _e :entity :type)
+                                      (-> _e :attribute-value :attribute :name)
+                                      (-> _e :component :type)
+                                      (-> _e :type))]
+     (js/console.log (str "on " event-name " [ total events :" (inc (b/total-events)) " ]"))
+     (b/fire event-name _e)))
+  ([e overrides]
+   (trigger-bus-event (merge e overrides))))
+
 (defn- dispatch-events [id events]
   (let [obj (js/document.getElementById id)
         stream (merge-streams obj events)
@@ -171,9 +191,5 @@
         last     (.map pattern  (fn [e] (merge e @state {:type (or (:state @state) (:type e))})))] ; this could be moved to events/tests at the end
 
       (.subscribe last  (fn [e]
-                          (let [event-name (loose-event-name (-> e :entity :type)
-                                                             (-> e :attribute-value :attribute :name)
-                                                             (-> e :component :type)
-                                                             (-> e :type))]
-                           (js/console.log (str "on " event-name))
-                           (b/fire event-name e))))))
+                          (on-phase :completed)
+                          (trigger-bus-event e)))))

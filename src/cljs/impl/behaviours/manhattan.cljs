@@ -201,7 +201,7 @@
 
 (defn- update-line-component [entity idx sx sy ex ey]
   (let [line (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey})]
-    (when (= true (:path-editing (config)))
+    (when (and (true? (:path-editing (config))) (> idx 0) (< idx (dec (count (e/get-entity-component entity ::c/relation)))))
        (set-editable entity line))
     line))
 

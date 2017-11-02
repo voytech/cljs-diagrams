@@ -12,6 +12,8 @@
 
 (defonce ^:private event-cnt (volatile! 0))
 
+(defonce ^:private events-pool (volatile! []))
+
 (defn total-events [] @event-cnt)
 
 (defn add-event [event]
@@ -61,15 +63,27 @@
    :cancelBubble false
    :defaultPrevented false})
 
+(defn- is-available? [event]
+  (not (nil? event)))
+
+(defn- append-new-event [event-name context]
+  (peek (vswap! events-pool conj (make-event event-name context))))
+
+(defn- borrow-event [event-name context]
+  (let [availables (vec (filterv #(is-available? %) @events-pool))
+        event (or (peek availables) (append-new-event event-name context))]
+     (merge event {:type event-name
+                   :context   context
+                   :timestamp (.getTime (js/Date.))
+                   :uid   (vswap! event-cnt inc)})))
+
 (defn prevent-default [event]
-  (vswap! event assoc :defaultPrevented true)
-  (when-not (nil? (:originalEvent @event))
-    (.preventDefault (:originalEvent @event))))
+  (when-not (nil? (:originalEvent event))
+    (.preventDefault (:originalEvent event))))
 
 (defn stop-propagation [event]
-  (vswap! event assoc :cancelBubble true)
-  (when-not (nil? (:originalEvent @event))
-    (.stopPropagation (:originalEvent @event))))
+  (when-not (nil? (:originalEvent event))
+    (.stopPropagation (:originalEvent event))))
 
 ;; as long as listeners are vector we should rather use peek and it should be sorted in reversed order.
 (defn- next [listeners event]
@@ -77,16 +91,16 @@
     (when-not (nil? listener)
       (let [result ((:callback listener) event)]
         (if (nil? result)
-          (when (and (not (:cancelBubble @event))
-                     (not (:defaultPrevented @event)))
+          (when (and (not (:cancelBubble event))
+                     (not (:defaultPrevented event)))
             (recur (rest listeners) event))
           result)))))
 
 (defn fire
   ([name context]
-   (let [event (volatile! (make-event name context))
+   (let [event (borrow-event name context)
          listeners (get @bus name)]
-     (add-event @event)
+     (add-event event)
      (when-not (nil? listeners)
        (let [result (next listeners event)]
          (do-after-all name)

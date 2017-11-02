@@ -18,7 +18,7 @@
                     (bind-to ::c/main))
                 "move")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   ((std/moving-entity) event)
                   nil)))
 
@@ -28,7 +28,7 @@
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation))
                 (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil "moveby")))
               (fn [e]
-                (let [event (:context @e)
+                (let [event (:context e)
                       entity (:entity event)
                       relation (:relation event)
                       adata (:association-data relation)
@@ -44,10 +44,10 @@
                     (bind-to ::c/startpoint ::c/endpoint))
                 "move")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   ((m/do-manhattan-layout) event)
                   ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
-                                           (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context @e))
+                                           (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context e))
                   nil)))
 
 (defbehaviour moving-connector-control
@@ -57,7 +57,7 @@
                     (bind-to ::c/control))
                 "move")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   ((m/control-connector) event)
                   nil)))
 
@@ -68,7 +68,7 @@
                     (bind-to ::c/startpoint ::c/endpoint))
                 "mouse-up")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   ((std/intersects-controls? (fn [src trg]
                                                (let [ctype (-> event :component :type)
                                                      end-type (cond
@@ -77,8 +77,8 @@
                                                 (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
                                                 (std/toggle-controls (:entity trg) false)
                                                 (std/set-endpoint-relation-data (:entity src) (:component src) (:entity trg) (:component trg))
-                                                ((:f end-type) (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context @e))
-                  (std/relations-validate (->> @e :context :entity))
+                                                ((:f end-type) (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
+                  (std/relations-validate (->> e :context :entity))
                   ((m/do-manhattan-layout) event)
                   nil)))
 
@@ -91,7 +91,7 @@
                     (bind-to ::c/startpoint ::c/endpoint))
                 "focus")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   ((std/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                   nil)))
 
@@ -104,7 +104,7 @@
                     (bind-to ::c/startpoint ::c/endpoint))
                 "blur")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                   nil)))
 
@@ -115,7 +115,7 @@
                     (bind-to ::c/main))
                 "focus")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   (std/toggle-controls (:entity event) true)
                   nil)))
 
@@ -126,7 +126,7 @@
                     (bind-to ::c/main))
                 "blur")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   (std/toggle-controls (:entity event) false)
                   nil)))
 
@@ -139,7 +139,7 @@
                     (bind-to ::c/control))
                 "focus")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   (std/toggle-control (:entity event) (-> event :component :name) true)
                   nil)))
 
@@ -152,7 +152,7 @@
                     (bind-to ::c/control))
                 "blur")
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   (std/toggle-control (:entity event) (-> event :component :name) false)
                   nil)))
 

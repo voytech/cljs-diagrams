@@ -89,6 +89,6 @@
         (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))))
 
 (b/on ["layout.attributes"] -999 (fn [event]
-                                     (layout-attributes (-> @event :context))
+                                     (layout-attributes (-> event :context))
                                      (b/fire "uncommited.render")
                                      (b/fire "rendering.finish")))

@@ -111,11 +111,11 @@
   (bus/fire (ev/loose-event-name (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))
 
 (bus/on ["entity.component.added"] -999 (fn [event]
-                                            (let [context (:context @event)
+                                            (let [context (:context event)
                                                   entity  (:entity context)]
                                               (autowire entity))))
 
 (bus/on ["attribute-value.created"] -999 (fn [event]
-                                            (let [context (:context @event)
+                                            (let [context (:context event)
                                                   attribute-value (:attribute-value context)]
                                               (autowire attribute-value))))

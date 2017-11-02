@@ -56,11 +56,11 @@
     (bus/fire "rendering.finish")))
 
 (bus/on ["rendering.context.update"] -999 (fn [event]
-                                            (let [context (:context @event)]
+                                            (let [context (:context event)]
                                               (update-context context))))
 
 (bus/on ["component.created"] -999 (fn [event]
-                                    (let [context (:context @event)
+                                    (let [context (:context event)
                                           component (:component context)]
                                         (js/console.log "component created:")
                                         (js/console.log (clj->js (merge component (d/model component)))))))
@@ -73,31 +73,31 @@
     (vswap! rendering-context assoc-in [:redraw-properties (:uid component)] properties_)))
 
 (bus/on ["component.changed"] -999 (fn [event]
-                                    (let [context (:context @event)
+                                    (let [context (:context event)
                                           component (:component context)]
                                        (update-property-to-redraw component (:properties context)))))
 
 (bus/on ["component.render" "component.layout.finished"] -999 (fn [event]
-                                                                (let [context (:context @event)
+                                                                (let [context (:context event)
                                                                       component (:component context)]
                                                                    (render component))))
 
 (bus/on ["component.removed"] -999 (fn [event]
-                                    (let [context (:context @event)
+                                    (let [context (:context event)
                                           component (:component context)]
                                        (destroy-rendering-state component @rendering-context))))
 
 (bus/on ["entities.render"] -999 (fn [event]
-                                     (let [context (:context @event)
+                                     (let [context (:context event)
                                            entities  (:entities context)]
                                         (doseq [entity enttities] (render-entity entity)))))
 
 (bus/on ["entity.added"] -999 (fn [event]
-                                 (let [context (:context @event)])))
+                                 (let [context (:context event)])))
                                     ;(render-entity (:entity context)))))
 
 (bus/on ["entity.render"] -999 (fn [event]
-                                 (let [context (:context @event)]
+                                 (let [context (:context event)]
                                     (js/console.log "entity.render fired.")
                                     (js/console.log (clj->js (:entity context)))
                                     (render-entity (:entity context)))))

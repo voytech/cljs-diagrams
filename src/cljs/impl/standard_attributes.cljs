@@ -57,7 +57,7 @@
                 (fn [target behaviour result]
                   (ev/loose-event-name nil (-> target :attribute :name) result "focus")))
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   ((behaviours/highlight true (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7})) event)
                   nil)))
 
@@ -69,7 +69,7 @@
               (fn [target behaviour result]
                 (ev/loose-event-name nil (-> target :attribute :name) result "blur")))
             (fn [e]
-              (let [event (:context @e)]
+              (let [event (:context e)]
                 ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
                 nil)))
 
@@ -80,7 +80,7 @@
                   (when-let [domain (:domain attribute)] ;; needs to find a way how to obtain a component name for domain entry.
                     (ev/loose-event-name nil (-> attribute :name) ::c/value "activate"))))
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   (ed/domain-editor event)
                   nil)))
 
@@ -93,6 +93,6 @@
                 (fn [target behaviour result]
                   (ev/loose-event-name nil (-> target :attribute :name) result "activate")))
               (fn [e]
-                (let [event (:context @e)]
+                (let [event (:context e)]
                   (ed/editor event)
                   nil)))

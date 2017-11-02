@@ -178,6 +178,34 @@
   (let [all-points (flatten [start-point mid-points end-point])]
      (partition 2 1 all-points)))
 
+
+(defn- get-line-transform-properties [entity line]
+  (let [p1 {:x (d/getp line :x1) :y (d/getp line :y1)}
+        p2 {:x (d/getp line :x2) :y (d/getp line :y2)}
+        axis (find-axis p1 p2)]
+    {:value (get p1 (second-axis axis)) :axis axis}))
+
+(defn- store-line-transform [entity line]
+  (e/update-component-prop entity line :transform (get-line-transform-properties entity line)))
+
+(defn- load-line-transform [entity line]
+  (e/component-property entity line :transform))
+
+(defn- clear-line-transform [entity line]
+  (e/remove-component-prop entity line :transform))
+
+(defn- restore-transform? [entity line]
+  (let [current (get-line-transform-properties entity line)]
+    (when-let [persisted  (load-line-transform entity line)]
+      (if (= (:axis current) (:axis persisted))
+         (let [co-axis (second-axis (:axis current))
+               coord1set (keyword (str (name co-axis) "1"))
+               coord2set (keyword (str (name co-axis) "2"))]
+           (d/setp line coord1set (:value persisted))
+           (d/setp line coord2set (:value persisted)))
+         (clear-line-transform entity line)))
+    line))     
+
 (defn- connector-idx [name]
   (let [splt (clojure.string/split name #"-")]
     (if (> (count splt) 1) (cljs.reader/read-string (splt 1)) -1)))
@@ -200,7 +228,7 @@
     (e/update-component-prop entity ctrl-name :next-connector  (str "line-" (inc conn-idx)))))
 
 (defn- update-line-component [entity idx sx sy ex ey]
-  (let [line (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey})]
+  (let [line (restore-transform? entity (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey}))]
     (when (and (true? (:path-editing (config))) (> idx 0) (< idx (dec (count (e/get-entity-component entity ::c/relation)))))
        (set-editable entity line))
     line))
@@ -256,11 +284,12 @@
           (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
         (update-manhattan-layout entity (normals 0) (normals 1)))))
 
-(defn position-connector [connector m-x m-y]
+(defn position-connector [entity connector m-x m-y]
   (when (not= m-x 0) (d/setp connector :x1 (+ (d/getp connector :x1) m-x)))
   (when (not= m-y 0) (d/setp connector :y1 (+ (d/getp connector :y1) m-y)))
   (when (not= m-x 0) (d/setp connector :x2 (+ (d/getp connector :x2) m-x)))
-  (when (not= m-y 0) (d/setp connector :y2 (+ (d/getp connector :y2) m-y))))
+  (when (not= m-y 0) (d/setp connector :y2 (+ (d/getp connector :y2) m-y)))
+  (store-line-transform entity connector))
 
 (defn position-connector-end [connector xp yp m-x m-y]
   (d/setp connector xp (+ (d/getp connector xp) m-x))
@@ -313,4 +342,4 @@
            (and (= (d/getp trg-conn :x2) (d/getp next-conn :x2))
                 (= (d/getp trg-conn :y2) (d/getp next-conn :y2)))
            (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)))
-       (position-connector trg-conn constr-movement-x constr-movement-y))))
+       (position-connector entity trg-conn constr-movement-x constr-movement-y))))

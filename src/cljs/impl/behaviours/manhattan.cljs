@@ -178,6 +178,19 @@
   (let [all-points (flatten [start-point mid-points end-point])]
      (partition 2 1 all-points)))
 
+(defn- connector-idx [name]
+  (let [splt (clojure.string/split name #"-")]
+    (if (> (count splt) 1) (cljs.reader/read-string (splt 1)) -1)))
+
+(defn- point-match? [sx sy trg tx ty]
+  (and (= sx  (d/getp trg tx))
+       (= sy  (d/getp trg ty))))
+
+(defn start-or-end-point? [x y target]
+  (cond
+    (point-match? x y target :x1 :y1) :start
+    (point-match? x y target :x1 :y1) :end
+    :else false))
 
 (defn- get-line-transform-properties [entity line]
   (let [p1 {:x (d/getp line :x1) :y (d/getp line :y1)}
@@ -195,20 +208,23 @@
   (e/remove-component-prop entity line :transform))
 
 (defn- restore-transform? [entity line]
-  (let [current (get-line-transform-properties entity line)]
+  (let [current (get-line-transform-properties entity line)
+        conn-idx (connector-idx (:name line))
+        prev-connector (e/get-entity-component entity (str "line-" (dec conn-idx)))
+        next-connector (e/get-entity-component entity (str "line-" (inc conn-idx)))]
     (when-let [persisted  (load-line-transform entity line)]
       (if (= (:axis current) (:axis persisted))
          (let [co-axis (second-axis (:axis current))
                coord1set (keyword (str (name co-axis) "1"))
-               coord2set (keyword (str (name co-axis) "2"))]
+               coord2set (keyword (str (name co-axis) "2"))
+               prev1 (start-or-end-point? (d/getp line :x1) (d/getp line :y1) prev-connector)
+               next2 (start-or-end-point? (d/getp line :x2) (d/getp line :y2) next-connector)]
            (d/setp line coord1set (:value persisted))
-           (d/setp line coord2set (:value persisted)))
+           (d/setp line coord2set (:value persisted))
+           (d/setp prev-connector (if (= prev1 :start) coord1set coord2set) (:value persisted))
+           (d/setp next-connector (if (= next1 :start) coord1set coord2set) (:value persisted)))           
          (clear-line-transform entity line)))
-    line))     
-
-(defn- connector-idx [name]
-  (let [splt (clojure.string/split name #"-")]
-    (if (> (count splt) 1) (cljs.reader/read-string (splt 1)) -1)))
+    line))
 
 (defn- set-editable [entity line]
   (let [x1 (d/getp line :x1)

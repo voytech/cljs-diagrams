@@ -189,41 +189,70 @@
 (defn start-or-end-point? [x y target]
   (cond
     (point-match? x y target :x1 :y1) :start
-    (point-match? x y target :x1 :y1) :end
+    (point-match? x y target :x2 :y2) :end
     :else false))
 
 (defn- get-line-transform-properties [entity line]
   (let [p1 {:x (d/getp line :x1) :y (d/getp line :y1)}
         p2 {:x (d/getp line :x2) :y (d/getp line :y2)}
         axis (find-axis p1 p2)]
-    {:value (get p1 (second-axis axis)) :axis axis}))
+    {:value (get p1 (second-axis axis)) :axis (second-axis axis)}))
 
-(defn- store-line-transform [entity line]
-  (e/update-component-prop entity line :transform (get-line-transform-properties entity line)))
+(defn- store-layout-override [entity line]
+  (e/update-component-prop entity (:name line) :store-transform (get-line-transform-properties entity line)))
+
+(defn- store-related-connection-hints [entity target outbound?]
+  (let [related-name (str "line-" ((if outbound? inc dec) (connector-idx (:name target))))
+        px (if outbound? :x2 :x1)
+        py (if outbound? :y2 :y1)
+        hint-type (if outbound? :outbound-line :inbound-line)]
+    (when-let [related (e/get-entity-component entity related-name)]
+      (e/update-component-prop entity (:name target) hint-type
+        {:component related
+         :end (cond
+                (and (not (d/diff-property related :x1 target px))
+                     (not (d/diff-property related :y1 target py)))
+                :start
+                (and (not (d/diff-property related :x2 target px))
+                     (not (d/diff-property related :y2 target py)))
+                :end
+                :else
+                false)}))))
+
+(defn- store-related-connections-hints [entity target]
+ (store-related-connection-hints entity target true)
+ (store-related-connection-hints entity target false))
 
 (defn- load-line-transform [entity line]
-  (e/component-property entity line :transform))
+  (e/component-property entity line :store-transform))
 
 (defn- clear-line-transform [entity line]
-  (e/remove-component-prop entity line :transform))
+  (e/remove-component-prop entity line :store-transform))
 
 (defn- restore-transform? [entity line]
-  (let [current (get-line-transform-properties entity line)
+  (let [transform (get-line-transform-properties entity line)
+        caxis (:axis transform)
+        cvalue (:value transform)
         conn-idx (connector-idx (:name line))
-        prev-connector (e/get-entity-component entity (str "line-" (dec conn-idx)))
-        next-connector (e/get-entity-component entity (str "line-" (inc conn-idx)))]
-    (when-let [persisted  (load-line-transform entity line)]
-      (if (= (:axis current) (:axis persisted))
-         (let [co-axis (second-axis (:axis current))
-               coord1set (keyword (str (name co-axis) "1"))
-               coord2set (keyword (str (name co-axis) "2"))
-               prev1 (start-or-end-point? (d/getp line :x1) (d/getp line :y1) prev-connector)
-               next2 (start-or-end-point? (d/getp line :x2) (d/getp line :y2) next-connector)]
-           (d/setp line coord1set (:value persisted))
-           (d/setp line coord2set (:value persisted))
-           (d/setp prev-connector (if (= prev1 :start) coord1set coord2set) (:value persisted))
-           (d/setp next-connector (if (= next1 :start) coord1set coord2set) (:value persisted)))           
-         (clear-line-transform entity line)))
+        inbound-connector-hints (e/component-property entity (:name line) :inbound-line)
+        outbound-connector-hints (e/component-property entity (:name line) :outbound-line)]
+    (when-let [{:keys [value axis]} (load-line-transform entity (:name line))]
+      (if (= caxis axis)
+         (let [coord1set (keyword (str (name caxis) "1"))
+               coord2set (keyword (str (name caxis) "2"))]
+           (d/setp line coord1set value)
+           (d/setp line coord2set value)
+           (when-not (nil? inbound-connector-hints)
+             (d/setp (:component inbound-connector-hints) (if (= (:end inbound-connector-hints) :start) coord1set coord2set) value))
+           (when-not (nil? outbound-connector-hints)
+             (d/setp (:component outbound-connector-hints) (if (= (:end outbound-connector-hints) :start) coord1set coord2set) value)
+             (e/update-component-prop entity (:name (:component outbound-connector-hints)) :skip-coord (if (= (:end outbound-connector-hints) :start) coord1set coord2set))))
+
+         (do (clear-line-transform entity (:name line))
+             (e/remove-component-prop entity (:name line) :inbound-line)
+             (e/remove-component-prop entity (:name line) :outbound-line)
+             (when-not (nil? outbound-connector-hints)
+                (e/remove-component-prop entity (:name (:component outbound-connector-hints)) :skip-coord)))))
     line))
 
 (defn- set-editable [entity line]
@@ -243,8 +272,19 @@
     (e/update-component-prop entity ctrl-name :prev-connector  (str "line-" (dec conn-idx)))
     (e/update-component-prop entity ctrl-name :next-connector  (str "line-" (inc conn-idx)))))
 
+(defn- skip-prop? [entity name prop input]
+  (if-let [component (e/get-entity-component entity name)]
+    (when (not= prop (e/component-property entity name :skip-coord))
+      {prop input})
+    {prop input}))
+
 (defn- update-line-component [entity idx sx sy ex ey]
-  (let [line (restore-transform? entity (e/assert-component entity (str "line-" idx) ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey}))]
+  (let [name (str "line-" idx)
+        data (merge (skip-prop? entity name :x1 sx)
+                    (skip-prop? entity name :y1 sy)
+                    (skip-prop? entity name :x2 ex)
+                    (skip-prop? entity name :y2 ey))
+        line (restore-transform? entity (e/assert-component entity name ::c/relation data))]
     (when (and (true? (:path-editing (config))) (> idx 0) (< idx (dec (count (e/get-entity-component entity ::c/relation)))))
        (set-editable entity line))
     line))
@@ -305,7 +345,7 @@
   (when (not= m-y 0) (d/setp connector :y1 (+ (d/getp connector :y1) m-y)))
   (when (not= m-x 0) (d/setp connector :x2 (+ (d/getp connector :x2) m-x)))
   (when (not= m-y 0) (d/setp connector :y2 (+ (d/getp connector :y2) m-y)))
-  (store-line-transform entity connector))
+  (store-layout-override entity connector))
 
 (defn position-connector-end [connector xp yp m-x m-y]
   (d/setp connector xp (+ (d/getp connector xp) m-x))
@@ -358,4 +398,9 @@
            (and (= (d/getp trg-conn :x2) (d/getp next-conn :x2))
                 (= (d/getp trg-conn :y2) (d/getp next-conn :y2)))
            (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)))
-       (position-connector entity trg-conn constr-movement-x constr-movement-y))))
+       (position-connector entity trg-conn constr-movement-x constr-movement-y)
+       (store-related-connections-hints entity trg-conn)
+       (js/console.log (clj->js (e/component-property entity (:name trg-conn) :outbound-line)))
+       (js/console.log (clj->js (e/component-property entity (:name trg-conn) :inbound-line)))
+       (js/console.log (clj->js (e/component-property entity (:name trg-conn) :store-transform))))))
+       ;(store-related-connections-hints entity line))))

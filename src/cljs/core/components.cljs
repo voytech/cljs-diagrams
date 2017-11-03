@@ -33,7 +33,9 @@
   (get-bbox [this])
   (intersects? [this other])
   (contains? [this other])
-  (contains-point? [this x y]))
+  (contains-point? [this x y])
+  (diff-properties [this other props])
+  (diff-property [this p1 other p2]))
 
 (defn- changed
   ([component properties]
@@ -86,7 +88,11 @@
   (contains? [this other])
   (contains-point? [this x y]
     (and (>= x (get-left this)) (<= x (+ (get-left this) (get-width this)))
-         (>= y (get-top this)) (<= y (+ (get-top this) (get-height this))))))
+         (>= y (get-top this)) (<= y (+ (get-top this) (get-height this)))))
+  (diff-properties [this other properties]
+    (filterv #(not= (getp this %1) (getp other %2)) properties))
+  (diff-property [this p1 other p2]
+    (not= (getp this p1) (getp other p2))))
 
 (defn- next-z-index []
   (or

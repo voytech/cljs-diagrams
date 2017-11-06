@@ -149,8 +149,7 @@
         filtered-out (filterv pred all)]
     (doseq [rem filtered-out] (d/remove-component rem))
     (when-not (empty? filtered-out)
-      (js/console.log (clj->js filtered-out))
-      (swap! entities update-in [(:uid entity) :components] (apply dissoc (:components (entity-by-id (:uid entity))) (mapv :name filtered-out))))))
+      (swap! entities assoc-in [(:uid entity) :components] (apply dissoc (:components (entity-by-id (:uid entity))) (mapv :name filtered-out))))))
 
 (defn update-component-prop [entity name prop value]
  (swap! entities assoc-in [(:uid entity) :components name :props prop] value))
@@ -163,7 +162,7 @@
 
 (defn get-entity-component [entity name-or-type]
   (if (keyword? name-or-type)
-   (filter #(= name-or-type (:type %)) (components-of entity))
+   (filter #(= name-or-type (:type %)) (components-of (entity-by-id (:uid entity))))
    (get-in @entities [(:uid entity) :components name-or-type])))
 
 (defn assert-component

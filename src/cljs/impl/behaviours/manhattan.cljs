@@ -263,12 +263,6 @@
     (e/update-component-prop entity ctrl-name :prev-connector  (str "line-" (dec conn-idx)))
     (e/update-component-prop entity ctrl-name :next-connector  (str "line-" (inc conn-idx)))))
 
-(defn- skip-prop? [entity name prop input]
-  (if-let [component (e/get-entity-component entity name)]
-    (when (not= prop (e/component-property entity name :skip-coord))
-      {prop input})
-    {prop input}))
-
 (defn- try-override-coords [entity name sx sy ex ey]
   (let [line (e/get-entity-component entity name)
         persisted-state (e/component-property entity name :store-transform)
@@ -303,7 +297,6 @@
 
 (defn- update-line-components [entity path]
   (check-override entity path)
-  (js/console.log (count path))
   (e/remove-entity-components entity (fn [c] (and (= (:type c) ::c/relation) (>= (connector-idx (:name c)) (count path)))))
   (-> (map-indexed (fn [idx e]
                      (update-line-component (e/entity-by-id (:uid entity)) idx (:x (first e))

@@ -13,7 +13,7 @@
    :path-editing true
    :points-editing true})
 
-(def overriden-line (volatile! nil))
+(def overrides (volatile! #{}))
 
 (defn- center-point [cmp]
   (let [mx (+ (d/get-left cmp) (/ (d/get-width cmp) 2))
@@ -238,7 +238,7 @@
       (e/update-component-prop entity prev-name  :store-transform  (merge state (resolve-property-overrides line prev state))))
     (when (not (nil? next))
       (e/update-component-prop entity next-name  :store-transform  (merge state (resolve-property-overrides line next state))))
-    (vreset! overriden-line line)))
+    (vswap! overrides conj line)))
 
 (defn- load-line-transform [entity line]
   (e/component-property entity line :store-transform))
@@ -287,32 +287,30 @@
     line))
 
 (defn- check-override [entity path]
-  (when (not (nil? @overriden-line))
-    (let [name (:name @overriden-line)
-          idx (connector-idx name)
-          entry ((vec path) idx)
-          persisted-state (load-line-transform entity name)
-          axis (find-axis (first entry) (last entry))]
-      (when (not (= (second-axis axis) (:axis persisted-state)))
-        (e/remove-component-prop entity name :store-transform)
-        (e/remove-component-prop entity (str "line-" (inc idx)) :store-transform)
-        (e/remove-component-prop entity (str "line-" (dec idx)) :store-transform)
-        (vreset! overriden-line nil)))))
+  (let [vpath (vec path)]
+    (when (> (count @overrides) 0)
+      (doseq [override @overrides]
+        (let [name (:name override)
+              idx (connector-idx name)
+              entry (vpath idx)
+              persisted-state (load-line-transform entity name)
+              axis (find-axis (first entry) (last entry))]
+          (when (not (= (second-axis axis) (:axis persisted-state)))
+            (e/remove-component-prop entity name :store-transform)
+            (e/remove-component-prop entity (str "line-" (inc idx)) :store-transform)
+            (e/remove-component-prop entity (str "line-" (dec idx)) :store-transform)
+            (vreset! overrides (remove #(= override %) @overrides))))))))
 
 (defn- update-line-components [entity path]
   (check-override entity path)
-  (let [remove-components (filter (fn [c]
-                                    (let [splt (clojure.string/split (:name c) #"-")]
-                                      (when (> (count splt) 1)
-                                        (>= (cljs.reader/read-string (splt 1)) (count path))))) (e/components-of entity))]
-    (if (> (count remove-components) 0)
-      (doseq [component remove-components] (e/remove-entity-component entity (:name component))))
-    (-> (map-indexed (fn [idx e]
-                         (update-line-component entity idx (:x (first e))
-                                                           (:y (first e))
-                                                           (:x (last e))
-                                                           (:y (last e)))) path)
-        last)))
+  (js/console.log (count path))
+  (e/remove-entity-components entity (fn [c] (and (= (:type c) ::c/relation) (>= (connector-idx (:name c)) (count path)))))
+  (-> (map-indexed (fn [idx e]
+                     (update-line-component (e/entity-by-id (:uid entity)) idx (:x (first e))
+                                                                               (:y (first e))
+                                                                               (:x (last e))
+                                                                               (:y (last e)))) path)
+      last))
 
 (defn update-manhattan-layout [entity s-normal e-normal]
   (let [start (e/get-entity-component entity "start")

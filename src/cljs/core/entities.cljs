@@ -144,6 +144,14 @@
     (d/remove-component component)
     (swap! entities update-in [(:uid entity) :components ] dissoc component-name)))
 
+(defn remove-entity-components [entity pred]
+  (let [all (components-of (entity-by-id (:uid entity)))
+        filtered-out (filterv pred all)]
+    (doseq [rem filtered-out] (d/remove-component rem))
+    (when-not (empty? filtered-out)
+      (js/console.log (clj->js filtered-out))
+      (swap! entities update-in [(:uid entity) :components] (apply dissoc (:components (entity-by-id (:uid entity))) (mapv :name filtered-out))))))
+
 (defn update-component-prop [entity name prop value]
  (swap! entities assoc-in [(:uid entity) :components name :props prop] value))
 

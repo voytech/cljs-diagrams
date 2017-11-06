@@ -153,17 +153,15 @@
 ;; x1 x2 y1 y2 properties. Also take into account that synchronization of x1 x2 y1 y2 with left top widht height must be better.
 ;;==========================================================================================================
 (defmethod r/do-render [:fabric ::impld/relation :default] [drawable rendering-context]
-  (fabric-destroy-rendering-state rendering-context (r/get-state-of drawable))
-  (let [data (dissoc (to-fabric-property-map (d/model drawable)) :width :height :left :top)
-        state (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))]
-    (.moveTo (:data state) (get data "zIndex"))
-    (r/update-state drawable state)))
-  ;(property-change-render drawable rendering-context))
+  ;(fabric-destroy-rendering-state rendering-context (r/get-state-of drawable))
+  ;(let [data (dissoc (to-fabric-property-map (d/model drawable)) :width :height :left :top)
+  ;      state (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))
+  ;  (.moveTo (:data state) (get data "zIndex"))
+  ;  (r/update-state drawable state)
+  (property-change-render drawable rendering-context))
 
 (defmethod r/create-rendering-state [:fabric ::impld/relation :default] [drawable context]
-  (js/console.log (clj->js drawable))
   (let [data (to-fabric-property-map (d/model drawable))]
-    (js/console.log (clj->js data))
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))))
 
 

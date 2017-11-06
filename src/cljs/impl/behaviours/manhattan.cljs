@@ -13,6 +13,8 @@
    :path-editing true
    :points-editing true})
 
+(def overriden-line (volatile! nil))
+
 (defn- center-point [cmp]
   (let [mx (+ (d/get-left cmp) (/ (d/get-width cmp) 2))
         my (+ (d/get-top cmp) (/ (d/get-height cmp) 2))]
@@ -198,62 +200,51 @@
         axis (find-axis p1 p2)]
     {:value (get p1 (second-axis axis)) :axis (second-axis axis)}))
 
-(defn- store-layout-override [entity line]
-  (e/update-component-prop entity (:name line) :store-transform (get-line-transform-properties entity line)))
+(defn- match-ends [line1 line2]
+  (cond-> []
+    (and (= (d/getp line1 :x1) (d/getp line2 :x1))
+         (= (d/getp line1 :y1) (d/getp line2 :y1)))
+    (conj {:x1 :x1 :y1 :y1})
+    (and (= (d/getp line1 :x1) (d/getp line2 :x2))
+         (= (d/getp line1 :y1) (d/getp line2 :y2)))
+    (conj {:x1 :x2 :y2 :y2})
+    (and (= (d/getp line1 :x2) (d/getp line2 :x1))
+         (= (d/getp line1 :y2) (d/getp line2 :y1)))
+    (conj {:x2 :x1 :y2 :y1})
+    (and (= (d/getp line1 :x2) (d/getp line2 :x2))
+         (= (d/getp line1 :y2) (d/getp line2 :y2)))
+    (conj {:x2 :x2 :y2 :y2})))
 
-(defn- store-related-connection-hints [entity target outbound?]
-  (let [related-name (str "line-" ((if outbound? inc dec) (connector-idx (:name target))))
-        px (if outbound? :x2 :x1)
-        py (if outbound? :y2 :y1)
-        hint-type (if outbound? :outbound-line :inbound-line)]
-    (when-let [related (e/get-entity-component entity related-name)]
-      (e/update-component-prop entity (:name target) hint-type
-        {:component related
-         :end (cond
-                (and (not (d/diff-property related :x1 target px))
-                     (not (d/diff-property related :y1 target py)))
-                :start
-                (and (not (d/diff-property related :x2 target px))
-                     (not (d/diff-property related :y2 target py)))
-                :end
-                :else
-                false)}))))
+(defn- resolve-property-overrides
+  ([state]
+   {:override (if (= :x (:axis state)) {:x1 (:value state) :x2 (:value state)} {:y1 (:value state) :y2 (:value state)})})
+  ([line related state]
+   (let [match-ends (match-ends line related)
+         props (if (= :x (:axis state)) #{:x1 :x2} #{:y1 :y2})]
+     (if (= (count match-ends) 1)
+       (let [match-end (match-ends 0)
+             keys (clojure.set/intersection (set (keys match-end)) props)]
+        {:override (into {} (mapv (fn [e] {(get match-end e) (d/getp line e)} ) keys))})
+       {}))))
 
-(defn- store-related-connections-hints [entity target]
- (store-related-connection-hints entity target true)
- (store-related-connection-hints entity target false))
+(defn- persist-overrides [entity line]
+  (let [state (get-line-transform-properties entity line)
+        prev-name (str "line-" (dec (connector-idx (:name line))))
+        next-name (str "line-" (inc (connector-idx (:name line))))
+        prev (e/get-entity-component entity prev-name)
+        next (e/get-entity-component entity next-name)]
+    (e/update-component-prop entity (:name line) :store-transform  (merge state (resolve-property-overrides state)))
+    (when (not (nil? prev))
+      (e/update-component-prop entity prev-name  :store-transform  (merge state (resolve-property-overrides line prev state))))
+    (when (not (nil? next))
+      (e/update-component-prop entity next-name  :store-transform  (merge state (resolve-property-overrides line next state))))
+    (vreset! overriden-line line)))
 
 (defn- load-line-transform [entity line]
   (e/component-property entity line :store-transform))
 
 (defn- clear-line-transform [entity line]
   (e/remove-component-prop entity line :store-transform))
-
-(defn- restore-transform? [entity line]
-  (let [transform (get-line-transform-properties entity line)
-        caxis (:axis transform)
-        cvalue (:value transform)
-        conn-idx (connector-idx (:name line))
-        inbound-connector-hints (e/component-property entity (:name line) :inbound-line)
-        outbound-connector-hints (e/component-property entity (:name line) :outbound-line)]
-    (when-let [{:keys [value axis]} (load-line-transform entity (:name line))]
-      (if (= caxis axis)
-         (let [coord1set (keyword (str (name caxis) "1"))
-               coord2set (keyword (str (name caxis) "2"))]
-           (d/setp line coord1set value)
-           (d/setp line coord2set value)
-           (when-not (nil? inbound-connector-hints)
-             (d/setp (:component inbound-connector-hints) (if (= (:end inbound-connector-hints) :start) coord1set coord2set) value))
-           (when-not (nil? outbound-connector-hints)
-             (d/setp (:component outbound-connector-hints) (if (= (:end outbound-connector-hints) :start) coord1set coord2set) value)
-             (e/update-component-prop entity (:name (:component outbound-connector-hints)) :skip-coord (if (= (:end outbound-connector-hints) :start) coord1set coord2set))))
-
-         (do (clear-line-transform entity (:name line))
-             (e/remove-component-prop entity (:name line) :inbound-line)
-             (e/remove-component-prop entity (:name line) :outbound-line)
-             (when-not (nil? outbound-connector-hints)
-                (e/remove-component-prop entity (:name (:component outbound-connector-hints)) :skip-coord)))))
-    line))
 
 (defn- set-editable [entity line]
   (let [x1 (d/getp line :x1)
@@ -278,18 +269,38 @@
       {prop input})
     {prop input}))
 
+(defn- try-override-coords [entity name sx sy ex ey]
+  (let [line (e/get-entity-component entity name)
+        persisted-state (e/component-property entity name :store-transform)
+        override (:override persisted-state)]
+     {:x1 (or (:x1 override) sx)
+      :y1 (or (:y1 override) sy)
+      :x2 (or (:x2 override) ex)
+      :y2 (or (:y2 override) ey)}))
+
 (defn- update-line-component [entity idx sx sy ex ey]
   (let [name (str "line-" idx)
-        data (merge (skip-prop? entity name :x1 sx)
-                    (skip-prop? entity name :y1 sy)
-                    (skip-prop? entity name :x2 ex)
-                    (skip-prop? entity name :y2 ey))
-        line (restore-transform? entity (e/assert-component entity name ::c/relation data))]
+        data (try-override-coords entity name sx sy ex ey)
+        line (e/assert-component entity name ::c/relation data)]
     (when (and (true? (:path-editing (config))) (> idx 0) (< idx (dec (count (e/get-entity-component entity ::c/relation)))))
        (set-editable entity line))
     line))
 
+(defn- check-override [entity path]
+  (when (not (nil? @overriden-line))
+    (let [name (:name @overriden-line)
+          idx (connector-idx name)
+          entry ((vec path) idx)
+          persisted-state (load-line-transform entity name)
+          axis (find-axis (first entry) (last entry))]
+      (when (not (= (second-axis axis) (:axis persisted-state)))
+        (e/remove-component-prop entity name :store-transform)
+        (e/remove-component-prop entity (str "line-" (inc idx)) :store-transform)
+        (e/remove-component-prop entity (str "line-" (dec idx)) :store-transform)
+        (vreset! overriden-line nil)))))
+
 (defn- update-line-components [entity path]
+  (check-override entity path)
   (let [remove-components (filter (fn [c]
                                     (let [splt (clojure.string/split (:name c) #"-")]
                                       (when (> (count splt) 1)
@@ -344,8 +355,7 @@
   (when (not= m-x 0) (d/setp connector :x1 (+ (d/getp connector :x1) m-x)))
   (when (not= m-y 0) (d/setp connector :y1 (+ (d/getp connector :y1) m-y)))
   (when (not= m-x 0) (d/setp connector :x2 (+ (d/getp connector :x2) m-x)))
-  (when (not= m-y 0) (d/setp connector :y2 (+ (d/getp connector :y2) m-y)))
-  (store-layout-override entity connector))
+  (when (not= m-y 0) (d/setp connector :y2 (+ (d/getp connector :y2) m-y))))
 
 (defn position-connector-end [connector xp yp m-x m-y]
   (d/setp connector xp (+ (d/getp connector xp) m-x))
@@ -399,8 +409,4 @@
                 (= (d/getp trg-conn :y2) (d/getp next-conn :y2)))
            (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)))
        (position-connector entity trg-conn constr-movement-x constr-movement-y)
-       (store-related-connections-hints entity trg-conn)
-       (js/console.log (clj->js (e/component-property entity (:name trg-conn) :outbound-line)))
-       (js/console.log (clj->js (e/component-property entity (:name trg-conn) :inbound-line)))
-       (js/console.log (clj->js (e/component-property entity (:name trg-conn) :store-transform))))))
-       ;(store-related-connections-hints entity line))))
+       (persist-overrides entity trg-conn))))

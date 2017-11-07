@@ -249,10 +249,10 @@
         next (e/get-entity-component entity next-name)]
     (e/update-component-prop entity (:name line) :store-transform  (merge state (resolve-property-overrides state)))
     (when (not (nil? prev))
-      (e/update-component-prop entity prev-name  :store-transform  (merge state (resolve-property-overrides line prev state))))
+      (e/update-component-prop entity prev-name :store-transform  (merge state (resolve-property-overrides line prev state))))
     (when (not (nil? next))
-      (e/update-component-prop entity next-name  :store-transform  (merge state (resolve-property-overrides line next state))))
-    (vswap! overrides conj line)))
+      (e/update-component-prop entity next-name :store-transform  (merge state (resolve-property-overrides line next state))))
+    (vswap! overrides conj (:name line))))
 
 (defn- load-line-transform [entity line]
   (e/component-property entity line :store-transform))
@@ -297,9 +297,8 @@
 (defn- check-override [entity path]
   (let [vpath (vec path)]
     (when (> (count @overrides) 0)
-      (doseq [override @overrides]
-        (let [name (:name override)
-              idx (connector-idx name)
+      (doseq [name @overrides]
+        (let [idx (connector-idx name)
               entry (vpath idx)
               persisted-state (load-line-transform entity name)
               axis (find-axis (first entry) (last entry))]
@@ -307,7 +306,7 @@
             (e/remove-component-prop entity name :store-transform)
             (e/remove-component-prop entity (str "line-" (inc idx)) :store-transform)
             (e/remove-component-prop entity (str "line-" (dec idx)) :store-transform)
-            (vreset! overrides (remove #(= override %) @overrides))))))))
+            (vreset! overrides (set (remove #(= name %) @overrides)))))))))
 
 (defn- update-line-components [entity path]
   (check-override entity path)

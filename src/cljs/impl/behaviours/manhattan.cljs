@@ -7,6 +7,8 @@
             [impl.components :as c]))
 
 (def INSET-WIDTH 20)
+(defonce CONTROL_SUFFIX "-ctrl")
+(defonce LINE_PREFIX "line-")
 
 (defn config []
   {:inset-width INSET-WIDTH
@@ -130,7 +132,19 @@
   (let [c-axis (second-axis on-axis)]
     (vec (filter #(or (compare (on-axis %) (on-axis cutoff)) (not= (c-axis %) (c-axis cutoff))) points))))
 
+(defn- flag-dissoc [path]
+  (fn [idx item]
+    (let [prev-item (if (> idx 0) (path (dec idx)))
+          next-item (if (< idx (dec (count path))) (path (inc idx)))]
+      (if (and (not (nil? prev-item)) (not (nil? next-item)))
+        (assoc item :rm (= (find-axis prev-item item) (find-axis item next-item)))
+        item))))
+
 (defn- normalize-path [path]
+  (let [vpath (vec path)]
+    (vec (filter #(or (nil? (:rm %)) (= false (:rm %))) (map-indexed (flag-dissoc vpath) vpath)))))
+
+(defn- normalize-path_ [path]
   (let [y-align (flatten (mapv (fn [e] [(e 0) (peek e)]) (filter (fn [e] (> (count e) 1)) (vals (group-by :x path)))))
         x-align (flatten (mapv (fn [e] [(e 0) (peek e)]) (filter (fn [e] (> (count e) 1)) (vals (group-by :y path)))))
         preserve (set (concat x-align y-align))]

@@ -310,12 +310,8 @@
 
 (defn- update-line-components [entity path]
   (check-override entity path)
-  (e/remove-entity-components entity (fn [c] (and (= (:type c) ::c/relation) (>= (connector-idx (:name c)) (count path)))))
-  (-> (map-indexed (fn [idx e]
-                     (update-line-component (e/entity-by-id (:uid entity)) idx (:x (first e))
-                                                                               (:y (first e))
-                                                                               (:x (last e))
-                                                                               (:y (last e)))) path)
+  (e/remove-entity-components entity (fn [c] (>= (connector-idx (:name c)) (count path))))
+  (-> (map-indexed (fn [idx e] (update-line-component (e/entity-by-id (:uid entity)) idx (:x (first e)) (:y (first e)) (:x (last e)) (:y (last e)))) path)
       last))
 
 (defn update-manhattan-layout [entity s-normal e-normal]

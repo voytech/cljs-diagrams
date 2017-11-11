@@ -3,30 +3,18 @@
             [core.eventbus :as b]
             [core.entities :as e]))
 
-(defn align-center [src trg]
-  (let [srcCx   (+ (d/get-left src) (/ (d/get-width src) 2))
-        srcCy   (+ (d/get-top src) (/ (d/get-height src) 2))
-        trgLeft (- srcCx (/ (d/get-width trg) 2))
-        trgTop  (- srcCy (/ (d.get-height trg) 2))]
-      (d/set-data trg {:left trgLeft :top trgTop})))
+(defrecord Layout [layout-func origin-x origin-y left top width height])
 
+(defn get-components [container]
+  (if (not (nil? (:components container)))
+    (if (map? (:components container))
+      (vals (:components container))
+      (:components container))
+    (throw (Error. "Paramter passed to get-components is supposed to be component container but IS NOT !"))))
 
-(defn position [partial left top coord-mode])
-
-(defn position-entity [entity left top coord-mode])
-
-(defn position-attribute [attribute left top coord-mode])
-
-(defn get-components [partials-container]
-  (if (not (nil? (:components partials-container)))
-    (if (map? (:components partials-container))
-      (vals (:components partials-container))
-      (:components partials-container))
-    (throw (Error. "Paramter passed to get-partials is supposed to be partials container but IS NOT !"))))
-
-(defn get-bbox [partials-container]
-  (when (> (count (get-components partials-container)) 0)
-    (let [sources (get-components partials-container)
+(defn get-bbox [container]
+  (when (> (count (get-components container)) 0)
+    (let [sources (get-components container)
           leftmost   (apply min-key (conj sources #(d/get-left %)))
           rightmost  (apply max-key (conj sources #(+ (d/get-left %) (d/get-width %))))
           topmost    (apply min-key (conj sources #(d/get-top %)))
@@ -35,6 +23,59 @@
        :top  (d/get-top topmost)
        :width (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
        :height (- (+ (d/get-top bottommost) (d/get-height  bottommost)) (d/get-top topmost))})))
+
+; Interface function for adding new elements into specific containers using layout.
+
+(defn- compute-layout-bbox [layout container]
+  (let [container-bbox (get-bbox container)
+        {:keys [left top width height origin-x origin-y]} layout]))
+
+(defn- is-container [element]
+  (not (nil? (:components container))))
+
+(defn- is-component [element]
+  (record? element))
+
+(defn move-component [component left top]
+  (d/set-left component left)
+  (d/set-top component top))
+
+(defn move-container [container left top]
+  (doseq [component (get-components container)]
+     (move-component component left top)))
+
+(defn move-element [element left top]
+  (cond
+    (is-container element)
+    (move-container element left top)
+    (is-component element)
+    (move-component element left top)))
+
+(defn bbox [element]
+  (cond
+    (is-container element)
+    (get-bbox element)
+    (is-component element)
+    (d/get-bbox element)))
+    
+(defn do-layout [container elements])
+
+(defn add [container element])
+
+(defn add-at [container element index])
+
+(defn add-after [container element after])
+
+(defn add-before [container element before])
+
+(defn remove [container element])
+
+(defn align-center [src trg]
+  (let [srcCx   (+ (d/get-left src) (/ (d/get-width src) 2))
+        srcCy   (+ (d/get-top src) (/ (d/get-height src) 2))
+        trgLeft (- srcCx (/ (d/get-width trg) 2))
+        trgTop  (- srcCy (/ (d.get-height trg) 2))]
+      (d/set-data trg {:left trgLeft :top trgTop})))
 
 (defn- layout-row [bbox layout-buffer partials-aware]
   (when (> (count (get-components partials-aware)) 0)

@@ -68,9 +68,11 @@
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
 
+;; todo:  consider positioning components relative to entity position
 (defentity relation
   (with-content-bounding-box {:left 15
                               :top  15
+                              :origin :center
                               :width  180
                               :height 150})
   (with-behaviours {})

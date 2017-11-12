@@ -75,9 +75,9 @@
 (defn- contextualize [container options]
   {:container-bbox (bbox container)
    :options options
-   :current-row-top 0
+   :current-row-top (or (:top options) 0)
    :current-row-height 0
-   :current-row-left 0})
+   :current-row-left (or (:left options) 0)})
 
 (defn alter [context append-top append-width]
    (merge context {:current-row-top (+ (:current-row-top context) append-top)
@@ -111,21 +111,6 @@
 
 (defn exceeds-container-height? [context element]
   (> (+ (absolute-row-top context) (:height (bbox element))) (container-bottom-edge context)))
-
-(defn default-layout [context element]
-  (let [element-bbox (bbox element)
-        context (assoc context :current-row-height (if (> (:height element) (:current-row-height context))
-                                                       (:height element)
-                                                       (:current-row-height context)))
-        top (absolute-row-top context)
-        left (absolute-row-left context)
-        new-row? (and (exceeds-container-width? context element) (> (:current-row-left context) 0))
-        element-coords (if new-row?
-                           {:left (container-left-edge context) :top (absolute-next-row context)}
-                           {:left (absolute-row-left context)   :top (absolute-row-top context)})]
-    (move-element element (:left elements-coords) (:top elements-coords))
-    (alter context (if new-row? (absolute-next-row context) 0)
-                   (if new-row?  0  (:width element-bbox)))))
 
 (defn do-layout [layout container resolve-elements]
   (let [elements (resolve-elements container)

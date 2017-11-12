@@ -3,7 +3,7 @@
             [core.eventbus :as b]
             [core.entities :as e]))
 
-(defrecord Layout [layout-func origin-x origin-y left top width height])
+(defrecord Layout [layout-func options])
 
 (defn get-components [container]
   (if (not (nil? (:components container)))
@@ -36,13 +36,19 @@
 (defn- is-component [element]
   (record? element))
 
-(defn move-component [component left top]
-  (d/set-left component left)
-  (d/set-top component top))
+(defn move-component
+  ([component left top mode]
+   (d/set-left component (if (= :offset mode) (+ (d/get-left component) left) left))
+   (d/set-top component (if (= :offset mode) (+ (d/get-top component) top) top)))
+  ([component left top]
+   (move-component left top :absolute)))
 
-(defn move-container [container left top]
-  (doseq [component (get-components container)]
-     (move-component component left top)))
+(defn move-container [container nleft ntop]
+  (let [{:keys [left top]} (get-bbox container)
+        offset-x (- nleft left)
+        offset-y (- ntop top)]
+     (doseq [component (get-components container)]
+       (move-component component offset-x offset-y :offset))))
 
 (defn move-element [element left top]
   (cond
@@ -57,8 +63,74 @@
     (get-bbox element)
     (is-component element)
     (d/get-bbox element)))
-    
-(defn do-layout [container elements])
+
+(defn- is-absolute-position [parent-container child-element]
+  (let [{:keys [left top]} (bbox child-element)
+        parent-bbox (bbox parent-container)]
+    (and (>= left (:left parent-bbox))
+         (<= left (+ (:left parent-bbox) (:width parent-bbox)))
+         (>= top (:top parent-bbox))
+         (<= top (+ (:top parent-bbox) (:height parent-bbox))))))
+
+(defn- contextualize [container options]
+  {:container-bbox (bbox container)
+   :options options
+   :current-row-top 0
+   :current-row-height 0
+   :current-row-left 0})
+
+(defn alter [context append-top append-width]
+   (merge context {:current-row-top (+ (:current-row-top context) append-top)
+                   :current-row-left (+ (:current-row-left cotnext) append-width)}))
+
+(defn absolute-row-top [context]
+  (+ (-> context :container-bbox :top) (:current-row-top context)))
+
+(defn absolute-row-left [context]
+  (+ (-> context :container-bbox :left) (:current-row-left context)))
+
+(defn absolute-next-row [context]
+  (+ (absolute-row-top context) (:current-row-height context)))
+
+(defn container-left-edge [context]
+  (-> context :container-bbox :left))
+
+(defn container-right-edge [context]
+  (let [{:keys [left width]} (:container-bbox context)]
+    (+ left width)))
+
+(defn container-top-edge [context]
+  (-> context :container-bbox :top))
+
+(defn container-bottom-edge [context]
+  (let [{:keys [top height]} (:container-bbox context)]
+    (+ top height)))
+
+(defn exceeds-container-width? [context element]
+  (> (+ (absolute-row-left context) (:width (bbox element))) (container-right-edge context)))
+
+(defn exceeds-container-height? [context element]
+  (> (+ (absolute-row-top context) (:height (bbox element))) (container-bottom-edge context)))
+
+(defn default-layout [context element]
+  (let [element-bbox (bbox element)
+        context (assoc context :current-row-height (if (> (:height element) (:current-row-height context))
+                                                       (:height element)
+                                                       (:current-row-height context)))
+        top (absolute-row-top context)
+        left (absolute-row-left context)
+        new-row? (and (exceeds-container-width? context element) (> (:current-row-left context) 0))
+        element-coords (if new-row?
+                           {:left (container-left-edge context) :top (absolute-next-row context)}
+                           {:left (absolute-row-left context)   :top (absolute-row-top context)})]
+    (move-element element (:left elements-coords) (:top elements-coords))
+    (alter context (if new-row? (absolute-next-row context) 0)
+                   (if new-row?  0  (:width element-bbox)))))
+
+(defn do-layout [layout container resolve-elements]
+  (let [elements (resolve-elements container)
+        {:keys [left top width height] } (bbox container)]
+    (reduce (:layout-func layout) (contextualize container (:options layout)) elements)))
 
 (defn add [container element])
 

@@ -47,13 +47,7 @@
   (render-components  (e/components-of entity))
   (doseq [attribute-value (e/get-attributes-values entity)]
     (render-components (e/components-of attribute-value)))
-  (let [bbox (l/get-bbox entity)
-        cbox {:left (+ (:left (e/get-entity-content-bbox entity)) (:left bbox))
-              :top  (+ (:top (e/get-entity-content-bbox entity)) (:top bbox))
-              :width (:width (e/get-entity-content-bbox entity))
-              :height (:height (e/get-entity-content-bbox entity))}]
-    (l/layout cbox (e/get-attributes-values entity))
-    (bus/fire "rendering.finish")))
+  (bus/fire "rendering.finish"))
 
 (bus/on ["rendering.context.update"] -999 (fn [event]
                                             (let [context (:context event)]

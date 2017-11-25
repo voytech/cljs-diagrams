@@ -3,7 +3,7 @@
             [core.eventbus :as b]
             [core.entities :as e]))
 
-(defrecord Layout [layout-func options])
+(defrecord Layout [layout-func select-func options])
 
 (defn get-components [container]
   (if (not (nil? (:components container)))
@@ -25,10 +25,6 @@
        :height (- (+ (d/get-top bottommost) (d/get-height  bottommost)) (d/get-top topmost))})))
 
 ; Interface function for adding new elements into specific containers using layout.
-
-(defn- compute-layout-bbox [layout container]
-  (let [container-bbox (get-bbox container)
-        {:keys [left top width height origin-x origin-y]} layout]))
 
 (defn- is-container [element]
   (not (nil? (:components container))))
@@ -64,20 +60,18 @@
     (is-component element)
     (d/get-bbox element)))
 
-(defn- is-absolute-position [parent-container child-element]
-  (let [{:keys [left top]} (bbox child-element)
-        parent-bbox (bbox parent-container)]
-    (and (>= left (:left parent-bbox))
-         (<= left (+ (:left parent-bbox) (:width parent-bbox)))
-         (>= top (:top parent-bbox))
-         (<= top (+ (:top parent-bbox) (:height parent-bbox))))))
+(defn- resolve-options [container options]
+  (if (map? options)
+    options
+    (options container)))
 
-(defn- contextualize [container options]
-  {:container-bbox (bbox container)
-   :options options
-   :current-row-top (or (:top options) 0)
-   :current-row-height 0
-   :current-row-left (or (:left options) 0)})
+(defn- contextualize [container opts]
+  (let [options (resolve-options container opts)]
+    {:container-bbox (bbox container)
+     :options options
+     :current-row-top (or (:top options) 0)
+     :current-row-height 0
+     :current-row-left (or (:left options) 0)}))
 
 (defn alter [context append-top append-width]
    (merge context {:current-row-top (+ (:current-row-top context) append-top)
@@ -112,9 +106,8 @@
 (defn exceeds-container-height? [context element]
   (> (+ (absolute-row-top context) (:height (bbox element))) (container-bottom-edge context)))
 
-(defn do-layout [layout container resolve-elements]
-  (let [elements (resolve-elements container)
-        {:keys [left top width height] } (bbox container)]
+(defn do-layout [layout container]
+  (let [elements ((:select-func layout) container)]
     (reduce (:layout-func layout) (contextualize container (:options layout)) elements)))
 
 (defn add [container element])

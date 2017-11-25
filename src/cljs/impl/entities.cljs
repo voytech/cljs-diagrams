@@ -3,12 +3,13 @@
            [core.options :as defaults]
            [impl.standard-attributes :as stdatr]
            [impl.components :as c]
+           [impl.layouts :as l]
            [core.project :as p]
            [core.eventbus :as bus]
            [core.options :as o]
            [impl.behaviours.definitions :as bd]
            [clojure.string :as str])
- (:require-macros [core.macros :refer [defentity with-components]]))
+ (:require-macros [core.macros :refer [defentity with-components with-layouts layout]]))
 
 (defn- control-data [point]
  {:left (- (first point) 8)
@@ -48,11 +49,8 @@
 
 
 (defentity rectangle-node
-  (with-content-bounding-box {:left 15
-                              :top  15
-                              :width  175
-                              :height 150})
-  (with-behaviours {})
+  (with-layouts
+    (layout :attributes l/default-flow-layout #(:attributes %) {:left 15 :top 15}))
   (with-components data options
     (let [enriched-opts (merge options defaults/DEFAULT_SIZE_OPTS defaults/TRANSPARENT_FILL defaults/DEFAULT_STROKE)
           conL    (vector (:left options) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
@@ -68,14 +66,12 @@
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
 
+(defn- relation-layout-options [e]
+  {})
 ;; todo:  consider positioning components relative to entity position
 (defentity relation
-  (with-content-bounding-box {:left 15
-                              :top  15
-                              :origin :center
-                              :width  180
-                              :height 150})
-  (with-behaviours {})
+  (with-layouts
+    (layout :attributes l/default-flow-layout #(:attributes %) relation-layout-options))
   (with-components data options
     (let [enriched-opts options
           offset-x (:left options)

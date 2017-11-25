@@ -8,7 +8,6 @@
   (let [file-struct (-> a/*cljs-file* slurp read-string)]
     (name (second file-struct))))
 
-
 (defmacro value [value drawables]
   `(core.entities/AttributeDomain. ~value ~drawables))
 
@@ -20,24 +19,27 @@
 
 (defmacro with-behaviours [name body])
 
-(defmacro with-content-bounding-box [name body])
+(defmacro layout [name layout-func select-func options]
+  `{~name (core.layouts.Layout. ~layout-func ~select-func ~options)})
+
+(defmacro with-layouts [ & body]
+  `(merge ~@body))
 
 (defmacro with-attributes [body])
 
 (defmacro defentity [name & body]
   (let [transformed  (transform-body body)]
     (let [nsname     (resolve-namespace-name)
-          cntbbox    (last (:with-content-bounding-box transformed))
           components (:with-components transformed)
+          layouts        (:with-layouts transformed)
+          has-layouts    (contains? transformed :with-layouts)
           behaviours (last (:with-behaviours transformed))
           attributes (last (:with-attributes transformed))]
       (when (nil? components)
         (throw (Error. "Provide components and behaviours definition within entitity definition!")))
-      (when (nil? cntbbox)
-        (throw (Error. "Provide attribute content bounding box parameters!")))
      `(do
         (defn ~name [data# options#]
-           (let [e# (core.entities/create-entity (keyword ~nsname (name '~name)) {} ~cntbbox)
+           (let [e# (core.entities/create-entity (keyword ~nsname (name '~name)) {} ~layouts)
                  component-factory# ~components]
              (apply core.entities/add-entity-component e# (component-factory# data# options#))
              (doseq [call# ~attributes] (call# e#))
@@ -50,8 +52,8 @@
         transformed    (transform-body body)
         dfinition      (last (:with-definition transformed))
         has-definition (contains? transformed :with-definition)
-        components      (:with-components  transformed)
-        has-components  (contains? transformed :with-components)
+        components     (:with-components  transformed)
+        has-components (contains? transformed :with-components)
         behaviours     (last (:with-behaviours transformed))
         has-behaviours (contains? transformed :with-behaviours)
         domain         (last (:with-domain transformed))

@@ -1,10 +1,10 @@
 (ns impl.layouts
   (:require [core.layouts :as l]))
-            
+
 (defn default-flow-layout [context element]
   (let [element-bbox (l/bbox element)
-        context (assoc context :current-row-height (if (> (:height element) (:current-row-height context))
-                                                       (:height element)
+        context (assoc context :current-row-height (if (> (:height element-bbox) (:current-row-height context))
+                                                       (:height element-bbox)
                                                        (:current-row-height context)))
         new-row? (and (l/exceeds-container-width? context element) (> (:current-row-left context) 0))
         element-coords (if new-row?

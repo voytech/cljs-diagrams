@@ -209,7 +209,7 @@
        (e/update-component-prop entity (:name line-start) :end (:name line-endpoint))
        (e/update-component-prop entity (:name line-endpoint) :end (:name line-start))
        (e/update-component-prop entity (:name line-startpoint) :penultimate is-penultimate?)
-       (d/set-data drawable {:x2 (+ (d/getp line-endpoint :left) (/ (d/getp line-endpointe :width) 2))
+       (d/set-data drawable {:x2 (+ (d/getp line-endpoint :left) (/ (d/getp line-endpoint :width) 2))
                              :y2 (+ (d/getp line-endpoint :top) (/ (d/getp line-endpoint :height) 2))}))))
 
 (defn position-breakpoint

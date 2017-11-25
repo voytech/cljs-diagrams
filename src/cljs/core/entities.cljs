@@ -34,7 +34,7 @@
                    components
                    attributes
                    relationships
-                   content-bbox])
+                   layouts])
 
 (defn components-of [holder]
  (vals (:components holder)))
@@ -119,10 +119,10 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component. Under Component we have only one Drawable wich holds properties for renderer."
-  ([type components content-bbox]
+  ([type components layouts]
    (let [uid (str (random-uuid))
          _components (apply merge (mapv (fn [e] {(:name e) (d/Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
-         entity (Entity. uid type _components {} [] content-bbox)]
+         entity (Entity. uid type _components {} [] layouts)]
      (define-lookups-on-entities entity)
      (swap! entities assoc uid entity)
      (bus/fire "entity.added" {:entity entity})
@@ -174,9 +174,6 @@
     (get-entity-component entity name)))
  ([entity name type]
   (assert-component entity name type {})))
-
-(defn get-entity-content-bbox [entity]
-   (:content-bbox entity))
 
 (defn connect-entities [src trg association-type arg1 arg2]
   (let [src-rel (conj (:relationships src) {:relation-type association-type :association-data arg1 :entity-id (:uid trg)})

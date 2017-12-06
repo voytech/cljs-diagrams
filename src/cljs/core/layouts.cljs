@@ -10,7 +10,7 @@
     (if (map? (:components container))
       (vals (:components container))
       (:components container))
-    (throw (Error. "Paramter passed to get-components is supposed to be component container but IS NOT !"))))
+    (throw (Error. "Parameter passed to get-components is supposed to be component container but IS NOT !"))))
 
 (defn get-bbox [container]
   (when (> (count (get-components container)) 0)
@@ -61,9 +61,10 @@
     (d/get-bbox element)))
 
 (defn- resolve-options [container options]
-  (if (map? options)
-    options
-    (options container)))
+  (if (fn? options)
+    (options container)
+    options))
+
 
 (defn- contextualize [container opts]
   (let [options (resolve-options container opts)]

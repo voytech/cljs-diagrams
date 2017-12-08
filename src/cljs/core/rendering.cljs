@@ -47,6 +47,7 @@
   (render-components  (e/components-of entity))
   (doseq [attribute-value (e/get-attributes-values entity)]
     (render-components (e/components-of attribute-value)))
+  (l/do-layout (-> entity :layouts :attributes) entity)
   (bus/fire "rendering.finish"))
 
 (bus/on ["rendering.context.update"] -999 (fn [event]

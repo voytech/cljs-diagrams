@@ -50,7 +50,7 @@
 
 (defentity rectangle-node
   (with-layouts
-    (layout :attributes l/default-flow-layout #(:attributes %) {:left 15 :top 15}))
+    (layout :attributes l/default-flow-layout #(-> % :attributes vals) {:left 15 :top 15}))
   (with-components data options
     (let [enriched-opts (merge options defaults/DEFAULT_SIZE_OPTS defaults/TRANSPARENT_FILL defaults/DEFAULT_STROKE)
           conL    (vector (:left options) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
@@ -71,7 +71,7 @@
 ;; todo:  consider positioning components relative to entity position
 (defentity relation
   (with-layouts
-    (layout :attributes l/default-flow-layout #(:attributes %) relation-layout-options))
+    (layout :attributes l/default-flow-layout #(-> % :attributes vals) relation-layout-options))
   (with-components data options
     (let [enriched-opts options
           offset-x (:left options)

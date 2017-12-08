@@ -27,7 +27,7 @@
 ; Interface function for adding new elements into specific containers using layout.
 
 (defn- is-container [element]
-  (not (nil? (:components container))))
+  (not (nil? (:components element))))
 
 (defn- is-component [element]
   (record? element))
@@ -120,6 +120,8 @@
 (defn add-before [container element before])
 
 (defn remove [container element])
+
+(defn generic-layout [context element])
 
 (defn align-center [src trg]
   (let [srcCx   (+ (d/get-left src) (/ (d/get-width src) 2))

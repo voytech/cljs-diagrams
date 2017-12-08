@@ -10,7 +10,7 @@
     (if (map? (:components container))
       (vals (:components container))
       (:components container))
-    (throw (Error. "Parameter passed to get-components is supposed to be component container but IS NOT !"))))
+    (throw (js/Error. "Parameter passed to get-components is supposed to be component container but IS NOT !"))))
 
 (defn get-bbox [container]
   (when (> (count (get-components container)) 0)
@@ -76,7 +76,7 @@
 
 (defn alter [context append-top append-width]
    (merge context {:current-row-top (+ (:current-row-top context) append-top)
-                   :current-row-left (+ (:current-row-left cotnext) append-width)}))
+                   :current-row-left (+ (:current-row-left context) append-width)}))
 
 (defn absolute-row-top [context]
   (+ (-> context :container-bbox :top) (:current-row-top context)))
@@ -119,8 +119,6 @@
 
 (defn add-before [container element before])
 
-(defn remove [container element])
-
 (defn generic-layout [context element])
 
 (defn align-center [src trg]
@@ -129,47 +127,6 @@
         trgLeft (- srcCx (/ (d/get-width trg) 2))
         trgTop  (- srcCy (/ (d.get-height trg) 2))]
       (d/set-data trg {:left trgLeft :top trgTop})))
-
-(defn- layout-row [bbox layout-buffer partials-aware]
-  (when (> (count (get-components partials-aware)) 0)
-    (let [partials (get-components partials-aware)
-          partials-bbox (get-bbox partials-aware)
-          relative-left #(- (d/get-left  %) (:left partials-bbox))
-          relative-top  #(- (d/get-top %) (:top partials-bbox))
-          absolute-left (:left @layout-buffer)
-          absolute-top  (:top  @layout-buffer)
-          exceeds-bbox? (>= (+ absolute-left (:width partials-bbox)) (+ (:left bbox) (:width bbox)))
-          starts-row?   (= absolute-left (:left bbox))
-          new-row?      (and (not starts-row?) exceeds-bbox?)]
-      (when new-row?
-        (swap! layout-buffer assoc-in [:left] (:left bbox))
-        (swap! layout-buffer assoc-in [:top] (+ absolute-top (:row-height @layout-buffer)))
-        (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))
-      (doseq [partial partials]
-        (d/set-data partial {:left (+ (:left @layout-buffer) (relative-left partial))
-                             :top  (+ (:top @layout-buffer)  (relative-top partial))})
-        (b/fire "component.layout.finished" {:component partial}))
-      (swap! layout-buffer assoc-in [:left] (+ (:left @layout-buffer) (:width partials-bbox)))
-      (let [replace? (> (:height partials-bbox) (:row-height @layout-buffer))]
-        (when replace? (swap! layout-buffer assoc-in [:row-height] (:height partials-bbox)))))))
-
-; Position array of objects (being composed of drawable partials) within given bounding box.
-; 1. Get each entry (object composed of drawable partials) bounding box - calculate it from drawables.
-; 2. Get each drawable for processed entry and for that drawable get relative possition to bounding box.
-; 3.
-(defn layout [bbox entries]
-  (let [layout-buffer (atom {:row-height 0 :left (:left bbox) :top (:top bbox)})]
-    (doseq [partials-aware entries]
-      (layout-row bbox layout-buffer partials-aware))
-    (b/fire "entries.layout" {:entries (:entries entries)})))
-
-(defn layout-attributes [entity]
-  (let [bbox (get-bbox entity)
-        cbox {:left (+ (:left (e/get-entity-content-bbox entity)) (:left bbox))
-              :top  (+ (:top (e/get-entity-content-bbox entity)) (:top bbox))
-              :width (:width (e/get-entity-content-bbox entity))
-              :height (:height (e/get-entity-content-bbox entity))}]
-    (layout cbox (e/get-attributes-values entity))))
 
 (defn intersects? [tbbox obbox]
   (or
@@ -183,6 +140,6 @@
         (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))))
 
 (b/on ["layout.attributes"] -999 (fn [event]
-                                     (layout-attributes (-> event :context))
+                                     (do-layout (-> event :context :layouts :attributes) (-> event :context))
                                      (b/fire "uncommited.render")
                                      (b/fire "rendering.finish")))

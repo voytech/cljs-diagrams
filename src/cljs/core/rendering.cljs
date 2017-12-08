@@ -6,6 +6,7 @@
 
 (declare render)
 (declare all-rendered)
+(declare destroy-rendering-state)
 
 ; Sets default renderers
 (def RENDERER (atom :fabric))
@@ -85,7 +86,7 @@
 (bus/on ["entities.render"] -999 (fn [event]
                                      (let [context (:context event)
                                            entities  (:entities context)]
-                                        (doseq [entity enttities] (render-entity entity)))))
+                                        (doseq [entity entities] (render-entity entity)))))
 
 (bus/on ["entity.added"] -999 (fn [event]
                                  (let [context (:context event)])))

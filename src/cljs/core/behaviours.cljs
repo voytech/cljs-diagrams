@@ -79,8 +79,6 @@
 
 (defn generic-components-validator [_definitions action-fn?]
   (fn [target behaviour]
-    ;(js/console.log (clj->js target))
-    ;(js/console.log (clj->js _definitions))
     (let [transform (to-event action-fn?)]
       (let [attach-targets (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) target) (:result e))) _definitions))]
         (when (is-all-valid attach-targets)

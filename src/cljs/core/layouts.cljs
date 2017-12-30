@@ -65,7 +65,6 @@
     (options container)
     options))
 
-
 (defn- contextualize [container opts]
   (let [options (resolve-options container opts)]
     {:container-bbox (bbox container)

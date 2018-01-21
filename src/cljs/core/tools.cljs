@@ -9,7 +9,6 @@
 (defn create-tool
   ([name desc type icon ctor]
    (let [tool (Tool. (str (random-uuid)) name desc type icon ctor)]
-    (js/console.log tool)
     (swap! tools assoc (:uid tool) tool)
     tool))
   ([name type ctor]

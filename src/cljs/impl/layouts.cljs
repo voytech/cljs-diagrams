@@ -5,10 +5,11 @@
   (js/console.log "default flow layout input context")
   (js/console.log (clj->js context))
   (let [element-bbox (l/bbox element)
-        context (assoc context :current-row-height (if (> (:height element-bbox) (:current-row-height context))
-                                                       (:height element-bbox)
-                                                       (:current-row-height context)))
-        new-row? (and (l/exceeds-container-width? context element) (> (:current-row-left context) 0))
+        coords (:coords context)
+        context (assoc-in  context [:coords :height] (if (> (:height element-bbox) (:height coords))
+                                                         (:height element-bbox)
+                                                         (:height coords)))
+        new-row? (and (l/exceeds-container-width? context element) (> (:left coords) 0))
         elements-coords (if new-row?
                            {:left (l/container-left-edge context) :top (l/absolute-next-row context)}
                            {:left (l/absolute-row-left context)   :top (l/absolute-row-top context)})]

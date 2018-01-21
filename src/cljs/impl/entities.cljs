@@ -27,8 +27,6 @@
   :y2   (last conE)
   :left (first conS)
   :top  (last conS)})
-  ;:width  (+ (first conS) (first conE))
-  ;:height (+ (last conS)  (last conE))})
 
 (defn- endpoint-data [point visible]
  {:left (- (first point) 8)

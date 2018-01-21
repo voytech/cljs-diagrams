@@ -69,22 +69,22 @@
   (let [options (resolve-options container opts)]
     {:container-bbox (bbox container)
      :options options
-     :current-row-top (or (:top options) 0)
-     :current-row-height 0
-     :current-row-left (or (:left options) 0)}))
+     :coords { :top (or (:top options) 0)
+               :left (or (:left options) 0)
+               :height 0}}))
 
 (defn alter [context append-top append-width]
-   (merge context {:current-row-top (+ (:current-row-top context) append-top)
-                   :current-row-left (+ (:current-row-left context) append-width)}))
+   (merge context {:coords {:top (+ (-> context :coords :top) append-top)
+                            :left (+ (-> context :coords :left) append-width)}}))
 
 (defn absolute-row-top [context]
-  (+ (-> context :container-bbox :top) (:current-row-top context)))
+  (+ (-> context :container-bbox :top) (-> context :coords :top)))
 
 (defn absolute-row-left [context]
-  (+ (-> context :container-bbox :left) (:current-row-left context)))
+  (+ (-> context :container-bbox :left) (-> context :coords :left)))
 
 (defn absolute-next-row [context]
-  (+ (absolute-row-top context) (:current-row-height context)))
+  (+ (absolute-row-top context) (-> context :coords :height)))
 
 (defn container-left-edge [context]
   (-> context :container-bbox :left))

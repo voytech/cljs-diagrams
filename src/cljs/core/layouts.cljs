@@ -73,9 +73,23 @@
                :left (or (:left options) 0)
                :height 0}}))
 
-(defn alter [context append-top append-width]
-   (merge context {:coords {:top (+ (-> context :coords :top) append-top)
-                            :left (+ (-> context :coords :left) append-width)}}))
+(defn next-column [context offset]
+   (merge context {:coords {:left (+ (-> context :coords :left) offset)}}))
+
+(defn next-row [context]
+   (merge context {:coords {:top (+ (-> context :coords :top)
+                                    (-> context :coords :height))
+                            :left (or (-> context :options :left) 0)
+                            :height 0}}))
+
+(defn to-first-column [context]
+  (assoc-in context [:coords :left] (-> context :options :left)))
+
+(defn to-first-row [cotnext]
+  (assoc-in context [:coords :top] (-> context :options :top)))
+
+(defn reset [context path value]
+  (assoc-in context path value))
 
 (defn absolute-row-top [context]
   (+ (-> context :container-bbox :top) (-> context :coords :top)))

@@ -189,7 +189,6 @@
 
 (defmethod r/create-rendering-state [:fabric ::impld/value :default] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
-   (js/console.log (clj->js data))
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
 (defmethod r/destroy-rendering-state [:fabric ::impld/value :default] [drawable context]

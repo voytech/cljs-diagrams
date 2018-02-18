@@ -74,7 +74,7 @@
                :height 0}}))
 
 (defn next-column [context offset]
-   (merge context {:coords {:left (+ (-> context :coords :left) offset)}}))
+   (assoc-in context [:coords :left] (+ (-> context :coords :left) offset)))
 
 (defn next-row [context]
    (merge context {:coords {:top (+ (-> context :coords :top)
@@ -91,14 +91,14 @@
 (defn reset [context path value]
   (assoc-in context path value))
 
-(defn absolute-row-top [context]
+(defn reset-line-height [context]
+  (reset context [:coords :height] 0))
+
+(defn absolute-top [context]
   (+ (-> context :container-bbox :top) (-> context :coords :top)))
 
-(defn absolute-row-left [context]
+(defn absolute-left [context]
   (+ (-> context :container-bbox :left) (-> context :coords :left)))
-
-(defn absolute-next-row [context]
-  (+ (absolute-row-top context) (-> context :coords :height)))
 
 (defn container-left-edge [context]
   (-> context :container-bbox :left))
@@ -114,11 +114,17 @@
   (let [{:keys [top height]} (:container-bbox context)]
     (+ top height)))
 
+(defn move [element context]
+  (let [left (absolute-left context)
+        top  (absolute-top context)]
+    (move-element element left top)
+    context))
+
 (defn exceeds-container-width? [context element]
-  (> (+ (absolute-row-left context) (:width (bbox element))) (container-right-edge context)))
+  (> (+ (absolute-left context) (:width (bbox element))) (container-right-edge context)))
 
 (defn exceeds-container-height? [context element]
-  (> (+ (absolute-row-top context) (:height (bbox element))) (container-bottom-edge context)))
+  (> (+ (absolute-top context) (:height (bbox element))) (container-bottom-edge context)))
 
 (defn do-layout [layout container]
   (let [elements ((:select-func layout) container)]

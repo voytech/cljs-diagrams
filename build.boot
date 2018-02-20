@@ -6,7 +6,7 @@
                  [adzerk/boot-reload        "0.4.13"     :scope "test"]
                  [adzerk/boot-test          "1.2.0"]
                  [pandeiro/boot-http        "0.8.0"]
-                 [tolitius/boot-check       "0.1.6"]
+                 [tolitius/boot-check       "0.1.9"]
                  [com.cemerick/piggieback   "0.2.1"      :scope "test"]
                  [org.clojure/tools.nrepl   "0.2.13"     :scope "test"]
                  [weasel                    "0.7.0"      :scope "test"]
@@ -22,12 +22,13 @@
                  [cljsjs/rx                       "4.0.7-0"]])
 
 (require
- '[adzerk.boot-cljs      :refer [cljs]]
- '[tolitius.boot-check   :as check]
- '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]]
- '[adzerk.boot-reload    :refer [reload]]
- '[pandeiro.boot-http    :refer [serve]]
- '[adzerk.boot-test            :refer :all]
+ '[adzerk.boot-cljs       :refer [cljs]]
+ '[tolitius.boot-check    :as check]
+ '[tolitius.reporter.html :refer :all]
+ '[adzerk.boot-cljs-repl  :refer [cljs-repl start-repl]]
+ '[adzerk.boot-reload     :refer [reload]]
+ '[pandeiro.boot-http     :refer [serve]]
+ '[adzerk.boot-test]
  '[crisptrutski.boot-cljs-test :refer [test-cljs]]
  '[powerlaces.boot-cljs-devtools :refer [cljs-devtools dirac]])
 
@@ -35,13 +36,13 @@
   (comp (speak)
         (cljs)))
 
-(deftask check-sources []
-  ;(set-env! :source-paths #{"src" "test"})
+(deftask analyze []
+  (set-env! :source-paths #{"src/cljs"})
   (comp
-    (check/with-yagni)
-    (check/with-eastwood)
-    (check/with-kibit)
-    (check/with-bikeshed)))
+    (check/with-eastwood :options {:gen-report true})
+    (check/with-bikeshed :options {:gen-report true})
+    (check/with-kibit :options {:gen-report true})))
+
 
 (deftask run []
   (comp (serve)

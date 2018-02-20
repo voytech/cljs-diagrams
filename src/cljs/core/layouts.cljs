@@ -130,14 +130,6 @@
   (let [elements ((:select-func layout) container)]
     (reduce (:layout-func layout) (contextualize container (:options layout)) elements)))
 
-(defn add [container element])
-
-(defn add-at [container element index])
-
-(defn add-after [container element after])
-
-(defn add-before [container element before])
-
 (defn generic-layout [context element])
 
 (defn align-center [src trg]
@@ -159,6 +151,7 @@
         (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))))
 
 (b/on ["layout.attributes"] -999 (fn [event]
-                                     (do-layout (-> event :context :layouts :attributes) (-> event :context))
-                                     (b/fire "uncommited.render")
-                                     (b/fire "rendering.finish")))
+                                     (when-let [entity (:context event)]
+                                       (do-layout (-> entity :layouts :attributes) entity)
+                                       (b/fire "uncommited.render")
+                                       (b/fire "rendering.finish"))))

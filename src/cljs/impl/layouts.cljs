@@ -1,12 +1,7 @@
 (ns impl.layouts
   (:require [core.layouts :as l]))
 
-(defn- h-start-position [context]
-  (+ (l/container-left-edge context)
-     (-> context :options :left)))
-
-(defn- recalc-line-height [ebbox context]
-  (js/console.log (clj->js context))
+(defn- recalc-line-height [context ebbox]
   (let [coords (:coords context)]
     (->> (if (> (:height ebbox) (:height coords))
            (:height ebbox)
@@ -19,7 +14,7 @@
 
 (defn default-flow-layout [context element]
   (let [ebbox (l/bbox element)
-        context  (recalc-line-height ebbox context)
+        context  (recalc-line-height context ebbox)
         new-row? (is-new-row? context element)
         context  (if new-row?
                    (l/to-first-column (l/next-row context))

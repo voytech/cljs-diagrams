@@ -44,7 +44,6 @@
 
 (defn entity-by-type [type])
 
-
 ;;Utility functions for getting expected data on type non-deterministic argument
 (defn- id [input fetch]
   (cond
@@ -61,6 +60,11 @@
 
 (defn- entity-record [input]
   (record input entity-by-id))
+
+(defn- volatile-entity [entity]
+  (-> entity
+      entity-id
+      entity-record))
 
 (defn- component-id [input]
   (id input :name))
@@ -248,7 +252,7 @@
     (doseq [component (components-of attribute-value)]
       (d/remove-component component))
     (swap! entities update-in [eid :attributes] dissoc avid)
-    (js/console.log (clj->js (entity-by-id eid)))))
+    (entity-by-id eid)))
 
 (defn get-attribute-value [entity id]
   (get-in @entities [(:uid entity) :attributes id]))
@@ -273,8 +277,9 @@
 ;  (memoize create-attribute-value))
 
 (defn- replace-attribute-value [entity attribute-value new-value]
-  (remove-attribute-value entity attribute-value)
-  (add-entity-attribute-value entity (create-attribute-value (:attribute attribute-value) new-value)))
+  (-> entity
+      (remove-attribute-value attribute-value)
+      (add-entity-attribute-value (create-attribute-value (:attribute attribute-value) new-value))))
 
 (defn- update-attribute-value-value [entity attribute-value new-value]
   (let [eid  (entity-id entity)
@@ -291,4 +296,4 @@
     (if (not (nil? (:domain attribute)))
       (replace-attribute-value entity attribute-value value)
       (update-attribute-value-value entity attribute-value value))
-    (bus/fire "layout.attributes" (entity-record entity))))
+    (bus/fire "layout.attributes" (volatile-entity entity))))

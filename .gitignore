@@ -2,3 +2,5 @@
 /.nrepl-port
 /out
 .nrepl-history
+boot-check-report**
+forms-**

@@ -30,6 +30,8 @@
 
 (defonce fabric-property-mapping {:left "left"
                                   :top  "top"
+                                  :round-x "rx"
+                                  :round-y "ry"
                                   :text "text"
                                   :width  "width"
                                   :height "height"

@@ -40,14 +40,16 @@
   (with-domain
      [(value :open
         (with-components data options
-          [(c/rect "background" {:background-color "green"})
-           (c/text "value-open" {:text "OPEN"})]))
+          [(c/rect "background" {:background-color "green" :width 35 :height 14 :round-x 5 :round-y 5})
+           (c/text "value-open" {:text "OPEN" :border-color "white" :left 2})]))
       (value :progress
         (with-components data options
-          [(c/text "value-progress" {:text "PROGRESS"})]))
+          [(c/rect "background" {:background-color "yellow" :width 55 :height 14 :round-x 5 :round-y 5})
+           (c/text "value-progress" {:text "PROGRESS" :border-color "white" :left 2})]))
       (value :closed
         (with-components data options
-          [(c/text "value-closed" {:text "CLOSED"})]))]))
+          [(c/rect "background" {:background-color "black" :width 40 :height 14 :round-x 5 :round-y 5})
+           (c/text "value-closed" {:text "CLOSED" :border-color "white" :left 2})]))]))
 
 
 (defbehaviour attribute-hovering
@@ -55,6 +57,7 @@
               (validate
                 (-- (having-all ::c/text)
                     (bind-to ::c/text))
+                (-- (invalid-when #(= ::state (-> % :attribute :name))))
                 (fn [target behaviour result]
                   (ev/loose-event-name nil (-> target :attribute :name) result "focus")))
               (fn [e]
@@ -67,6 +70,7 @@
             (validate
               (-- (having-all ::c/text)
                   (bind-to ::c/text))
+              (-- (invalid-when #(= ::state (-> % :attribute :name))))    
               (fn [target behaviour result]
                 (ev/loose-event-name nil (-> target :attribute :name) result "blur")))
             (fn [e]

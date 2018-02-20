@@ -24,11 +24,11 @@
 
 (defcomponent arrow :default {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center})
 
-(defcomponent startpoint :default {:start "connector" :penultimate true} {:moveable true :visible true})
+(defcomponent startpoint :default {:start "connector" :penultimate true} {:moveable true :visible true :z-index 999})
 
-(defcomponent endpoint :default {:end "connector"} {:moveable true :visible false :opacity 1})
+(defcomponent endpoint :default {:end "connector"} {:moveable true :visible false :opacity 1 :z-index 999})
 
-(defcomponent breakpoint :default {} {:moveable true :visible true :opacity 1})
+(defcomponent breakpoint :default {} {:moveable true :visible true :opacity 1 :z-index 999})
 
 (defcomponent control :default {} {:moveable false :visible false :opacity 1 :background-color "white"})
 
@@ -36,6 +36,8 @@
 
 ;; Attribute components.
 
-(defcomponent value :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defcomponent label :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+
+(defcomponent text :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
 
 (defcomponent description :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})

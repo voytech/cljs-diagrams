@@ -349,7 +349,8 @@
         (cond
           (= ::c/startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
           (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
-        (update-manhattan-layout entity (normals 0) (normals 1)))))
+        (update-manhattan-layout entity (normals 0) (normals 1))
+        (b/fire "layout.do" {:container (e/volatile-entity entity) :type :attributes}))))
 
 (defn position-connector [entity connector m-x m-y]
   (when (not= m-x 0) (d/setp connector :x1 (+ (d/getp connector :x1) m-x)))

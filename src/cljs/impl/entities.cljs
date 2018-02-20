@@ -4,6 +4,7 @@
            [impl.standard-attributes :as stdatr]
            [impl.components :as c]
            [impl.layouts :as l]
+           [core.layouts :as cl]
            [core.project :as p]
            [core.eventbus :as bus]
            [core.options :as o]
@@ -55,17 +56,20 @@
           conR    (vector (+ (:left options) (:width defaults/DEFAULT_SIZE_OPTS)) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
           conT    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
           conB    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height defaults/DEFAULT_SIZE_OPTS)))]
-      [(c/control "connector-left"   (control-data conL) {:side :left})
+      [(c/main "body" enriched-opts)
+       (c/control "connector-left"   (control-data conL) {:side :left})
        (c/control "connector-right"  (control-data conR) {:side :right})
        (c/control "connector-top"    (control-data conT) {:side :top})
-       (c/control "connector-bottom" (control-data conB) {:side :bottom})
-       (c/main "body" enriched-opts)]))
+       (c/control "connector-bottom" (control-data conB) {:side :bottom})]))       
   (with-attributes [#(stdatr/name % "<Enter name here>")
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
 
 (defn- relation-layout-options [e]
-  {})
+  (let [bbox (cl/get-bbox e)]
+    {:left (/ (:width bbox) 2)
+     :top  (/ (:height bbox) 2)}))
+
 ;; todo:  consider positioning components relative to entity position
 (defentity relation
   (with-layouts
@@ -81,4 +85,5 @@
         [(c/relation "connector" (relation-data conS conE) {:start "start" :end "end"})
          (c/startpoint "start" (endpoint-data conS true))
          (c/arrow "arrow" (arrow-data data options))
-         (c/endpoint "end" (endpoint-data conE false))])))
+         (c/endpoint "end" (endpoint-data conE false))]))
+  (with-attributes [#(stdatr/name % "--Relation Name--")]))

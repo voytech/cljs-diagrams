@@ -185,22 +185,22 @@
 ;;==========================================================================================================
 ;; text rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/value :default] [drawable context]
+(defmethod r/do-render [:fabric ::impld/text :default] [drawable context]
   (property-change-render drawable context))
 
-(defmethod r/create-rendering-state [:fabric ::impld/value :default] [drawable context]
+(defmethod r/create-rendering-state [:fabric ::impld/text :default] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric ::impld/value :default] [drawable context]
+(defmethod r/destroy-rendering-state [:fabric ::impld/text :default] [drawable context]
   (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
-(defmethod r/do-render [:fabric ::impld/description :default] [drawable context]
+(defmethod r/do-render [:fabric ::impld/label :default] [drawable context]
   (property-change-render drawable context))
 
-(defmethod r/create-rendering-state [:fabric ::impld/description :default] [drawable context]
+(defmethod r/create-rendering-state [:fabric ::impld/label :default] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric ::impld/description :default] [drawable context]
+(defmethod r/destroy-rendering-state [:fabric ::impld/label :default] [drawable context]
   (fabric-destroy-rendering-state context (r/get-state-of drawable)))

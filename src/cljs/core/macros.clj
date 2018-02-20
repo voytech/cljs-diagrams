@@ -45,6 +45,7 @@
              (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
                (core.eventbus/fire "entity.render" {:entity result#})
+               (core.eventbus/fire "layout.do" {:container result# :type :attributes})
                result#)))))))
 
 (defmacro defattribute [name & body]

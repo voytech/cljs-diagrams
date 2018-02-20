@@ -61,7 +61,7 @@
 (defn- entity-record [input]
   (record input entity-by-id))
 
-(defn- volatile-entity [entity]
+(defn volatile-entity [entity]
   (-> entity
       entity-id
       entity-record))
@@ -296,4 +296,4 @@
     (if (not (nil? (:domain attribute)))
       (replace-attribute-value entity attribute-value value)
       (update-attribute-value-value entity attribute-value value))
-    (bus/fire "layout.attributes" (volatile-entity entity))))
+    (bus/fire "layout.do" {:container (volatile-entity entity) :type :attributes})))

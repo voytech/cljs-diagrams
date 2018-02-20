@@ -150,8 +150,8 @@
    (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
         (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))))
 
-(b/on ["layout.attributes"] -999 (fn [event]
-                                     (when-let [entity (:context event)]
-                                       (do-layout (-> entity :layouts :attributes) entity)
-                                       (b/fire "uncommited.render")
-                                       (b/fire "rendering.finish"))))
+(b/on ["layout.do"] -999 (fn [event]
+                           (when-let [{:keys [container type]} (:context event)]
+                             (do-layout (-> container :layouts type) container)
+                             (b/fire "uncommited.render")
+                             (b/fire "rendering.finish"))))

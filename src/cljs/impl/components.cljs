@@ -20,11 +20,11 @@
                                       (setup-bbox drawable p :x1 :x2 :left :width)
                                       (setup-bbox drawable p :y1 :y2 :top :height))))
 
-(defcomponent relation :default {} {:border-color "black" :border-style :solid :border-width 1})
+(defcomponent relation :default {} {:border-color "black" :border-style :solid :border-width 1 :z-index 0})
 
 (defcomponent arrow :default {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center})
 
-(defcomponent startpoint :default {:start "connector" :penultimate true} {:moveable true :visible true :opacity 1})
+(defcomponent startpoint :default {:start "connector" :penultimate true} {:moveable true :visible true})
 
 (defcomponent endpoint :default {:end "connector"} {:moveable true :visible false :opacity 1})
 

@@ -74,6 +74,7 @@
   (let [fabric-object (create)]
      (make-js-property fabric-object "refId" (:uid drawable))
      (.add (:canvas context) fabric-object)
+     (.moveTo fabric-object (d/getp drawable :z-index))
      {:data fabric-object}))
 
 ; in drawable-state we holds an fabric.js object.

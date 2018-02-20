@@ -20,24 +20,26 @@
                                       (setup-bbox drawable p :x1 :x2 :left :width)
                                       (setup-bbox drawable p :y1 :y2 :top :height))))
 
-(defcomponent relation :default {} {:border-color "black" :border-style :solid :border-width 1 :z-index 0})
+(defcomponent relation :draw-line {} {:border-color "black" :border-style :solid :border-width 1 :z-index 0})
 
-(defcomponent arrow :default {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center})
+(defcomponent arrow :draw-triangle {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center})
 
-(defcomponent startpoint :default {:start "connector" :penultimate true} {:moveable true :visible true :z-index 999})
+(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} {:moveable true :visible true :z-index 999})
 
-(defcomponent endpoint :default {:end "connector"} {:moveable true :visible false :opacity 1 :z-index 999})
+(defcomponent endpoint :draw-circle {:end "connector"} {:moveable true :visible false :opacity 1 :z-index 999})
 
-(defcomponent breakpoint :default {} {:moveable true :visible true :opacity 1 :z-index 999})
+(defcomponent breakpoint :draw-circle {} {:moveable true :visible true :opacity 1 :z-index 999})
 
-(defcomponent control :default {} {:moveable false :visible false :opacity 1 :background-color "white"})
+(defcomponent control :draw-rect {} {:moveable false :visible false :opacity 1 :background-color "white"})
 
-(defcomponent main :default {} {:border-color "black" :border-style :solid :border-width 1})
+(defcomponent main :draw-rect {} {:border-color "black" :border-style :solid :border-width 1})
 
 ;; Attribute components.
 
-(defcomponent label :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defcomponent label :draw-text {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
 
-(defcomponent text :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defcomponent text :draw-text {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
 
-(defcomponent description :default {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defcomponent description :draw-text {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+
+(defcomponent rect :draw-rect {} {:border-color "black" :border-style :solid :border-width 1})

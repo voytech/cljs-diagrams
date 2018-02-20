@@ -40,7 +40,8 @@
   (with-domain
      [(value :open
         (with-components data options
-          [(c/text "value-open" {:text "OPEN"})]))
+          [(c/rect "background" {:background-color "green"})
+           (c/text "value-open" {:text "OPEN"})]))
       (value :progress
         (with-components data options
           [(c/text "value-progress" {:text "PROGRESS"})]))

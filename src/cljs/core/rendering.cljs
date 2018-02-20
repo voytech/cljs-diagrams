@@ -109,13 +109,13 @@
 
 (defmulti all-rendered (fn [context] @RENDERER))
 
-(defmulti do-render (fn [component context] [@RENDERER (:type component) (:rendering-method component)]))
+(defmulti do-render (fn [component context] [@RENDERER (or (:rendering-method component) (:type component))]))
 
-(defmulti create-rendering-state (fn [component context] [@RENDERER (:type component) (:rendering-method component)]))
+(defmulti create-rendering-state (fn [component context] [@RENDERER (or (:rendering-method component) (:type component))]))
 
 (defmethod create-rendering-state :default [component context])
 
-(defmulti destroy-rendering-state (fn [component context] [@RENDERER (:type component) (:rendering-method component)]))
+(defmulti destroy-rendering-state (fn [component context] [@RENDERER (or (:rendering-method component) (:type component))]))
 
 (defmethod destroy-rendering-state :default [rendering-state context])
 

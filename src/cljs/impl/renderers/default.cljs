@@ -89,118 +89,66 @@
 ;;==========================================================================================================
 ;; rect rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/main :default] [drawable context]
+(defmethod r/do-render [:fabric :draw-rect] [drawable context]
   (property-change-render drawable context))
 
-(defmethod r/create-rendering-state [:fabric ::impld/main :default] [drawable context]
+(defmethod r/create-rendering-state [:fabric :draw-rect] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Rect. (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric ::impld/main :default] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
-
-(defmethod r/do-render [:fabric ::impld/control :default] [drawable context]
-  (property-change-render drawable context))
-
-(defmethod r/create-rendering-state [:fabric ::impld/control :default] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Rect. (clj->js data))))))
-
-(defmethod r/destroy-rendering-state [:fabric ::impld/control :default] [drawable context]
+(defmethod r/destroy-rendering-state [:fabric :draw-rect] [drawable context]
   (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
 ;; startpoint rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/startpoint :default] [drawable context]
+(defmethod r/do-render [:fabric :draw-circle] [drawable context]
   (property-change-render drawable context))
 
-(defmethod r/create-rendering-state [:fabric ::impld/startpoint :default] [drawable context]
+(defmethod r/create-rendering-state [:fabric :draw-circle] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Circle. (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric ::impld/startpoint :default] [drawable context]
+(defmethod r/destroy-rendering-state [:fabric :draw-circle] [drawable context]
   (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
-;;==========================================================================================================
-;; endpoint rendering
-;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/endpoint :default] [drawable context]
-  (property-change-render drawable context))
-
-(defmethod r/create-rendering-state [:fabric ::impld/endpoint :default] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Circle. (clj->js data))))))
-
-(defmethod r/destroy-rendering-state [:fabric ::impld/endpoint :default] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
-;; breakpoint rendering
+;; line rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/breakpoint :default] [drawable context]
-  (property-change-render drawable context))
-
-(defmethod r/create-rendering-state [:fabric ::impld/breakpoint :default] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Circle. (clj->js data))))))
-
-(defmethod r/destroy-rendering-state [:fabric ::impld/breakpoint :default] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
-
-;;==========================================================================================================
-;; line rendering (must be improved ... changes to x1 x2 y1 y2 on static canvas not working as expected)
-;; As a temporary workaround - we are removing rendering state of drawable and creating new line as a new rendering state with new
-;; x1 x2 y1 y2 properties. Also take into account that synchronization of x1 x2 y1 y2 with left top widht height must be better.
-;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/relation :default] [drawable rendering-context]
-  ;(fabric-destroy-rendering-state rendering-context (r/get-state-of drawable))
-  ;(let [data (dissoc (to-fabric-property-map (d/model drawable)) :width :height :left :top)
-  ;      state (fabric-create-rendering-state rendering-context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))
-  ;  (.moveTo (:data state) (get data "zIndex"))
-  ;  (r/update-state drawable state)
+(defmethod r/do-render [:fabric :draw-line] [drawable rendering-context]
   (property-change-render drawable rendering-context))
 
-(defmethod r/create-rendering-state [:fabric ::impld/relation :default] [drawable context]
+(defmethod r/create-rendering-state [:fabric :draw-line] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
     (fabric-create-rendering-state context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))))
 
 
-(defmethod r/destroy-rendering-state [:fabric ::impld/relation :default] [drawable context]
+(defmethod r/destroy-rendering-state [:fabric :draw-line] [drawable context]
   (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
 ;; triangle rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/arrow :default] [drawable context]
+(defmethod r/do-render [:fabric :draw-triangle] [drawable context]
   (property-change-render drawable context))
 
-(defmethod r/create-rendering-state [:fabric ::impld/arrow :default] [drawable context]
+(defmethod r/create-rendering-state [:fabric :draw-triangle] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Triangle. (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric ::impld/arrow :default] [drawable context]
+(defmethod r/destroy-rendering-state [:fabric :draw-triangle] [drawable context]
   (fabric-destroy-rendering-state context (r/get-state-of drawable)))
 
 ;;==========================================================================================================
 ;; text rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric ::impld/text :default] [drawable context]
+(defmethod r/do-render [:fabric :draw-text] [drawable context]
   (property-change-render drawable context))
 
-(defmethod r/create-rendering-state [:fabric ::impld/text :default] [drawable context]
+(defmethod r/create-rendering-state [:fabric :draw-text] [drawable context]
   (let [data (to-fabric-property-map (d/model drawable))]
    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric ::impld/text :default] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
-
-(defmethod r/do-render [:fabric ::impld/label :default] [drawable context]
-  (property-change-render drawable context))
-
-(defmethod r/create-rendering-state [:fabric ::impld/label :default] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-   (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
-
-(defmethod r/destroy-rendering-state [:fabric ::impld/label :default] [drawable context]
+(defmethod r/destroy-rendering-state [:fabric :draw-text] [drawable context]
   (fabric-destroy-rendering-state context (r/get-state-of drawable)))

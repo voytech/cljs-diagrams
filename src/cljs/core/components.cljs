@@ -132,11 +132,11 @@
       (add-component component)
       component)))
  ([type name data props]
-  (new-component type name data props :default))
+  (new-component type name data props nil))
  ([type name data]
-  (new-component type name data {} :default))
+  (new-component type name data {} nil))
  ([type name]
-  (new-component type name {} {} :default)))
+  (new-component type name {} {} nil)))
 
 (defn get-component-def [type]
  (get @components-types type))

@@ -45,7 +45,7 @@
       (value :progress
         (with-components data options
           [(c/rect "background" {:background-color "yellow" :width 55 :height 14 :round-x 5 :round-y 5})
-           (c/text "value-progress" {:text "PROGRESS" :border-color "white" :left 2})]))
+           (c/text "value-progress" {:text "PROGRESS" :border-color "black" :left 2})]))
       (value :closed
         (with-components data options
           [(c/rect "background" {:background-color "black" :width 40 :height 14 :round-x 5 :round-y 5})
@@ -70,7 +70,7 @@
             (validate
               (-- (having-all ::c/text)
                   (bind-to ::c/text))
-              (-- (invalid-when #(= ::state (-> % :attribute :name))))    
+              (-- (invalid-when #(= ::state (-> % :attribute :name))))
               (fn [target behaviour result]
                 (ev/loose-event-name nil (-> target :attribute :name) result "blur")))
             (fn [e]

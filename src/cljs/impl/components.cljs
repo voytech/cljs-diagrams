@@ -20,15 +20,15 @@
                                       (setup-bbox drawable p :x1 :x2 :left :width)
                                       (setup-bbox drawable p :y1 :y2 :top :height))))
 
-(defcomponent relation :draw-line {} {:border-color "black" :border-style :solid :border-width 1 :z-index 0})
+(defcomponent relation :draw-line {} {:border-color "black" :border-style :solid :border-width 1 :z-index :bottom})
 
 (defcomponent arrow :draw-triangle {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center})
 
-(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} {:moveable true :visible true :z-index 999})
+(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} {:moveable true :visible true :z-index :top})
 
-(defcomponent endpoint :draw-circle {:end "connector"} {:moveable true :visible false :opacity 1 :z-index 999})
+(defcomponent endpoint :draw-circle {:end "connector"} {:moveable true :visible false :opacity 1 :z-index :top})
 
-(defcomponent breakpoint :draw-circle {} {:moveable true :visible true :opacity 1 :z-index 999})
+(defcomponent breakpoint :draw-circle {} {:moveable true :visible true :opacity 1 :z-index :top})
 
 (defcomponent control :draw-rect {} {:moveable false :visible false :opacity 1 :background-color "white"})
 

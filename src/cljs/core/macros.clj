@@ -43,7 +43,7 @@
                  component-factory# ~components]
              (apply core.entities/add-entity-component e# (component-factory# data# options#))
              (doseq [call# ~attributes] (call# e#))
-             (let [result# (core.entities/entity-by-id (:uid e#))]
+             (let [result# (core.entities/entity-by-id (:uid e#))]        
                (core.eventbus/fire "entity.render" {:entity result#})
                (core.eventbus/fire "layout.do" {:container result# :type :attributes})
                result#)))))))

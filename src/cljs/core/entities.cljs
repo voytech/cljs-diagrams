@@ -215,19 +215,14 @@
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
-(defn- sorted-attributes-map [input]
-  (into (sorted-map-by (fn [k1 k2]
-                         (compare [(-> (get input k1) :attribute :index) k1]
-                                  [(-> (get input k2) :attribute :index) k2])))
-    input))
-
 (defn create-attribute-value [attribute_ data options]
   (let [attribute (get-attribute (:name attribute_))
         domain (:domain attribute)
         domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))
         component-factory (or (:factory domain-value) (:factory attribute))
         components (component-factory data options)
-        components-map (into {} (map (fn [d] {(:name d) d}) components))
+        components-map (let [temp-map (into {} (map (fn [d] {(:name d) d}) components))]
+                         (into (sorted-map-by (d/z-index-compare temp-map)) temp-map))
         result (AttributeValue. (str (random-uuid)) attribute data components-map)]
     (bus/fire "attribute-value.created" {:attribute-value result})
     result))

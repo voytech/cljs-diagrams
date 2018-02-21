@@ -58,9 +58,7 @@
 (bus/on ["component.created"] -999 (fn [event]
                                     (let [context (:context event)
                                           component (:component context)]
-                                        (js/console.log "component created:")
-                                        (js/console.log (clj->js (merge component (d/model component)))))))
-
+                                        (js/console.log (str "Component created - " (:name component)) " [ z-index : " (d/getp component :z-index) " ]."))))
 
 (bus/on ["component.added"] -999 (fn [event]))
 
@@ -98,8 +96,12 @@
                                     (js/console.log (clj->js (:entity context)))
                                     (render-entity (:entity context)))))
 
+(defn- reorder-uncommited []
+  (let [uncommited (get @rendering-context :redraw-properties)]
+    (into (sorted-map-by (d/z-index-compare)) uncommited)))
+
 (bus/on ["uncommited.render"] -999 (fn [event]
-                                     (let [uncommited (get @rendering-context :redraw-properties)]
+                                     (let [uncommited (reorder-uncommited)]
                                        (doseq [drawable-id (keys uncommited)]
                                           (render (get @d/components drawable-id))))))
 

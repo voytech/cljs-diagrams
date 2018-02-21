@@ -4,6 +4,7 @@
             [core.utils.dnd :as dnd]
             [ui.components.tools :as tv]
             [impl.tools :as toolsimpl]
+            [impl.renderers.default]
             [ui.components.workspace :as ws :refer [Workspace]]))
 
 ;;FUNCTIONS

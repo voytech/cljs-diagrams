@@ -56,11 +56,11 @@
           conR    (vector (+ (:left options) (:width defaults/DEFAULT_SIZE_OPTS)) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2) (:top options)))
           conT    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (:top options))
           conB    (vector (+ (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:left options)) (+ (:top options) (:height defaults/DEFAULT_SIZE_OPTS)))]
-      [(c/main "body" enriched-opts)
+      [(c/main "body" (assoc enriched-opts :round-x 5 :round-y 5))
        (c/control "connector-left"   (control-data conL) {:side :left})
        (c/control "connector-right"  (control-data conR) {:side :right})
        (c/control "connector-top"    (control-data conT) {:side :top})
-       (c/control "connector-bottom" (control-data conB) {:side :bottom})]))       
+       (c/control "connector-bottom" (control-data conB) {:side :bottom})]))
   (with-attributes [#(stdatr/name % "<Enter name here>")
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))

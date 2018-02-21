@@ -1,6 +1,7 @@
 (ns impl.renderers.default
   (:require [core.utils.general :refer [make-js-property]]
             [core.components :as d]
+            [core.entities :as e]
             [core.eventbus :as b]
             [core.rendering :as r]
             [impl.components :as impld]))
@@ -54,12 +55,20 @@
                                   :color "color"
                                   :border-width "strokeWidth"})
 
+(defonce fabric-value-mapping {:top 100000
+                               :bottom 0})
+
+(defn- resolve-value [val]
+  (if (keyword? val)
+    (or (val fabric-value-mapping) val)
+    val))
+
 (defn- to-fabric-property-map [input-map]
-  (apply merge (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (e input-map)}) (keys input-map))))
+  (apply merge (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (resolve-value (e input-map))}) (keys input-map))))
 
 (defn- fabric-apply [drawable source properties]
   (doseq [p properties]
-    (fabric-set source (or (p fabric-property-mapping) p) (d/getp drawable p))))
+    (fabric-set source (or (p fabric-property-mapping) p) (resolve-value (d/getp drawable p)))))
 
 (defn- synchronize-bounds [drawable]
   (let [source (:data (r/get-state-of drawable))]
@@ -76,7 +85,8 @@
   (let [fabric-object (create)]
      (make-js-property fabric-object "refId" (:uid drawable))
      (.add (:canvas context) fabric-object)
-     (.moveTo fabric-object (d/getp drawable :z-index))
+     (.moveTo (get context :canvas) fabric-object (resolve-value (d/getp drawable :z-index)))
+     (.renderAll (get context :canvas))
      {:data fabric-object}))
 
 ; in drawable-state we holds an fabric.js object.

@@ -94,21 +94,40 @@
   (diff-property [this p1 other p2]
     (not= (getp this p1) (getp other p2))))
 
+(defn z-index-compare
+  ([components_]
+   (fn [ck1 ck2]
+     (let [component-1 (get components_ ck1)
+           component-2 (get components_ ck2)
+           z-index-1 (getp component-1 :z-index)
+           z-index-2 (getp component-2 :z-index)
+           bind-val (fn [rel]
+                      (case rel
+                        :top 100000
+                        :bottom 1
+                        rel))]
+       (compare [(bind-val z-index-1) ck1]
+                [(bind-val z-index-2) ck2]))))
+  ([] (z-index-compare @components)))
+
 (defn- next-z-index []
   (or
-    (let [vs (vals @components)]
+    (let [vs (filterv #(number? (getp % :z-index)) (vals @components))]
       (when (and (not (nil? vs)) (< 0 (count vs)));
          (when-let [e (apply max-key #(getp % :z-index) vs)]
             (inc (getp e :z-index)))))
     1))
 
-(defn- assert-z-index [component]
+(defn- ensure-z-index [component]
   (when (nil? (getp component :z-index))
     (setp component :z-index (next-z-index))))
 
 (defn- add-component [component]
   (swap! components assoc (:uid component) component)
   (bus/fire "component.added" {:component component}))
+
+(defn through [visitor]
+  (doseq [component (vals @components)] (visitor component)))
 
 (defn remove-component [component]
   (swap! components dissoc (:uid component))
@@ -127,7 +146,7 @@
           _data  (merge (:init-data component-type) data)
           _props (merge (:props component-type) props)
           component (Component. (str (random-uuid)) name type (volatile! _data) _method _props)]
-      (assert-z-index component)
+      (ensure-z-index component)
       (bus/fire "component.created" {:component component})
       (add-component component)
       component)))

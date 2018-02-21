@@ -10,7 +10,6 @@
            [core.events :as events]
            [core.rendering :as r]
            [core.components :as d]
-           [impl.renderers.default :as dd]
            [core.layouts :as layouts]))
 
 (defonce project (atom {}))

@@ -311,7 +311,7 @@
 (defn- update-line-components [entity path]
   (check-override entity path)
   (e/remove-entity-components entity (fn [c] (>= (connector-idx (:name c)) (count path))))
-  (-> (map-indexed (fn [idx e] (update-line-component (e/entity-by-id (:uid entity)) idx (:x (first e)) (:y (first e)) (:x (last e)) (:y (last e)))) path)
+  (-> (map-indexed (fn [idx e] (update-line-component (e/volatile-entity entity)  idx (:x (first e)) (:y (first e)) (:x (last e)) (:y (last e)))) path)
       last))
 
 (defn update-manhattan-layout [entity s-normal e-normal]
@@ -333,9 +333,6 @@
        (and (= :bottom startpoint-connector) (= :left endpoint-connector)) [:v :h]
        :else (if (> (- (:x end-c-point) (:x start-c-point)) (- (:y end-c-point) (:y start-c-point))) [:h :h] [:v :v]))))
 
-(defn clear-orphan-components [entity start end]
-  (e/remove-entity-component entity "connector"))
-
 ;; Main behaviour function exposed by manhattan.
 (defn do-manhattan-layout []
   (fn [e]
@@ -345,7 +342,7 @@
            end (e/get-entity-component entity "end")
            connector (e/get-entity-component entity "connector")
            normals (calculate-normals entity start end)]
-        (clear-orphan-components entity start end)
+        (e/remove-entity-component entity "connector")
         (cond
           (= ::c/startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
           (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))

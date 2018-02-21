@@ -132,7 +132,7 @@
   (->> @d/components
        vals
        (filter #(d/contains-point? % x y))
-       (sort-by #(d/getp % :z-index) >)))
+       (sort-by #(d/resolve-z-index (d/getp % :z-index)) >)))
 
 (defn enrich [component]
   (when (d/is-component (:uid component))

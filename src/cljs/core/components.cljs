@@ -94,20 +94,21 @@
   (diff-property [this p1 other p2]
     (not= (getp this p1) (getp other p2))))
 
+(defn resolve-z-index [val]
+  (case val
+    :top 100000
+    :bottom 0
+    val))
+
 (defn z-index-compare
   ([components_]
    (fn [ck1 ck2]
      (let [component-1 (get components_ ck1)
            component-2 (get components_ ck2)
            z-index-1 (getp component-1 :z-index)
-           z-index-2 (getp component-2 :z-index)
-           bind-val (fn [rel]
-                      (case rel
-                        :top 100000
-                        :bottom 1
-                        rel))]
-       (compare [(bind-val z-index-1) ck1]
-                [(bind-val z-index-2) ck2]))))
+           z-index-2 (getp component-2 :z-index)]
+       (compare [(resolve-z-index z-index-1) ck1]
+                [(resolve-z-index z-index-2) ck2]))))
   ([] (z-index-compare @components)))
 
 (defn- next-z-index []

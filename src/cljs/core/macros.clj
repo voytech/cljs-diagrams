@@ -13,7 +13,15 @@
 
 (defmacro with-components [data options & components-vector]
   (let [components (if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
-    `(fn [~data ~options] ~components)))
+    `(fn [~data ~options]
+       (let [left# (or (:left ~options) 0)
+             top#  (or (:top  ~options) 0)
+             inc-props# (fn [component#]
+                          (doseq [vl# [[:left left#] [:top top#]]]
+                            (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
+                              (core.components/setp component# (vl# 0) new-val#)))
+                          component#)]    
+         (mapv inc-props# ~components)))))
 
 (defmacro with-domain [name body])
 
@@ -43,7 +51,7 @@
                  component-factory# ~components]
              (apply core.entities/add-entity-component e# (component-factory# data# options#))
              (doseq [call# ~attributes] (call# e#))
-             (let [result# (core.entities/entity-by-id (:uid e#))]        
+             (let [result# (core.entities/entity-by-id (:uid e#))]
                (core.eventbus/fire "entity.render" {:entity result#})
                (core.eventbus/fire "layout.do" {:container result# :type :attributes})
                result#)))))))

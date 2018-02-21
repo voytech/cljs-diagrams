@@ -108,6 +108,7 @@
 (bus/on ["rendering.finish"] -999 (fn [event]
                                     (all-rendered @rendering-context)
                                     nil))
+(defmulti initialize (fn [dom-id width height] @RENDERER))
 
 (defmulti all-rendered (fn [context] @RENDERER))
 

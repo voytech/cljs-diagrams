@@ -95,6 +95,15 @@
   (let [canvas (:canvas context)]
     (.remove canvas (:data state))))
 
+;;==========================================================================================================
+;; rendering context initialization
+;;==========================================================================================================
+(defmethod r/initialize :fabric [dom-id width height]
+  (let [canvas (js/fabric.StaticCanvas. dom-id)]
+     (.setWidth canvas width)
+     (.setHeight canvas height)
+     canvas))
+
 (defmethod r/all-rendered :fabric [context]
   (.renderAll (get context :canvas)))
 

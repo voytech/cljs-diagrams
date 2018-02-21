@@ -40,16 +40,14 @@
 (defonce source-events "click dbclick mousemove mousedown mouseup mouseenter mouseleave keypress keydown keyup")
 
 (defn initialize [id {:keys [width height]}]
-  (dom/console-log (str "Initializing canvas with id [ " id " ]."))
-  (let [data {:canvas (js/fabric.StaticCanvas. id)
+  (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
+  (let [data {:canvas (r/initialize id width height)
               :id id
               :width width
               :height height}]
-    (.setWidth (:canvas data) width)
-    (.setHeight (:canvas data) height)
     (reset! project data)
     (events/dispatch-events id (clojure.string/split source-events #" "))
-    (b/fire "rendering.context.update" {:canvas (:canvas data)})))
+    (b/fire "rendering.context.update" data)))
 
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type

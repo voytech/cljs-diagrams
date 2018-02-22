@@ -48,6 +48,10 @@
   (l/do-layout (-> entity :layouts :attributes) entity)
   (bus/fire "rendering.finish"))
 
+(defn- update-property-to-redraw [component properties]
+  (let [properties_ (concat (or (get-in @rendering-context [:redraw-properties (:uid component)]) #{}) properties)]
+    (vswap! rendering-context assoc-in [:redraw-properties (:uid component)] properties_)))
+
 (bus/on ["rendering.context.update"] -999 (fn [event]
                                             (let [context (:context event)]
                                               (update-context context))))
@@ -57,16 +61,14 @@
                                           component (:component context)]
                                         (js/console.log (str "Component created - " (:name component)) " [ z-index : " (d/getp component :z-index) " ]."))))
 
-(bus/on ["component.added"] -999 (fn [event]))
-
-(defn- update-property-to-redraw [component properties]
-  (let [properties_ (concat (or (get-in @rendering-context [:redraw-properties (:uid component)]) #{}) properties)]
-    (vswap! rendering-context assoc-in [:redraw-properties (:uid component)] properties_)))
-
 (bus/on ["component.changed"] -999 (fn [event]
                                     (let [context (:context event)
                                           component (:component context)]
                                        (update-property-to-redraw component (:properties context)))))
+
+(bus/on ["component.added"] -999 (fn [event]
+                                  (let [component (-> event :context :component)]
+                                     (update-property-to-redraw component (keys (d/model component))))))
 
 (bus/on ["component.render" "component.layout.finished"] -999 (fn [event]
                                                                 (let [context (:context event)

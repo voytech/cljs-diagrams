@@ -150,8 +150,6 @@
       (ensure-z-index component)
       (bus/fire "component.created" {:component component})
       (add-component component)
-      (changed component (keys _data))
-      (invoke-hook component :set-data _data)
       component)))
  ([type name data props]
   (new-component type name data props nil))

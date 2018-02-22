@@ -277,7 +277,8 @@
   (let [{:keys [value] {:keys [sync]} :attribute} attribute-value]
     (doseq [prop sync]
       (let [[component property] (clojure.string/split prop #"\.")]
-         (d/setp (get-attribute-value-component attribute-value component) (keyword property) value)))))
+         (d/setp (get-attribute-value-component attribute-value component) (keyword property) value)
+         (bus/fire "uncommited.render")))))
 
 (defn- update-attribute-value-value [entity attribute-value new-value]
   (let [eid  (entity-id entity)

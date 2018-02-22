@@ -37,7 +37,7 @@
 
 (defcomponent relation :draw-line {} {:border-color "black" :border-style :solid :border-width 1 :z-index :bottom})
 
-(defcomponent arrow :draw-triangle {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center})
+(defcomponent arrow :draw-triangle {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center :z-index :top})
 
 (defcomponent startpoint :draw-circle {:start "connector" :penultimate true} {:moveable true :visible true :z-index :top})
 

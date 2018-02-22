@@ -347,7 +347,6 @@
           (= ::c/startpoint (:type endpoint)) (std/position-startpoint entity (:movement-x e) (:movement-y e) :offset true)
           (= ::c/endpoint   (:type endpoint)) (std/position-endpoint   entity (:movement-x e) (:movement-y e) :offset true))
         (update-manhattan-layout entity (normals 0) (normals 1))
-        (js/console.log (clj->js (e/volatile-entity entity)))
         (b/fire "layout.do" {:container (e/volatile-entity entity) :type :attributes}))))
 
 (defn position-connector [entity connector m-x m-y]

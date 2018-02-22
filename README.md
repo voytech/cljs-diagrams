@@ -2,12 +2,13 @@
 
 Cljs library for creating different kinds of diagrams.
 Key functionalities:
-- creating different kind of entities (diagram entity classes)
+- defining different kind of entities (diagram entity classes)
 - creating relationships between entities
 - feeding entities with content (represented by attribute values)
-
-- different rendering engines (currentlty only canvas (via fabric.js), but will support SVG rendering)
-- extensibility via event driven model (Event Bus)
+- behaviours - event handling abstraction
+- auto-wiring of behaviours onto entities (via behaviour validators)
+- different rendering engines (currently only canvas (via fabric.js), but will support SVG rendering)
+- extensibility via event driven model (event bus)
 - extensive usage of macros : defentity, defcomponent, defatrribute, defbehaviour to provide DSL support for defining new entity classes.
 
 ## Dependencies
@@ -24,7 +25,7 @@ Need to reach minimal set of functionalities to be usable.
 
 ## License
 
-Copyright © 2017, **Wojciech Maka**
+Copyright © 2018, **Wojciech Maka**
 
 [1]: https://github.com/tailrecursion/boot
 [2]: https://github.com/technomancy/leiningen

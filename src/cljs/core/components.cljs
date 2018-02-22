@@ -150,6 +150,8 @@
       (ensure-z-index component)
       (bus/fire "component.created" {:component component})
       (add-component component)
+      (changed component (keys _data))
+      (invoke-hook component :set-data _data)
       component)))
  ([type name data props]
   (new-component type name data props nil))
@@ -163,6 +165,13 @@
 
 (defn add-hook [type function hook]
   (swap! hooks assoc-in [type function] hook))
+
+(defn suppress-hook [type function call]
+  (let [hook (get-in @hooks [type function])]
+    (swap! hooks update-in [type] dissoc function)
+    (let [result (call)]
+      (add-hook type function hook)
+      result)))
 
 (defn- invoke-hook [drawable function & args]
   (let [type (:type drawable)]

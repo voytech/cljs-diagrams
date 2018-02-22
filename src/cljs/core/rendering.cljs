@@ -11,9 +11,6 @@
 ; Sets default renderers
 (def RENDERER (atom :fabric))
 
-; Sets default rendering options.
-; Options can be :
-; :auto - should rendering be triggered automatically in drawable model property  changes or only on 'rendering.execute' events ?
 (def OPTIONS (atom {:auto false}))
 
 (defonce rendering-context (volatile! {}))
@@ -108,6 +105,7 @@
 (bus/on ["rendering.finish"] -999 (fn [event]
                                     (all-rendered @rendering-context)
                                     nil))
+
 (defmulti initialize (fn [dom-id width height] @RENDERER))
 
 (defmulti all-rendered (fn [context] @RENDERER))

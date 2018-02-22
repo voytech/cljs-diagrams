@@ -268,21 +268,22 @@
 (defn get-attribute-value-data [attribute-value]
   (:value attribute-value))
 
-;(defn- cached-create-attribute-value []
-;  (memoize create-attribute-value))
-
 (defn- replace-attribute-value [entity attribute-value new-value]
   (-> entity
       (remove-attribute-value attribute-value)
       (add-entity-attribute-value (create-attribute-value (:attribute attribute-value) new-value))))
 
+(defn- sync-attribute-value [attribute-value]
+  (let [{:keys [value] {:keys [sync]} :attribute} attribute-value]
+    (doseq [prop sync]
+      (let [[component property] (clojure.string/split prop #"\.")]
+         (d/setp (get-attribute-value-component attribute-value component) (keyword property) value)))))
+
 (defn- update-attribute-value-value [entity attribute-value new-value]
   (let [eid  (entity-id entity)
-        avid (attribute-value-id attribute-value)
-        attribute (:attribute (attribute-value-record attribute-value entity))]
+        avid (attribute-value-id attribute-value)]
     (swap! entities assoc-in [eid :attributes avid :value] new-value)
-    (when-let [sync (:sync attribute)]
-      (sync (get-attribute-value entity avid)))))
+    (sync-attribute-value (get-attribute-value entity avid))))
 
 (defn update-attribute-value [entity-or-id attribute-value-or-id value]
   (let [entity (entity-record entity-or-id)

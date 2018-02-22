@@ -23,10 +23,10 @@
 
 (defn- relation-data [points]
  (let [p1 (first points)
-       p2 (last points)])
- {:x1  (first p1) :y1  (last p1)
-  :x2  (first p2) :y2  (last p2)
-  :left (first p1) :top (last p1)})
+       p2 (last points)]
+   {:x1  (first p1) :y1  (last p1)
+    :x2  (first p2) :y2  (last p2)
+    :left (first p1) :top (last p1)}))
 
 (defn- endpoint-data [point visible]
  {:left (- (first point) 8)

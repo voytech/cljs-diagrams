@@ -15,9 +15,7 @@
   (with-definition
     {:cardinality 1
      :index 0
-     :sync (fn [av]
-             (d/setp (e/get-attribute-value-component av "value") :text (:value av)))})
-
+     :sync ["value.text"]})
   (with-components data options
     [(c/text "value" {:text data})])
   (with-behaviours))
@@ -26,8 +24,7 @@
   (with-definition
     {:cardinality 1
      :index 1
-     :sync (fn [av]
-             (d/setp (e/get-attribute-value-component av "value") :text (:value av)))})
+     :sync ["value.text"]})
   (with-components data options
     [(c/label "desc" {:text "Description"})
      (c/text "value" {:text data :left 60})])

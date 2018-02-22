@@ -19,16 +19,17 @@
      (d/getp drawable d1)))
 
 (defn- manage-related-properties [drawable p]
-  (cond p
-    :left (let [width (dimmension drawable :x2 :x1)]
-            (d/setp drawable :x1 (d/getp drawable :left))
-            (d/setp drawable :x2 (+ (d/getp drawable :left) width)))
-    :top (let [height (dimmension drawable :y2 :y1)]
-            (d/setp drawable :y1 (d/getp drawable :top))
-            (d/setp drawable :y2 (+ (d/getp drawable :top) height)))
-    (do
-      (setup-bbox drawable p :x1 :x2 :left :width)
-      (setup-bbox drawable p :y1 :y2 :top :height))))
+  (d/suppress-hook ::relation :setp ;; prevent circular dependency invocations
+    (fn []
+      (cond
+        (= p :left) (let [width (dimmension drawable :x2 :x1)]
+                      (d/setp drawable :x1 (d/getp drawable :left))
+                      (d/setp drawable :x2 (+ (d/getp drawable :left) width)))
+        (= p :top)  (let [height (dimmension drawable :y2 :y1)]
+                      (d/setp drawable :y1 (d/getp drawable :top))
+                      (d/setp drawable :y2 (+ (d/getp drawable :top) height)))
+        :else (do (setup-bbox drawable p :x1 :x2 :left :width)
+                  (setup-bbox drawable p :y1 :y2 :top  :height))))))
 
 (d/add-hook ::relation :setp manage-related-properties)
 

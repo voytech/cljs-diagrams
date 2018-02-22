@@ -6,13 +6,11 @@
 
 (defn- setup-bbox [drawable p p1 p2 p3 p4]
   (when (or (= p p1) (= p p2))
-    (d/suppress-hook ::relation :setp ;;prevent circular dependency
-      (fn []
-        (if (>= (d/getp drawable p1) (d/getp drawable p2))
-          (do (d/setp drawable p3 (d/getp drawable p2))
-              (d/setp drawable p4 (- (d/getp drawable p1) (d/getp drawable p2))))
-          (do (d/setp drawable p3 (d/getp drawable p1))
-              (d/setp drawable p4 (- (d/getp drawable p2) (d/getp drawable p1)))))))))
+    (if (>= (d/getp drawable p1) (d/getp drawable p2))
+      (do (d/setp drawable p3 (d/getp drawable p2))
+          (d/setp drawable p4 (- (d/getp drawable p1) (d/getp drawable p2))))
+      (do (d/setp drawable p3 (d/getp drawable p1))
+          (d/setp drawable p4 (- (d/getp drawable p2) (d/getp drawable p1)))))))
 
 (defn- dimmension [drawable d2 d1]
   (- (d/getp drawable d2)

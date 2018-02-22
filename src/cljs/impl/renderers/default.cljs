@@ -70,16 +70,18 @@
   (doseq [p properties]
     (fabric-set source (or (p fabric-property-mapping) p) (resolve-value (d/getp drawable p)))))
 
-(defn- synchronize-bounds [drawable]
+(defn- synchronize-dimmensions [drawable]
   (let [source (:data (r/get-state-of drawable))]
-    (when (or (nil? (d/get-width drawable)) (= :text (:type drawable))) (d/set-width  drawable (.-width  source)))
-    (when (or (nil? (d/get-height drawable)) (= :text (:type drawable))) (d/set-height drawable (.-height source)))))
+    (when (or (nil? (d/get-width drawable))
+              (= :draw-text (:rendering-method drawable))) (d/set-width  drawable (.-width  source)))
+    (when (or (nil? (d/get-height drawable))
+              (= :draw-text (:rendering-method drawable))) (d/set-height drawable (.-height source)))))
 
 (defn- property-change-render [drawable rendering-context]
   (let [source  (:data (r/get-state-of drawable))
         redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
       (fabric-apply drawable source redraw)
-      (synchronize-bounds drawable)))
+      (synchronize-dimmensions drawable)))
 
 (defn- fabric-create-rendering-state [context drawable create]
   (let [fabric-object (create)]

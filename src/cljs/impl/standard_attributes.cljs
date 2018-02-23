@@ -56,7 +56,7 @@
                     (bind-to ::c/text))
                 (-- (invalid-when #(= ::state (-> % :attribute :name))))
                 (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result "focus")))
+                  (ev/entity-event-key nil (-> target :attribute :name) result "focus")))
               (fn [e]
                 (let [event (:context e)]
                   ((behaviours/highlight true (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7})) event)
@@ -69,7 +69,7 @@
                   (bind-to ::c/text))
               (-- (invalid-when #(= ::state (-> % :attribute :name))))
               (fn [target behaviour result]
-                (ev/loose-event-name nil (-> target :attribute :name) result "blur")))
+                (ev/entity-event-key nil (-> target :attribute :name) result "blur")))
             (fn [e]
               (let [event (:context e)]
                 ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -80,7 +80,7 @@
               (fn [target this]
                 (let [attribute (:attribute target)]
                   (when-let [domain (:domain attribute)] ;; needs to find a way how to obtain a component name for domain entry.
-                    (ev/loose-event-name nil (-> attribute :name) ::c/text "activate"))))
+                    (ev/entity-event-key nil (-> attribute :name) ::c/text "activate"))))
               (fn [e]
                 (let [event (:context e)]
                   (ed/domain-editor event)
@@ -93,7 +93,7 @@
                     (bind-to ::c/text))
                 (-- (invalid-when #(< 0 (count (-> % :attribute :domain)))))
                 (fn [target behaviour result]
-                  (ev/loose-event-name nil (-> target :attribute :name) result "activate")))
+                  (ev/entity-event-key nil (-> target :attribute :name) result "activate")))
               (fn [e]
                 (let [event (:context e)]
                   (ed/editor event)

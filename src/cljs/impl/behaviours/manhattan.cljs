@@ -355,10 +355,11 @@
   (when (not= m-x 0) (d/setp connector :x2 (+ (d/getp connector :x2) m-x)))
   (when (not= m-y 0) (d/setp connector :y2 (+ (d/getp connector :y2) m-y))))
 
-(defn position-connector-end [connector xp yp m-x m-y]
+(defn position-connector-end [entity connector xp yp m-x m-y]
   (d/setp connector xp (+ (d/getp connector xp) m-x))
-  (d/setp connector yp (+ (d/getp connector yp) m-y)))
-
+  (d/setp connector yp (+ (d/getp connector yp) m-y))
+  (set-editable entity connector))
+  
 (defn control-connector []
   (fn [e]
     (let [movement-x (:movement-x e)
@@ -382,29 +383,29 @@
           (cond
             (and (= (d/getp trg-conn :x1) (d/getp prev-conn :x1))
                  (= (d/getp trg-conn :y1) (d/getp prev-conn :y1)))
-            (position-connector-end prev-conn :x1 :y1 constr-movement-x constr-movement-y)
+            (position-connector-end entity prev-conn :x1 :y1 constr-movement-x constr-movement-y)
             (and (= (d/getp trg-conn :x1) (d/getp prev-conn :x2))
                  (= (d/getp trg-conn :y1) (d/getp prev-conn :y2)))
-            (position-connector-end prev-conn :x2 :y2 constr-movement-x constr-movement-y)
+            (position-connector-end entity prev-conn :x2 :y2 constr-movement-x constr-movement-y)
             (and (= (d/getp trg-conn :x2) (d/getp prev-conn :x1))
                  (= (d/getp trg-conn :y2) (d/getp prev-conn :y1)))
-            (position-connector-end prev-conn :x1 :y1 constr-movement-x constr-movement-y)
+            (position-connector-end entity prev-conn :x1 :y1 constr-movement-x constr-movement-y)
             (and (= (d/getp trg-conn :x2) (d/getp prev-conn :x2))
                  (= (d/getp trg-conn :y2) (d/getp prev-conn :y2)))
-            (position-connector-end prev-conn :x2 :y2 constr-movement-x constr-movement-y)))
+            (position-connector-end entity prev-conn :x2 :y2 constr-movement-x constr-movement-y)))
        (when (not (nil? next-conn))
          (cond
            (and (= (d/getp trg-conn :x1) (d/getp next-conn :x1))
                 (= (d/getp trg-conn :y1) (d/getp next-conn :y1)))
-           (position-connector-end next-conn :x1 :y1 constr-movement-x constr-movement-y)
+           (position-connector-end entity next-conn :x1 :y1 constr-movement-x constr-movement-y)
            (and (= (d/getp trg-conn :x1) (d/getp next-conn :x2))
                 (= (d/getp trg-conn :y1) (d/getp next-conn :y2)))
-           (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)
+           (position-connector-end entity next-conn :x2 :y2 constr-movement-x constr-movement-y)
            (and (= (d/getp trg-conn :x2) (d/getp next-conn :x1))
                 (= (d/getp trg-conn :y2) (d/getp next-conn :y1)))
-           (position-connector-end next-conn :x1 :y1 constr-movement-x constr-movement-y)
+           (position-connector-end entity next-conn :x1 :y1 constr-movement-x constr-movement-y)
            (and (= (d/getp trg-conn :x2) (d/getp next-conn :x2))
                 (= (d/getp trg-conn :y2) (d/getp next-conn :y2)))
-           (position-connector-end next-conn :x2 :y2 constr-movement-x constr-movement-y)))
+           (position-connector-end entity next-conn :x2 :y2 constr-movement-x constr-movement-y)))
        (position-connector entity trg-conn constr-movement-x constr-movement-y)
        (persist-overrides entity trg-conn))))

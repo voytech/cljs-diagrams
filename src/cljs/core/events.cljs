@@ -121,7 +121,7 @@
                                (not (nil? component-type)) (conj (ns-qualified-element-name component-type))
                                (not (nil? event-type)) (conj (name event-type))))))
 
-(defn loose-event-name [entity-type attribute-name component-type event-type]
+(defn entity-event-key [entity-type attribute-name component-type event-type]
  (let [has-attribute  (and (not (nil? attribute-name)) (not (nil? entity-type)))]
     (event-name (if has-attribute nil entity-type)
                 attribute-name
@@ -170,22 +170,24 @@
 (defn trigger-bus-event
   ([e]
    (let [_e (assoc e :type (convert-to-application-event (:type e)))
-         event-name (loose-event-name (-> _e :entity :type)
+         event-name (entity-event-key (-> _e :entity :type)
                                       (-> _e :attribute-value :attribute :name)
                                       (-> _e :component :type)
                                       (-> _e :type))]
-     ;(js/console.log (str "on " event-name " [ total events :" (inc (b/total-events)) " ]"))
+     (js/console.log (str "on " event-name " [ total events :" (inc (b/total-events)) " ]"))
      (b/fire event-name _e)))
   ([e overrides]
    (trigger-bus-event (merge e overrides))))
 
-(defn- dispatch-events [id events]
-  (let [obj (js/document.getElementById id)
-        stream (merge-streams obj events)
+(defn- dispatch-events [id]
+  (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"
+                "mouseenter" "mouseleave" "keypress" "keydown" "keyup"]
+        obj        (js/document.getElementById id)
+        stream     (merge-streams obj events)
         onstart    (.map stream (fn [e] (on-phase :start) e))
         normalized (.map onstart (fn [e] (normalise-event e obj)))
-        delta    (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
-                                                       :movement-y (- (:top e) (or (:top acc) 0))}))
+        delta      (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
+                                                         :movement-y (- (:top e) (or (:top acc) 0))}))
         enriched (enriching-stream delta)
         pattern  (.map enriched (fn [e] (test e)))
         last     (.map pattern  (fn [e] (merge e @state {:type (or (:state @state) (:type e))})))] ; this could be moved to events/tests at the end

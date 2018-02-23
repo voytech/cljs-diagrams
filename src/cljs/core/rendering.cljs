@@ -58,8 +58,7 @@
 
 (bus/on ["component.created"] -999 (fn [event]
                                     (let [context (:context event)
-                                          component (:component context)]
-                                        (js/console.log (str "Component created - " (:name component)) " [ z-index : " (d/getp component :z-index) " ]."))))
+                                          component (:component context)])))
 
 (bus/on ["component.changed"] -999 (fn [event]
                                     (let [context (:context event)

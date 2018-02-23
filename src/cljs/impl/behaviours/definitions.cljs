@@ -26,7 +26,7 @@
               "Default Relation Link Moving By" :moving-by
               (validate
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation))
-                (fn [entity behaviour result] (ev/loose-event-name (:type entity) nil nil "moveby")))
+                (fn [entity behaviour result] (ev/entity-event-key (:type entity) nil nil "moveby")))
               (fn [e]
                 (let [event (:context e)
                       entity (:entity event)
@@ -155,28 +155,3 @@
                 (let [event (:context e)]
                   (std/toggle-control (:entity event) (-> event :component :name) false)
                   nil)))
-
-
-; (bus/on ["relation.relation.mousepointclick"] -999 (fn [e]
-;                                                     ((insert-breakpoint) (:context @e))
-;                                                     (bus/fire "uncommited.render")
-;                                                     (bus/fire "rendering.finish")))
-;
-; (bus/on ["relation.breakpoint.mousepointclick"] -999 (fn [e]
-;                                                       ((dissoc-breakpoint) (:context @e))
-;                                                       (bus/fire "uncommited.render")
-;                                                       (bus/fire "rendering.finish")))
-;(defbehaviour free-moving-component
-;              "Moving Entity Component" :component-moving
-;              (b/generic-validator [{:tmpl #{:startpoint :endpoint :relation}
-;                                     :func (fn [requires types] (= requires (clojure.set/intersection requires types)))
-;                                     :result [:startpoint :endpoint]))
-;              "mousedrag"
-;              (fn [e]
-;                (let [event (:context @e)]
-;                  ((ib/moving-endpoint) event)
-;                  ((b/intersects? "body" (fn [src trg] (ib/toggle-controls (:entity trg) true))
-;                                         (fn [src trg] (ib/toggle-controls (:entity trg) false))) (:context @e)
-;                  (bus/fire "uncommited.render")   ;TODO Fire on after all handlers executed.
-;                  (bus/fire "rendering.finish") ;TODO Fire on after all handlers executed.
-;                  nil)))

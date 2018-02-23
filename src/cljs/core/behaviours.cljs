@@ -72,7 +72,7 @@
   (if (fn? action-fn?)
     action-fn?
     (fn [target behaviour result]
-       (ev/loose-event-name (:type target) nil result action-fn?))))
+       (ev/entity-event-key (:type target) nil result action-fn?))))
 
 (defn- is-all-valid [targets]
   (= 0 (count (filter #(= % false) targets))))
@@ -106,7 +106,7 @@
 (defonce hooks (atom {}))
 
 (defn trigger-behaviour [entity avalue component event-suffix data]
-  (bus/fire (ev/loose-event-name (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))
+  (bus/fire (ev/entity-event-key (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))
 
 (bus/on ["entity.component.added"] -999 (fn [event]
                                             (let [context (:context event)

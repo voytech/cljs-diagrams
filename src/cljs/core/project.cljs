@@ -37,8 +37,6 @@
 (defn clear-selection []
   (vswap! project-state dissoc :selection))
 
-(defonce source-events "click dbclick mousemove mousedown mouseup mouseenter mouseleave keypress keydown keyup")
-
 (defn initialize [id {:keys [width height]}]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
   (let [data {:canvas (r/initialize id width height)
@@ -46,7 +44,7 @@
               :width width
               :height height}]
     (reset! project data)
-    (events/dispatch-events id (clojure.string/split source-events #" "))
+    (events/dispatch-events id)
     (b/fire "rendering.context.update" data)))
 
 ;;--------------------------------

@@ -9,7 +9,7 @@ Key functionalities:
 - auto-wiring of behaviours onto entities (via behaviour validators)
 - different rendering engines (currently only canvas (via fabric.js), but will support SVG rendering)
 - extensibility via event driven model (event bus)
-- extensive usage of macros : defentity, defcomponent, defatrribute, defbehaviour to provide DSL support for defining new entity classes.
+- DSL for defining new entity classes (via macros : defentity, defcomponent, defatrribute, defbehaviour) .
 
 ## Dependencies
 

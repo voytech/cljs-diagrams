@@ -111,6 +111,7 @@
         {:points (vec xaxis) :axis :x})))
   ([point-a point-b]
    (cond
+     (= point-a point-b)           :p
      (= (:x point-a) (:x point-b)) :y
      (= (:y point-a) (:y point-b)) :x
      :else :xy)))
@@ -266,7 +267,7 @@
         y1 (d/getp line :y1)
         y2 (d/getp line :y2)
         axis (if (= x1 x2) :y :x)
-        ctrl-name (str (:name line) "-ctrl")
+        ctrl-name (str (:name line) CONTROL_SUFFIX)
         width (if (= :x axis) (/ (js/Math.abs (- x2 x1)) 2) 8)
         height (if (= :x axis) 8 (/ (js/Math.abs (- y2 y1)) 2))
         left  (if (= :x axis) (+ (if (<= x1 x2) x1 x2) (/ width 2)) (- x1 4))
@@ -276,6 +277,10 @@
     (e/update-component-prop entity ctrl-name :target-connector (:name line))
     (e/update-component-prop entity ctrl-name :prev-connector  (str "line-" (dec conn-idx)))
     (e/update-component-prop entity ctrl-name :next-connector  (str "line-" (inc conn-idx)))))
+
+(defn- refresh-connector-control [entity line]
+  (when-let [control (e/get-entity-component entity (str (:name line) CONTROL_SUFFIX))]
+    (set-editable entity line)))
 
 (defn- try-override-coords [entity name sx sy ex ey]
   (let [line (e/get-entity-component entity name)
@@ -358,8 +363,8 @@
 (defn position-connector-end [entity connector xp yp m-x m-y]
   (d/setp connector xp (+ (d/getp connector xp) m-x))
   (d/setp connector yp (+ (d/getp connector yp) m-y))
-  (set-editable entity connector))
-  
+  (refresh-connector-control entity connector))
+
 (defn control-connector []
   (fn [e]
     (let [movement-x (:movement-x e)

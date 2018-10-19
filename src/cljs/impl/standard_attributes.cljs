@@ -26,8 +26,7 @@
      :index 1
      :sync ["value.text"]})
   (with-components data options
-    [(c/label "desc" {:text "Description"})
-     (c/text "value" {:text data :left 60})])
+    [(c/text "value" {:text data :left 60})])
   (with-behaviours))
 
 (defattribute state
@@ -37,16 +36,13 @@
   (with-domain
      [(value :open
         (with-components data options
-          [(c/rect "background" {:background-color "green" :width 35 :height 14 :round-x 5 :round-y 5})
-           (c/text "value-open" {:text "OPEN" :border-color "white" :left 2})]))
+           [(c/text "value-open" {:text "[OPEN]" :border-color "green" :left 2})]))
       (value :progress
         (with-components data options
-          [(c/rect "background" {:background-color "yellow" :width 55 :height 14 :round-x 5 :round-y 5})
-           (c/text "value-progress" {:text "PROGRESS" :border-color "black" :left 2})]))
+           [(c/text "value-progress" {:text "[PROGRESS]" :border-color "blue" :left 2})]))
       (value :closed
         (with-components data options
-          [(c/rect "background" {:background-color "black" :width 40 :height 14 :round-x 5 :round-y 5})
-           (c/text "value-closed" {:text "CLOSED" :border-color "white" :left 2})]))]))
+           [(c/text "value-closed" {:text "[CLOSED]" :border-color "black" :left 2})]))]))
 
 
 (defbehaviour attribute-hovering

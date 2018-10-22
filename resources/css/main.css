@@ -131,6 +131,8 @@ img.page-thumb{
   border-color:black;
   border-style:dashed;
   border-width:1px;
+  width: 100%;
+  height: 100%;
 }
 
 .visible {

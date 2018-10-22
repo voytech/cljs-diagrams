@@ -79,8 +79,21 @@
 (defn append-child [parent child]
   (.appendChild parent child))
 
+(defn create-node [tag id]
+  (let [element (.createElement js/document tag)]
+    (-> element
+        (attr "id" id))
+    element))
+
 (defn attr [elem name val]
   (.attr (j-query elem) name val))
+
+(defn attrs [elem attrs]
+  (when-let [target (j-query elem)]
+    (doseq [key (keys attrs)]
+      (.attr target
+              (clj->js key)
+              (clj->js (get attrs key))))))
 
 (defn replace-container-content [container content]
   (remove-childs container)

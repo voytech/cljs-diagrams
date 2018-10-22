@@ -21,9 +21,7 @@
 
 (defn ProjectCanvas [id]
   (fn []
-    [:div
-      [canvas-initializing-wrapper
-        [:div {:id id :class "canvas"}]]]))
+      ))
 
 (defn Workspace [class]
   [:div {:id "workspace-inner" :class (:class class)}
@@ -31,5 +29,5 @@
            :class "workspace-div"
            :on-drop resolve-drop
            :on-drag-over #(.preventDefault %)}
-       [ProjectCanvas "project-page"]]])
-    ;[:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) p/select-page p/add-page p/remove-page]]
+       [canvas-initializing-wrapper
+         [:div {:id "project" :class "canvas"}]]]])

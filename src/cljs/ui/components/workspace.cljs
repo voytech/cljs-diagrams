@@ -19,10 +19,6 @@
  (with-meta identity
    {:component-did-mount #(p/initialize (.-id (reagent/dom-node %)) {:width 1270 :height 1000 :renderer :svg})}))
 
-(defn ProjectCanvas [id]
-  (fn []
-      ))
-
 (defn Workspace [class]
   [:div {:id "workspace-inner" :class (:class class)}
     [:div {:id "canvas-wrapper"

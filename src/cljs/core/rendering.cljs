@@ -23,7 +23,7 @@
 (defn update-state [drawable state]
   (vswap! drawable-states assoc (if (record? drawable) (:uid drawable) drawable) state))
 
-(defn set-rendering [renderer]
+(defn set-renderer [renderer]
   (reset! RENDERER renderer))
 
 (defn get-rendering []
@@ -120,6 +120,11 @@
 (defmulti destroy-rendering-state (fn [component context] [@RENDERER (or (:rendering-method component) (:type component))]))
 
 (defmethod destroy-rendering-state :default [rendering-state context])
+
+(defn create [dom-id width height renderer]
+  (set-renderer renderer)
+  (update-context (initialize dom-id width height))
+  @rendering-context)
 
 (defn render [component]
   (when (not (nil? component))

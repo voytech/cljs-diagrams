@@ -37,16 +37,14 @@
 (defn clear-selection []
   (vswap! project-state dissoc :selection))
 
-(defn initialize [id {:keys [width height]}]
+(defn initialize [id {:keys [width height renderer]}]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
-  (let [data {:canvas (r/initialize id width height)
+  (let [data {:canvas (r/create id width height renderer)
               :id id
               :width width
               :height height}]
     (reset! project data)
-    (events/dispatch-events id)
-    (b/fire "rendering.context.update" data)))
-
+    (events/dispatch-events id)))
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------

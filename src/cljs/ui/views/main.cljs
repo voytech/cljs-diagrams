@@ -4,13 +4,11 @@
             [core.utils.dnd :as dnd]
             [ui.components.tools :as tv]
             [impl.tools :as toolsimpl]
-            [impl.renderers.default]
+            [core.rendering :as rendering]
+            [impl.renderers.svg]
             [ui.components.workspace :as ws :refer [Workspace]]))
 
-;;FUNCTIONS
-
-;;COMPONENTS
-
+ 
 (defn Library [class]
   [:div {:class (:class class)}
     [components/Tabs {:name "Toolbox" :view [tv/ToolBox :basic-tools]}

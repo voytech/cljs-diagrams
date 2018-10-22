@@ -17,13 +17,13 @@
 
 (def canvas-initializing-wrapper
  (with-meta identity
-   {:component-did-mount #(p/initialize (.-id (reagent/dom-node %)) {:width 1270  :height 1000})}))
+   {:component-did-mount #(p/initialize (.-id (reagent/dom-node %)) {:width 1270 :height 1000 :renderer :svg})}))
 
-(defn FabricCanvas [id]
+(defn ProjectCanvas [id]
   (fn []
     [:div
       [canvas-initializing-wrapper
-        [:canvas {:id id :class "canvas"}]]]))
+        [:div {:id id :class "canvas"}]]]))
 
 (defn Workspace [class]
   [:div {:id "workspace-inner" :class (:class class)}
@@ -31,5 +31,5 @@
            :class "workspace-div"
            :on-drop resolve-drop
            :on-drag-over #(.preventDefault %)}
-       [FabricCanvas "project-page"]]])
+       [ProjectCanvas "project-page"]]])
     ;[:div {:id "pagination" :class "center"} [DynamicPagination (vals (:pages @project)) p/select-page p/add-page p/remove-page]]

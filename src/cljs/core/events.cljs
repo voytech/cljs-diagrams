@@ -128,7 +128,7 @@
                 component-type
                 event-type)))
 
-(defn- lookup-all [x y]
+(defn- resolve-targets [x y]
   (->> @d/components
        vals
        (filter #(d/contains-point? % x y))
@@ -164,7 +164,7 @@
 
 (defn- enriching-stream [input]
   (.map input (fn [e]
-                 (->> (enrich (or (:component @state) (first (lookup-all (:left e) (:top e)))))
+                 (->> (enrich (or (:component @state) (first (resolve-targets (:left e) (:top e)))))
                       (merge e)))))
 
 (defn trigger-bus-event

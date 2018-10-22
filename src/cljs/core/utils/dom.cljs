@@ -73,7 +73,6 @@
 (defn elem-hidden [elem]
   (.css (js/jQuery elem) "display" "none"))
 
-
 (defn remove-childs [parent]
   (.empty (j-query parent)))
 

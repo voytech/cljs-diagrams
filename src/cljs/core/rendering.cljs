@@ -123,7 +123,7 @@
 
 (defn create [dom-id width height renderer]
   (set-renderer renderer)
-  (update-context (initialize dom-id width height))
+  (update-context {:canvas (initialize dom-id width height) :id dom-id})
   @rendering-context)
 
 (defn render [component]

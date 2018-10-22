@@ -12,31 +12,34 @@
                                :top  "y"
                                :round-x "rx"
                                :round-y "ry"
-                               :text "text"
                                :width  "width"
                                :height "height"
-                               :origin-x "originX"
-                               :origin-y "originY"
                                :angle "angle"
                                :x1 "x1"
                                :y1 "y1"
                                :x2 "x2"
                                :y2 "y2"
-                               :z-index "zIndex"
                                :border-color  "stroke"
                                :background-color "fill"
                                :radius "radius"
-                               :font-family "fontFamily"
-                               :font-weight "fontWeight"
-                               :font-size "fontSize"
-                               :text-align "textAlign"
+                               :font-family "font-family"
+                               :font-weight "font-weight"
+                               :font-size "font-size"
+                               :text-align "text-align"
                                :visible "visible"
-                               :color "color"
-                               :border-width "strokeWidth"})
+                               :color "stroke"
+                               :border-width "stroke-width"})
+
+(defonce constants-bindings {:top 100000
+                             :bottom 0})
+
+(defn- resolve-value [val]
+ (if (keyword? val)
+   (or (val constants-bindings) val)
+   val))
 
 (defn- svg-shape-attributes [component-model]
-
-  )
+  (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value (e component-model))}) (keys component-model))))
 
 ;;==========================================================================================================
 ;; rendering context initialization
@@ -55,7 +58,7 @@
 
 (defmethod r/create-rendering-state [:svg :draw-rect] [component context]
   (let [attributes (svg-shape-attributes (d/model component))]
-     (svg/create-rect (:canvas context) attributes)))
+    {:data (svg/create-rect (:canvas context) attributes)}))
 
 (defmethod r/destroy-rendering-state [:svg :draw-rect] [component context]
   (console.log "destroy-rendering-state :draw-rect has been not yet implemented."))

@@ -6,6 +6,7 @@
             [core.rendering :as r]
             [core.utils.dom :as dom]
             [core.utils.svg :as svg]
+            [reagent.core :as reagent :refer [atom]]
             [impl.components :as impld]))
 
 (defonce svg-property-mapping {:left "x"
@@ -30,22 +31,42 @@
                                :color "stroke"
                                :border-width "stroke-width"})
 
+(defonce reactive-svgs (atom {}))
+
 (defonce constants-bindings {:top 100000
                              :bottom 0})
-
 (defn- resolve-value [val]
  (if (keyword? val)
    (or (val constants-bindings) val)
    val))
 
-(defn- svg-shape-attributes [component-model]
-  (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value (e component-model))}) (keys component-model))))
+(defn- svg-shape-attributes
+  ([component-model]
+    (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value (e component-model))}) (keys component-model))))
+  ([component-model attributes]
+    (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value (e component-model))}) attributes))))
+
+(defn- attributes-sync [component rendering-context]
+  (let [source  (:data (r/get-state-of component))
+        component-model (d/model component)
+        properties  (get-in rendering-context [:redraw-properties (:uid component)])
+        svg-attributes (svg-shape-attributes component-model properties)
+        old-svg-attributes (get-in @reactive-svgs [(:uid component) 1])]
+    (swap! reactive-svgs assoc-in [(:uid component) 1] (merge old-svg-attributes svg-attributes))))
+
+(defn Root [dom-id width height]
+  [:svg {:id (str dom-id "-svg") :width width :height height}
+    (doall
+      (for [uid (keys  @reactive-svgs)]
+        ^{:key uid}
+        (get @reactive-svgs uid)))])
 
 ;;==========================================================================================================
 ;; rendering context initialization
 ;;==========================================================================================================
 (defmethod r/initialize :svg [dom-id width height]
-  (svg/create-svg dom-id "svg" {:width width :height height}))
+  (reagent/render-component [Root (str dom-id "-svg") width height]
+    (dom/by-id dom-id)))
 
 (defmethod r/all-rendered :svg [context]
   (console.log "all-rendered: SVG renderer does not support this type of method."))
@@ -54,11 +75,13 @@
 ;; rect rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:svg :draw-rect] [component context]
-  (console.log "do-render :draw-rect has been not yet implemented."))
+  (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:svg :draw-rect] [component context]
-  (let [attributes (svg-shape-attributes (d/model component))]
-    {:data (svg/create-rect (:canvas context) attributes)}))
+  (let [attributes (svg-shape-attributes (d/model component))
+        state [:rect (merge {:id (:uid component)} attributes)]]
+    (swap! reactive-svgs assoc (:uid component) state)
+    {:data state}))
 
 (defmethod r/destroy-rendering-state [:svg :draw-rect] [component context]
   (console.log "destroy-rendering-state :draw-rect has been not yet implemented."))

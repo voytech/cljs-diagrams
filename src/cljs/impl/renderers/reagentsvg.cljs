@@ -1,11 +1,10 @@
-(ns impl.renderers.svg
+(ns impl.renderers.reagentsvg
   (:require [core.utils.general :refer [make-js-property]]
             [core.components :as d]
             [core.entities :as e]
             [core.eventbus :as b]
             [core.rendering :as r]
             [core.utils.dom :as dom]
-            [core.utils.svg :as svg]
             [reagent.core :as reagent :refer [atom]]
             [impl.components :as impld]))
 
@@ -64,73 +63,73 @@
 ;;==========================================================================================================
 ;; rendering context initialization
 ;;==========================================================================================================
-(defmethod r/initialize :svg [dom-id width height]
+(defmethod r/initialize :reagentsvg [dom-id width height]
   (reagent/render-component [Root (str dom-id "-svg") width height]
     (dom/by-id dom-id)))
 
-(defmethod r/all-rendered :svg [context]
+(defmethod r/all-rendered :reagentsvg [context]
   (console.log "all-rendered: SVG renderer does not support this type of method."))
 
 ;;==========================================================================================================
 ;; rect rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:svg :draw-rect] [component context]
+(defmethod r/do-render [:reagentsvg :draw-rect] [component context]
   (attributes-sync component context))
 
-(defmethod r/create-rendering-state [:svg :draw-rect] [component context]
+(defmethod r/create-rendering-state [:reagentsvg :draw-rect] [component context]
   (let [attributes (svg-shape-attributes (d/model component))
         state [:rect (merge {:id (:uid component)} attributes)]]
     (swap! reactive-svgs assoc (:uid component) state)
     {:data state}))
 
-(defmethod r/destroy-rendering-state [:svg :draw-rect] [component context]
+(defmethod r/destroy-rendering-state [:reagentsvg :draw-rect] [component context]
   (console.log "destroy-rendering-state :draw-rect has been not yet implemented."))
 
 ;;==========================================================================================================
 ;; startpoint rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:svg :draw-circle] [component context]
+(defmethod r/do-render [:reagentsvg :draw-circle] [component context]
   (console.log "do-render :draw-rect has been not yet implemented."))
 
-(defmethod r/create-rendering-state [:svg :draw-circle] [component context]
+(defmethod r/create-rendering-state [:reagentsvg :draw-circle] [component context]
   (console.log "create-rendering-state :draw-circle has been not yet implemented."))
 
-(defmethod r/destroy-rendering-state [:svg :draw-circle] [component context]
+(defmethod r/destroy-rendering-state [:reagentsvg :draw-circle] [component context]
   (console.log "destroy-rendering-state :draw-rect has been not yet implemented."))
 
 
 ;;==========================================================================================================
 ;; line rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:svg :draw-line] [component rendering-context]
+(defmethod r/do-render [:reagentsvg :draw-line] [component rendering-context]
   (console.log "do-render :draw-line has been not yet implemented."))
 
-(defmethod r/create-rendering-state [:svg :draw-line] [component context]
+(defmethod r/create-rendering-state [:reagentsvg :draw-line] [component context]
   (console.log "create-rendering-state :draw-line has been not yet implemented."))
 
-(defmethod r/destroy-rendering-state [:svg :draw-line] [component context]
+(defmethod r/destroy-rendering-state [:reagentsvg :draw-line] [component context]
   (console.log "destroy-rendering-state :draw-line has been not yet implemented."))
 
 ;;==========================================================================================================
 ;; triangle rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:svg :draw-triangle] [component context]
+(defmethod r/do-render [:reagentsvg :draw-triangle] [component context]
   (console.log "do-render :draw-triangle has been not yet implemented."))
 
-(defmethod r/create-rendering-state [:svg :draw-triangle] [component context]
+(defmethod r/create-rendering-state [:reagentsvg :draw-triangle] [component context]
   (console.log "create-rendering-state :draw-triangle has been not yet implemented."))
 
-(defmethod r/destroy-rendering-state [:svg :draw-triangle] [component context]
+(defmethod r/destroy-rendering-state [:reagentsvg :draw-triangle] [component context]
   (console.log "destroy-rendering-state :draw-triangle has been not yet implemented."))
 
 ;;==========================================================================================================
 ;; text rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:svg :draw-text] [component context]
+(defmethod r/do-render [:reagentsvg :draw-text] [component context]
   (console.log "do-render :draw-text has been not yet implemented."))
 
-(defmethod r/create-rendering-state [:svg :draw-text] [component context]
+(defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
   (console.log "create-rendering-state :draw-text has been not yet implemented."))
 
-(defmethod r/destroy-rendering-state [:svg :draw-text] [component context]
+(defmethod r/destroy-rendering-state [:reagentsvg :draw-text] [component context]
   (console.log "destroy-rendering-state :draw-text has been not yet implemented."))

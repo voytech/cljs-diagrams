@@ -5,10 +5,10 @@
             [ui.components.tools :as tv]
             [impl.tools :as toolsimpl]
             [core.rendering :as rendering]
-            [impl.renderers.svg]
+            [impl.renderers.reagentsvg]
             [ui.components.workspace :as ws :refer [Workspace]]))
 
- 
+
 (defn Library [class]
   [:div {:class (:class class)}
     [components/Tabs {:name "Toolbox" :view [tv/ToolBox :basic-tools]}

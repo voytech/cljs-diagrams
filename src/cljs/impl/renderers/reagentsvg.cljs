@@ -26,28 +26,34 @@
                                :font-weight "font-weight"
                                :font-size "font-size"
                                :text-align "text-align"
-                               :visible "visible"
+                               :visible "visibility"
                                :color "stroke"
                                :border-width "stroke-width"})
+
+(defonce svg-value-mapping {:visible [{:from true :to "visible"} {:from false :to "hidden"}]})
 
 (defonce reactive-svgs (atom {}))
 
 (defonce constants-bindings {:top 100000
                              :bottom 0})
-(defn- resolve-value [val]
+(defn- resolve-value [key val]
  (if (keyword? val)
    (or (val constants-bindings) val)
-   val))
+   (or (when-let [mapping (key svg-value-mapping)]
+         (-> (filter #(== (:from %) val) mapping)
+             (first)
+             :to))
+       val)))
 
 (defn- model-attributes [component]
   (let [model (d/model component)]
-    (apply merge (mapv (fn [e] {e (resolve-value (e model))}) (keys model)))))
+    (apply merge (mapv (fn [e] {e (resolve-value e (e model))}) (keys model)))))
 
 (defn- svg-shape-attributes
   ([component-model]
-    (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value (e component-model))}) (keys component-model))))
+    (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value e (e component-model))}) (keys component-model))))
   ([component-model attributes]
-    (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value (e component-model))}) attributes))))
+    (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value e (e component-model))}) attributes))))
 
 (defn- attributes-sync [component rendering-context]
   (let [source  (:data (r/get-state-of component))

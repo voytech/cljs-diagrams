@@ -130,7 +130,7 @@
 ;;==========================================================================================================
 ;; line rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:reagentsvg :draw-line] [component rendering-context]
+(defmethod r/do-render [:reagentsvg :draw-line] [component context]
   (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-line] [component context]

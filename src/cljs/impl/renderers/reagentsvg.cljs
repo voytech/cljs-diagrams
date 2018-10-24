@@ -36,6 +36,7 @@
 
 (defonce constants-bindings {:top 100000
                              :bottom 0})
+
 (defn- resolve-value [key val]
  (if (keyword? val)
    (or (val constants-bindings) val)
@@ -100,15 +101,26 @@
   (swap! reactive-svgs dissoc (:uid component)))
 
 ;;==========================================================================================================
-;; startpoint rendering
+;; circle rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-circle] [component context]
-  (attributes-sync component context))
+  (let [source  (:data (r/get-state-of component))
+        component-model (model-attributes component)
+        properties  (get-in context [:redraw-properties (:uid component)])
+        svg-attributes (svg-shape-attributes component-model properties)
+        circle-attribs (merge svg-attributes {
+          "cx" (+ (:left component-model) (:radius component-model))
+          "cy" (+ (:top component-model) (:radius component-model))})
+        old-svg-attributes (get-in @reactive-svgs [(:uid component) :dom 1])]
+    (swap! reactive-svgs assoc-in [(:uid component) :dom 1] (merge old-svg-attributes circle-attribs))))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-circle] [component context]
   (let [model (model-attributes component)
         attributes (svg-shape-attributes model)
-        state {:dom  [:circle (merge {:id (:uid component)} attributes)] :attributes model}]
+        circle-attribs (merge attributes {
+          "cx" (+ (:left model) (:radius model))
+          "cy" (+ (:top model) (:radius model))})
+        state {:dom  [:circle (merge {:id (:uid component)} circle-attribs)] :attributes model}]
     (swap! reactive-svgs assoc (:uid component) state)
     {:data state}))
 

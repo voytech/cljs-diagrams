@@ -32,6 +32,8 @@
  {:left (- (first point) 8)
   :top (- (last point)   8)
   :radius 8
+  :width 16
+  :height 16
   :background-color "white"
   :border-color "black"
   :visible visible})

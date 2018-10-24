@@ -50,15 +50,18 @@
         component-model (d/model component)
         properties  (get-in rendering-context [:redraw-properties (:uid component)])
         svg-attributes (svg-shape-attributes component-model properties)
-        old-svg-attributes (get-in @reactive-svgs [(:uid component) 1])]
-    (swap! reactive-svgs assoc-in [(:uid component) 1] (merge old-svg-attributes svg-attributes))))
+        old-svg-attributes (get-in @reactive-svgs [(:uid component) :dom 1])]
+    (swap! reactive-svgs assoc-in [(:uid component) :dom 1] (merge old-svg-attributes svg-attributes))))
+
+(defn- z-index-sorted []
+  (sort-by #(-> % :attributes :z-index) (vals @reactive-svgs)))
 
 (defn Root [dom-id width height]
   [:svg {:id (str dom-id "-svg") :width width :height height}
     (doall
-      (for [uid (keys  @reactive-svgs)]
-        ^{:key uid}
-        (get @reactive-svgs uid)))])
+      (for [svg (z-index-sorted)]
+        ^{:key (-> svg :attributes :id)}
+        (:dom svg)))])
 
 ;;==========================================================================================================
 ;; rendering context initialization
@@ -77,8 +80,9 @@
   (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-rect] [component context]
-  (let [attributes (svg-shape-attributes (d/model component))
-        state [:rect (merge {:id (:uid component)} attributes)]]
+  (let [model (d/model component)
+        attributes (svg-shape-attributes model)
+        state {:dom  [:rect (merge {:id (:uid component)} attributes)] :attributes model}]
     (swap! reactive-svgs assoc (:uid component) state)
     {:data state}))
 

@@ -21,7 +21,7 @@
                                :y2 "y2"
                                :border-color  "stroke"
                                :background-color "fill"
-                               :radius "radius"
+                               :radius "r"
                                :font-family "font-family"
                                :font-weight "font-weight"
                                :font-size "font-size"
@@ -39,6 +39,10 @@
    (or (val constants-bindings) val)
    val))
 
+(defn- model-attributes [component]
+  (let [model (d/model component)]
+    (apply merge (mapv (fn [e] {e (resolve-value (e model))}) (keys model)))))
+
 (defn- svg-shape-attributes
   ([component-model]
     (apply merge (mapv (fn [e] {(keyword (or (e svg-property-mapping) e)) (resolve-value (e component-model))}) (keys component-model))))
@@ -47,7 +51,7 @@
 
 (defn- attributes-sync [component rendering-context]
   (let [source  (:data (r/get-state-of component))
-        component-model (d/model component)
+        component-model (model-attributes component)
         properties  (get-in rendering-context [:redraw-properties (:uid component)])
         svg-attributes (svg-shape-attributes component-model properties)
         old-svg-attributes (get-in @reactive-svgs [(:uid component) :dom 1])]
@@ -80,39 +84,46 @@
   (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-rect] [component context]
-  (let [model (d/model component)
+  (let [model (model-attributes component)
         attributes (svg-shape-attributes model)
         state {:dom  [:rect (merge {:id (:uid component)} attributes)] :attributes model}]
     (swap! reactive-svgs assoc (:uid component) state)
     {:data state}))
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-rect] [component context]
-  (console.log "destroy-rendering-state :draw-rect has been not yet implemented."))
+  (swap! reactive-svgs dissoc (:uid component)))
 
 ;;==========================================================================================================
 ;; startpoint rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-circle] [component context]
-  (console.log "do-render :draw-rect has been not yet implemented."))
+  (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-circle] [component context]
-  (console.log "create-rendering-state :draw-circle has been not yet implemented."))
+  (let [model (model-attributes component)
+        attributes (svg-shape-attributes model)
+        state {:dom  [:circle (merge {:id (:uid component)} attributes)] :attributes model}]
+    (swap! reactive-svgs assoc (:uid component) state)
+    {:data state}))
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-circle] [component context]
-  (console.log "destroy-rendering-state :draw-rect has been not yet implemented."))
-
+  (swap! reactive-svgs dissoc (:uid component)))
 
 ;;==========================================================================================================
 ;; line rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-line] [component rendering-context]
-  (console.log "do-render :draw-line has been not yet implemented."))
+  (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-line] [component context]
-  (console.log "create-rendering-state :draw-line has been not yet implemented."))
+  (let [model (model-attributes component)
+        attributes (svg-shape-attributes model)
+        state {:dom  [:line (merge {:id (:uid component)} attributes)] :attributes model}]
+    (swap! reactive-svgs assoc (:uid component) state)
+    {:data state}))
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-line] [component context]
-  (console.log "destroy-rendering-state :draw-line has been not yet implemented."))
+  (swap! reactive-svgs dissoc (:uid component)))
 
 ;;==========================================================================================================
 ;; triangle rendering
@@ -124,16 +135,20 @@
   (console.log "create-rendering-state :draw-triangle has been not yet implemented."))
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-triangle] [component context]
-  (console.log "destroy-rendering-state :draw-triangle has been not yet implemented."))
+  (swap! reactive-svgs dissoc (:uid component)))
 
 ;;==========================================================================================================
 ;; text rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-text] [component context]
-  (console.log "do-render :draw-text has been not yet implemented."))
+  (attributes-sync component context)) ;;sync text attribute !!!
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
-  (console.log "create-rendering-state :draw-text has been not yet implemented."))
+  (let [model (model-attributes component)
+        attributes (svg-shape-attributes model)
+        state {:dom  [:text (merge {:id (:uid component)} attributes) (:text model)] :attributes model}]
+    (swap! reactive-svgs assoc (:uid component) state)
+    {:data state}))
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-text] [component context]
-  (console.log "destroy-rendering-state :draw-text has been not yet implemented."))
+  (swap! reactive-svgs dissoc (:uid component)))

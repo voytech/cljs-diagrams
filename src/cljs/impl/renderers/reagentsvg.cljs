@@ -71,11 +71,14 @@
   (sort-by #(-> % :attributes :z-index) (vals @reactive-svgs)))
 
 (defn Root [dom-id width height]
-  [:svg {:id (str dom-id "-svg") :width width :height height}
-    (doall
-      (for [svg (z-index-sorted)]
-        ^{:key (-> svg :attributes :id)}
-        (:dom svg)))])
+  (with-meta
+    [:svg {:id (str dom-id "-svg") :width width :height height}
+      (doall
+        (for [svg (z-index-sorted)]
+          ^{:key (-> svg :attributes :id)}
+          (:dom svg)))]
+    {:component-did-mount (fn [this] (console.log "Text mount "))
+     :component-did-update (fn [this] (console.log "Text update "))}))
 
 ;;==========================================================================================================
 ;; rendering context initialization
@@ -155,7 +158,7 @@
         y (:top model)
         width (:width model)
         height (:height model)]
-   (str "M " (- x (/ width 2)) "," (+ y (/ height 2)) " " 
+   (str "M " (- x (/ width 2)) "," (+ y (/ height 2)) " "
              (+ x (/ width 2)) "," (+ y (/ height 2)) " "
               x "," (- y (/ height 2))
         " z")))
@@ -179,10 +182,12 @@
 (defmethod r/do-render [:reagentsvg :draw-text] [component context]
   (attributes-sync component context))
 
+
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
   (let [model (model-attributes component)
         attributes (svg-shape-attributes model)
-        state {:dom  [:text (merge {:id (:uid component)} attributes) (:text model)] :attributes model}]
+        state { :dom  [:text (merge {:id (:uid component)} attributes) (:text model)]
+                :attributes model }]
     (swap! reactive-svgs assoc (:uid component) state)
     {:data state}))
 

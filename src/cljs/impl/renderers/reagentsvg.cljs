@@ -155,7 +155,10 @@
         y (:top model)
         width (:width model)
         height (:height model)]
-   (str "M " (- x (/ width 2)) "," (+ y (/ height 2)) " " (+ x (/ width 2)) "," (+ y (/ height 2)) " " x "," (- y (/ height 2)) " z")))
+   (str "M " (- x (/ width 2)) "," (+ y (/ height 2)) " " 
+             (+ x (/ width 2)) "," (+ y (/ height 2)) " "
+              x "," (- y (/ height 2))
+        " z")))
 
 (defmethod r/do-render [:reagentsvg :draw-triangle] [component context]
   (attributes-sync component context {:d (path-d-from-pos (model-attributes component))}))

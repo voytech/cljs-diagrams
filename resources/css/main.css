@@ -309,3 +309,10 @@ img.page-thumb{
 .hoplon-grid > tbody > tr >td {
   vertical-align:middle
 }
+
+svg text{
+   -webkit-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   user-select: none;
+}

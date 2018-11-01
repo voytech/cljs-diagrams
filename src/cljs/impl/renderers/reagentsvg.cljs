@@ -8,27 +8,27 @@
             [reagent.core :as reagent :refer [atom]]
             [impl.components :as impld]))
 
-(defonce svg-property-mapping {:left "x"
-                               :top  "y"
-                               :round-x "rx"
-                               :round-y "ry"
-                               :width  "width"
-                               :height "height"
-                               :angle {:to "transform" :eval (fn [v] (str "rotate(" v ")" ))}
-                               :x1 "x1"
-                               :y1 "y1"
-                               :x2 "x2"
-                               :y2 "y2"
-                               :border-color  "stroke"
-                               :background-color "fill"
-                               :radius "r"
-                               :font-family "font-family"
-                               :font-weight "font-weight"
-                               :font-size "font-size"
-                               :text-align "text-align"
-                               :visible {:to "visibility" :eval (fn [v] (if (== v true) "visible" "hidden"))}
-                               :color "stroke"
-                               :border-width "stroke-width"})
+(defonce svg-property-mapping {:left :x
+                               :top  :y
+                               :round-x :rx
+                               :round-y :ry
+                               :width  :width
+                               :height :height
+                               :angle {:to :transform :eval (fn [val mdl] (str "rotate(" val "," (:left mdl) "," (:top mdl) ")" ))}
+                               :x1 :x1
+                               :y1 :y1
+                               :x2 :x2
+                               :y2 :y2
+                               :border-color  :stroke
+                               :background-color :fill
+                               :radius :r
+                               :font-family :font-family
+                               :font-weight :font-weight
+                               :font-size :font-size
+                               :text-align :text-align
+                               :visible {:to :visibility :eval (fn [val mdl] (if (== val true) "visible" "hidden"))}
+                               :color :stroke
+                               :border-width :stroke-width})
 
 (defonce reactive-svgs (atom {}))
 
@@ -44,25 +44,28 @@
   (let [model (d/model component)]
     (apply merge (mapv (fn [e] {e (resolve-value (e model))}) (keys model)))))
 
-(defn- resolve-attribute [attrib-key attrib-val]
-  (when-let [svg-attrib (or (attrib-key svg-property-mapping) attrib-key)]
+(defn- resolve-attribute [attrib-key model]
+  (let [attrib-val (attrib-key model)
+        svg-attrib (or (attrib-key svg-property-mapping) attrib-key)]
     (if (map? svg-attrib)
-       {(:to svg-attrib) ((:eval svg-attrib) (resolve-value attrib-val))}
-       {(keyword svg-attrib) (resolve-value attrib-val)})))
+       {(:to svg-attrib) ((:eval svg-attrib) (resolve-value attrib-val) model)}
+       {svg-attrib (resolve-value attrib-val)})))
 
 (defn- svg-shape-attributes
   ([component-model]
-    (apply merge (mapv (fn [e] (resolve-attribute e (e component-model))) (keys component-model))))
+    (apply merge (mapv (fn [e] (resolve-attribute e component-model)) (keys component-model))))
   ([component-model attributes]
-    (apply merge (mapv (fn [e] (resolve-attribute e (e component-model))) attributes))))
+    (apply merge (mapv (fn [e] (resolve-attribute e component-model)) attributes))))
 
-(defn- attributes-sync [component rendering-context]
-  (let [source  (:data (r/get-state-of component))
-        component-model (model-attributes component)
-        properties  (get-in rendering-context [:redraw-properties (:uid component)])
-        svg-attributes (svg-shape-attributes component-model properties)
-        old-svg-attributes (get-in @reactive-svgs [(:uid component) :dom 1])]
-    (swap! reactive-svgs assoc-in [(:uid component) :dom 1] (merge old-svg-attributes svg-attributes))))
+(defn- attributes-sync
+  ([component rendering-context computed-attributes]
+    (let [source  (:data (r/get-state-of component))
+          component-model (model-attributes component)
+          properties  (get-in rendering-context [:redraw-properties (:uid component)])
+          svg-attributes (svg-shape-attributes component-model properties)
+          old-svg-attributes (get-in @reactive-svgs [(:uid component) :dom 1])]
+      (swap! reactive-svgs assoc-in [(:uid component) :dom 1] (merge old-svg-attributes svg-attributes computed-attributes))))
+  ([component rendering-context] (attributes-sync component rendering-context {})))
 
 (defn- z-index-sorted []
   (sort-by #(-> % :attributes :z-index) (vals @reactive-svgs)))
@@ -147,13 +150,20 @@
 ;;==========================================================================================================
 ;; triangle rendering
 ;;==========================================================================================================
+(defn- path-d-from-pos [model]
+  (let [x (:left model)
+        y (:top model)
+        width (:width model)
+        height (:height model)]
+   (str "M " (- x (/ width 2)) "," (+ y (/ height 2)) " " (+ x (/ width 2)) "," (+ y (/ height 2)) " " x "," (- y (/ height 2)) " z")))
+
 (defmethod r/do-render [:reagentsvg :draw-triangle] [component context]
-  (console.log "do-render :draw-triangle has been not yet implemented."))
+  (attributes-sync component context {:d (path-d-from-pos (model-attributes component))}))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-triangle] [component context]
   (let [model (model-attributes component)
         attributes (svg-shape-attributes model)
-        state {:dom  [:path (merge {:id (:uid component) :d "M 95,50 5,95 5,5 z"} attributes)] :attributes model}]
+        state {:dom  [:path (merge {:id (:uid component) :d (path-d-from-pos model)} attributes)] :attributes model}]
     (swap! reactive-svgs assoc (:uid component) state)
     {:data state}))
 
@@ -164,9 +174,7 @@
 ;; text rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-text] [component context]
-  (attributes-sync component context)
-  (console.log "TEXT Properties converted")
-  (console.log (clj->js (get @reactive-svgs (:uid component)))))
+  (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
   (let [model (model-attributes component)

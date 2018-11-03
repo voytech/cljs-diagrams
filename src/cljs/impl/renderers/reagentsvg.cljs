@@ -32,6 +32,8 @@
 
 (defonce reactive-svgs (atom {}))
 
+(defonce pending-measures (atom []))
+
 (defonce constants-bindings {:top 100000
                              :bottom 0})
 
@@ -70,15 +72,25 @@
 (defn- z-index-sorted []
   (sort-by #(-> % :attributes :z-index) (vals @reactive-svgs)))
 
+(defn- measure-text []
+  (doseq [id @pending-measures]
+    (let [element (dom/by-id id)
+          bbox (.getBBox element)]
+      (console.log bbox)))
+  (reset! pending-measures []))
+
 (defn Root [dom-id width height]
-  (with-meta
-    [:svg {:id (str dom-id "-svg") :width width :height height}
-      (doall
-        (for [svg (z-index-sorted)]
-          ^{:key (-> svg :attributes :id)}
-          (:dom svg)))]
-    {:component-did-mount (fn [this] (console.log "Text mount "))
-     :component-did-update (fn [this] (console.log "Text update "))}))
+  (reagent/create-class {
+    :display-name  "Root"
+    :component-did-update
+        (fn [this old-argv] (measure-text))
+    :reagent-render (fn [dom-id width height]
+                      [:svg {:id (str dom-id "-svg") :width width :height height}
+                        (doall
+                          (for [svg (z-index-sorted)]
+                            ^{:key (-> svg :attributes :id)}
+                            (:dom svg)))])
+                    }))
 
 ;;==========================================================================================================
 ;; rendering context initialization
@@ -180,10 +192,11 @@
 ;; text rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-text] [component context]
+  (swap! pending-measures conj (:uid component))
   (attributes-sync component context))
 
-
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
+  (swap! pending-measures conj (:uid component))
   (let [model (model-attributes component)
         attributes (svg-shape-attributes model)
         state { :dom  [:text (merge {:id (:uid component)} attributes) (:text model)]

@@ -5,6 +5,7 @@
             [core.eventbus :as b]
             [core.rendering :as r]
             [core.utils.dom :as dom]
+            [core.eventbus :as bus]
             [reagent.core :as reagent :refer [atom]]
             [impl.components :as impld]))
 
@@ -32,7 +33,7 @@
 
 (defonce reactive-svgs (atom {}))
 
-(defonce pending-measures (atom []))
+(defonce pending-measures (atom {}))
 
 (defonce constants-bindings {:top 100000
                              :bottom 0})
@@ -72,12 +73,20 @@
 (defn- z-index-sorted []
   (sort-by #(-> % :attributes :z-index) (vals @reactive-svgs)))
 
+(defn- request-text-measure [component]
+  (swap! pending-measures assoc (:uid component) component))
+
+(defn- close-text-measure [id]
+  (swap! pending-measures dissoc id))
+
 (defn- measure-text []
-  (doseq [id @pending-measures]
-    (let [element (dom/by-id id)
-          bbox (.getBBox element)]
-      (console.log bbox)))
-  (reset! pending-measures []))
+  (doseq [id (keys @pending-measures)]
+    (let [domnode (dom/by-id id)
+          component (get @pending-measures id)
+          bbox (.getBBox domnode)]
+      (d/set-data component {:width (.-width bbox) :height (.-height bbox)})
+      (close-text-measure id)
+      (bus/fire "layout.do" {:container (e/lookup component :entity) :type :attributes}))))
 
 (defn Root [dom-id width height]
   (reagent/create-class {
@@ -192,11 +201,11 @@
 ;; text rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-text] [component context]
-  (swap! pending-measures conj (:uid component))
+  (request-text-measure component)
   (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
-  (swap! pending-measures conj (:uid component))
+  (request-text-measure component)
   (let [model (model-attributes component)
         attributes (svg-shape-attributes model)
         state { :dom  [:text (merge {:id (:uid component)} attributes) (:text model)]

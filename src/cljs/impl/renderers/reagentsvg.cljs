@@ -205,7 +205,7 @@
   (attributes-sync component context))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
-  (request-text-measure component)
+  ;;(request-text-measure component)
   (let [model (model-attributes component)
         attributes (svg-shape-attributes model)
         state { :dom  [:text (merge {:id (:uid component)} attributes) (:text model)]
@@ -214,4 +214,5 @@
     {:data state}))
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-text] [component context]
+  (close-text-measure (:uid component))
   (swap! reactive-svgs dissoc (:uid component)))

@@ -9,27 +9,35 @@
             [reagent.core :as reagent :refer [atom]]
             [impl.components :as impld]))
 
-(defonce svg-property-mapping {:left :x
-                               :top  :y
-                               :round-x :rx
-                               :round-y :ry
-                               :width  :width
-                               :height :height
-                               :angle {:to :transform :eval (fn [val mdl] (str "rotate(" val "," (:left mdl) "," (:top mdl) ")" ))}
-                               :x1 :x1
-                               :y1 :y1
-                               :x2 :x2
-                               :y2 :y2
-                               :border-color  :stroke
-                               :background-color :fill
-                               :radius :r
-                               :font-family :font-family
-                               :font-weight :font-weight
-                               :font-size :font-size
-                               :text-align :text-align
-                               :visible {:to :visibility :eval (fn [val mdl] (if (== val true) "visible" "hidden"))}
-                               :color :stroke
-                               :border-width :stroke-width})
+(defn- simple-set [to]
+  (fn [svg val mdl]
+    (assoc-in svg [1 to] val)))
+
+(defonce svg-property-mapping {:left (simple-set :x)
+                               :top  (simple-set :y)
+                               :round-x (simple-set :rx)
+                               :round-y (simple-set :ry)
+                               :width  (simple-set :width)
+                               :height (simple-set :height)
+                               :angle  (fn [svg val mdl]
+                                          (assoc-in svg [1 :transform]
+                                            (str "rotate(" val "," (:left mdl) "," (:top mdl) ")" )))
+                               :x1 (simple-set :x1)
+                               :y1 (simple-set :y1)
+                               :x2 (simple-set :x2)
+                               :y2 (simple-set :y2)
+                               :border-color  (simple-set :stroke)
+                               :background-color (simple-set :fill)
+                               :radius (simple-set :r)
+                               :font-family (simple-set :font-family)
+                               :font-weight (simple-set :font-weight)
+                               :font-size (simple-set :font-size)
+                               :text-align (simple-set :text-align)
+                               :text (fn [svg val mdl] (assoc svg 2 val))
+                               :visible (fn [svg val mdl] (assoc-in svg [1 :visibility] (if (== val true) "visible" "hidden")))
+                               :color (simple-set :stroke)
+                               :border-style (simple-set :stroke-style)
+                               :border-width (simple-set :stroke-width)})
 
 (defonce reactive-svgs (atom {}))
 
@@ -47,28 +55,35 @@
   (let [model (d/model component)]
     (apply merge (mapv (fn [e] {e (resolve-value (e model))}) (keys model)))))
 
-(defn- resolve-attribute [attrib-key model]
-  (let [attrib-val (attrib-key model)
-        svg-attrib (or (attrib-key svg-property-mapping) attrib-key)]
-    (if (map? svg-attrib)
-       {(:to svg-attrib) ((:eval svg-attrib) (resolve-value attrib-val) model)}
-       {svg-attrib (resolve-value attrib-val)})))
+(defn- resolve-attribute-wrapper [model]
+  (fn [svg attribute]
+    (let [func (attribute svg-property-mapping)]
+       (if (not (nil? func))
+         (func svg (resolve-value (attribute model)) model)
+         svg))))
 
-(defn- svg-shape-attributes
-  ([component-model]
-    (apply merge (mapv (fn [e] (resolve-attribute e component-model)) (keys component-model))))
-  ([component-model attributes]
-    (apply merge (mapv (fn [e] (resolve-attribute e component-model)) attributes))))
+(defn- sync-svg-element
+  ([svg component-model]
+    (sync-svg-element svg component-model (keys component-model)))
+  ([svg component-model attributes]
+    (reduce (resolve-attribute-wrapper component-model) svg attributes)))
 
-(defn- attributes-sync
-  ([component rendering-context computed-attributes]
-    (let [source  (:data (r/get-state-of component))
-          component-model (model-attributes component)
-          properties  (get-in rendering-context [:redraw-properties (:uid component)])
-          svg-attributes (svg-shape-attributes component-model properties)
-          old-svg-attributes (get-in @reactive-svgs [(:uid component) :dom 1])]
-      (swap! reactive-svgs assoc-in [(:uid component) :dom 1] (merge old-svg-attributes svg-attributes computed-attributes))))
-  ([component rendering-context] (attributes-sync component rendering-context {})))
+(defn- update-svg-element [component rendering-context postprocess]
+  (let [source  (get-in @reactive-svgs [(:uid component) :dom])
+        model (model-attributes component)
+        properties  (get-in rendering-context [:redraw-properties (:uid component)])
+        svg (sync-svg-element source model properties)]
+    (swap! reactive-svgs assoc (:uid component)
+      {:dom (if (not (nil? postprocess)) (postprocess svg) svg)
+       :attributes model})))
+
+(defn- create-svg-element [svg-name component rendering-context postprocess]
+  (let [source [svg-name {:id (:uid component)}]
+        model (model-attributes component)
+        svg (sync-svg-element source model)]
+    (swap! reactive-svgs assoc (:uid component)
+      {:dom (if (not (nil? postprocess)) (postprocess svg) svg)
+       :attributes model})))
 
 (defn- z-index-sorted []
   (sort-by #(-> % :attributes :z-index) (vals @reactive-svgs)))
@@ -115,15 +130,10 @@
 ;; rect rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-rect] [component context]
-  (attributes-sync component context))
-
+  (update-svg-element component context nil))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-rect] [component context]
-  (let [model (model-attributes component)
-        attributes (svg-shape-attributes model)
-        state {:dom  [:rect (merge {:id (:uid component)} attributes)] :attributes model}]
-    (swap! reactive-svgs assoc (:uid component) state)
-    {:data state}))
+  {:data (create-svg-element :rect component context nil)})
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-rect] [component context]
   (swap! reactive-svgs dissoc (:uid component)))
@@ -131,26 +141,20 @@
 ;;==========================================================================================================
 ;; circle rendering
 ;;==========================================================================================================
+
+(defn- circle [component]
+  (fn [svg]
+    (let [mdl (model-attributes component)]
+      (-> svg
+         (assoc-in [1 :cx] (+ (:left mdl ) (:radius mdl)) )
+         (assoc-in [1 :cy] (+ (:top  mdl ) (:radius mdl)) ) ))))
+
 (defmethod r/do-render [:reagentsvg :draw-circle] [component context]
-  (let [source  (:data (r/get-state-of component))
-        component-model (model-attributes component)
-        properties  (get-in context [:redraw-properties (:uid component)])
-        svg-attributes (svg-shape-attributes component-model properties)
-        circle-attribs (merge svg-attributes {
-          "cx" (+ (:left component-model) (:radius component-model))
-          "cy" (+ (:top component-model) (:radius component-model))})
-        old-svg-attributes (get-in @reactive-svgs [(:uid component) :dom 1])]
-    (swap! reactive-svgs assoc-in [(:uid component) :dom 1] (merge old-svg-attributes circle-attribs))))
+  (update-svg-element component context (circle component)))
+
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-circle] [component context]
-  (let [model (model-attributes component)
-        attributes (svg-shape-attributes model)
-        circle-attribs (merge attributes {
-          "cx" (+ (:left model) (:radius model))
-          "cy" (+ (:top model) (:radius model))})
-        state {:dom  [:circle (merge {:id (:uid component)} circle-attribs)] :attributes model}]
-    (swap! reactive-svgs assoc (:uid component) state)
-    {:data state}))
+  {:data (create-svg-element :circle component context (circle component))})
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-circle] [component context]
   (swap! reactive-svgs dissoc (:uid component)))
@@ -159,14 +163,10 @@
 ;; line rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-line] [component context]
-  (attributes-sync component context))
+  (update-svg-element component context nil))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-line] [component context]
-  (let [model (model-attributes component)
-        attributes (svg-shape-attributes model)
-        state {:dom  [:line (merge {:id (:uid component)} attributes)] :attributes model}]
-    (swap! reactive-svgs assoc (:uid component) state)
-    {:data state}))
+  {:data (create-svg-element :line component context nil)})
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-line] [component context]
   (swap! reactive-svgs dissoc (:uid component)))
@@ -174,8 +174,9 @@
 ;;==========================================================================================================
 ;; triangle rendering
 ;;==========================================================================================================
-(defn- path-d-from-pos [model]
-  (let [x (:left model)
+(defn- triangle-from-pos [component]
+  (let [model (model-attributes component)
+        x (:left model)
         y (:top model)
         width (:width model)
         height (:height model)]
@@ -184,15 +185,15 @@
               x "," (- y (/ height 2))
         " z")))
 
+(defn- triangle [component]
+  (fn [svg]
+    (assoc-in svg [1 :d] (triangle-from-pos component))))
+
 (defmethod r/do-render [:reagentsvg :draw-triangle] [component context]
-  (attributes-sync component context {:d (path-d-from-pos (model-attributes component))}))
+  (update-svg-element component context (triangle component)))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-triangle] [component context]
-  (let [model (model-attributes component)
-        attributes (svg-shape-attributes model)
-        state {:dom  [:path (merge {:id (:uid component) :d (path-d-from-pos model)} attributes)] :attributes model}]
-    (swap! reactive-svgs assoc (:uid component) state)
-    {:data state}))
+  {:data (create-svg-element :path component context (triangle component))})
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-triangle] [component context]
   (swap! reactive-svgs dissoc (:uid component)))
@@ -202,16 +203,10 @@
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-text] [component context]
   (request-text-measure component)
-  (attributes-sync component context))
+  (update-svg-element component context nil))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]
-  ;;(request-text-measure component)
-  (let [model (model-attributes component)
-        attributes (svg-shape-attributes model)
-        state { :dom  [:text (merge {:id (:uid component)} attributes) (:text model)]
-                :attributes model }]
-    (swap! reactive-svgs assoc (:uid component) state)
-    {:data state}))
+  {:data (create-svg-element :text component context nil)})
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-text] [component context]
   (close-text-measure (:uid component))

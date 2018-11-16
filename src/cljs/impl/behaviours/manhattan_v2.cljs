@@ -75,11 +75,19 @@
              {:src src :trg trg :d (distance (center-point src) (center-point trg))})
            (apply min-key #(:d %)))))
 
-(defn- position-entity-endpoint [entity component movement-x movement-y]
-  (std/apply-effective-position component movement-x movement-y :offset)
-  (when (= (:type component) ::c/endpoint)
-    (let [arrow (e/get-entity-component entity "arrow")]
-      (std/apply-effective-position arrow movement-x movement-y :offset))))
+(defn- position-entity-endpoint
+  ([entity component movement-x movement-y]
+    (std/apply-effective-position component movement-x movement-y :offset)
+    (when (= (:type component) ::c/endpoint)
+      (let [arrow (e/get-entity-component entity "arrow")]
+        (std/apply-effective-position arrow movement-x movement-y :offset))))
+  ([entity endpoint to-point]
+    (std/apply-effective-position endpoint (:x to-point) (:y to-point) :absolute)
+    (when (= (:type endpoint) ::c/endpoint)
+      (let [arrow (e/get-entity-component entity "arrow")
+            x (+ (:x to-point) (/ (d/get-width arrow) 2))
+            y (+ (:y to-point) (/ (d/get-height arrow) 2))]
+        (std/apply-effective-position arrow x y :absolute)))))
 
 (defn on-endpoint-event [event]
   (let [{:keys [entity component movement-x movement-y]} event
@@ -99,12 +107,13 @@
             active (e/get-entity-component entity (if-not (nil? start) "start" "end"))
             passive (e/get-entity-component entity (if-not (nil? start) "end" "start"))
             vectors (eval-vectors (center-point active) (center-point passive))]
-        (position-entity-endpoint entity active movement-x movement-y)    
+        (position-entity-endpoint entity active movement-x movement-y)
         (update-manhattan-layout entity active passive (vectors 0) (vectors 1)))
       (let [{:keys [src trg]} (nearest-controls-between start end)
+            startpoint (e/get-entity-component entity "start")
+            endpoint (e/get-entity-component entity "end")
             vectors (calculate-vectors start src end trg)]
-        (console.log (clj->js start))
-        (console.log (clj->js end))
-        (console.log (clj->js vectors))
+        (position-entity-endpoint entity startpoint {:x (d/get-left src) :y (d/get-top src)})
+        (position-entity-endpoint entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
         (update-manhattan-layout entity src trg (vectors 0) (vectors 1) movement-x movement-y)))
     (b/fire "layout.do" {:container (e/volatile-entity entity) :type :attributes})))

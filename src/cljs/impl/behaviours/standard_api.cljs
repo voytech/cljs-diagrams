@@ -134,27 +134,17 @@
                                              movementY
                                              :offset))))))
 
-(defn set-endpoint-relation-data [src src-cmp trg trg-cmp]
-  (let [ctrl-side (e/component-property trg (:name trg-cmp) :side)]
-    (e/update-component-prop src (:name src-cmp) :rel-connector ctrl-side)
-    (e/update-component-prop src (:name src-cmp) :rel-entity-uid (:uid trg))))
-
-(defn dissoc-endpoint-relation-data [src end]
-  (e/remove-component-prop src end :rel-connector)
-  (e/remove-component-prop src end :rel-entity-uid))
-
 (defn relations-validate [entity]
  (doseq [relation (:relationships entity)]
    (let [related-entity (e/entity-by-id (:entity-id relation))
-         end-type (:association-data relation)
+         relation-type (:relation-type relation)
          component-type (cond
-                          (= "start" end-type) ::c/startpoint
-                          (= "end" end-type) ::c/endpoint)
+                          (= :start relation-type) ::c/startpoint
+                          (= :end relation-type) ::c/endpoint)
          endpoint (first (e/get-entity-component entity component-type))
          controls (e/get-entity-component related-entity ::c/control)
          component-intersections (filter #(d/intersects? % endpoint) controls)]
      (when (= 0 (count component-intersections))
-       (dissoc-endpoint-relation-data entity (:name endpoint))
        (e/disconnect-entities entity related-entity)))))
 
 (defn set-relation-movement-hook [sent-type rent-type hook]

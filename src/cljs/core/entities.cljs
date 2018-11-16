@@ -179,12 +179,18 @@
  ([entity name type]
   (assert-component entity name type {})))
 
-(defn connect-entities [src trg association-type arg1 arg2]
-  (let [src-rel (conj (:relationships src) {:relation-type association-type :association-data arg1 :entity-id (:uid trg)})
-        trg-rel (conj (:relationships trg) {:relation-type association-type :association-data arg2 :entity-id (:uid src)})]
+(defn connect-entities [src trg association-type]
+  (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg)})
+        trg-rel (conj (:relationships trg) {:relation-type association-type :entity-id (:uid src)})]
     (swap! entities assoc-in [(:uid src) :relationships] src-rel)
     (swap! entities assoc-in [(:uid trg) :relationships] trg-rel)))
 
+(defn get-related-entities [entity association-type]
+  (let [_entity (volatile-entity entity)]
+    (->> (:relationships _entity)
+         (filter  #(= (:relation-type %) association-type))
+         (mapv #(entity-by-id (:entity-id %))))))
+  
 (defn disconnect-entities
   ([src trg]
    (let [src-rel (filter #(not= (:uid trg) (:entity-id %)) (:relationships src))

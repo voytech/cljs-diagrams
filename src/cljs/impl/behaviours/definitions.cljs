@@ -6,7 +6,7 @@
             [core.events :as ev]
             [core.components :as d]
             [impl.behaviours.standard-api :as std]
-            [impl.behaviours.manhattan :as m]
+            [impl.behaviours.manhattan-v2 :as m]
             [impl.components :as c])
   (:require-macros [core.macros :refer [defbehaviour having-all having-strict make-event validate bind-to --]]))
 
@@ -30,11 +30,10 @@
               (fn [e]
                 (let [event (:context e)
                       entity (:entity event)
-                      relation (:relation event)
-                      adata (:association-data relation)
-                      component (e/get-entity-component entity adata)
-                      enriched (merge event {:component component})]
-                  ((m/do-manhattan-layout) enriched)
+                      start (first (e/get-related-entities entity :start))
+                      end (first (e/get-related-entities entity :end))
+                      enriched (merge event {:start start :end end})]
+                  (m/on-source-entity-event enriched)
                   nil)))
 
 (defbehaviour moving-connector-endpoints
@@ -45,20 +44,9 @@
                 "move")
               (fn [e]
                 (let [event (:context e)]
-                  ((m/do-manhattan-layout) event)
+                  (m/on-endpoint-event event)
                   ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
                                            (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context e))
-                  nil)))
-
-(defbehaviour moving-connector-control
-              "Connector's control moving [Manhattan]" :connector-control-moving
-              (validate
-                (-- (having-all ::c/startpoint ::c/endpoint ::c/relation)
-                    (bind-to ::c/control))
-                "move")
-              (fn [e]
-                (let [event (:context e)]
-                  ((m/control-connector) event)
                   nil)))
 
 (defbehaviour make-relation
@@ -74,12 +62,11 @@
                                                      end-type (cond
                                                                 (= ::c/endpoint ctype) {:type "end" :f std/position-endpoint}
                                                                 (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
-                                                (e/connect-entities (:entity src) (:entity trg) :entity-link (:type end-type) (:type end-type))
+                                                (e/connect-entities (:entity src) (:entity trg) (keyword (:type end-type)))
                                                 (std/toggle-controls (:entity trg) false)
-                                                (std/set-endpoint-relation-data (:entity src) (:component src) (:entity trg) (:component trg))
                                                 ((:f end-type) (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
                   (std/relations-validate (->> e :context :entity))
-                  ((m/do-manhattan-layout) event)
+                  (m/on-endpoint-event event)
                   nil)))
 
 (defbehaviour hovering-entity

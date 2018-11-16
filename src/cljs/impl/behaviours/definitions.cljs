@@ -6,7 +6,7 @@
             [core.events :as ev]
             [core.components :as d]
             [impl.behaviours.standard-api :as std]
-            [impl.behaviours.manhattan-v2 :as m]
+            [impl.behaviours.manhattan :as m]
             [impl.components :as c])
   (:require-macros [core.macros :refer [defbehaviour having-all having-strict make-event validate bind-to --]]))
 

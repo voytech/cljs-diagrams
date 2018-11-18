@@ -1,114 +1,69 @@
 (ns core.behaviours
   (:require [core.events :as ev]
+            [core.features :as f]
             [core.eventbus :as bus]))
 
 (defonce behaviours (volatile! {}))
 
-(defonce active-behaviours (volatile! {}))
+(defonce attached-behaviours (volatile! {}))
 
 (defrecord Behaviour [name
                       display-name
                       type
-                      validator ;; split to : features (a list of feature predicate to test), binder (a function to obtain event name)
+                      features
+                      event-name-provider
                       handler])
-;Validator needs to return targets (keyword of component types for which behaviour can be registered)
 
-(defn event-name [component-type event-name]
-  (fn [target]
-     (ev/event-name (:type target)
-                    (-> target :attribute :name)
-                    component-type
-                    event-name)))
+(defn build-event-name
+  ([component-types event-name]
+    (fn [target]
+       (mapv  #(ev/event-name (:type target)
+                              (-> target :attribute :name)
+                              %
+                              event-name) component-types)))
+  ([event-name]
+    (fn [target]
+      [(ev/event-name (:type target) nil nil event-name)])))
 
-(defn add-behaviour [name display-name type validator handler]
-  (vswap! behaviours assoc name (Behaviour. name display-name type validator handler)))
-
-(defn entity-behaviours [entity-type])
-
-(defn component-behaviours [component-type])
+(defn add-behaviour [name display-name type features event-provider handler]
+  (vswap! behaviours assoc name (Behaviour. name display-name type features event-provider handler)))
 
 (defn validate [behaviour target]
   (let [behaviour_ (cond
-                    (string? behaviour) (get @behaviours behaviour)
-                    (record? behaviour) (get @behaviours (:name behaviour)))]
-    ((:validator behaviour_) target behaviour_)))
+                     (string? behaviour) (get @behaviours behaviour)
+                     (record? behaviour) (get @behaviours (:name behaviour)))]
+    (reduce f/_OR_ false (mapv #(% target) (:features behaviour)))))
 
 (defn enable [entity component-type behaviour])
 
 (defn disable [entity component-type behaviour])
 
-(defn- make-key [behaviour-type event-name]
-   #{behaviour-type event-name})
+(defn- render-changes [event-name]
+  (bus/after-all event-name (fn [ev]
+                              (bus/fire "uncommited.render")
+                              (bus/fire "rendering.finish"))))
 
-(defn get-active-behaviour [behaviour-type event-name]
-  (let [key (make-key behaviour-type event-name)]
-    (get @active-behaviours key)))
+(defn- attach [event-name behaviour]
+  (let [attached (or (get @attached-behaviours event-name) [])]
+    (vswap! attached-behaviours assoc event-name (conj attached (:name behaviour)))))
 
-(defn- is-active [behaviour-type event-name]
-  (not (nil? (get-active-behaviour behaviour-type event-name))))
+(defn- is-attached [event-name behaviour]
+  (let [attached (filter #(== (:name behaviour) %) (or (get @attached-behaviours event-name) []))]
+    (not (empty? attached))))
 
-(defn- set-active-behaviour [behaviour-type event-name behaviour-name]
-  (let [key (make-key behaviour-type event-name)]
-    (vswap! active-behaviours assoc key behaviour-name)))
-
-(defn- inactive-beahviours [keys]
-  (filter #(nil? (get @active-behaviours  %)) keys))
-
-(defn- render-changes [events]
-  (doseq [e events]
-    (bus/after-all e (fn [ev]
-                       (bus/fire "uncommited.render")
-                       (bus/fire "rendering.finish")))))
-
-(defn- reg [events behaviour]
-  (bus/on events (:handler behaviour))
-  (render-changes events))
-
-(defn- with-check-if-already-attached [behaviour events]
-  (let [_new (filter #(nil? (get @active-behaviours (make-key (:type behaviour) %))) events)]
-    (reg _new behaviour)
-    (doseq [n _new]
-       (set-active-behaviour (:type behaviour) n (:name behaviour)))))
+(defn- reg [event-names behaviour]
+  (doseq [event-name event-names]
+    (when-not (is-attached event-name behaviour)
+      (bus/on [event-name] (:handler behaviour))
+      (attach event-name behaviour)
+      (render-changes event-name))))
 
 (defn autowire [target]
   (doseq [behaviour (vals @behaviours)]
-     (when-let [results (validate behaviour target)]
-        (with-check-if-already-attached behaviour (if (not (coll? results)) [results] results)))))
-
-(defn- to-event [action-fn?]
-  (if (fn? action-fn?)
-    action-fn?
-    (fn [target behaviour result]
-       (ev/event-name (:type target) nil result action-fn?))))
-
-(defn- is-all-valid [targets]
-  (= 0 (count (filter #(= % false) targets))))
-
-(defn generic-components-validator [_definitions action-fn?]
-  (fn [target behaviour]
-    (let [transform (to-event action-fn?)]
-      (let [attach-targets (filter #(not (nil? %)) (map (fn [e] (when ((:func e) (:tmpl e) target) (:result e))) _definitions))]
-        (when (is-all-valid attach-targets)
-          (flatten (mapv (fn [attach-to]
-                           (when (not (nil? attach-to))
-                             (if (coll? attach-to)
-                               (map #(transform target behaviour %) attach-to)
-                               (transform target behaviour attach-to)))) attach-targets)))))))
-
-(defn- components-types [target]
-  (->> target
-       :components
-       (vals)
-       (map :type)
-       (set)))
-
-(defn having-strict-components [test-types target] (= test-types (components-types target)))
-
-(defn having-all-components [test-types target] (= test-types (clojure.set/intersection test-types (components-types target))))
-
-(defn any-of-types [test-types target] (contains? test-types (or (:type target) (:name target))))
-
-(defn invalid-when [func target] (func target))
+     (when (validate behaviour target)
+        (let [event-name-provider (:event-name-provider behaviour)
+              event-names (event-name-provider target)]
+            (reg event-names behaviour)))))
 
 (defonce hooks (atom {}))
 

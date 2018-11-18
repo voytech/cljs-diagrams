@@ -1,5 +1,7 @@
 (ns impl.standard-attributes
  (:require [core.entities :as e]
+           [core.behaviours :as b]
+           [impl.features.default :as f]
            [impl.behaviours.standard-api :as behaviours]
            [core.project :as p]
            [core.components :as d]
@@ -9,7 +11,7 @@
            [core.options :as o]
            [impl.behaviours.editors :as ed])
 
- (:require-macros [core.macros :refer [defattribute defbehaviour having-all having-strict make-event validate bind-to -- with-components value invalid-when]]))
+ (:require-macros [core.macros :refer [defattribute with-components with-behaviours with-domain value]]))
 
 (defattribute name
   (with-definition
@@ -44,53 +46,42 @@
         (with-components data options
            [(c/text "value-closed" {:text "[CLOSED]" :border-color "black" :left 2 })]))]))
 
+(b/add-behaviour 'attribute-hovering
+                 "Default Attribute Hover"
+                 :attribute-hovering
+                 [f/is-text-attribute]
+                 (b/build-event-name [::c/text] "focus")
+                 (fn [e]
+                   (let [event (:context e)]
+                     ((behaviours/highlight true (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7})) event)
+                     nil)))
 
-(defbehaviour attribute-hovering
-              "Default Attribute Hover" :attribute-hovering
-              (validate
-                (-- (having-all ::c/text)
-                    (bind-to ::c/text))
-                (-- (invalid-when #(= ::state (-> % :attribute :name))))
-                (fn [target behaviour result]
-                  (ev/event-name nil (-> target :attribute :name) result "focus")))
-              (fn [e]
-                (let [event (:context e)]
-                  ((behaviours/highlight true (merge o/DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "blue" :normal-width 0.5 :highlight-width 0.7})) event)
-                  nil)))
+(b/add-behaviour 'attribute-leaving
+                 "Default Attribute Leave"
+                 :attribute-leaving
+                 [f/is-text-attribute]
+                 (b/build-event-name [::c/text] "blur")
+                 (fn [e]
+                   (let [event (:context e)]
+                     ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                     nil)))
 
-(defbehaviour leaving-attribute
-            "Default Entity Leave" :leaving
-            (validate
-              (-- (having-all ::c/text)
-                  (bind-to ::c/text))
-              (-- (invalid-when #(= ::state (-> % :attribute :name))))
-              (fn [target behaviour result]
-                (ev/event-name nil (-> target :attribute :name) result "blur")))
-            (fn [e]
-              (let [event (:context e)]
-                ((behaviours/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
-                nil)))
+(b/add-behaviour 'state-attribute-editing
+                 "Attribute Edit"
+                 :attribute-editing
+                 [f/is-selection-attribute]
+                 (b/build-event-name [:c/text] "activate")
+                 (fn [e]
+                   (let [event (:context e)]
+                     (ed/domain-editor event)
+                     nil)))
 
-(defbehaviour state-attribute-editing
-              "Attribute Edit" :attribute-editing
-              (fn [target this]
-                (let [attribute (:attribute target)]
-                  (when-let [domain (:domain attribute)] ;; needs to find a way how to obtain a component name for domain entry.
-                    (ev/event-name nil (-> attribute :name) ::c/text "activate"))))
-              (fn [e]
-                (let [event (:context e)]
-                  (ed/domain-editor event)
-                  nil)))
-
-(defbehaviour text-attribute-editing
-              "Attribute Edit" :attribute-editing
-              (validate
-                (-- (having-all ::c/text)
-                    (bind-to ::c/text))
-                (-- (invalid-when #(< 0 (count (-> % :attribute :domain)))))
-                (fn [target behaviour result]
-                  (ev/event-name nil (-> target :attribute :name) result "activate")))
-              (fn [e]
-                (let [event (:context e)]
-                  (ed/editor event)
-                  nil)))
+(b/add-behaviour 'text-attribute-editing
+                "Attribute Edit"
+                :attribute-editing
+                [f/is-single-attribute]
+                (b/build-event-name [:c/text] "activate")
+                (fn [e]
+                  (let [event (:context e)]
+                    (ed/editor event)
+                    nil)))

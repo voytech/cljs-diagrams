@@ -10,6 +10,9 @@
        (map what)
        (set)))
 
+(defn _OR_ [arg1 arg2] (or arg1 arg2))
+(defn _AND_ [arg1 arg2] (and arg1 arg2))
+
 (defn- all-components-to-names [target]
   (all-components-to target :name))
 
@@ -19,10 +22,10 @@
 ;; feature API:
 
 (defn check-features [features target]
-  (reduce and true (mapv #(% target) features)))
+  (reduce _AND_ true (mapv #(% target) features)))
 
 (defn any-of-features [features target]
-  (reduce or true (mapv #(% target) features)))
+  (reduce _OR_ false (mapv #(% target) features)))
 
 (defn has-components-of-types [component-types]
   (fn [target]

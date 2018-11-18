@@ -10,7 +10,7 @@
   ((f/has-components-of-types #{::c/relation}) target))
 
 (defn has-controls [target]
-  ((f/has-components-of-types #{::c/control}]) target))
+  ((f/has-components-of-types #{::c/control}) target))
 
 (defn is-rectangular-entity [target]
   ((f/has-components-of-types #{::c/main}) target))
@@ -22,7 +22,7 @@
   ] target))
 
 (defn is-interactive-entity [target]
-  ((f/has-components-of-types #{::c/control}]) target))
+  ((f/has-components-of-types #{::c/control}) target))
 
 (defn is-primary-entity [target]
   (f/check-features [
@@ -34,4 +34,18 @@
   (f/check-features [
      is-associative-entity
      has-relation
+  ] target ))
+
+(defn is-selection-attribute [target]
+  (let [attribute (:attribute target)]
+    (not (nil? (:domain attribute)))))
+
+(defn is-single-attribute [target]
+  (let [attribute (:attribute target)]
+    (nil? (:domain attribute))))
+
+(defn is-text-attribute [target]
+  (f/check-features [
+     is-single-attribute
+     (f/has-components-of-types #{::c/text})
   ] target ))

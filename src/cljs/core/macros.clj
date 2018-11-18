@@ -20,7 +20,7 @@
                           (doseq [vl# [[:left left#] [:top top#]]]
                             (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
                               (core.components/setp component# (vl# 0) new-val#)))
-                          component#)]    
+                          component#)]
          (mapv inc-props# ~components)))))
 
 (defmacro with-domain [name body])
@@ -99,41 +99,6 @@
           ([name#]
            (core.components/new-component (keyword ~nsname (name '~type)) name# {} {}))))))
 
-(defmacro defbehaviour [name display-name type validator handler]
-  (let [nsname (resolve-namespace-name)]
-   `(core.behaviours/add-behaviour (keyword ~nsname (name '~name)) ~display-name ~type ~validator ~handler)))
-
-(defmacro having-all [& test-types]
-  `{:tmpl #{~@test-types}
-    :func core.behaviours/having-all-components
-    :result true})
-
-(defmacro having-strict [& test-types]
-  `{:tmpl #{~@test-types}
-    :func core.behaviours/having-strict-components
-    :result true})
-
-(defmacro invalid-when [func]
-  `{:tmpl ~func
-    :func core.behaviours/invalid-when
-    :result false})
-
-(defmacro any-of-target-types [& test-types]
-  `{:tmpl #{~@test-types}
-    :func core.behaviours/any-of-types
-    :result true})
-
-(defmacro bind-to [& targets]
-  `{:result (vector ~@targets)})
-
-(defmacro make-event [transform]
-  `~transform)
-
-(defmacro -- [& body]
-  `(merge ~@body))
-
-(defmacro validate [& body]
-  (let [lst (last body)
-        defi (butlast body)]
-    `(let [def# (vector ~@defi)]
-       (core.behaviours/generic-components-validator def# ~lst))))
+;;(defmacro defbehaviour [name display-name type validator handler]
+;;  (let [nsname (resolve-namespace-name)]
+;;   `(core.behaviours/add-behaviour (keyword ~nsname (name '~name)) ~display-name ~type ~validator ~handler)))

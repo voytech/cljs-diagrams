@@ -123,9 +123,7 @@
   (reagent/render-component [Root (str dom-id "-svg") width height]
     (dom/by-id dom-id)))
 
-(defmethod r/all-rendered :reagentsvg [context]
-  (console.log "all-rendered: SVG renderer does not support this type of method."))
-
+(defmethod r/all-rendered :reagentsvg [context])
 ;;==========================================================================================================
 ;; rect rendering
 ;;==========================================================================================================

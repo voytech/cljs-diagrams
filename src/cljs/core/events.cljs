@@ -175,7 +175,6 @@
                                   (-> _e :attribute-value :attribute :name)
                                   (-> _e :component :type)
                                   (-> _e :type))]
-     (js/console.log (str "on " event-name " [ total events :" (inc (b/total-events)) " ]"))
      (b/fire event-name _e)))
   ([e overrides]
    (trigger-bus-event (merge e overrides))))

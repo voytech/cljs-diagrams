@@ -10,7 +10,6 @@
             [impl.components :as c])
   (:require-macros [core.macros :refer [defbehaviour having-all having-strict make-event validate bind-to --]]))
 
-
 (defbehaviour moving-node-entity
               "Default Entity Moving" :node-moving
               (validate
@@ -26,7 +25,7 @@
               "Default Relation Link Moving By" :moving-by
               (validate
                 (-- (having-all ::c/startpoint ::c/endpoint ::c/relation))
-                (fn [entity behaviour result] (ev/entity-event-key (:type entity) nil nil "moveby")))
+                (fn [entity behaviour result] (ev/event-name (:type entity) nil nil "moveby")))
               (fn [e]
                 (let [event (:context e)
                       entity (:entity event)

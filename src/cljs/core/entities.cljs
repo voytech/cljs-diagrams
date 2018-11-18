@@ -84,6 +84,12 @@
 (defn- attribute-value-record [input entity]
   (record input #(get-in @entities [(entity-id entity) :attributes %])))
 
+(defn is-entity [target]
+  (instance? Entity target))
+
+(defn is-attribute-value [target]
+  (instance? AttributeValue target))
+
 (defn- define-lookup [drawable-id parent]
   (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
     (vswap! lookups assoc drawable-id lookup)))
@@ -190,7 +196,7 @@
     (->> (:relationships _entity)
          (filter  #(= (:relation-type %) association-type))
          (mapv #(entity-by-id (:entity-id %))))))
-  
+
 (defn disconnect-entities
   ([src trg]
    (let [src-rel (filter #(not= (:uid trg) (:entity-id %)) (:relationships src))

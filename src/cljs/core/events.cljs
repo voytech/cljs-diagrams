@@ -111,22 +111,23 @@
   (str (namespace type) "." (name type)))
 
 (defn event-name [entity-type attribute-name component-type event-type]
-  (let [event-descriptor (clojure.string/join "" (cond-> []
-                                                   (not (nil? entity-type)) (conj "e")
-                                                   (not (nil? attribute-name)) (conj "a")
+  (let [entity-as-source    (and (not (nil? entity-type)) (nil? attribute-name))
+        attribute-as-srouce (not (nil? attribute-name))
+        event-descriptor (clojure.string/join "" (cond-> []
+                                                   entity-as-source            (conj "e")
+                                                   attribute-as-source         (conj "a")
                                                    (not (nil? component-type)) (conj "c")))]
     (clojure.string/join ":" (cond-> [event-descriptor]
-                               (not (nil? entity-type)) (conj (ns-qualified-element-name entity-type))
-                               (not (nil? attribute-name)) (conj (ns-qualified-element-name attribute-name))
+                               entity-as-source            (conj (ns-qualified-element-name entity-type))
+                               attribute-as-source         (conj (ns-qualified-element-name attribute-name))
                                (not (nil? component-type)) (conj (ns-qualified-element-name component-type))
-                               (not (nil? event-type)) (conj (name event-type))))))
+                               (not (nil? event-type))     (conj (name event-type))))))
 
-(defn entity-event-key [entity-type attribute-name component-type event-type]
- (let [has-attribute  (and (not (nil? attribute-name)) (not (nil? entity-type)))]
-    (event-name (if has-attribute nil entity-type)
-                attribute-name
-                component-type
-                event-type)))
+(defn entity-event-name [entity-type source-component event-type]
+  )
+
+(defn attribute-event-name [attribute-name source-component event-type]
+  )
 
 (defn- resolve-targets [x y]
   (->> @d/components
@@ -170,10 +171,10 @@
 (defn trigger-bus-event
   ([e]
    (let [_e (assoc e :type (convert-to-application-event (:type e)))
-         event-name (entity-event-key (-> _e :entity :type)
-                                      (-> _e :attribute-value :attribute :name)
-                                      (-> _e :component :type)
-                                      (-> _e :type))]
+         event-name (event-name   (-> _e :entity :type)
+                                  (-> _e :attribute-value :attribute :name)
+                                  (-> _e :component :type)
+                                  (-> _e :type))]
      (js/console.log (str "on " event-name " [ total events :" (inc (b/total-events)) " ]"))
      (b/fire event-name _e)))
   ([e overrides]

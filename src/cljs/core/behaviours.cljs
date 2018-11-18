@@ -9,9 +9,16 @@
 (defrecord Behaviour [name
                       display-name
                       type
-                      validator
+                      validator ;; split to : features (a list of feature predicate to test), binder (a function to obtain event name)
                       handler])
 ;Validator needs to return targets (keyword of component types for which behaviour can be registered)
+
+(defn event-name [component-type event-name]
+  (fn [target]
+     (ev/event-name (:type target)
+                    (-> target :attribute :name)
+                    component-type
+                    event-name)))
 
 (defn add-behaviour [name display-name type validator handler]
   (vswap! behaviours assoc name (Behaviour. name display-name type validator handler)))
@@ -72,7 +79,7 @@
   (if (fn? action-fn?)
     action-fn?
     (fn [target behaviour result]
-       (ev/entity-event-key (:type target) nil result action-fn?))))
+       (ev/event-name (:type target) nil result action-fn?))))
 
 (defn- is-all-valid [targets]
   (= 0 (count (filter #(= % false) targets))))
@@ -106,7 +113,7 @@
 (defonce hooks (atom {}))
 
 (defn trigger-behaviour [entity avalue component event-suffix data]
-  (bus/fire (ev/entity-event-key (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))
+  (bus/fire (ev/event-name (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))
 
 (bus/on ["entity.component.added"] -999 (fn [event]
                                             (let [context (:context event)

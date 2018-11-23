@@ -13,15 +13,14 @@
 
 (defmacro with-components [data options & components-vector]
   (let [components (if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
-    `(fn [~data ~options]
+    `(fn [container# ~data ~options]
        (let [left# (or (:left ~options) 0)
              top#  (or (:top  ~options) 0)
-             inc-props# (fn [component#]
-                          (doseq [vl# [[:left left#] [:top top#]]]
-                            (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
-                              (core.components/setp component# (vl# 0) new-val#)))
-                          component#)]
-         (mapv inc-props# ~components)))))
+             _container# (reduce (fn [agg# func#] (func# agg#)) container# ~components)]
+          (doseq [component# (-> _container# :components vals)]
+            (doseq [vl# [[:left left#] [:top top#]]]
+              (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
+                (core.components/setp component# (vl# 0) new-val#))))))))
 
 (defmacro with-domain [name body])
 
@@ -36,20 +35,20 @@
 (defmacro with-attributes [body])
 
 (defmacro defentity [name & body]
-  (let [transformed  (transform-body body)]
-    (let [nsname     (resolve-namespace-name)
-          components (:with-components transformed)
-          layouts        (:with-layouts transformed)
-          has-layouts    (contains? transformed :with-layouts)
-          behaviours (last (:with-behaviours transformed))
-          attributes (last (:with-attributes transformed))]
+  (let [transformed   (transform-body body)]
+    (let [nsname      (resolve-namespace-name)
+          components  (:with-components transformed)
+          layouts     (:with-layouts transformed)
+          has-layouts (contains? transformed :with-layouts)
+          behaviours  (last (:with-behaviours transformed))
+          attributes  (last (:with-attributes transformed))]
       (when (nil? components)
         (throw (Error. "Provide components and behaviours definition within entitity definition!")))
      `(do
         (defn ~name [data# options#]
-           (let [e# (core.entities/create-entity (keyword ~nsname (name '~name)) {} ~layouts)
+           (let [e# (core.entities/create-entity (keyword ~nsname (name '~name)) ~layouts)
                  component-factory# ~components]
-             (apply core.entities/add-entity-component e# (component-factory# data# options#))
+             (component-factory# e# data# options#)
              (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
                (core.eventbus/fire "entity.render" {:entity result#})
@@ -92,12 +91,12 @@
   (let [nsname (resolve-namespace-name)]
    `(do (core.components/define-component (keyword ~nsname (name '~type)) ~rendering-method ~props ~init-data)
         (defn ~type
-          ([name# data# p#]
-           (core.components/new-component (keyword ~nsname (name '~type)) name# data# p#))
-          ([name# data#]
-           (core.components/new-component (keyword ~nsname (name '~type)) name# data# {}))
-          ([name#]
-           (core.components/new-component (keyword ~nsname (name '~type)) name# {} {}))))))
+          ([container name# data# p#]
+           (core.entities/add-component container (keyword ~nsname (name '~type)) name# data# p#))
+          ([container name# data#]
+           (core.entities/add-component container (keyword ~nsname (name '~type)) name# data# {}))
+          ([container name#]
+           (core.entities/add-component container (keyword ~nsname (name '~type)) name# {} {}))))))
 
 ;;(defmacro defbehaviour [name display-name type validator handler]
 ;;  (let [nsname (resolve-namespace-name)]

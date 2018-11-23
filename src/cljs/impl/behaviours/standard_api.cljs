@@ -178,8 +178,9 @@
           (let [relation-id   (str (random-uuid))
                 breakpoint-id (str (random-uuid))
                 is-penultimate (= true (:penultimate (:props line-start-breakpoint)))]
-            (e/add-entity-component entity (d/new-component relation-id :relation {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
-                                           (d/new-component breakpoint-id :breakpoint {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
+            (-> entity
+              (e/add-entity-component ::c/relation relation-id  {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
+              (e/add-entity-component ::c/breakpoint breakpoint-id {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
             (e/update-component-prop entity (:name line) :end breakpoint-id)
             (e/update-component-prop entity (:name line-end-breakpoint) :end relation-id)
             (when (= true is-penultimate)

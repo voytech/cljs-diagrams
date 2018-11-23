@@ -42,7 +42,7 @@
    (bus/fire COMPONENT_CHANGED {:properties properties
                                 :component component})))
 
-(defrecord ComponentType [type rendering-method props init-data])
+(defrecord ComponentType [type rendering-method props initializer])
 
 (defrecord Component [uid name type model rendering-method props]
   IDrawable
@@ -137,26 +137,27 @@
 (defn is-component [uid]
   (not (nil? (get @components uid))))
 
-(defn define-component [type rendering-method props init-data]
- (swap! component-types assoc type (ComponentType. type rendering-method props init-data)))
+(defn define-component [type rendering-method props initializer]
+ (swap! component-types assoc type (ComponentType. type rendering-method props initializer)))
 
 (defn new-component
- ([type name data props method]
+ ([container type name data props method]
   (when-let [component-type (get @component-types type)]
     (let [_method (or method (:rendering-method component-type))
-          _data  (merge (:init-data component-type) data)
+          initializer-data (if (nil? (:initializer component-type)) {} ((:initializer component-type) container))
+          _data  (merge initializer-data data)
           _props (merge (:props component-type) props)
           component (Component. (str (random-uuid)) name type (volatile! _data) _method _props)]
       (ensure-z-index component)
       (bus/fire "component.created" {:component component})
       (add-component component)
-      component)))
- ([type name data props]
-  (new-component type name data props nil))
- ([type name data]
-  (new-component type name data {} nil))
- ([type name]
-  (new-component type name {} {} nil)))
+      (assoc-in container [:components :name] component))))
+ ([container type name data props]
+  (new-component container type name data props nil))
+ ([container type name data]
+  (new-component container type name data {} nil))
+ ([container type name]
+  (new-component container type name {} {} nil)))
 
 (defn get-component-def [type]
  (get @components-types type))

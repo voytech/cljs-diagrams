@@ -129,25 +129,28 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component. Under Component we have only one Drawable wich holds properties for renderer."
-  ([type components layouts]
+  ([type layouts]
    (let [uid (str (random-uuid))
-         _components (apply merge (mapv (fn [e] {(:name e) (d/Component. (:name e) (:type e) (:drawable e) (:props e))}) components))
-         entity (Entity. uid type _components {} [] layouts)]
-     (define-lookups-on-entities entity)
+         entity (Entity. uid type {} {} [] layouts)]
      (swap! entities assoc uid entity)
      (bus/fire "entity.added" {:entity entity})
      (get @entities uid)))
-  ([type components]
-   (create-entity type components nil))
   ([type]
-   (create-entity type [] nil)))
+   (create-entity type nil)))
 
-(defn add-entity-component [entity & components]
- (doseq [component (flatten components)]
-   (swap! entities assoc-in [(:uid entity) :components (:name component)] component))
- (let [entity-reloaded (entity-by-id (:uid entity))]
-   (define-lookups-on-entities entity-reloaded)
-   (bus/fire "entity.component.added" {:entity entity-reloaded})))
+(defn add-entity-component
+  ([entity type name data props method]
+    (->> (d/new-component entity type name data props method)
+         (swap! entities assoc (:uid entity)))
+     (let [entity-reloaded (entity-by-id (:uid entity))]
+       (define-lookups-on-entities entity-reloaded)
+       (bus/fire "entity.component.added" {:entity entity-reloaded})))
+  ([entity type name data props]
+   (add-entity-component entity type name data props nil))
+  ([entity type name data]
+   (add-entity-component entity type name data {} nil))
+  ([entity type name]
+   (add-entity-component entity type name {} {} nil)))
 
 (defn remove-entity-component [entity component-name]
   (let [component (get-in @entities [(:uid entity) :components component-name])]
@@ -160,7 +163,7 @@
     (doseq [rem filtered-out] (d/remove-component rem))
     (when-not (empty? filtered-out)
       (swap! entities assoc-in [(:uid entity) :components] (apply dissoc (:components (entity-by-id (:uid entity))) (mapv :name filtered-out))))))
-
+;; properties are ,m
 (defn update-component-prop [entity name prop value]
  (swap! entities assoc-in [(:uid entity) :components name :props prop] value))
 
@@ -179,7 +182,7 @@
  ([entity name type data]
   (let [component (get-entity-component entity name)]
     (if (or (nil? component) (not= type (:type component)))
-      (add-entity-component entity (d/new-component type name data))
+      (add-entity-component entity type name data)
       (d/set-data component data))
     (get-entity-component entity name)))
  ([entity name type]
@@ -306,3 +309,19 @@
       (replace-attribute-value entity attribute-value value)
       (update-attribute-value-value entity attribute-value value))
     (bus/fire "layout.do" {:container (volatile-entity entity) :type :attributes})))
+
+;; ==============================================
+;; generalized context aware component creation
+;; ==============================================
+
+(defn add-component
+  ([container type name data props method]
+    (cond
+      (instance? Entity container) (add-entity-component container type name data props method)
+      (instance? AttributeValue container) (console.log "to be implemented")))
+  ([container type name data props]
+   (add-component container type name data props nil))
+  ([container type name data]
+   (add-component container type name data {} nil))
+  ([container type name]
+   (add-component container type name {} {} nil)))

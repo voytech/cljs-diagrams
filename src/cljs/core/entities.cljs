@@ -132,7 +132,7 @@
   "Creates editable entity. Entity is a first class functional element used within relational-designer.
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
-   Those properties models functions of specific component. Under Component we have only one Drawable wich holds properties for renderer."
+   Those properties models functions of specific component."
   ([type layouts]
    (let [uid (str (random-uuid))
          entity (Entity. uid type {} {} [] layouts)]

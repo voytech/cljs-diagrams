@@ -51,20 +51,11 @@
   (with-layouts
     (layout :attributes l/default-flow-layout #(-> % :attributes vals) {:left 15 :top 15}))
   (with-components data options
-      [(c/main "body"
-         (merge defaults/DEFAULT_SIZE_OPTS defaults/TRANSPARENT_FILL defaults/DEFAULT_STROKE {:round-x 5 :round-y 5}))
-       (c/control "connector-left"
-         (control-data 0 (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2)))
-         {:side :left})
-       (c/control "connector-right"
-         (control-data (:width defaults/DEFAULT_SIZE_OPTS) (+ (/ (:height defaults/DEFAULT_SIZE_OPTS) 2)))
-         {:side :right})
-       (c/control "connector-top"
-         (control-data (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) 0)
-         {:side :top})
-       (c/control "connector-bottom"
-         (control-data (/ (:width defaults/DEFAULT_SIZE_OPTS) 2) (:height defaults/DEFAULT_SIZE_OPTS))
-         {:side :bottom})])
+      [#(c/main % "body"  {:round-x 5 :round-y 5} {})
+       #(c/control % "connector-left" {} {:side :left})
+       #(c/control % "connector-right" {} {:side :right})
+       #(c/control % "connector-top" {} {:side :top})
+       #(c/control % "connector-bottom" {} {:side :bottom})])
   (with-attributes [#(stdatr/name % "<Enter name here>")
                     #(stdatr/description % "<Enter descrition here>")
                     #(stdatr/state % :open)]))
@@ -78,9 +69,8 @@
   (with-layouts
     (layout :attributes l/default-flow-layout #(-> % :attributes vals) relation-layout-options))
   (with-components data options
-    (let [points (partition 2 data)]
-        [(c/relation "connector" (relation-data points) {:start "start" :end "end"})
-         (c/startpoint "start" (endpoint-data (first points) true))
-         (c/arrow "arrow" (arrow-data (last points)))
-         (c/endpoint "end" (endpoint-data (last points) false))]))
+     [#(c/relation % "connector" {} {:start "start" :end "end"})
+      #(c/startpoint % "start" {} {})
+      #(c/arrow % "arrow" {} {})
+      #(c/endpoint % "end" {} {})])
   (with-attributes [#(stdatr/name % "<< Relation Name >>")]))

@@ -35,26 +35,26 @@
                                      (doseq [p (keys data)]
                                       (manage-related-properties drawable p))))
 
-(defcomponent relation :draw-line {} {:border-color "black" :border-style :solid :border-width 1 :z-index :bottom})
+(defcomponent relation :draw-line {} (fn [e] {:border-color "black" :border-style :solid :border-width 1 :z-index :bottom}))
 
-(defcomponent arrow :draw-triangle {} {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center :z-index :top})
+(defcomponent arrow :draw-triangle {} (fn [e] {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center :z-index :top}))
 
-(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} {:moveable true :visible true :z-index :top})
+(defcomponent startpoint :draw-circle {:start "connector" :penultimate true}  (fn [e] {:moveable true :visible true :z-index :top}))
 
-(defcomponent endpoint :draw-circle {:end "connector"} {:moveable true :visible false :opacity 1 :z-index :top})
+(defcomponent endpoint :draw-circle {:end "connector"} (fn [e] {:moveable true :visible false :opacity 1 :z-index :top}))
 
-(defcomponent breakpoint :draw-circle {} {:moveable true :visible true :opacity 1 :z-index :top})
+(defcomponent breakpoint :draw-circle {} (fn [e] {:moveable true :visible true :opacity 1 :z-index :top}))
 
-(defcomponent control :draw-rect {} {:moveable false :visible false :opacity 1 :background-color "white"})
+(defcomponent control :draw-rect {} (fn [e] {:moveable false :visible false :opacity 1 :background-color "white"}))
 
-(defcomponent main :draw-rect {} {:border-color "black" :border-style :solid :border-width 1})
+(defcomponent main :draw-rect {} (fn [e] {:border-color "black" :border-style :solid :border-width 1}))
 
 ;; Attribute components.
 
-(defcomponent label :draw-text {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defcomponent label :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
-(defcomponent text :draw-text {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
-(defcomponent description :draw-text {} {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})
+(defcomponent description :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
-(defcomponent rect :draw-rect {} {:border-color "black" :border-style :solid :border-width 1})
+(defcomponent rect :draw-rect {} (fn [c] {:border-color "black" :border-style :solid :border-width 1}))

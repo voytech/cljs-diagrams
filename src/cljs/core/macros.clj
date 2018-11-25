@@ -8,8 +8,8 @@
   (let [file-struct (-> a/*cljs-file* slurp read-string)]
     (name (second file-struct))))
 
-(defmacro value [value drawables]
-  `(core.entities/AttributeDomain. ~value ~drawables))
+(defmacro value [value factory]
+  `(core.entities/AttributeDomain. ~value ~factory))
 
 (defmacro with-components [data options & components-vector]
   (let [components (if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
@@ -83,9 +83,8 @@
              ([entity# data#]
               (~name entity# data# nil))
              ([entity# data# options#]
-              (let [attribute#   (core.entities/get-attribute (keyword ~nsname (name '~name)))
-                    attr-value#  (core.entities/create-attribute-value attribute# data# options#)]
-                (core.entities/add-entity-attribute-value entity# attr-value#))))))))
+              (let [attribute# (core.entities/get-attribute (keyword ~nsname (name '~name)))]
+                (core.entities/create-attribute-value entity# attribute# data# options#))))))))
 
 (defmacro defcomponent [type rendering-method props init-data]
   (let [nsname (resolve-namespace-name)]

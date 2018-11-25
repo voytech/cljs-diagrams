@@ -90,21 +90,20 @@
 (defn is-attribute-value [target]
   (instance? AttributeValue target))
 
-(defn- define-lookup [drawable-id parent]
-  (let [lookup (merge (or (get @lookups drawable-id) {}) parent)]
-    (vswap! lookups assoc drawable-id lookup)))
+(defn- define-lookup [uid parent]
+  (let [lookup (merge (or (get @lookups uid) {}) parent)]
+    (vswap! lookups assoc uid lookup)))
 
 (defn- define-lookups-on-entities [entity]
   (doseq [component (vals (:components entity))]
-    (let [uid (:uid component)]
-      (define-lookup uid {:entity (:uid entity)}))))
+    (define-lookup (:uid component) {:entity (:uid entity)})))
 
 (defn- define-lookups-on-attributes [entity]
   (doseq [attribute (vals (:attributes entity))]
+    (define-lookup (:id attribute) {:entity (:uid entity)})
     (doseq [component (vals (:components attribute))]
-      (let [cid (:uid  component)]
-        (define-lookup cid {:entity (:uid entity)
-                            :attribute (:id attribute)})))))
+      (define-lookup (:uid component) {:entity (:uid entity)
+                                       :attribute (:id attribute)}))))
 
 (defn- define-lookups [entity]
   (define-lookups-on-entities entity)
@@ -118,8 +117,13 @@
 (defmethod do-lookup :attribute [lookup-for entity lookup]
   (get-attribute-value entity (:attribute lookup)))
 
-(defn lookup [component lookup-for]
-  (let [uid (if (record? component) (:uid component) component)
+(defn- lookup-source-id [source]
+  (if (record? source)
+    (or (:uid source) (:id source))
+    source))
+
+(defn lookup [source lookup-for]
+  (let [uid (lookup-source-id source)
         lookup (get @lookups uid)
         entity (entity-by-id (:entity lookup))]
     (do-lookup lookup-for entity lookup)))
@@ -163,6 +167,22 @@
     (doseq [rem filtered-out] (d/remove-component rem))
     (when-not (empty? filtered-out)
       (swap! entities assoc-in [(:uid entity) :components] (apply dissoc (:components (entity-by-id (:uid entity))) (mapv :name filtered-out))))))
+
+(defn add-attribute-value-component
+  ([attribute-value type name data props method]
+    (let [entity (lookup attribute-value :entity)]
+      (->> (d/new-component atribute-value type name data props method)
+           (swap! entities assoc-in [(:uid entity) :attributes (:id attribute-value)])))
+    (let [entity-reloaded (entity-by-id (:uid entity))]
+      (define-lookups-on-attributes entity-reloaded)
+      (bus/fire "attribute-value.component.added" {:attribute-value entity-reloaded})))
+  ([attribute-value type name data props]
+    (add-attribute-value-component attribute-value type name data props nil))
+  ([attribute-value type name data]
+    (add-attribute-value-component attribute-value type name data {} nil))
+  ([attribute-value type name]
+    (add-attribute-value-component attribute-value type name {} {} nil))))
+
 ;; properties are ,m
 (defn update-component-prop [entity name prop value]
  (swap! entities assoc-in [(:uid entity) :components name :props prop] value))
@@ -230,30 +250,25 @@
   (when-not (is-attribute (:name attribute))
     (swap! attributes assoc-in [(:name attribute)] attribute)))
 
-(defn create-attribute-value [attribute_ data options]
-  (let [attribute (get-attribute (:name attribute_))
-        domain (:domain attribute)
+(defn- add-entity-attribute-value [entity attribute-value]
+  (let [entity-fetch (entity-by-id (:uid entity))
+        existing-cardinality (count (filter #(= (-> % :attribute :name) (-> attribute-value :attribute :name)) (vals (:attributes entity-fetch))))
+        cardinality (:cardinality (:attribute attribute-value))]
+    (if (> cardinality existing-cardinality)
+      (do (swap! entities assoc-in [(:uid entity) :attributes (:id attribute-value)] attribute-value)
+          (define-lookups-on-attributes (entity-by-id (:uid entity))))
+      (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!")))))
+
+(defn create-attribute-value [entity attribute data options]
+  (let [attribute (get-attribute (:name attribute))
+        attribute-value (AttributeValue. (str (random-uuid)) attribute data {})]
+     (add-entity-attribute-value entity attribute-value))
+  (let [domain (:domain attribute)
         domain-value (when (not (nil? domain)) (first (filter #(= data (:value %)) domain)))
         component-factory (or (:factory domain-value) (:factory attribute))
-        components (component-factory data options)
-        components-map (let [temp-map (into {} (map (fn [d] {(:name d) d}) components))]
-                         (into (sorted-map-by (d/z-index-compare temp-map)) temp-map))
-        result (AttributeValue. (str (random-uuid)) attribute data components-map)]
+        result (component-factory attribute-value data options)]
     (bus/fire "attribute-value.created" {:attribute-value result})
     result))
-
-;TODO Should rahter internally invoke create-attribute-value which should be not public instead of taking attribute-value as an argument.
-(defn add-entity-attribute-value [entity & attributes]
-  (doseq [attribute-value (vec attributes)]
-    (let [entity-fetch (entity-by-id (:uid entity))
-          existing-cardinality (count (filter #(= (-> % :attribute :name) (-> attribute-value :attribute :name)) (vals (:attributes entity-fetch))))
-          cardinality (:cardinality (:attribute attribute-value))]
-      (if (> cardinality existing-cardinality)
-        (let [attributes (:attributes entity-fetch)
-              sorted  (assoc attributes (:id attribute-value) attribute-value)] ;(sorted-attributes-map (assoc attributes (:id attribute-value) attribute-value))]
-           (swap! entities assoc-in [(:uid entity) :attributes] sorted)
-           (define-lookups-on-attributes (entity-by-id (:uid entity))))
-        (throw (js/Error. "Trying to add more attribute values than specified attribute definition cardinality!"))))))
 
 (defn remove-attribute-value [entity-or-id attribute-value-or-id]
   (let [eid (entity-id entity-or-id)
@@ -318,7 +333,7 @@
   ([container type name data props method]
     (cond
       (instance? Entity container) (add-entity-component container type name data props method)
-      (instance? AttributeValue container) (console.log "to be implemented")))
+      (instance? AttributeValue container) (add-attribute-value-component container type name data props method))
   ([container type name data props]
    (add-component container type name data props nil))
   ([container type name data]

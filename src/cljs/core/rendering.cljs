@@ -43,8 +43,6 @@
 
 (defn- render-entity [entity]
   (render-components  (e/components-of entity))
-  (doseq [attribute-value (e/get-attributes-values entity)]
-    (render-components (e/components-of attribute-value)))
   (l/do-layout (-> entity :layouts :attributes) entity)
   (bus/fire "rendering.finish"))
 
@@ -90,8 +88,6 @@
 
 (bus/on ["entity.render"] -999 (fn [event]
                                  (let [context (:context event)]
-                                    (js/console.log "entity.render fired.")
-                                    (js/console.log (clj->js (:entity context)))
                                     (render-entity (:entity context)))))
 
 (defn- reorder-uncommited []

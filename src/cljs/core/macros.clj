@@ -32,8 +32,6 @@
 (defmacro with-layouts [ & body]
   `(merge ~@body))
 
-(defmacro with-attributes [body])
-
 (defmacro defentity [name & body]
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
@@ -49,46 +47,13 @@
            (let [e# (core.entities/create-entity (keyword ~nsname (name '~name)) ~layouts)
                  component-factory# ~components]
              (component-factory# e# data# options#)
-             ; (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
                (core.eventbus/fire "entity.render" {:entity result#})
                (core.eventbus/fire "layout.do" {:container result# :type :attributes})
                result#)))))))
 
-(defmacro defattribute [name & body]
-  (let [nsname         (resolve-namespace-name)
-        transformed    (transform-body body)
-        dfinition      (last (:with-definition transformed))
-        has-definition (contains? transformed :with-definition)
-        components     (:with-components  transformed)
-        has-components (contains? transformed :with-components)
-        behaviours     (last (:with-behaviours transformed))
-        has-behaviours (contains? transformed :with-behaviours)
-        domain         (last (:with-domain transformed))
-        has-domain     (contains? transformed :with-domain)]
-    `(when-not (core.entities/is-attribute (keyword ~nsname (name '~name)))
-         (let [attr# (core.entities/Attribute. (keyword ~nsname (name '~name))
-                                               (:cardinality ~dfinition)
-                                               (:index ~dfinition)
-                                               (if ~has-domain
-                                                 ~domain
-                                                 nil)
-                                               (:sync ~dfinition)
-                                               (:bbox ~dfinition)
-                                               (if ~has-components
-                                                 ~components
-                                                 nil))]
-           (core.entities/add-attribute attr#)
-           (defn ~name
-             ([entity# data#]
-              (~name entity# data# nil))
-             ([entity# data# options#]
-              (let [attribute# (core.entities/get-attribute (keyword ~nsname (name '~name)))]
-                (core.entities/create-attribute-value entity# attribute# data# options#))))))))
-
 (defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
    `(do (core.components/define-component (keyword ~nsname (name '~type)) ~rendering-method ~props ~initializer)
         (defn ~type [container# name# data# p#]
-            (core.entities/hahaha container# (keyword ~nsname (name '~type)) name# data# p#)))))
-           ;(core.entities/add-component container# (keyword ~nsname (name '~type)) name# data# p#)))))
+            (core.entities/add-entity-component container# (keyword ~nsname (name '~type)) name# data# p#)))))

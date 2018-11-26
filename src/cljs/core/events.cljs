@@ -110,24 +110,14 @@
 (defn- ns-qualified-element-name [type]
   (str (namespace type) "." (name type)))
 
-(defn event-name [entity-type attribute-name component-type event-type]
-  (let [entity-as-source    (and (not (nil? entity-type)) (nil? attribute-name))
-        attribute-as-srouce (not (nil? attribute-name))
-        event-descriptor (clojure.string/join "" (cond-> []
-                                                   entity-as-source            (conj "e")
-                                                   attribute-as-source         (conj "a")
+(defn event-name [entity-type component-type event-type]
+  (let [event-descriptor (clojure.string/join "" (cond-> []
+                                                   (not (nil? entity-type))    (conj "e")
                                                    (not (nil? component-type)) (conj "c")))]
     (clojure.string/join ":" (cond-> [event-descriptor]
-                               entity-as-source            (conj (ns-qualified-element-name entity-type))
-                               attribute-as-source         (conj (ns-qualified-element-name attribute-name))
+                               (not (nil? entity-type))    (conj (ns-qualified-element-name entity-type))
                                (not (nil? component-type)) (conj (ns-qualified-element-name component-type))
                                (not (nil? event-type))     (conj (name event-type))))))
-
-(defn entity-event-name [entity-type source-component event-type]
-  )
-
-(defn attribute-event-name [attribute-name source-component event-type]
-  )
 
 (defn- resolve-targets [x y]
   (->> @d/components
@@ -137,10 +127,8 @@
 
 (defn enrich [component]
   (when (d/is-component (:uid component))
-    (let [entity             (e/lookup component :entity)
-          attribute-value    (e/lookup component :attribute)]
+    (let [entity             (e/lookup component :entity)]
         {:entity           entity
-         :attribute-value  attribute-value
          :component        component})))
 
 (defn normalise-event [e obj]
@@ -171,10 +159,9 @@
 (defn trigger-bus-event
   ([e]
    (let [_e (assoc e :type (convert-to-application-event (:type e)))
-         event-name (event-name   (-> _e :entity :type)
-                                  (-> _e :attribute-value :attribute :name)
-                                  (-> _e :component :type)
-                                  (-> _e :type))]
+         event-name (event-name (-> _e :entity :type)
+                                (-> _e :component :type)
+                                (-> _e :type))]
      (b/fire event-name _e)))
   ([e overrides]
    (trigger-bus-event (merge e overrides))))

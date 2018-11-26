@@ -17,13 +17,10 @@
 (defn build-event-name
   ([component-types event-name]
     (fn [target]
-       (mapv  #(ev/event-name (:type target)
-                              (-> target :attribute :name)
-                              %
-                              event-name) component-types)))
+       (mapv #(ev/event-name (:type target) % event-name) component-types)))
   ([event-name]
     (fn [target]
-      [(ev/event-name (:type target) nil nil event-name)])))
+      [(ev/event-name (:type target) nil event-name)])))
 
 (defn add-behaviour [name display-name type features event-provider handler]
   (vswap! behaviours assoc name (Behaviour. name display-name type features event-provider handler)))
@@ -68,14 +65,9 @@
 (defonce hooks (atom {}))
 
 (defn trigger-behaviour [entity avalue component event-suffix data]
-  (bus/fire (ev/event-name (:type entity) (-> avalue :attribute :name) (:type component) event-suffix) data))
+  (bus/fire (ev/event-name (:type entity) (:type component) event-suffix) data))
 
 (bus/on ["entity.component.added"] -999 (fn [event]
                                             (let [context (:context event)
                                                   entity  (:entity context)]
                                               (autowire entity))))
-
-(bus/on ["attribute-value.created"] -999 (fn [event]
-                                            (let [context (:context event)
-                                                  attribute-value (:attribute-value context)]
-                                              (autowire attribute-value))))

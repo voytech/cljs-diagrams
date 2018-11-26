@@ -12,7 +12,6 @@
            [clojure.string :as str])
  (:require-macros [core.macros :refer [defentity with-components with-layouts layout]]))
 
-
 (defentity rectangle-node
   (with-layouts
     (layout :attributes l/default-flow-layout #(-> % :attributes vals) {:left 15 :top 15}))
@@ -21,10 +20,7 @@
        #(c/control % "connector-left" {} {:side :left})
        #(c/control % "connector-right" {} {:side :right})
        #(c/control % "connector-top" {} {:side :top})
-       #(c/control % "connector-bottom" {} {:side :bottom})])
-  (with-attributes [#(stdatr/name % "<Enter name here>")
-                    #(stdatr/description % "<Enter descrition here>")
-                    #(stdatr/state % :open)]))
+       #(c/control % "connector-bottom" {} {:side :bottom})]))
 
 (defn- relation-layout-options [e]
   (let [bbox (cl/get-bbox e)]
@@ -38,5 +34,4 @@
      [#(c/relation % "connector" {} {:start "start" :end "end"})
       #(c/startpoint % "start" {} {})
       #(c/arrow % "arrow" {} {})
-      #(c/endpoint % "end" {} {})])
-  (with-attributes [#(stdatr/name % "<< Relation Name >>")]))
+      #(c/endpoint % "end" {} {})]))

@@ -54,9 +54,6 @@
         path (find-path-lines (center-point start) (center-point end) points)
         cstart (e/get-entity-component entity "start")
         cend (e/get-entity-component entity "end")]
-    (console.log (clj->js (center-point start)))
-    (console.log (clj->js (center-point end)))
-    (console.log (clj->js points))
      (-> (update-line-components entity path)
          (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))
 

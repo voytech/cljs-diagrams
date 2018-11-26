@@ -9,42 +9,7 @@
            [core.behaviours :as b]
            [core.events :as ev]
            [core.options :as o]
-           [impl.behaviours.editors :as ed])
-
- (:require-macros [core.macros :refer [defattribute with-components with-behaviours with-domain value]]))
-
-(defattribute name
-  (with-definition
-    {:cardinality 1
-     :index 0
-     :sync ["value.text"]})
-  (with-components data options
-    [(c/text "value" {:text data})])
-  (with-behaviours))
-
-(defattribute description
-  (with-definition
-    {:cardinality 1
-     :index 1
-     :sync ["value.text"]})
-  (with-components data options
-    [(c/text "value" {:text data})])
-  (with-behaviours))
-
-(defattribute state
-  (with-definition
-    {:cardinality 1
-     :index 4})
-  (with-domain
-     [(value :open
-        (with-components data options
-           [(c/text "value-open" {:text "[OPEN]" :border-color "green" :left 2 })]))
-      (value :progress
-        (with-components data options
-           [(c/text "value-progress" {:text "[PROGRESS]" :border-color "blue" :left 2 })]))
-      (value :closed
-        (with-components data options
-           [(c/text "value-closed" {:text "[CLOSED]" :border-color "black" :left 2 })]))]))
+           [impl.behaviours.editors :as ed]))
 
 (b/add-behaviour 'attribute-hovering
                  "Default Attribute Hover"

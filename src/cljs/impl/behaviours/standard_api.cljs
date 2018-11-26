@@ -84,11 +84,6 @@
                             y
                             coord-mode)))
 
-(defn- position-attributes-components [attributes offset-left offset-top]
-  (doseq [src (flatten (mapv #(e/components-of %) attributes))]
-    (d/set-data src {:left (+ (d/getp src :left) offset-left)
-                     :top  (+ (d/getp src :top) offset-top)})))
-
 (defn default-position-entity-component [entity component-name left top coord-mode]
   (let [component (e/get-entity-component entity component-name)]
     (apply-effective-position component left top coord-mode)))
@@ -100,8 +95,7 @@
            effective-top   (+ (d/getp component :top) (:top effective-offset))]
        (if (= ref-component-name (:name component))
          (default-position-entity-component entity (:name component) left top :offset)
-         (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))
-   (position-attributes-components (vals (:attributes entity)) (:left effective-offset) (:top effective-offset))))
+         (default-position-entity-component entity (:name component) effective-left effective-top :absolute))))))
 
 (defn move-related-entity [entity related-entity relation left top coord-mode]
   (let [event-data {:entity related-entity

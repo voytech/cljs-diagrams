@@ -44,7 +44,7 @@
 
 (defrecord ComponentType [type rendering-method props initializer])
 
-(defrecord Component [uid name type model rendering-method props]
+(defrecord Component [uid name type model rendering-method props parentRef]
   IDrawable
   (model [this] @model)
   (setp [this property value]
@@ -147,9 +147,7 @@
           initializer-data (if (nil? (:initializer component-type)) {} ((:initializer component-type) container props))
           _data  (merge initializer-data data)
           _props (merge (:props component-type) props)
-          component (Component. (str (random-uuid)) name type (volatile! _data) _method _props)]
-      (console.log "initializer data")
-      (console.log (clj->js initializer-data)  )
+          component (Component. (str (random-uuid)) name type (volatile! _data) _method _props (:uid container))]
       (ensure-z-index component)
       (bus/fire "component.created" {:component component})
       (add-component component)

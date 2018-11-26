@@ -115,9 +115,21 @@
 
 (defcomponent main :draw-rect {} (body-initializer))
 
-;; Attribute components.
+;; ===================================
+;; layout managed components.
+;; ===================================
+(defn- title-initializer []
+  (fn [container props]
+    {:left 0
+     :top  0
+     :border-color "black"
+     :border-style :solid
+     :border-width 1
+     :z-index :top
+     :font-family "calibri"
+     :font-size 12}))
 
-(defcomponent label :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
+(defcomponent title :draw-text {:layout :attributes} (title-initializer))
 
 (defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 

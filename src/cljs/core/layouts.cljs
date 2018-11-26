@@ -37,7 +37,7 @@
    (d/set-left component (if (= :offset mode) (+ (d/get-left component) left) left))
    (d/set-top component (if (= :offset mode) (+ (d/get-top component) top) top)))
   ([component left top]
-   (move-component left top :absolute)))
+   (move-component component left top :absolute)))
 
 (defn move-container [container nleft ntop]
   (let [{:keys [left top]} (get-bbox container)
@@ -130,6 +130,18 @@
   (let [elements ((:select-func layout) container)]
     (reduce (:layout-func layout) (contextualize container (:options layout)) elements)))
 
+(defn do-layouts [container]
+  (doseq [layout (-> container :layouts vals)]
+    (do-layout layout container)))
+
+(defn having-layout-property [layout-name]
+  (fn [container]
+    (filterv
+      (fn [component]
+        (let [layout (-> component :props :layout)]
+          (= layout layout-name)))
+      (get-components container))))
+
 (defn generic-layout [context element])
 
 (defn align-center [src trg]
@@ -155,3 +167,9 @@
                              (do-layout (-> container :layouts type) container)
                              (b/fire "uncommited.render")
                              (b/fire "rendering.finish"))))
+
+(b/on ["layouts.do"] -999 (fn [event]
+                            (when-let [{:keys [container]} (:context event)]
+                              (do-layouts container)
+                              (b/fire "uncommited.render")
+                              (b/fire "rendering.finish"))))

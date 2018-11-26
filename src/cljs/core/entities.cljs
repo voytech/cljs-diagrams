@@ -57,7 +57,7 @@
 (defn is-entity [target]
   (instance? Entity target))
 
-(defn lookup [component ]
+(defn lookup [component]
   (let [uid (:parentRef component)]
     (entity-by-id uid)))
 

@@ -14,13 +14,14 @@
 
 (defentity rectangle-node
   (with-layouts
-    (layout :attributes l/default-flow-layout #(-> % :attributes vals) {:left 15 :top 15}))
+    (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) {:left 15 :top 25}))
   (with-components data options
       [#(c/main % "body"  {:round-x 5 :round-y 5} {})
        #(c/control % "connector-left" {} {:side :left})
        #(c/control % "connector-right" {} {:side :right})
        #(c/control % "connector-top" {} {:side :top})
-       #(c/control % "connector-bottom" {} {:side :bottom})]))
+       #(c/control % "connector-bottom" {} {:side :bottom})
+       #(c/title % "title" {:text "Title."} {:layout :attributes})]))
 
 (defn- relation-layout-options [e]
   (let [bbox (cl/get-bbox e)]
@@ -29,9 +30,10 @@
 
 (defentity relation
   (with-layouts
-    (layout :attributes l/default-flow-layout #(-> % :attributes vals) relation-layout-options))
+    (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
   (with-components data options
      [#(c/relation % "connector" {} {:start "start" :end "end"})
       #(c/startpoint % "start" {} {})
       #(c/arrow % "arrow" {} {})
-      #(c/endpoint % "end" {} {})]))
+      #(c/endpoint % "end" {} {})
+      #(c/title % "title" {:text "Title."} {:layout :attributes})]))

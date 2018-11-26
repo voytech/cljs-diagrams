@@ -43,7 +43,9 @@
 
 (defn- render-entity [entity]
   (render-components  (e/components-of entity))
-  (l/do-layout (-> entity :layouts :attributes) entity)
+  (console.log "Rendering")
+  (console.log (clj->js entity))
+  (l/do-layouts entity)
   (bus/fire "rendering.finish"))
 
 (defn- update-property-to-redraw [component properties]

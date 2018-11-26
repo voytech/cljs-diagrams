@@ -12,7 +12,7 @@
   `(core.entities/AttributeDomain. ~value ~factory))
 
 (defmacro with-components [data options & components-vector]
-  (let [components (first components-vector)];](if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
+  (let [components (first components-vector)]
     `(fn [container# ~data ~options]
        (let [left# (or (:left ~options) 0)
              top#  (or (:top  ~options) 0)
@@ -49,7 +49,7 @@
              (component-factory# e# data# options#)
              (let [result# (core.entities/entity-by-id (:uid e#))]
                (core.eventbus/fire "entity.render" {:entity result#})
-               (core.eventbus/fire "layout.do" {:container result# :type :attributes})
+               ;(core.eventbus/fire "layout.do" {:container result# :type :attributes})
                result#)))))))
 
 (defmacro defcomponent [type rendering-method props initializer]

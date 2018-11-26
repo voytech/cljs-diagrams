@@ -1,6 +1,11 @@
 (ns core.options)
 
 (def DEFAULT_SIZE_OPTS {:width 180 :height 150})
+
+(def WIDTH 180)
+
+(def HEIGHT 150)
+
 (def TRANSPARENT_FILL {:background-color "rgb(255,255,255)"})
 (def DEFAULT_FILL {:background-color "black"})
 (def DEFAULT_STROKE {:border-color "black" :border-width 1.5})

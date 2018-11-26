@@ -12,7 +12,7 @@
   `(core.entities/AttributeDomain. ~value ~factory))
 
 (defmacro with-components [data options & components-vector]
-  (let [components (if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
+  (let [components (first components-vector)];](if (and (coll? (first components-vector)) (= 1 (count components-vector))) (first components-vector) components-vector)]
     `(fn [container# ~data ~options]
        (let [left# (or (:left ~options) 0)
              top#  (or (:top  ~options) 0)
@@ -49,7 +49,7 @@
            (let [e# (core.entities/create-entity (keyword ~nsname (name '~name)) ~layouts)
                  component-factory# ~components]
              (component-factory# e# data# options#)
-             (doseq [call# ~attributes] (call# e#))
+             ; (doseq [call# ~attributes] (call# e#))
              (let [result# (core.entities/entity-by-id (:uid e#))]
                (core.eventbus/fire "entity.render" {:entity result#})
                (core.eventbus/fire "layout.do" {:container result# :type :attributes})
@@ -86,17 +86,9 @@
               (let [attribute# (core.entities/get-attribute (keyword ~nsname (name '~name)))]
                 (core.entities/create-attribute-value entity# attribute# data# options#))))))))
 
-(defmacro defcomponent [type rendering-method props init-data]
+(defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
-   `(do (core.components/define-component (keyword ~nsname (name '~type)) ~rendering-method ~props ~init-data)
-        (defn ~type
-          ([container name# data# p#]
-           (core.entities/add-component container (keyword ~nsname (name '~type)) name# data# p#))
-          ([container name# data#]
-           (core.entities/add-component container (keyword ~nsname (name '~type)) name# data# {}))
-          ([container name#]
-           (core.entities/add-component container (keyword ~nsname (name '~type)) name# {} {}))))))
-
-;;(defmacro defbehaviour [name display-name type validator handler]
-;;  (let [nsname (resolve-namespace-name)]
-;;   `(core.behaviours/add-behaviour (keyword ~nsname (name '~name)) ~display-name ~type ~validator ~handler)))
+   `(do (core.components/define-component (keyword ~nsname (name '~type)) ~rendering-method ~props ~initializer)
+        (defn ~type [container# name# data# p#]
+            (core.entities/hahaha container# (keyword ~nsname (name '~type)) name# data# p#)))))
+           ;(core.entities/add-component container# (keyword ~nsname (name '~type)) name# data# p#)))))

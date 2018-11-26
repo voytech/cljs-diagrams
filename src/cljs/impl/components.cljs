@@ -3,6 +3,8 @@
             [core.components :as d])
   (:require-macros [core.macros :refer [defcomponent]]))
 
+(def WIDTH 180)
+(def HEIGHT 150)
 
 (defn- setup-bbox [drawable p p1 p2 p3 p4]
   (when (or (= p p1) (= p p2))
@@ -35,19 +37,83 @@
                                      (doseq [p (keys data)]
                                       (manage-related-properties drawable p))))
 
-(defcomponent relation :draw-line {} (fn [e] {:border-color "black" :border-style :solid :border-width 1 :z-index :bottom}))
+(defn- control-initializer []
+  (fn [container props]
+    (let [point (cond
+                  (= (:side props) :left)   {:left 0 :top (/ HEIGHT 2)}
+                  (= (:side props) :right)  {:left WIDTH :top (/ HEIGHT 2)}
+                  (= (:side props) :top)    {:left (/ WIDTH 2) :top 0}
+                  (= (:side props) :bottom) {:left (/ WIDTH 2) :top HEIGHT})]
+       {:left (- (:left point) 8)
+        :top (- (:top point) 8)
+        :width 16
+        :height 16
+        :opacity 1
+        :background-color "white"
+        :border-color "black"
+        :visible true})))
 
-(defcomponent arrow :draw-triangle {} (fn [e] {:border-color "black" :border-style :solid :border-width 1 :width 20 :height 20 :angle 90 :origin-x :center :origin-y :center :z-index :top}))
+(defn- relation-initializer []
+ (fn [container props]
+   {:x1  0
+    :y1  0
+    :x2 WIDTH
+    :y2 HEIGHT
+    :left 0
+    :top 0
+    :border-color "black"
+    :border-style :solid
+    :border-width 1
+    :z-index :bottom}))
 
-(defcomponent startpoint :draw-circle {:start "connector" :penultimate true}  (fn [e] {:moveable true :visible true :z-index :top}))
+(defn- endpoint-initializer [type visible]
+  (fn [container props]
+     {:left (- (if (= :start type) 0 WIDTH) 8)
+      :top (- (if (= :start type) 0 HEIGHT) 8)
+      :radius 8
+      :width 16
+      :z-index :top
+      :height 16
+      :background-color "white"
+      :border-color "black"
+      :visible visible}))
 
-(defcomponent endpoint :draw-circle {:end "connector"} (fn [e] {:moveable true :visible false :opacity 1 :z-index :top}))
+(defn- arrow-initializer []
+  (fn [container props]
+    {:left WIDTH
+     :top  HEIGHT
+     :origin-x :center
+     :origin-y :center
+     :angle 90
+     :width 20
+     :z-index :top
+     :height 20}))
+
+(defn- body-initializer []
+  (fn [container props]
+    {:left 0
+     :top  0
+     :border-color "black"
+     :border-style :solid
+     :border-width 1
+     :background-color "white"
+     :width  WIDTH
+     :height HEIGHT}))
+
+
+(defcomponent relation :draw-line {} (relation-initializer))
+
+(defcomponent arrow :draw-triangle {} (arrow-initializer))
+
+(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} (endpoint-initializer :start true))
+
+(defcomponent endpoint :draw-circle {:end "connector"} (endpoint-initializer :end false))
 
 (defcomponent breakpoint :draw-circle {} (fn [e] {:moveable true :visible true :opacity 1 :z-index :top}))
 
-(defcomponent control :draw-rect {} (fn [e] {:moveable false :visible false :opacity 1 :background-color "white"}))
+(defcomponent control :draw-rect {} (control-initializer))
 
-(defcomponent main :draw-rect {} (fn [e] {:border-color "black" :border-style :solid :border-width 1}))
+(defcomponent main :draw-rect {} (body-initializer))
 
 ;; Attribute components.
 

@@ -144,14 +144,16 @@
  ([container type name data props method]
   (when-let [component-type (get @component-types type)]
     (let [_method (or method (:rendering-method component-type))
-          initializer-data (if (nil? (:initializer component-type)) {} ((:initializer component-type) container))
+          initializer-data (if (nil? (:initializer component-type)) {} ((:initializer component-type) container props))
           _data  (merge initializer-data data)
           _props (merge (:props component-type) props)
           component (Component. (str (random-uuid)) name type (volatile! _data) _method _props)]
+      (console.log "initializer data")
+      (console.log (clj->js initializer-data)  )
       (ensure-z-index component)
       (bus/fire "component.created" {:component component})
       (add-component component)
-      (assoc-in container [:components :name] component))))
+      (assoc-in container [:components (:name component)] component))))
  ([container type name data props]
   (new-component container type name data props nil))
  ([container type name data]

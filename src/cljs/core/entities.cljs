@@ -146,9 +146,10 @@
   ([entity type name data props method]
     (->> (d/new-component entity type name data props method)
          (swap! entities assoc (:uid entity)))
-     (let [entity-reloaded (entity-by-id (:uid entity))]
-       (define-lookups-on-entities entity-reloaded)
-       (bus/fire "entity.component.added" {:entity entity-reloaded})))
+    (let [entity-reloaded (entity-by-id (:uid entity))]
+      (define-lookups-on-entities entity-reloaded)
+      (bus/fire "entity.component.added" {:entity entity-reloaded})
+      entity-reloaded))
   ([entity type name data props]
    (add-entity-component entity type name data props nil))
   ([entity type name data]
@@ -173,15 +174,17 @@
     (let [entity (lookup attribute-value :entity)]
       (->> (d/new-component atribute-value type name data props method)
            (swap! entities assoc-in [(:uid entity) :attributes (:id attribute-value)])))
-    (let [entity-reloaded (entity-by-id (:uid entity))]
+    (let [entity-reloaded (entity-by-id (:uid entity))
+          attribute-value (get-attribute-value entity-reloaded (:id attribute-value))]
       (define-lookups-on-attributes entity-reloaded)
-      (bus/fire "attribute-value.component.added" {:attribute-value entity-reloaded})))
+      (bus/fire "attribute-value.component.added" {:attribute-value entity-reloaded})
+      attribute-value))
   ([attribute-value type name data props]
     (add-attribute-value-component attribute-value type name data props nil))
   ([attribute-value type name data]
     (add-attribute-value-component attribute-value type name data {} nil))
   ([attribute-value type name]
-    (add-attribute-value-component attribute-value type name {} {} nil))))
+    (add-attribute-value-component attribute-value type name {} {} nil)))
 
 ;; properties are ,m
 (defn update-component-prop [entity name prop value]
@@ -328,15 +331,24 @@
 ;; ==============================================
 ;; generalized context aware component creation
 ;; ==============================================
+(defn hahaha [container type name data props]
+  (cond
+    (instance? Entity container)
+      (add-entity-component container type name data props method)
+    (instance? AttributeValue container)
+      (add-attribute-value-component container type name data props method)))
 
 (defn add-component
   ([container type name data props method]
-    (cond
-      (instance? Entity container) (add-entity-component container type name data props method)
-      (instance? AttributeValue container) (add-attribute-value-component container type name data props method))
+    (console.log "a")
+    ;(cond
+    ;  (instance? Entity container)
+    ;    (add-entity-component container type name data props method)
+    ;  (instance? AttributeValue container)
+    ;    (add-attribute-value-component container type name data props method))
   ([container type name data props]
    (add-component container type name data props nil))
   ([container type name data]
    (add-component container type name data {} nil))
   ([container type name]
-   (add-component container type name {} {} nil)))
+   (add-component container type name {} {} nil))))

@@ -62,7 +62,7 @@
   (let [source-control-side (e/component-property source-entity (:name source-control) :side)
         target-control-side (e/component-property target-entity (:name target-control) :side)]
     [(if (or (= :left source-control-side) (= :right source-control-side)) :h :v)
-     (if (or (= :left source-control-side) (= :right source-control-side)) :h :v)]))
+     (if (or (= :left target-control-side) (= :right target-control-side)) :h :v)]))
 
 (defn- nearest-controls-between [src-entity trg-entity]
   (let [src-connectors (e/get-entity-component src-entity ::c/control)
@@ -110,6 +110,7 @@
             startpoint (e/get-entity-component entity "start")
             endpoint (e/get-entity-component entity "end")
             vectors (calculate-vectors start src end trg)]
+        (console.log (clj->js vectors))
         (position-entity-endpoint entity startpoint {:x (d/get-left src) :y (d/get-top src)})
         (position-entity-endpoint entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
         (update-manhattan-layout entity src trg (vectors 0) (vectors 1) movement-x movement-y)))

@@ -42,10 +42,8 @@
   (doseq [component components] (render component)))
 
 (defn- render-entity [entity]
-  (render-components  (e/components-of entity))
-  (console.log "Rendering")
-  (console.log (clj->js entity))
   (l/do-layouts entity)
+  (render-components  (e/components-of entity))
   (bus/fire "rendering.finish"))
 
 (defn- update-property-to-redraw [component properties]

@@ -17,6 +17,7 @@
   (fn [e]
     (let [bbox (cl/get-bbox e)
           source (e/get-entity-component e name)]
+      (console.log (clj->js source))    
       {:left (- (/ (:width bbox) 2) (/ (cc/get-width source) 2))
        :top  25})))
 

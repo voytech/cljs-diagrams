@@ -16,7 +16,9 @@
   (state [this])
   (model [this])
   (setp [this property value])
+  (silent-setp [this property value])
   (set-data [this map_])
+  (silent-set-data [this map_])
   (getp [this property])
   (set-border-color [this color])
   (set-background-color [this color])
@@ -51,6 +53,12 @@
     (vswap! model assoc property value)
     (changed this [property])
     (invoke-hook this :setp property value))
+  (silent-setp [this property value]
+    (vswap! model assoc property value)
+    (invoke-hook this :setp property value))
+  (silent-set-data [this map_]
+    (vswap! model merge map_)
+    (invoke-hook this :set-data map_))
   (set-data [this map_]
     (vswap! model merge map_)
     (changed this (keys map_))

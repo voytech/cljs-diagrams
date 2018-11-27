@@ -102,7 +102,7 @@
           bbox (.getBBox domnode)]
       (d/set-data component {:width (.-width bbox) :height (.-height bbox)})
       (close-text-measure id)
-      (bus/fire "layout.do" {:container (e/lookup component :entity) :type :attributes}))))
+      (bus/fire "layouts.do" {:container (e/lookup component :entity)}))))
 
 (defn Root [dom-id width height]
   (reagent/create-class {
@@ -201,7 +201,9 @@
 ;; text rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:reagentsvg :draw-text] [component context]
-  (request-text-measure component)
+  (let [properties (get-in context [:redraw-properties (:uid component)])]
+    (when (some #(= :text %) properties)
+      (request-text-measure component)))
   (update-svg-element component context nil))
 
 (defmethod r/create-rendering-state [:reagentsvg :draw-text] [component context]

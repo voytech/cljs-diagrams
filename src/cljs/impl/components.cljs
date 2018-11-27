@@ -125,11 +125,22 @@
      :border-color "black"
      :border-style :solid
      :border-width 1
-     :z-index :top
      :font-family "calibri"
      :font-size 12}))
 
 (defcomponent title :draw-text {:layout :attributes} (title-initializer))
+
+(defn- image-initializer [width height]
+  (fn [container props]
+    {:left 0
+     :top  0
+     :border-color "black"
+     :border-style :solid
+     :border-width 1
+     :width width
+     :height height}))
+
+(defcomponent image :draw-image {} (image-initializer 50 50))
 
 (defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 

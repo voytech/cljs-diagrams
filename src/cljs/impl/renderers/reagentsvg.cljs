@@ -37,7 +37,8 @@
                                :visible (fn [svg val mdl] (assoc-in svg [1 :visibility] (if (== val true) "visible" "hidden")))
                                :color (simple-set :stroke)
                                :border-style (simple-set :stroke-style)
-                               :border-width (simple-set :stroke-width)})
+                               :border-width (simple-set :stroke-width)
+                               :image-url (simple-set :href)})
 
 (defonce reactive-svgs (atom {}))
 
@@ -208,4 +209,17 @@
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-text] [component context]
   (close-text-measure (:uid component))
+  (swap! reactive-svgs dissoc (:uid component)))
+
+
+;;==========================================================================================================
+;; image rendering
+;;==========================================================================================================
+(defmethod r/do-render [:reagentsvg :draw-image] [component context]
+  (update-svg-element component context nil))
+
+(defmethod r/create-rendering-state [:reagentsvg :draw-image] [component context]
+  {:data (create-svg-element :image component context nil)})
+
+(defmethod r/destroy-rendering-state [:reagentsvg :draw-image] [component context]
   (swap! reactive-svgs dissoc (:uid component)))

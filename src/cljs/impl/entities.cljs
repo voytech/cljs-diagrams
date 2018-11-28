@@ -1,23 +1,17 @@
 (ns impl.entities
  (:require [core.entities :as e]
            [core.components :as cc]
-           [core.options :as defaults]
-           [impl.standard-attributes :as stdatr]
            [impl.components :as c]
            [impl.layouts :as l]
            [core.layouts :as cl]
-           [core.project :as p]
-           [core.eventbus :as bus]
-           [core.options :as o]
-           [impl.behaviours.definitions :as bd]
-           [clojure.string :as str])
+           [impl.behaviours.definitions :as bd])
  (:require-macros [core.macros :refer [defentity with-components with-layouts layout]]))
 
 (defn title-layout-options [name]
   (fn [e]
     (let [bbox (cl/get-bbox e)
           source (e/get-entity-component e name)]
-      (console.log (clj->js source))    
+      (console.log (clj->js source))
       {:left (- (/ (:width bbox) 2) (/ (cc/get-width source) 2))
        :top  25})))
 

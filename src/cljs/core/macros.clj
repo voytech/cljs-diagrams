@@ -49,7 +49,6 @@
              (component-factory# e# data# options#)
              (let [result# (core.entities/entity-by-id (:uid e#))]
                (core.eventbus/fire "entity.render" {:entity result#})
-               ;(core.eventbus/fire "layout.do" {:container result# :type :attributes})
                result#)))))))
 
 (defmacro defcomponent [type rendering-method props initializer]

@@ -3,9 +3,8 @@
             [core.eventbus :as b]
             [core.entities :as e]
             [core.components :as d]
-            [cljs.core.async :as async :refer [>! <! put! chan alts!]]
-            [goog.events :as events]
-            [goog.dom.classes :as classes]))
+            [cljs.core.async :as async :refer [>! <! put! chan alts!]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
 (defonce events-bindings (atom {}))
@@ -169,13 +168,12 @@
   ([e overrides]
    (trigger-bus-event (merge e overrides))))
 
-(defn events->channel [id event-types channel]
-  (let [el (js/document.getElementById id)]
-    (doseq [event-type event-types]
-      (events/listen el event-type (fn [e] (put! channel e))))
-    channel))
+(defn events->chan [el event-types chan]
+  (doseq [event-type event-types]
+    (.addEventListener el event-type (fn [e] (put! chan e))))
+  chan)
 
-(defn merge-channels [& chans]
+(defn merge-chans [& chans]
   (let [rc (chan)]
     (go
      (loop []
@@ -183,24 +181,81 @@
        (recur)))
     rc))
 
-(defn filter-channel [pred channel]
+(defn filter-chan [pred channel]
   (let [rc (chan)]
     (go (loop []
-          (let [val (<! channel)]
+          (let [val (<! chan)]
             (if (pred val) (put! rc val))
-            (recur))
-          ))
+            (recur))))
     rc))
 
-(defn normalise-channel [source-channel el]
+(defn normalise-chan [el source-chan]
   (let [output (chan)]
     (go (loop []
-          (let [event (<! source-channel)]
+          (on-phase :start)
+          (let [event (<! source-chan)]
             (put! output (normalise-event event el))
-          (recur))))
+            (recur))))
     output))
 
-(defn- dispatch-events [id]
+(defn position-delta-chan [source-chan]
+  (let [output (chan)]
+    (go (loop [prev nil]
+          (let [event (<! source-chan)]
+            (put! output (merge event {:movement-x (- (:left event) (or (:left prev) 0))
+                                       :movement-y (- (:top event)  (or (:top prev) 0))}))
+            (recur event))))
+    output))
+
+(defn enriching-chan [source-chan]
+  (let [output (chan)]
+    (go (loop []
+          (let [event (<! source-chan)]
+            (put! output (->> (enrich (or (:component @state) (first (resolve-targets (:left event) (:top event)))))
+                              (merge event)))
+            (recur))))
+    output))
+
+(defn pattern-test-chan [source-chan]
+  (let [output (chan)]
+    (go (loop []
+          (let [event (<! source-chan)
+                tested (test event)]
+            (put! output (merge tested @state {:type (or (:state @state) (:type tested))}))
+            (recur))))
+    output))
+
+(defn event-processing-chan [el source-chan]
+  (let [output (chan)]
+    (go (loop [prev nil]
+          (on-phase :start)
+          (let [event (<! source-chan)
+                normalised  (normalise-event event el)
+                moved       (merge normalised {:movement-x (- (:left normalised) (or (:left prev) 0))
+                                               :movement-y (- (:top normalised)  (or (:top prev) 0))})
+                enriched    (->> (enrich (or (:component @state)
+                                             (first (resolve-targets (:left moved) (:top moved)))))
+                                 (merge moved))
+                tested      (test enriched)
+                fin         (merge tested @state {:type (or (:state @state) (:type tested))})]
+            (put! output fin)
+            (recur fin))))
+    output))
+
+(defn dispatch-events-v2 [id]
+  (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"
+                "mouseenter" "mouseleave" "keypress" "keydown" "keyup"]
+        el         (js/document.getElementById id)
+        sink-chan  (->> (chan)
+                        (events->chan el events)
+                        (event-processing-chan el))]
+          (go (loop []
+                (let [event (<! sink-chan)]
+                  (on-phase :completed)
+                  (trigger-bus-event event)
+                  (recur))))))
+
+(defn dispatch-events [id]
   (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"
                 "mouseenter" "mouseleave" "keypress" "keydown" "keyup"]
         obj        (js/document.getElementById id)

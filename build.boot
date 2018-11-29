@@ -11,6 +11,7 @@
                  [org.clojure/tools.nrepl   "0.2.13"     :scope "test"]
                  [weasel                    "0.7.0"      :scope "test"]
                  [org.clojure/clojurescript "1.9.293"] ;;293 562
+                 [org.clojure/core.async    "0.3.442"]
                  [crisptrutski/boot-cljs-test "0.3.0" :scope "test"]
                  [reagent "0.6.0"]
                  [binaryage/devtools "0.9.0" :scope "test"]

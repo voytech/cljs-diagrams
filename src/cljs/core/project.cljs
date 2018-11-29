@@ -46,7 +46,7 @@
               :width width
               :height height}]
     (reset! project data)
-    (events/dispatch-events id)))
+    (events/dispatch-events-v2 id)))
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------

@@ -17,7 +17,31 @@
 
 (def canvas-initializing-wrapper
  (with-meta identity
-   {:component-did-mount #(p/initialize (.-id (reagent/dom-node %)) {:width 1270 :height 1000 :renderer :reagentsvg})}))
+   {:component-did-mount #(p/initialize
+     (.-id (reagent/dom-node %))
+     {:width 1270 :height 1000
+      :renderer :reagentsvg
+      :events {
+        :canonical-events {
+          "mousedown"  "mouse-down"
+          "mouseup"    "mouse-up"
+          "click"      "mouse-click"
+          "dbclick"    "mouse-db-click"
+          "mousemove"  "mouse-move"
+          "mouseenter" "mouse-enter"
+          "mouseleave" "mouse-leave"
+        }
+        :application-events {
+          "mouse-dragging-move"   "move"
+          "mouse-in"              "focus"
+          "mouse-out"             "blur"
+          "mouse-point-click"     "activate"
+        }
+        :patterns {
+
+        }
+      }})
+   }))
 
 
 (defn Workspace [class]

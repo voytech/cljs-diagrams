@@ -64,16 +64,3 @@
 (mouse-in-event)
 (mouse-out-event)
 (mouse-click-event)
-
-(events/set-original-events-bindings  {"mousedown"  "mouse-down"
-                                       "mouseup"    "mouse-up"
-                                       "click"      "mouse-click"
-                                       "dbclick"    "mouse-db-click"
-                                       "mousemove"  "mouse-move"
-                                       "mouseenter" "mouse-enter"
-                                       "mouseleave" "mouse-leave"})
-
-(events/set-application-events-bindings {"mouse-dragging-move"   "move"
-                                         "mouse-in"              "focus"
-                                         "mouse-out"             "blur"
-                                         "mouse-point-click"     "activate"})

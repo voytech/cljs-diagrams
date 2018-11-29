@@ -39,14 +39,25 @@
 ;; ====
 ;; move all global state for entities, event-bus, behaviours, components into this function as local mutable atoms.
 ;; ===
-(defn initialize [id {:keys [width height renderer]}]
+;; state = {
+;;  :renderer {},
+;;  :events {},
+;;  :entities  {},
+;;  :behaviours {} }
+;; }
+(defn initialize [id {:keys [width height renderer] :as config}]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
   (let [data {:canvas (r/create id width height renderer)
               :id id
               :width width
-              :height height}]
+              :height height}
+        app-state (atom {:dom {:id id :width width :height height}
+                         :renderer {},
+                         :events (:events config),
+                         :entities {},
+                         :behaviours {}})]
     (reset! project data)
-    (events/dispatch-events-v2 id)))
+    (events/dispatch-events app-state)))
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------

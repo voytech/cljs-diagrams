@@ -1,15 +1,9 @@
 (ns core.events
-  (:require [cljsjs.rx]
-            [core.eventbus :as b]
+  (:require [core.eventbus :as b]
             [core.entities :as e]
             [core.components :as d]
             [cljs.core.async :as async :refer [>! <! put! chan alts!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
-
-(defonce events-bindings (atom {}))
-
-(defonce application-events-bindings (atom {}))
 
 (defonce  event-codes {"noop"     {:desc "No operation event code"}
                        "move"     {:desc "Event code reserved for moving components"}
@@ -33,17 +27,13 @@
 
 (defonce phases (volatile! {}))
 
-(defn set-original-events-bindings [bindings]
-  (reset! events-bindings bindings))
+(defn- normalise-event-type [app-state event]
+  (let [bindings (-> @app-state :events :canonical-events)]
+    (or (get bindings event) event)))
 
-(defn- normalise-event-type [event]
-  (or (get @events-bindings event) event))
-
-(defn set-application-events-bindings [bindings]
-  (reset! application-events-bindings bindings))
-
-(defn- convert-to-application-event [event]
-  (or (get @application-events-bindings event) event))
+(defn- convert-to-application-event [app-state event]
+  (let [bindings (-> @app-state :events :application-events)]
+    (or (get bindings event) event)))
 
 (defn schedule [function phase]
   (let [hooks (conj (or (phase @phases) []) function)]
@@ -127,40 +117,30 @@
        (filter #(d/contains-point? % x y))
        (sort-by #(d/resolve-z-index (d/getp % :z-index)) >)))
 
-(defn enrich [component]
+(defn- enrich [component]
   (when (d/is-component (:uid component))
     (let [entity             (e/lookup component :entity)]
         {:entity           entity
          :component        component})))
 
-(defn normalise-event [e obj]
+(defn- normalise-event [app-state e obj]
   (let [rect (.getBoundingClientRect obj)
         left (- (.-clientX e) (.-left rect))
         top (- (.-clientY e) (.-top rect))]
      {:source e
+      :app-state app-state
       :ctrl-key (.-ctrlKey e)
       :target (.-target e)
-      :type (normalise-event-type (.-type e))
-      :state (or (:state @state) (normalise-event-type (.-type e)))
+      :type (normalise-event-type app-state (.-type e))
+      :state (or (:state @state) (normalise-event-type app-state (.-type e)))
       :left left
       :top  top
       :movement-x 0
       :movement-y 0}))
 
-(defn- merge-streams [obj events]
-  (apply js/Rx.Observable.merge (mapv (fn [e] (js/Rx.Observable.fromEvent obj e)) events)))
-
-(defn- delta-stream [input func]
-  (.scan input (fn [acc,e] (merge acc e (func acc e))) {}))
-
-(defn- enriching-stream [input]
-  (.map input (fn [e]
-                 (->> (enrich (or (:component @state) (first (resolve-targets (:left e) (:top e)))))
-                      (merge e)))))
-
 (defn trigger-bus-event
   ([e]
-   (let [_e (assoc e :type (convert-to-application-event (:type e)))
+   (let [_e (assoc e :type (convert-to-application-event (:app-state e) (:type e)))
          event-name (event-name (-> _e :entity :type)
                                 (-> _e :component :type)
                                 (-> _e :type))]
@@ -189,12 +169,12 @@
             (recur))))
     rc))
 
-(defn normalise-chan [el source-chan]
+(defn normalise-chan [state el source-chan]
   (let [output (chan)]
     (go (loop []
           (on-phase :start)
           (let [event (<! source-chan)]
-            (put! output (normalise-event event el))
+            (put! output (normalise-event state event el))
             (recur))))
     output))
 
@@ -225,49 +205,37 @@
             (recur))))
     output))
 
-(defn event-processing-chan [el source-chan]
-  (let [output (chan)]
-    (go (loop [prev nil]
-          (on-phase :start)
-          (let [event (<! source-chan)
-                normalised  (normalise-event event el)
-                moved       (merge normalised {:movement-x (- (:left normalised) (or (:left prev) 0))
-                                               :movement-y (- (:top normalised)  (or (:top prev) 0))})
-                enriched    (->> (enrich (or (:component @state)
-                                             (first (resolve-targets (:left moved) (:top moved)))))
-                                 (merge moved))
-                tested      (test enriched)
-                fin         (merge tested @state {:type (or (:state @state) (:type tested))})]
-            (put! output fin)
-            (recur fin))))
-    output))
+;;(defn event-processing-chan [el source-chan]
+;;  (let [output (chan)]
+;;    (go (loop [prev nil]
+;;          (on-phase :start)
+;;          (let [event (<! source-chan)
+;;                normalised  (normalise-event event el)
+;;                moved       (merge normalised {:movement-x (- (:left normalised) (or (:left prev) 0))
+;;                                               :movement-y (- (:top normalised)  (or (:top prev) 0))})
+;;                enriched    (->> (enrich (or (:component @state)
+;;                                             (first (resolve-targets (:left moved) (:top moved)))))
+;;                                 (merge moved))
+;;                tested      (test enriched)
+;;                fin         (merge tested @state {:type (or (:state @state) (:type tested))})]
+;;            (put! output fin)
+;;            (recur fin))))
+;;    output))
 
-(defn dispatch-events-v2 [id]
+(defn dispatch-events [app-state]
   (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"
                 "mouseenter" "mouseleave" "keypress" "keydown" "keyup"]
+        id         (-> @app-state :dom :id)
         el         (js/document.getElementById id)
         sink-chan  (->> (chan)
                         (events->chan el events)
-                        (event-processing-chan el))]
+                        (normalise-chan app-state el)
+                        (position-delta-chan)
+                        (enriching-chan)
+                        (pattern-test-chan))]
+                        ;;(event-processing-chan el))]
           (go (loop []
                 (let [event (<! sink-chan)]
                   (on-phase :completed)
                   (trigger-bus-event event)
                   (recur))))))
-
-(defn dispatch-events [id]
-  (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"
-                "mouseenter" "mouseleave" "keypress" "keydown" "keyup"]
-        obj        (js/document.getElementById id)
-        stream     (merge-streams obj events)
-        onstart    (.map stream (fn [e] (on-phase :start) e))
-        normalized (.map onstart (fn [e] (normalise-event e obj)))
-        delta      (delta-stream normalized (fn [acc e] {:movement-x (- (:left e) (or (:left acc) 0))
-                                                         :movement-y (- (:top e) (or (:top acc) 0))}))
-        enriched (enriching-stream delta)
-        pattern  (.map enriched (fn [e] (test e)))
-        last     (.map pattern  (fn [e] (merge e @state {:type (or (:state @state) (:type e))})))] ; this could be moved to events/tests at the end
-
-      (.subscribe last  (fn [e]
-                          (on-phase :completed)
-                          (trigger-bus-event e)))))

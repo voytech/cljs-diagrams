@@ -2,7 +2,10 @@
   (:require [cljsjs.rx]
             [core.eventbus :as b]
             [core.entities :as e]
-            [core.components :as d]))
+            [core.components :as d]
+            [cljs.core.async :as async :refer [>! <! put! chan alts!]]
+            [goog.events :as events]
+            [goog.dom.classes :as classes]))
 
 
 (defonce events-bindings (atom {}))
@@ -165,6 +168,37 @@
      (b/fire event-name _e)))
   ([e overrides]
    (trigger-bus-event (merge e overrides))))
+
+(defn events->channel [id event-types channel]
+  (let [el (js/document.getElementById id)]
+    (doseq [event-type event-types]
+      (events/listen el event-type (fn [e] (put! channel e))))
+    channel))
+
+(defn merge-channels [& chans]
+  (let [rc (chan)]
+    (go
+     (loop []
+       (put! rc (first (alts! chans)))
+       (recur)))
+    rc))
+
+(defn filter-channel [pred channel]
+  (let [rc (chan)]
+    (go (loop []
+          (let [val (<! channel)]
+            (if (pred val) (put! rc val))
+            (recur))
+          ))
+    rc))
+
+(defn normalise-channel [source-channel el]
+  (let [output (chan)]
+    (go (loop []
+          (let [event (<! source-channel)]
+            (put! output (normalise-event event el))
+          (recur))))
+    output))
 
 (defn- dispatch-events [id]
   (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"

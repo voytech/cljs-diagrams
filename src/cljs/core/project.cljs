@@ -36,7 +36,9 @@
 
 (defn clear-selection []
   (vswap! project-state dissoc :selection))
-
+;; ====
+;; move all global state for entities, event-bus, behaviours, components into this function as local mutable atoms.
+;; ===
 (defn initialize [id {:keys [width height renderer]}]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
   (let [data {:canvas (r/create id width height renderer)

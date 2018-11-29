@@ -54,7 +54,7 @@
         app-state (atom {:dom {:id id :width width :height height}
                          :renderer {},
                          :events (:events config),
-                         :entities {},
+                         :entities (atom {}),
                          :behaviours {}})]
     (reset! project data)
     (events/dispatch-events app-state)))

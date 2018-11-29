@@ -19,11 +19,11 @@
 
 (defonce funcs (atom {}))
 
-(defonce indices (volatile! {}))
+;(defonce indices (volatile! {}))
 
-(defonce context (volatile! {}))
+;(defonce context (volatile! {}))
 
-(defonce state (atom {}))
+;(defonce state (atom {}))
 
 (defonce phases (volatile! {}))
 
@@ -44,59 +44,59 @@
     (vswap! phases dissoc phase)
     (doseq [hook hooks] (hook))))
 
-(defn clear-state []
+(defn clear-state [{:keys [state]}]
   (reset! state {}))
 
 (defn clear-state-for-next-event []
   (schedule clear-state :started))
 
-(defn- matches? [key]
+(defn- matches? [{:keys [indices]} key]
   (let [steps (key @patterns)
         index (key @indices)]
     (= index (count steps))))
 
-(defn- advance [key event]
+(defn- advance [{:keys [indices] :as s} key event]
   (let [steps (key @patterns)
-        index (key @indices)
+        index (or (key @indices) 0)
         step (get steps index)
-        result (step event)
+        result (step event s)
         count  (count steps)]
     (cond
       (= :success result) (vswap! indices assoc key count)
       (and (= true result) (< index count)) (vswap! indices assoc key (inc index))
       :else (vswap! indices assoc key 0))))
 
-(defn- after-match [key event]
+(defn- after-match [{:keys [indices state] :as s} key event]
   (vswap! indices assoc key 0)
   (swap! state assoc :state (name key))
-  (swap! state merge ((key @funcs) event)))
+  (swap! state merge ((key @funcs) event s)))
 
-(defn- update-test [key event]
-   (advance key event)
-   (when (matches? key) (after-match key event)))
+(defn- update-test [matching-context key event]
+   (advance matching-context key event)
+   (when (matches? matching-context key) (after-match matching-context key event)))
 
 (defn add-pattern [name step-functions result-function]
   (swap! patterns assoc name step-functions)
-  (swap! funcs assoc name result-function)
-  (vswap! indices assoc name 0))
+  (swap! funcs assoc name result-function))
+  ;(vswap! indices assoc name 0))
 
-(defn set-context [event-type data]
+(defn set-context [{:keys [context]} event-type data]
   (vswap! context assoc event-type data))
 
-(defn get-context [event-type]
+(defn get-context [{:keys [context]} event-type]
   (get @context event-type))
 
-(defn remove-context [event-type]
-  (let [data (get-context event-type)]
+(defn remove-context [{:keys [context] :as s} event-type]
+  (let [data (get-context s event-type)]
     (vswap! context dissoc event-type)
     data))
 
-(defn has-context [event-type]
-  (not (nil? (get-context event-type))))
+(defn has-context [{:keys [context] :as s} event-type]
+  (not (nil? (get-context s event-type))))
 
-(defn test [event]
+(defn test [matching-context event]
   (doseq [key (keys @patterns)]
-     (update-test key event))
+     (update-test matching-context key event))
   event)
 
 (defn- ns-qualified-element-name [type]
@@ -123,7 +123,7 @@
         {:entity           entity
          :component        component})))
 
-(defn- normalise-event [app-state e obj]
+(defn- normalise-event [state app-state e obj]
   (let [rect (.getBoundingClientRect obj)
         left (- (.-clientX e) (.-left rect))
         top (- (.-clientY e) (.-top rect))]
@@ -141,6 +141,7 @@
 (defn trigger-bus-event
   ([e]
    (let [_e (assoc e :type (convert-to-application-event (:app-state e) (:type e)))
+         _ (console.log (clj->js _e))
          event-name (event-name (-> _e :entity :type)
                                 (-> _e :component :type)
                                 (-> _e :type))]
@@ -169,12 +170,12 @@
             (recur))))
     rc))
 
-(defn normalise-chan [state el source-chan]
+(defn normalise-chan [matching-context app-state el source-chan]
   (let [output (chan)]
     (go (loop []
           (on-phase :start)
           (let [event (<! source-chan)]
-            (put! output (normalise-event state event el))
+            (put! output (normalise-event (:state matching-context) app-state event el))
             (recur))))
     output))
 
@@ -187,7 +188,7 @@
             (recur event))))
     output))
 
-(defn enriching-chan [source-chan]
+(defn enriching-chan [{:keys [state]} source-chan]
   (let [output (chan)]
     (go (loop []
           (let [event (<! source-chan)]
@@ -196,46 +197,33 @@
             (recur))))
     output))
 
-(defn pattern-test-chan [source-chan]
+(defn pattern-test-chan [matching-context source-chan]
   (let [output (chan)]
     (go (loop []
           (let [event (<! source-chan)
-                tested (test event)]
-            (put! output (merge tested @state {:type (or (:state @state) (:type tested))}))
+                tested (test matching-context event)
+                current-state (-> matching-context :state (deref))]
+            (put! output (merge tested current-state {:type (or (:state current-state) (:type tested))}))
             (recur))))
     output))
-
-;;(defn event-processing-chan [el source-chan]
-;;  (let [output (chan)]
-;;    (go (loop [prev nil]
-;;          (on-phase :start)
-;;          (let [event (<! source-chan)
-;;                normalised  (normalise-event event el)
-;;                moved       (merge normalised {:movement-x (- (:left normalised) (or (:left prev) 0))
-;;                                               :movement-y (- (:top normalised)  (or (:top prev) 0))})
-;;                enriched    (->> (enrich (or (:component @state)
-;;                                             (first (resolve-targets (:left moved) (:top moved)))))
-;;                                 (merge moved))
-;;                tested      (test enriched)
-;;                fin         (merge tested @state {:type (or (:state @state) (:type tested))})]
-;;            (put! output fin)
-;;            (recur fin))))
-;;    output))
 
 (defn dispatch-events [app-state]
   (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"
                 "mouseenter" "mouseleave" "keypress" "keydown" "keyup"]
         id         (-> @app-state :dom :id)
         el         (js/document.getElementById id)
+        matching-context {:indices (volatile! {})
+                          :context (volatile! {})
+                          :state   (atom {})}
         sink-chan  (->> (chan)
                         (events->chan el events)
-                        (normalise-chan app-state el)
+                        (normalise-chan matching-context app-state el)
                         (position-delta-chan)
-                        (enriching-chan)
-                        (pattern-test-chan))]
-                        ;;(event-processing-chan el))]
+                        (enriching-chan matching-context)
+                        (pattern-test-chan matching-context))]
           (go (loop []
                 (let [event (<! sink-chan)]
                   (on-phase :completed)
+                  (console.log (clj->js event))
                   (trigger-bus-event event)
                   (recur))))))

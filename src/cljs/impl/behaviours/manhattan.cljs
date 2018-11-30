@@ -42,7 +42,7 @@
 
 (defn- update-line-component [entities entity idx sx sy ex ey]
   (let [name (str "line-" idx)]
-    (e/assert-component entities entity name ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey})))
+    (e/assert-component c/relation entities entity name {:x1 sx :y1 sy :x2 ex :y2 ey})))
 
 (defn- update-line-components [entities entity path]
   (e/remove-entity-components entities entity (fn [c] (>= (connector-idx (:name c)) (count path))))

@@ -53,4 +53,11 @@
 (defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
    `(defn ~type [entities# entity# name# data# p#]
-      (core.entities/add-entity-component entities# entity# (keyword ~nsname (name '~type)) name# data# p# ~rendering-method ~initializer))))
+      (core.entities/add-entity-component entities#
+                                          entity#
+                                          (keyword ~nsname (name '~type))
+                                          name#
+                                          data#
+                                          (merge ~props p#)
+                                          ~rendering-method
+                                          ~initializer))))

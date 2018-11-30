@@ -110,14 +110,14 @@
    (get-in @entities [(:uid entity) :components name-or-type])))
 
 (defn assert-component
- ([entities entity name type data]
+ ([func entities entity name data]
   (let [component (get-entity-component entities entity name)]
-    (if (or (nil? component) (not= type (:type component)))
-      (add-entity-component entities entity type name data)
+    (if (nil? component)
+      (func entities entity name data {})
       (d/set-data component data))
     (get-entity-component entities entity name)))
- ([entities entity name type]
-  (assert-component entities entity name type {})))
+ ([func entities entity name]
+  (assert-component func entities entity name {})))
 
 (defn connect-entities [entities src trg association-type]
   (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg)})

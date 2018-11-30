@@ -62,7 +62,7 @@
                                                                   (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
                                                   (e/connect-entities entities (:entity src) (:entity trg) (keyword (:type end-type)))
                                                   (std/toggle-controls (:entity trg) false)
-                                                  ((:f end-type) (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
+                                                  ((:f end-type) entities (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
                     (std/relations-validate entities (-> event :entity))
                     (m/on-endpoint-event event)
                     nil)))

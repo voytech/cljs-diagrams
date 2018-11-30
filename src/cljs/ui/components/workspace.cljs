@@ -4,7 +4,8 @@
             [ui.components.generic.basic :as cmp :refer [DynamicPagination]]
             [core.project :as p :refer [project]]
             [impl.synthetic-events :as s]
-            [core.tools :as t :refer [tools]]))
+            [core.tools :as t :refer [tools]]
+            [impl.synthetic-events :as patterns]))
 
 
 (defn resolve-drop "Should resolve drop events for following scenarios:
@@ -38,7 +39,11 @@
           "mouse-point-click"     "activate"
         }
         :patterns {
-
+          :mouse-dragging-move (patterns/mouse-dragging-move-event)
+          :mouse-move (patterns/mouse-move-event)
+          :mouse-in (patterns/mouse-in-event)
+          :mouse-out (patterns/mouse-out-event)
+          :mouse-point-click (patterns/mouse-click-event)
         }
       }})
    }))

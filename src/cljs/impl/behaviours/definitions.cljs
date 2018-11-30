@@ -28,8 +28,9 @@
                  (fn [e]
                    (let [event (:context e)
                          entity (:entity event)
-                         start (first (e/get-related-entities entity :start))
-                         end (first (e/get-related-entities entity :end))
+                         entities (-> event :app-state deref :entities)
+                         start (first (e/get-related-entities entities entity :start))
+                         end (first (e/get-related-entities entities entity :end))
                          enriched (merge event {:start start :end end})]
                      (m/on-source-entity-event enriched)
                      nil)))
@@ -52,16 +53,17 @@
                 [f/is-association-entity]
                 (b/build-event-name [::c/startpoint ::c/endpoint ] "mouse-up")
                 (fn [e]
-                  (let [event (:context e)]
+                  (let [event (:context e)
+                        entities (-> event :app-state deref :entities)]
                     ((std/intersects-controls? (fn [src trg]
                                                  (let [ctype (-> event :component :type)
                                                        end-type (cond
                                                                   (= ::c/endpoint ctype) {:type "end" :f std/position-endpoint}
                                                                   (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
-                                                  (e/connect-entities (:entity src) (:entity trg) (keyword (:type end-type)))
+                                                  (e/connect-entities entities (:entity src) (:entity trg) (keyword (:type end-type)))
                                                   (std/toggle-controls (:entity trg) false)
                                                   ((:f end-type) (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
-                    (std/relations-validate (->> e :context :entity))
+                    (std/relations-validate entities (-> event :entity))
                     (m/on-endpoint-event event)
                     nil)))
 
@@ -112,7 +114,7 @@
                 (b/build-event-name [::c/main] "focus")
                 (fn [e]
                   (let [event (:context e)]
-                    (std/toggle-control (:entity event) (-> event :component :name) true)
+                    (std/toggle-control (-> event :component) true)
                     nil)))
 
 (b/add-behaviour 'hide-entity-control
@@ -122,5 +124,5 @@
                 (b/build-event-name [::c/main] "blur")
                 (fn [e]
                   (let [event (:context e)]
-                    (std/toggle-control (:entity event) (-> event :component :name) false)
+                    (std/toggle-control (-> event :component) false)
                     nil)))

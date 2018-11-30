@@ -13,11 +13,11 @@
 
 (defmacro with-components [data options & components-vector]
   (let [components (first components-vector)]
-    `(fn [container# ~data ~options]
+    `(fn [entities# entity# ~data ~options]
        (let [left# (or (:left ~options) 0)
              top#  (or (:top  ~options) 0)
-             _container# (reduce (fn [agg# func#] (func# agg#)) container# ~components)]
-          (doseq [component# (-> _container# :components vals)]
+             _entity# (reduce (fn [agg# func#] (func# entities# agg#)) entity# ~components)]
+          (doseq [component# (-> _entity# :components vals)]
             (doseq [vl# [[:left left#] [:top top#]]]
               (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
                 (core.components/setp component# (vl# 0) new-val#))))))))
@@ -37,22 +37,20 @@
     (let [nsname      (resolve-namespace-name)
           components  (:with-components transformed)
           layouts     (:with-layouts transformed)
-          has-layouts (contains? transformed :with-layouts)
-          behaviours  (last (:with-behaviours transformed))
-          attributes  (last (:with-attributes transformed))]
+          has-layouts (contains? transformed :with-layouts)]
       (when (nil? components)
-        (throw (Error. "Provide components and behaviours definition within entitity definition!")))
+        (throw (Error. "Provide components definition within entitity definition!")))
      `(do
-        (defn ~name [data# options#]
-           (let [e# (core.entities/create-entity (keyword ~nsname (name '~name)) ~layouts)
+        (defn ~name [entities# data# options#]
+           (let [e# (core.entities/create-entity entities# (keyword ~nsname (name '~name)) ~layouts)
                  component-factory# ~components]
-             (component-factory# e# data# options#)
-             (let [result# (core.entities/entity-by-id (:uid e#))]
-               (core.eventbus/fire "entity.render" {:entity result#})
+             (component-factory# entities# e# data# options#)
+             (let [result# (core.entities/entity-by-id entities# (:uid e#))]
+               (core.eventbus/fire "entity.render" {:entity result#
+                                                    :entities entities#})
                result#)))))))
 
 (defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
-   `(do (core.components/define-component (keyword ~nsname (name '~type)) ~rendering-method ~props ~initializer)
-        (defn ~type [container# name# data# p#]
-            (core.entities/add-entity-component container# (keyword ~nsname (name '~type)) name# data# p#)))))
+   `(defn ~type [entities# entity# name# data# p#]
+      (core.entities/add-entity-component entities# entity# (keyword ~nsname (name '~type)) name# data# p# ~rendering-method ~initializer))))

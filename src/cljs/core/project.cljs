@@ -1,16 +1,10 @@
 (ns core.project
- (:require [cljsjs.jquery]
-           [cljsjs.fabric]
-           [cljsjs.rx]
-           [core.utils.dom :as dom]
+ (:require [core.utils.dom :as dom]
            [core.utils.dnd :as dnd]
-           [core.entities :as e]
            [core.tools :as t]
            [core.eventbus :as b]
            [core.events :as events]
-           [core.rendering :as r]
-           [core.components :as d]
-           [core.layouts :as layouts]))
+           [core.rendering :as r]))
 
 (defonce project (atom {}))
 
@@ -58,13 +52,15 @@
                          :components (atom {}),
                          :behaviours {}})]
     (reset! project data)
-    (events/dispatch-events app-state)))
+    (console.log "dispatching events....")
+    (events/dispatch-events app-state)
+    @app-state))
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------
 
-(defmethod dnd/dispatch-drop-event "tool-data" [event]
+(defmethod dnd/dispatch-drop-event "tool-data" [event state]
   (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
         tool-obj (t/by-id tool-id)]
-    (t/invoke-tool tool-obj context)))
+    (t/invoke-tool tool-obj (-> state deref :entities) context)))

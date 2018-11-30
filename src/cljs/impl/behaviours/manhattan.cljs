@@ -40,77 +40,88 @@
   (let [splt (clojure.string/split name #"-")]
     (if (> (count splt) 1) (cljs.reader/read-string (splt 1)) -1)))
 
-(defn- update-line-component [entity idx sx sy ex ey]
+(defn- update-line-component [entities entity idx sx sy ex ey]
   (let [name (str "line-" idx)]
-    (e/assert-component entity name ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey})))
+    (e/assert-component entities entity name ::c/relation {:x1 sx :y1 sy :x2 ex :y2 ey})))
 
-(defn- update-line-components [entity path]
-  (e/remove-entity-components entity (fn [c] (>= (connector-idx (:name c)) (count path))))
-  (-> (map-indexed (fn [idx e] (update-line-component (e/volatile-entity entity)  idx (:x (first e)) (:y (first e)) (:x (last e)) (:y (last e)))) path)
+(defn- update-line-components [entities entity path]
+  (e/remove-entity-components entities entity (fn [c] (>= (connector-idx (:name c)) (count path))))
+  (-> (map-indexed (fn [idx e]
+                      (update-line-component entities
+                                             (e/volatile-entity entities entity)
+                                             idx
+                                             (:x (first e))
+                                             (:y (first e))
+                                             (:x (last e))
+                                             (:y (last e))))
+                   path)
       last))
 
-(defn update-manhattan-layout [entity start end s-normal e-normal]
+(defn update-manhattan-layout [entities entity start end s-normal e-normal]
   (let [points (find-path start end s-normal e-normal)
         path (find-path-lines (center-point start) (center-point end) points)
-        cstart (e/get-entity-component entity "start")
-        cend (e/get-entity-component entity "end")]
-     (-> (update-line-components entity path)
-         (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))
+        cstart (e/get-entity-component entities entity "start")
+        cend (e/get-entity-component entities entity "end")]
+     (-> (update-line-components entities entity path)
+         (std/refresh-arrow-angle (e/get-entity-component entities entity "arrow")))))
 
-(defn- calculate-vectors [source-entity source-control
+(defn- calculate-vectors [entities
+                          source-entity source-control
                           target-entity target-control]
-  (let [source-control-side (e/component-property source-entity (:name source-control) :side)
-        target-control-side (e/component-property target-entity (:name target-control) :side)]
+  (let [source-control-side (e/component-property entities source-entity (:name source-control) :side)
+        target-control-side (e/component-property entities target-entity (:name target-control) :side)]
     [(if (or (= :left source-control-side) (= :right source-control-side)) :h :v)
      (if (or (= :left target-control-side) (= :right target-control-side)) :h :v)]))
 
-(defn- nearest-controls-between [src-entity trg-entity]
-  (let [src-connectors (e/get-entity-component src-entity ::c/control)
-        trg-connectors (e/get-entity-component trg-entity ::c/control)]
+(defn- nearest-controls-between [entities src-entity trg-entity]
+  (let [src-connectors (e/get-entity-component entities src-entity ::c/control)
+        trg-connectors (e/get-entity-component entities trg-entity ::c/control)]
       (->> (for [src src-connectors
                  trg trg-connectors]
              {:src src :trg trg :d (distance (center-point src) (center-point trg))})
            (apply min-key #(:d %)))))
 
 (defn- position-entity-endpoint
-  ([entity component movement-x movement-y]
+  ([entities entity component movement-x movement-y]
     (std/apply-effective-position component movement-x movement-y :offset)
     (when (= (:type component) ::c/endpoint)
-      (let [arrow (e/get-entity-component entity "arrow")]
+      (let [arrow (e/get-entity-component entities entity "arrow")]
         (std/apply-effective-position arrow movement-x movement-y :offset))))
-  ([entity endpoint to-point]
+  ([entities entity endpoint to-point]
     (std/apply-effective-position endpoint (:x to-point) (:y to-point) :absolute)
     (when (= (:type endpoint) ::c/endpoint)
-      (let [arrow (e/get-entity-component entity "arrow")
+      (let [arrow (e/get-entity-component entities entity "arrow")
             x (+ (:x to-point) (/ (d/get-width arrow) 2))
             y (+ (:y to-point) (/ (d/get-height arrow) 2))]
         (std/apply-effective-position arrow x y :absolute)))))
 
 (defn on-endpoint-event [event]
-  (let [{:keys [entity component movement-x movement-y]} event
-        start (e/get-entity-component entity "start")
-        end (e/get-entity-component entity "end")
+  (let [{:keys [app-state entity component movement-x movement-y]} event
+        entities (-> app-state deref :entities)
+        start (e/get-entity-component entities entity "start")
+        end (e/get-entity-component entities entity "end")
         vectors (eval-vectors (center-point start) (center-point end))]
-    (e/remove-entity-component entity "connector")
-    (position-entity-endpoint entity component movement-x movement-y)
-    (update-manhattan-layout entity start end (vectors 0) (vectors 1))
-    (b/fire "layout.do" {:container (e/volatile-entity entity) :type :attributes})))
+    (e/remove-entity-component entities entity "connector")
+    (position-entity-endpoint entities entity component movement-x movement-y)
+    (update-manhattan-layout entities entity start end (vectors 0) (vectors 1))
+    (b/fire "layout.do" {:container (e/volatile-entity entities entity) :type :attributes})))
 
 (defn on-source-entity-event [event]
-  (let [{:keys [entity start end movement-x movement-y]} event]
-    (e/remove-entity-component entity "connector")
+  (let [{:keys [app-state entity start end movement-x movement-y]} event
+        entities (-> app-state deref :entities)]
+    (e/remove-entity-component entities entity "connector")
     (if (or (nil? start) (nil? end))
       (let [related-entity (or start end)
-            active (e/get-entity-component entity (if-not (nil? start) "start" "end"))
-            passive (e/get-entity-component entity (if-not (nil? start) "end" "start"))
+            active (e/get-entity-component entities entity (if-not (nil? start) "start" "end"))
+            passive (e/get-entity-component entities entity (if-not (nil? start) "end" "start"))
             vectors (eval-vectors (center-point active) (center-point passive))]
-        (position-entity-endpoint entity active movement-x movement-y)
-        (update-manhattan-layout entity active passive (vectors 0) (vectors 1)))
-      (let [{:keys [src trg]} (nearest-controls-between start end)
-            startpoint (e/get-entity-component entity "start")
-            endpoint (e/get-entity-component entity "end")
-            vectors (calculate-vectors start src end trg)]
-        (position-entity-endpoint entity startpoint {:x (d/get-left src) :y (d/get-top src)})
-        (position-entity-endpoint entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
-        (update-manhattan-layout entity src trg (vectors 0) (vectors 1) movement-x movement-y)))
-    (b/fire "layout.do" {:container (e/volatile-entity entity) :type :attributes})))
+        (position-entity-endpoint entities entity active movement-x movement-y)
+        (update-manhattan-layout entities entity active passive (vectors 0) (vectors 1)))
+      (let [{:keys [src trg]} (nearest-controls-between entities start end)
+            startpoint (e/get-entity-component entities entity "start")
+            endpoint (e/get-entity-component entities entity "end")
+            vectors (calculate-vectors entities start src end trg)]
+        (position-entity-endpoint entities entity startpoint {:x (d/get-left src) :y (d/get-top src)})
+        (position-entity-endpoint entities entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
+        (update-manhattan-layout entities entity src trg (vectors 0) (vectors 1) movement-x movement-y)))
+    (b/fire "layout.do" {:container (e/volatile-entity entities entity) :type :attributes})))

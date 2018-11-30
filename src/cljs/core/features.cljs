@@ -1,7 +1,4 @@
-(ns core.features
-  (:require [core.events :as ev]
-            [core.entities :as e]
-            [core.eventbus :as bus]))
+(ns core.features )
 
 (defn- all-components-to [target what]
   (->> target

@@ -96,11 +96,12 @@
        (filter #(d/contains-point? % x y))
        (sort-by #(d/resolve-z-index (d/getp % :z-index)) >)))
 
-(defn- enrich [component]
+(defn- enrich [app-state component]
   (when (d/is-component (:uid component))
-    (let [entity             (e/lookup component :entity)]
-        {:entity           entity
-         :component        component})))
+    (let [entities (-> app-state deref :entities)
+          entity   (e/lookup entities component :entity)]
+        {:entity    entity
+         :component component})))
 
 (defn- normalise-event [state app-state e obj]
   (let [rect (.getBoundingClientRect obj)
@@ -166,11 +167,11 @@
             (recur event))))
     output))
 
-(defn enriching-chan [{:keys [state] :as process-state} source-chan]
+(defn enriching-chan [{:keys [state] :as process-state} app-state source-chan]
   (let [output (chan)]
     (go (loop []
           (let [event (<! source-chan)]
-            (put! output (->> (enrich (or (:component @state) (first (resolve-targets (:left event) (:top event)))))
+            (put! output (->> (enrich app-state (or (:component @state) (first (resolve-targets (:left event) (:top event)))))
                               (merge event)))
             (recur))))
     output))
@@ -198,7 +199,7 @@
                         (events->chan el events)
                         (normalise-chan process-state app-state el)
                         (position-delta-chan)
-                        (enriching-chan process-state)
+                        (enriching-chan process-state app-state)
                         (pattern-test-chan process-state))]
           (go (loop []
                 (let [event (<! sink-chan)]

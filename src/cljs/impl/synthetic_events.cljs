@@ -1,6 +1,5 @@
 (ns impl.synthetic-events
-  (:require [core.entities :as e]
-            [core.events :as events]
+  (:require [core.events :as events]
             [core.components :as d]))
 
 (defn mouse-dragging-move-event []

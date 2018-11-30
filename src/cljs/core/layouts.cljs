@@ -1,7 +1,6 @@
 (ns core.layouts
   (:require [core.components :as d]
-            [core.eventbus :as b]
-            [core.entities :as e]))
+            [core.eventbus :as b]))
 
 (defrecord Layout [layout-func select-func options])
 

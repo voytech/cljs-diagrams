@@ -1,6 +1,5 @@
 (ns impl.standard-attributes
- (:require [core.entities :as e]
-           [core.behaviours :as b]
+ (:require [core.behaviours :as b]
            [impl.features.default :as f]
            [impl.behaviours.standard-api :as behaviours]
            [core.project :as p]

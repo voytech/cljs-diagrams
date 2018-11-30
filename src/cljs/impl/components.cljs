@@ -1,6 +1,5 @@
 (ns impl.components
-  (:require [core.entities :as e]
-            [core.components :as d])
+  (:require [core.components :as d])
   (:require-macros [core.macros :refer [defcomponent]]))
 
 (def WIDTH 180)

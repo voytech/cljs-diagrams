@@ -1,6 +1,5 @@
 (ns impl.features.default
-  (:require [core.entities :as e]
-            [core.features :as f]
+  (:require [core.features :as f]
             [impl.components :as c]))
 
 (defn has-endpoints [target]

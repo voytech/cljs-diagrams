@@ -28,7 +28,7 @@
 (defn get-dnd-files [event]
   (.-files (data-transfer event)))
 
-(defn data-transfer-type [event]
+(defn data-transfer-type [event opts]
   (let [type (get-dnd-data event "m-key")]
     (if (nil? type) "file" type)))
 

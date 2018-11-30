@@ -16,9 +16,9 @@
   ([name desc type ctor]
    (create-tool name desc type nil ctor)))
 
-(defn invoke-tool [tool context]
+(defn invoke-tool [tool entities context]
   (let [ctor (:ctor tool)]
-    (ctor context)))
+    (ctor entities context)))
 
 (defn by-name [name]
   (get @tools name))
@@ -31,8 +31,8 @@
 
 (defn ctor
   ([entity data]
-   (fn [context]
-     (entity data context)))
+   (fn [entities context]
+     (entity entities data context)))
   ([entity]
-   (fn [context]
-     (entity nil context))))
+   (fn [entities context]
+     (entity entities nil context))))

@@ -43,7 +43,7 @@
 
 (defn- render-entity [entity]
   (l/do-layouts entity)
-  (render-components  (e/components-of entity))
+  (render-components (e/components-of entity))
   (bus/fire "rendering.finish"))
 
 (defn- update-property-to-redraw [component properties]

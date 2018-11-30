@@ -55,6 +55,7 @@
                          :renderer {},
                          :events (:events config),
                          :entities (atom {}),
+                         :components (atom {}),
                          :behaviours {}})]
     (reset! project data)
     (events/dispatch-events app-state)))

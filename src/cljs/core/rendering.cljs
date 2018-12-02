@@ -8,124 +8,103 @@
 (declare all-rendered)
 (declare destroy-rendering-state)
 
-; Sets default renderers
-(def RENDERER (atom :fabric))
+(defn renderer-name [renderer-state]
+  (-> renderer-state deref :name))
 
-(def OPTIONS (atom {:auto false}))
+(defn- render-components [renderer-state components]
+  (doseq [component components]
+    (render renderer-state component)))
 
-(defonce rendering-context (volatile! {}))
-
-(defonce drawable-states (volatile! {}))
-
-(defn get-state-of [drawable]
-  (get @drawable-states (if (record? drawable) (:uid drawable) drawable)))
-
-(defn update-state [drawable state]
-  (vswap! drawable-states assoc (if (record? drawable) (:uid drawable) drawable) state))
-
-(defn set-renderer [renderer]
-  (reset! RENDERER renderer))
-
-(defn get-rendering []
-  @RENDERER)
-
-(defn update-context [value-map]
-  (vreset! rendering-context (merge value-map @rendering-context)))
-
-(defn clear-context [path]
-  (vswap! rendering-context update-in (drop-last path) dissoc (last path)))
-
-(defn assoc-context [path value]
-  (vswap! rendering-context assoc-in path value))
-
-(defn- render-components [components]
-  (doseq [component components] (render component)))
-
-(defn- render-entity [entity]
+(defn- render-entity [renderer-state entity]
   (l/do-layouts entity)
-  (render-components (e/components-of entity))
+  (render-components renderer-state (e/components-of entity))
   (bus/fire "rendering.finish"))
 
-(defn- update-property-to-redraw [component properties]
-  (let [properties_ (concat (or (get-in @rendering-context [:redraw-properties (:uid component)]) #{}) properties)]
-    (vswap! rendering-context assoc-in [:redraw-properties (:uid component)] properties_)))
-
-(bus/on ["rendering.context.update"] -999 (fn [event]
-                                            (let [context (:context event)]
-                                              (update-context context))))
+(defn- update-property-to-redraw [renderer-state component properties]
+  (let [new-properties (concat
+                          (or (get-in @renderer-state [:components (:uid component) :redraw-properties]) #{})
+                          properties)]
+    (swap! renderer-state assoc-in [:components (:uid component)] {:redraw-properties new-properties :ref component})))
 
 (bus/on ["component.created"] -999 (fn [event]
-                                    (let [context (:context event)
-                                          component (:component context)])))
+                                    (let [{:keys [component app-state]} (:context event)])))
 
 (bus/on ["component.changed"] -999 (fn [event]
-                                    (let [context (:context event)
-                                          component (:component context)]
-                                       (update-property-to-redraw component (:properties context)))))
+                                    (let [{:keys [component app-state properties]} (:context event)
+                                          renderer-state (-> app-state deref :renderer)]
+                                       (update-property-to-redraw renderer-state component properties))))
 
 (bus/on ["component.added"] -999 (fn [event]
-                                  (let [component (-> event :context :component)]
-                                     (update-property-to-redraw component (keys (d/model component))))))
+                                  (let [{:keys [component app-state]} (:context event)
+                                        renderer-state (-> app-state deref :renderer)]
+                                     (update-property-to-redraw renderer-state component (keys (d/model component))))))
 
 (bus/on ["component.render" "component.layout.finished"] -999 (fn [event]
-                                                                (let [context (:context event)
-                                                                      component (:component context)]
-                                                                   (render component))))
+                                                                (let [{:keys [component app-state]} (:context event)]
+                                                                   (render app-state component))))
 
 (bus/on ["component.removed"] -999 (fn [event]
-                                    (let [context (:context event)
-                                          component (:component context)]
-                                       (destroy-rendering-state component @rendering-context))))
+                                    (let [{:keys [component app-state]} (:context event)
+                                          renderer-state (-> app-state deref :renderer)]
+                                       (destroy-rendering-state renderer-state component))))
 
 (bus/on ["entities.render"] -999 (fn [event]
-                                     (let [context (:context event)
-                                           entities  (:entities context)]
-                                        (doseq [entity entities] (render-entity entity)))))
+                                     (let [{:keys [app-state]} (:context event)
+                                           entities (-> app-state deref :entities deref vals)]
+                                        (doseq [entity entities]
+                                          (render-entity app-state entity)))))
 
 (bus/on ["entity.added"] -999 (fn [event]
                                  (let [context (:context event)])))
-                                    ;(render-entity (:entity context)))))
 
 (bus/on ["entity.render"] -999 (fn [event]
-                                 (let [context (:context event)]
-                                    (render-entity (:entity context)))))
-
-(defn- reorder-uncommited []
-  (let [uncommited (get @rendering-context :redraw-properties)]
-    (into (sorted-map-by (d/z-index-compare)) uncommited)))
+                                 (let [{:keys [entity app-state]} (:context event)
+                                        renderer-state (-> app-state deref :renderer)]
+                                    (render-entity renderer-state entity))))
 
 (bus/on ["uncommited.render"] -999 (fn [event]
-                                     (let [uncommited (reorder-uncommited)]
-                                       (doseq [drawable-id (keys uncommited)]
-                                          (render (get @d/components drawable-id))))))
+                                     (let [app-state (-> event :context :app-state)
+                                           renderer-state (-> app-state deref :renderer)
+                                           components (-> @renderer-state :components vals)]
+                                       (doseq [component components]
+                                          (render renderer-state (:ref component))))))
 
 (bus/on ["rendering.finish"] -999 (fn [event]
-                                    (all-rendered @rendering-context)
+                                    (all-rendered (-> event
+                                                      :context
+                                                      :app-state
+                                                      deref
+                                                      :renderer))
                                     nil))
 
-(defmulti initialize (fn [dom-id width height] @RENDERER))
+(defmulti initialize (fn [renderer app-state dom-id width height initial-state] renderer))
 
-(defmulti all-rendered (fn [context] @RENDERER))
+(defmulti all-rendered (fn [renderer-state] (renderer-name renderer-state)))
 
-(defmulti do-render (fn [component context] [@RENDERER (or (:rendering-method component) (:type component))]))
+(defmulti do-render (fn [renderer-state component] [(renderer-name renderer-state) (or (:rendering-method component) (:type component))]))
 
-(defmulti create-rendering-state (fn [component context] [@RENDERER (or (:rendering-method component) (:type component))]))
+(defmulti create-rendering-state (fn [renderer-state component] [(renderer-name renderer-state) (or (:rendering-method component) (:type component))]))
 
-(defmethod create-rendering-state :default [component context])
+(defmethod create-rendering-state :default [renderer-state component])
 
-(defmulti destroy-rendering-state (fn [component context] [@RENDERER (or (:rendering-method component) (:type component))]))
+(defmulti destroy-rendering-state (fn [renderer-state component] [(renderer-name renderer-state) (or (:rendering-method component) (:type component))]))
 
-(defmethod destroy-rendering-state :default [rendering-state context])
+(defmethod destroy-rendering-state :default [renderer-state component])
 
-(defn create [dom-id width height renderer]
-  (set-renderer renderer)
-  (update-context {:canvas (initialize dom-id width height) :id dom-id})
-  @rendering-context)
+(defn create-renderer [app-state dom-id width height renderer]
+  (let [initial-state {:name renderer :components {}}]
+    (swap! app-state assoc :renderer
+      (initialize renderer app-state dom-id width height initial-state))))
 
-(defn render [component]
+(defn render [renderer-state component]
   (when (not (nil? component))
-    (let [rendering-state (get-state-of component)]
-      (when (or (nil? rendering-state) (empty? rendering-state))
-        (update-state component (create-rendering-state component @rendering-context)))
-      (do-render component @rendering-context)
-      (clear-context [:redraw-properties (:uid component)]))))
+    (let [component-state (-> renderer-state deref :components (:uid component))]
+      (when (or (nil? component-state)
+                (empty? component-state)
+                (empty? (:dom component-state)))
+        (swap! renderer-state assoc-in
+          [:components (:uid component)]
+          (create-rendering-state renderer-state component)))
+      (do-render renderer-state component)
+      (swap! renderer-state update-in
+        [:components (:uid component)] dissoc :redraw-properties))))

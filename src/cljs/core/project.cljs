@@ -33,26 +33,17 @@
 ;; ====
 ;; move all global state for entities, event-bus, behaviours, components into this function as local mutable atoms.
 ;; ===
-;; state = {
-;;  :renderer {},
-;;  :events {},
-;;  :entities  {},
-;;  :behaviours {} }
-;; }
+
 (defn initialize [id {:keys [width height renderer] :as config}]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
-  (let [data {:canvas (r/create id width height renderer)
-              :id id
-              :width width
-              :height height}
-        app-state (atom {:dom {:id id :width width :height height}
-                         :renderer {},
-                         :events (:events config),
-                         :entities (atom {}),
-                         :components (atom {}),
-                         :behaviours {}})]
-    (reset! project data)
-    (console.log "dispatching events....")
+  (let [app-state (atom {:dom {:id id :width width :height height}
+                         :events (:events config)
+                         :entities (atom {})})]
+    (console.log "initializing event-bus ...")
+    (b/initialize app-state)                       
+    (console.log "Initializing renderer ...")
+    (r/create-renderer app-state id width height renderer)
+    (console.log "dispatching events ...")
     (events/dispatch-events app-state)
     @app-state))
 ;;--------------------------------

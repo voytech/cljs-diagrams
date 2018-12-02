@@ -96,14 +96,15 @@
             (recur (rest listeners) event))
           result)))))
 
-(defn fire
-  ([name context]
-   (let [event (borrow-event name context)
-         listeners (get @bus name)]
-     (add-event event)
-     (when-not (nil? listeners)
-       (let [result (next listeners event)]
-         (do-after-all name)
-         result))))
-  ([name]
-   (fire name {})))
+(defn initialize [app-state]
+  (defn fire
+    ([name context]
+     (let [event (borrow-event name (merge context {:app-state app-state}))
+           listeners (get @bus name)]
+       (add-event event)
+       (when-not (nil? listeners)
+         (let [result (next listeners event)]
+           (do-after-all name)
+           result))))
+    ([name]
+     (fire name {}))))

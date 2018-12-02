@@ -107,7 +107,8 @@
                 (empty? (:dom component-state)))
         (swap! renderer-state assoc-in
           [:components (:uid component)]
-          (merge component-state (create-rendering-state renderer-state component))))
+          (merge component-state
+                 (create-rendering-state renderer-state component))))
       (do-render renderer-state component)
       (swap! renderer-state update-in
         [:components (:uid component)] dissoc :redraw-properties))))

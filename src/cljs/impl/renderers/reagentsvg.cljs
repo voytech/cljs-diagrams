@@ -87,16 +87,16 @@
   (sort-by #(-> % :attributes :z-index) (vals svg-components)))
 
 (defn- request-text-measure [renderer-state component]
-  (swap! renderer-state assoc-in [:renderer :pending-measures (:uid component)] component))
+  (swap! renderer-state assoc-in [:pending-measures (:uid component)] component))
 
 (defn- close-text-measure [renderer-state id]
-  (swap! renderer-state update-in [:renderer :pending-measures] dissoc id))
+  (swap! renderer-state update-in [:pending-measures] dissoc id))
 
 (defn- measure-text [app-state]
   (let [renderer-state (-> app-state deref :renderer)]
     (doseq [id (-> renderer-state deref :pending-measures keys)]
       (let [domnode (dom/by-id id)
-            component (-> renderer-state deref :pending-measures id)
+            component (get-in @renderer-state [:pending-measures id])
             bbox (.getBBox domnode)]
         (d/set-data component {:width (.-width bbox) :height (.-height bbox)})
         (close-text-measure renderer-state id)

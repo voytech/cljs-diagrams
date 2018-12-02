@@ -26,6 +26,7 @@
                           properties)]
     (swap! renderer-state assoc-in [:components (:uid component)] {:redraw-properties new-properties :ref component})))
 
+
 (bus/on ["component.created"] -999 (fn [event]
                                     (let [{:keys [component app-state]} (:context event)])))
 
@@ -40,8 +41,9 @@
                                      (update-property-to-redraw renderer-state component (keys (d/model component))))))
 
 (bus/on ["component.render" "component.layout.finished"] -999 (fn [event]
-                                                                (let [{:keys [component app-state]} (:context event)]
-                                                                   (render app-state component))))
+                                                                (let [{:keys [component app-state]} (:context event)
+                                                                      renderer-state (-> app-state deref :renderer)]
+                                                                   (render renderer-state component))))
 
 (bus/on ["component.removed"] -999 (fn [event]
                                     (let [{:keys [component app-state]} (:context event)
@@ -50,9 +52,10 @@
 
 (bus/on ["entities.render"] -999 (fn [event]
                                      (let [{:keys [app-state]} (:context event)
+                                           renderer-state (-> app-state deref :renderer)
                                            entities (-> app-state deref :entities deref vals)]
                                         (doseq [entity entities]
-                                          (render-entity app-state entity)))))
+                                          (render-entity renderer-state entity)))))
 
 (bus/on ["entity.added"] -999 (fn [event]
                                  (let [context (:context event)])))
@@ -98,13 +101,13 @@
 
 (defn render [renderer-state component]
   (when (not (nil? component))
-    (let [component-state (-> renderer-state deref :components (:uid component))]
+    (let [component-state (get-in @renderer-state [:components (:uid component)])]
       (when (or (nil? component-state)
                 (empty? component-state)
                 (empty? (:dom component-state)))
         (swap! renderer-state assoc-in
           [:components (:uid component)]
-          (create-rendering-state renderer-state component)))
+          (merge component-state (create-rendering-state renderer-state component))))
       (do-render renderer-state component)
       (swap! renderer-state update-in
         [:components (:uid component)] dissoc :redraw-properties))))

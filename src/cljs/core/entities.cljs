@@ -2,12 +2,10 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [core.eventbus :as bus]
             [core.components :as d]
+            [core.state :as state]
             [core.utils.general :as utils :refer [make-js-property]]))
 
 (declare get-entity-component)
-
-(defn- assert-keyword [tokeyword]
-  (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 (defrecord Entity [uid
                    type
@@ -15,6 +13,12 @@
                    attributes
                    relationships
                    layouts])
+
+(defn components [diagram]
+  (:components diagram))
+
+(defn entities [diagram]
+  (:entities diagram))
 
 (defn components-of [holder]
  (vals (:components holder)))
@@ -64,14 +68,16 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
-  ([entities type layouts]
-   (let [uid (str (random-uuid))
-         entity (Entity. uid type {} {} [] layouts)]
-     (swap! entities assoc uid entity)
-     (bus/fire "entity.added" {:entity entity})
-     (get @entities uid)))
+  ([app-state type layouts]
+   (state/with-sub-state app-state :diagram :entities
+     (fn [state update]
+       (let [uid (str (random-uuid))
+             entity (Entity. uid type {} {} [] layouts)]
+         (update (assoc (or state {}) uid entity))
+         (bus/fire "entity.added" {:entity entity}))
+         entity)))
   ([entities type]
-   (create-entity entities type nil)))
+   (create-entity app-state type nil)))
 
 (defn add-entity-component
   ([entities entity type name data props method]

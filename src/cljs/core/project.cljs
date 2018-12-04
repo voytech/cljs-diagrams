@@ -34,18 +34,14 @@
 ;; move all global state for entities, event-bus, behaviours, components into this function as local mutable atoms.
 ;; ===
 
-(defn initialize [id {:keys [width height renderer] :as config}]
+(defn initialize [id app-state width height renderer]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
-  (let [app-state (atom {:dom {:id id :width width :height height}
-                         :events (:events config)
-                         :entities (atom {})})]
-    (console.log "initializing event-bus ...")
-    (b/initialize app-state)                       
-    (console.log "Initializing renderer ...")
-    (r/create-renderer app-state id width height renderer)
-    (console.log "dispatching events ...")
-    (events/dispatch-events app-state)
-    @app-state))
+  (console.log "initializing event-bus ...")
+  (b/initialize app-state)
+  (console.log "Initializing renderer ...")
+  (r/create-renderer app-state id width height renderer)
+  (console.log "dispatching events ...")
+  (events/dispatch-events app-state))
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------
@@ -54,4 +50,4 @@
   (let [tool-id (dnd/get-dnd-data event "tool-data")
         context (dnd/event-layer-coords event)
         tool-obj (t/by-id tool-id)]
-    (t/invoke-tool tool-obj (-> state deref :entities) context)))
+    (t/invoke-tool tool-obj state context)))

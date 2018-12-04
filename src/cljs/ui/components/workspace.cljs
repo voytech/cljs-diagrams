@@ -46,19 +46,22 @@
      }
    }})
 
-(defn canvas-initializing-wrapper [app-config state]
+(defn canvas-initializing-wrapper [app-state width height renderer]
  (with-meta identity
    {:component-did-mount (fn [el]
                             (let [domid (.-id (reagent/dom-node el))]
-                              (reset! state (p/initialize domid app-config)))) }))
+                              (p/initialize domid app-state width height renderer)))}))
 
 (defn Workspace [class]
   (let [config (app-config 1270 1000 :reagentsvg)
-        state (atom {})]
+        app-state (atom {:dom {:id "project" :width 1270 :height 1000}
+                         :events (:events config)
+                         :diagram {:entities {}}})]
+                         
     [:div {:id "workspace-inner" :class (:class class)}
       [:div {:id "canvas-wrapper"
              :class "workspace-div"
-             :on-drop (resolve-drop state)
+             :on-drop (resolve-drop app-state)
              :on-drag-over #(.preventDefault %)}
-         [(canvas-initializing-wrapper config state)
+         [(canvas-initializing-wrapper app-state 1270 1000 :reagentsvg)
            [:div {:id "project" :class "canvas"}]]]]))

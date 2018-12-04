@@ -28,9 +28,9 @@
                  (fn [e]
                    (let [event (:context e)
                          entity (:entity event)
-                         entities (-> event :app-state deref :entities)
-                         start (first (e/get-related-entities entities entity :start))
-                         end (first (e/get-related-entities entities entity :end))
+                         app-state (-> event :app-state)
+                         start (first (e/get-related-entities app-state entity :start))
+                         end (first (e/get-related-entities app-state entity :end))
                          enriched (merge event {:start start :end end})]
                      (m/on-source-entity-event enriched)
                      nil)))
@@ -54,16 +54,16 @@
                 (b/build-event-name [::c/startpoint ::c/endpoint ] "mouse-up")
                 (fn [e]
                   (let [event (:context e)
-                        entities (-> event :app-state deref :entities)]
+                        app-state (-> event :app-state)]
                     ((std/intersects-controls? (fn [src trg]
                                                  (let [ctype (-> event :component :type)
                                                        end-type (cond
                                                                   (= ::c/endpoint ctype) {:type "end" :f std/position-endpoint}
                                                                   (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
-                                                  (e/connect-entities entities (:entity src) (:entity trg) (keyword (:type end-type)))
+                                                  (e/connect-entities app-state (:entity src) (:entity trg) (keyword (:type end-type)))
                                                   (std/toggle-controls (:entity trg) false)
-                                                  ((:f end-type) entities (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
-                    (std/relations-validate entities (-> event :entity))
+                                                  ((:f end-type) app-state (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
+                    (std/relations-validate app-state (-> event :entity))
                     (m/on-endpoint-event event)
                     nil)))
 

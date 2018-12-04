@@ -100,7 +100,7 @@
             bbox (.getBBox domnode)]
         (d/set-data component {:width (.-width bbox) :height (.-height bbox)})
         (close-text-measure renderer-state id)
-        (bus/fire "layouts.do" {:container (e/lookup (-> app-state deref :entities) component)})))))
+        (bus/fire "layouts.do" {:container (e/lookup app-state component)})))))
 
 (defn Root [dom-id width height app-state renderer-state]
   (reagent/create-class {
@@ -168,7 +168,7 @@
   (create-svg-element renderer-state :line component nil))
 
 (defmethod r/destroy-rendering-state [:reagentsvg :draw-line] [renderer-state component]
-  (swap! renderer-state update :components dissoc (:uid component)))
+  (swap! renderer-state update-in [:components] dissoc (:uid component)))
 
 ;;==========================================================================================================
 ;; triangle rendering

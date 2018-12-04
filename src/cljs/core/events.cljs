@@ -98,8 +98,7 @@
 
 (defn enrich [event component]
   (when (d/is-component (:uid component))
-    (let [entities (-> event :app-state deref :entities)
-          entity   (e/lookup entities component :entity)]
+    (let [entity (e/lookup (-> event :app-state) component)]
       {:entity entity :component component})))
 
 (defn- normalise-event [state app-state e obj]

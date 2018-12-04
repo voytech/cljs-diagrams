@@ -13,10 +13,10 @@
 
 (defmacro with-components [data options & components-vector]
   (let [components (first components-vector)]
-    `(fn [entities# entity# ~data ~options]
+    `(fn [app-state# entity# ~data ~options]
        (let [left# (or (:left ~options) 0)
              top#  (or (:top  ~options) 0)
-             _entity# (reduce (fn [agg# func#] (func# entities# agg#)) entity# ~components)]
+             _entity# (reduce (fn [agg# func#] (func# app-state# agg#)) entity# ~components)]
           (doseq [component# (-> _entity# :components vals)]
             (doseq [vl# [[:left left#] [:top top#]]]
               (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
@@ -41,19 +41,18 @@
       (when (nil? components)
         (throw (Error. "Provide components definition within entitity definition!")))
      `(do
-        (defn ~name [entities# data# options#]
-           (let [e# (core.entities/create-entity entities# (keyword ~nsname (name '~name)) ~layouts)
+        (defn ~name [app-state# data# options#]
+           (let [e# (core.entities/create-entity app-state# (keyword ~nsname (name '~name)) ~layouts)
                  component-factory# ~components]
-             (component-factory# entities# e# data# options#)
-             (let [result# (core.entities/entity-by-id entities# (:uid e#))]
-               (core.eventbus/fire "entity.render" {:entity result#
-                                                    :entities entities#})
+             (component-factory# app-state# e# data# options#)
+             (let [result# (core.entities/entity-by-id app-state# (:uid e#))]
+               (core.eventbus/fire "entity.render" {:entity result#})
                result#)))))))
 
 (defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
-   `(defn ~type [entities# entity# name# data# p#]
-      (core.entities/add-entity-component entities#
+   `(defn ~type [app-state# entity# name# data# p#]
+      (core.entities/add-entity-component app-state#
                                           entity#
                                           (keyword ~nsname (name '~type))
                                           name#

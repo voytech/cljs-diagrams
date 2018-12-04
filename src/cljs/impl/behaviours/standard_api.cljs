@@ -24,31 +24,31 @@
                                :border-width (if bln (:highlight-width options)
                                                      (:normal-width options))})))
 
-(defn show [entities entity component-name show]
- (let [component (e/get-entity-component entities entity component-name)]
+(defn show [app-state entity component-name show]
+ (let [component (e/get-entity-component app-state entity component-name)]
    (d/setp component :visible show)))
 
 (defn intersects-controls? [yes]
  (fn [e]
    (let [entity           (:entity e)
-         entities         (-> e :app-state deref :entities)
+         app-state         (-> e :app-state)
          component        (:component e)]
      (when (contains? #{"end" "start"} (:name component))
        (doseq [trg-comp (vals @d/components)]
           (when (and (not= trg-comp component) (= ::c/control (:type trg-comp)))
-            (let [trg-ent  (e/lookup entities trg-comp :entity)]
+            (let [trg-ent (e/lookup app-state trg-comp)]
               (when (d/intersects? component trg-comp)
                 (yes {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))))
 
 (defn intersects? [target-name yes no]
  (fn [e]
    (let [entity           (:entity e)
-         entities         (-> e :app-state deref :entities)
+         app-state         (-> e :app-state)
          component        (:component e)]
      (when (contains? #{"end" "start"} (:name component))
        (doseq [trg-comp (vals @d/components)]
           (when (= target-name (:name trg-comp))
-            (let [trg-ent  (e/lookup entities trg-comp :entity)]
+            (let [trg-ent  (e/lookup app-state trg-comp :entity)]
                (if (d/intersects? component trg-comp)
                  (yes {:component component :entity entity} {:component trg-comp :entity trg-ent})
                  (no  {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))))
@@ -57,10 +57,10 @@
  {:left (- left (d/getp component :left))
   :top  (- top  (d/getp component :top))})
 
-(defn calculate-effective-offset [entities entity component-name left top coord-mode]
+(defn calculate-effective-offset [app-state entity component-name left top coord-mode]
  (if (= :offset coord-mode)
    {:left left :top top}
-   (let [component (e/get-entity-component entities entity component-name)]
+   (let [component (e/get-entity-component app-state entity component-name)]
      (calculate-offset component left top))))
 
 (defn effective-position
@@ -86,18 +86,18 @@
                             y
                             coord-mode)))
 
-(defn default-position-entity-component [entities entity component-name left top coord-mode]
-  (let [component (e/get-entity-component entities entity component-name)]
+(defn default-position-entity-component [app-state entity component-name left top coord-mode]
+  (let [component (e/get-entity-component app-state entity component-name)]
     (apply-effective-position component left top coord-mode)))
 
-(defn default-position-entity [entities entity ref-component-name left top coord-mode]
- (let [effective-offset (calculate-effective-offset entities entity ref-component-name left top coord-mode)]
+(defn default-position-entity [app-state entity ref-component-name left top coord-mode]
+ (let [effective-offset (calculate-effective-offset app-state entity ref-component-name left top coord-mode)]
    (doseq [component (e/components-of entity)]
      (let [effective-left  (+ (d/getp component :left) (:left effective-offset))
            effective-top   (+ (d/getp component :top) (:top effective-offset))]
        (if (= ref-component-name (:name component))
-         (default-position-entity-component entities entity (:name component) left top :offset)
-         (default-position-entity-component entities entity (:name component) effective-left effective-top :absolute))))))
+         (default-position-entity-component app-state entity (:name component) left top :offset)
+         (default-position-entity-component app-state entity (:name component) effective-left effective-top :absolute))))))
 
 (defn move-related-entity [app-state entity related-entity relation left top coord-mode]
   (let [event-data {:entity related-entity
@@ -114,19 +114,18 @@
  (fn [e]
    (let [entity (:entity e)
          event (:event e)
-         app-state (-> e :app-state)
-         entities  (-> app-state deref :entities)
+         app-state (:app-state e)
          component (:component e)
          movementX (:movement-x e)
          movementY (:movement-y e)]
-     (default-position-entity entities
+     (default-position-entity app-state
                               entity
                               (:name component)
                               movementX
                               movementY
                               :offset)
      (doseq [relation (:relationships entity)]
-       (let [related-entity (e/entity-by-id entities (:entity-id relation))]
+       (let [related-entity (e/entity-by-id app-state (:entity-id relation))]
           (default-position-related-entity   app-state
                                              entity
                                              related-entity
@@ -135,18 +134,18 @@
                                              movementY
                                              :offset))))))
 
-(defn relations-validate [entities entity]
+(defn relations-validate [app-state entity]
  (doseq [relation (:relationships entity)]
-   (let [related-entity (e/entity-by-id entities (:entity-id relation))
+   (let [related-entity (e/entity-by-id app-state (:entity-id relation))
          relation-type (:relation-type relation)
          component-type (cond
                           (= :start relation-type) ::c/startpoint
                           (= :end relation-type) ::c/endpoint)
-         endpoint (first (e/get-entity-component entities entity component-type))
-         controls (e/get-entity-component entities related-entity ::c/control)
+         endpoint (first (e/get-entity-component app-state entity component-type))
+         controls (e/get-entity-component app-state related-entity ::c/control)
          component-intersections (filter #(d/intersects? % endpoint) controls)]
      (when (= 0 (count component-intersections))
-       (e/disconnect-entities entities entity related-entity)))))
+       (e/disconnect-entities app-state entity related-entity)))))
 
 (defn set-relation-movement-hook [sent-type rent-type hook]
   (swap! hooks assoc-in [sent-type rent-type] hook))
@@ -168,9 +167,9 @@
   (fn [e]
       (let [entity (:entity e)
             line (:component e)
-            entities (-> e :app-state deref :entities)
-            line-start-breakpoint (e/get-entity-component entities entity (:start (:props line)))
-            line-end-breakpoint   (e/get-entity-component entities entity (:end (:props line)))
+            app-state (-> e :app-state)
+            line-start-breakpoint (e/get-entity-component app-state entity (:start (:props line)))
+            line-end-breakpoint   (e/get-entity-component app-state entity (:end (:props line)))
             oeX  (d/getp line :x2)
             oeY  (d/getp line :y2)
             eX   (:left e)
@@ -181,80 +180,80 @@
                 breakpoint-id (str (random-uuid))
                 is-penultimate (= true (:penultimate (:props line-start-breakpoint)))]
             (-> entity
-              (e/add-entity-component entities ::c/relation relation-id  {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
-              (e/add-entity-component entities ::c/breakpoint breakpoint-id {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
-            (e/update-component-prop entities entity (:name line) :end breakpoint-id)
-            (e/update-component-prop entities entity (:name line-end-breakpoint) :end relation-id)
+              (e/add-entity-component app-state ::c/relation relation-id  {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
+              (e/add-entity-component app-state ::c/breakpoint breakpoint-id {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
+            (e/update-component-prop app-state entity (:name line) :end breakpoint-id)
+            (e/update-component-prop app-state entity (:name line-end-breakpoint) :end relation-id)
             (when (= true is-penultimate)
-              (e/update-component-prop entities entity (:name line-start-breakpoint) :penultimate false)))))))
+              (e/update-component-prop app-state entity (:name line-start-breakpoint) :penultimate false)))))))
 
 (defn dissoc-breakpoint []
   (fn [e]
     (let [entity     (:entity e)
           breakpoint (:component e)
-          entities (-> e :app-state deref :entities)
-          line-end   (e/get-entity-component entities entity (:start  (:props breakpoint)))
-          line-endpoint (e/get-entity-component entities entity (:end (:props line-end)))
-          line-start (e/get-entity-component entities entity (:end   (:props breakpoint)))
-          line-startpoint (e/get-entity-component entities entity (:start (:props line-start)))
+          app-state (-> e :app-state)
+          line-end   (e/get-entity-component app-state entity (:start  (:props breakpoint)))
+          line-endpoint (e/get-entity-component app-state entity (:end (:props line-end)))
+          line-start (e/get-entity-component app-state entity (:end   (:props breakpoint)))
+          line-startpoint (e/get-entity-component app-state entity (:start (:props line-start)))
           is-penultimate? (:penultimate (:props breakpoint))]
-       (e/remove-entity-component entities entity (:name breakpoint))
-       (e/remove-entity-component entities entity (:name line-end))
-       (e/update-component-prop entities entity (:name line-start) :end (:name line-endpoint))
-       (e/update-component-prop entities entity (:name line-endpoint) :end (:name line-start))
-       (e/update-component-prop entities entity (:name line-startpoint) :penultimate is-penultimate?)
+       (e/remove-entity-component app-state entity (:name breakpoint))
+       (e/remove-entity-component app-state entity (:name line-end))
+       (e/update-component-prop app-state entity (:name line-start) :end (:name line-endpoint))
+       (e/update-component-prop app-state entity (:name line-endpoint) :end (:name line-start))
+       (e/update-component-prop app-state entity (:name line-startpoint) :penultimate is-penultimate?)
        (d/set-data drawable {:x2 (+ (d/getp line-endpoint :left) (/ (d/getp line-endpoint :width) 2))
                              :y2 (+ (d/getp line-endpoint :top) (/ (d/getp line-endpoint :height) 2))}))))
 
 (defn position-breakpoint
-  ([entities entity name left top coord-mode]
-   (let [breakpoint-component (e/get-entity-component entities entity name)
-         position (effective-position entities breakpoint-component left top coord-mode)
+  ([app-state entity name left top coord-mode]
+   (let [breakpoint-component (e/get-entity-component app-state entity name)
+         position (effective-position app-state breakpoint-component left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         starts-relation-component (e/get-entity-component entities entity (:start (:props breakpoint-component)))
-         ends-relation-component (e/get-entity-component entities entity (:end (:props breakpoint-component)))
-         arrow-component (e/get-entity-component entities entity "arrow")]
+         starts-relation-component (e/get-entity-component app-state entity (:start (:props breakpoint-component)))
+         ends-relation-component (e/get-entity-component app-state entity (:end (:props breakpoint-component)))
+         arrow-component (e/get-entity-component app-state entity "arrow")]
      (d/set-data  breakpoint-component {:left effective-left :top  effective-top})
      (to-the-center-of starts-relation-component  :x1 :y1 breakpoint-component)
      (to-the-center-of ends-relation-component :x2 :y2 breakpoint-component)
      (when (= true (:penultimate (:props breakpoint-component)))
        (refresh-arrow-angle starts-relation-component arrow-component))))
-  ([entities entity name left top]
-   (position-breakpoint entities entity name left top :absolute)))
+  ([app-state entity name left top]
+   (position-breakpoint app-state entity name left top :absolute)))
 
 (defn position-startpoint
-  ([entities entity left top coord-mode skip?]
-   (let [startpoint-component (e/get-entity-component entities entity "start")
+  ([app-state entity left top coord-mode skip?]
+   (let [startpoint-component (e/get-entity-component app-state entity "start")
          position (effective-position startpoint-component left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         starts-relation-component (e/get-entity-component entities entity (:start (:props startpoint-component)))
-         arrow-component (e/get-entity-component entities entity "arrow")]
+         starts-relation-component (e/get-entity-component app-state entity (:start (:props startpoint-component)))
+         arrow-component (e/get-entity-component app-state entity "arrow")]
      (d/set-data startpoint-component {:left effective-left :top  effective-top})
      (when (= false skip?)
       (to-the-center-of starts-relation-component :x1 :y1 startpoint-component)
       (when (= true (:penultimate (:props startpoint-component)))
         (refresh-arrow-angle starts-relation-component arrow-component)))))
-  ([entities entity left top]
-   (position-startpoint entities entity left top :absolute false)))
+  ([app-state entity left top]
+   (position-startpoint app-state entity left top :absolute false)))
 
 (defn position-endpoint
-  ([entities entity left top coord-mode skip?]
-   (let [endpoint-component   (e/get-entity-component entities entity "end")
+  ([app-state entity left top coord-mode skip?]
+   (let [endpoint-component  (e/get-entity-component app-state entity "end")
          position (effective-position endpoint-component left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         ends-relation-component  (e/get-entity-component entities entity (:end (:props endpoint-component)))
+         ends-relation-component  (e/get-entity-component app-state entity (:end (:props endpoint-component)))
 
-         arrow-component      (e/get-entity-component entities entity "arrow")]
+         arrow-component      (e/get-entity-component app-state entity "arrow")]
     (d/set-data endpoint-component {:left effective-left  :top  effective-top})
     (to-the-center-of arrow-component :left :top endpoint-component)
     (when (= false skip?)
      (to-the-center-of ends-relation-component :x2 :y2 endpoint-component)
      (refresh-arrow-angle ends-relation-component arrow-component))))
- ([entities entity left top]
-  (position-endpoint entities entity left top :absolute false)))
+ ([app-state entity left top]
+  (position-endpoint app-state entity left top :absolute false)))
 
 (defn toggle-controls [entity toggle]
   (doseq [component (e/components-of entity)]
@@ -269,11 +268,11 @@
    (fn [e]
       (let [endpoint (:component e)
             entity   (:entity e)
-            entities (-> e :app-state deref :entities)]
+            app-state (-> e :app-state)]
          (cond
-           (= ::c/breakpoint (:type endpoint)) (position-breakpoint entities entity (:name endpoint) (:movement-x e) (:movement-y e) :offset)
-           (= ::c/startpoint (:type endpoint)) (position-startpoint entities entity (:movement-x e) (:movement-y e) :offset false)
-           (= ::c/endpoint   (:type endpoint)) (position-endpoint   entities entity (:movement-x e) (:movement-y e) :offset false)))))
+           (= ::c/breakpoint (:type endpoint)) (position-breakpoint app-state entity (:name endpoint) (:movement-x e) (:movement-y e) :offset)
+           (= ::c/startpoint (:type endpoint)) (position-startpoint app-state entity (:movement-x e) (:movement-y e) :offset false)
+           (= ::c/endpoint   (:type endpoint)) (position-endpoint   app-state entity (:movement-x e) (:movement-y e) :offset false)))))
 
 (defn calculate-angle [x1 y1 x2 y2]
    (let [PI 3.14

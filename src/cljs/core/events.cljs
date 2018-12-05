@@ -90,14 +90,14 @@
                                (not (nil? component-type)) (conj (ns-qualified-element-name component-type))
                                (not (nil? event-type))     (conj (name event-type))))))
 
-(defn- resolve-targets [x y]
-  (->> @d/components
+(defn- resolve-targets [components x y]
+  (->> components
        vals
        (filter #(d/contains-point? % x y))
        (sort-by #(d/resolve-z-index (d/getp % :z-index)) >)))
 
 (defn enrich [event component]
-  (when (d/is-component (:uid component))
+  (when (d/is-component (-> event :app-state) (:uid component))
     (let [entity (e/lookup (-> event :app-state) component)]
       {:entity entity :component component})))
 
@@ -168,9 +168,10 @@
 (defn enriching-chan [{:keys [state] :as process-state} source-chan]
   (let [output (chan)]
     (go (loop []
-          (let [event (<! source-chan)]
+          (let [event (<! source-chan)
+                components (get-in @(:app-state event) [:diagram :components])]
             (put! output (->> (enrich event (or (:component @state)
-                                                (first (resolve-targets (:left event) (:top event)))))
+                                                (first (resolve-targets components (:left event) (:top event)))))
                               (merge event)))
             (recur))))
     output))

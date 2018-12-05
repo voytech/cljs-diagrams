@@ -34,7 +34,7 @@
          app-state         (-> e :app-state)
          component        (:component e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [trg-comp (vals @d/components)]
+       (doseq [trg-comp (vals (get-in @app-state [:diagram :components]))]
           (when (and (not= trg-comp component) (= ::c/control (:type trg-comp)))
             (let [trg-ent (e/lookup app-state trg-comp)]
               (when (d/intersects? component trg-comp)
@@ -46,7 +46,7 @@
          app-state         (-> e :app-state)
          component        (:component e)]
      (when (contains? #{"end" "start"} (:name component))
-       (doseq [trg-comp (vals @d/components)]
+       (doseq [trg-comp (vals (get-in @app-state [:diagram :components]))]
           (when (= target-name (:name trg-comp))
             (let [trg-ent  (e/lookup app-state trg-comp :entity)]
                (if (d/intersects? component trg-comp)

@@ -79,7 +79,7 @@
   ([app-state entity type name data props method]
     (add-entity-component app-state entity type name data props method nil))
   ([app-state entity type name data props method initializer]
-    (let [entity (d/new-component entity type name data props method initializer)]
+    (let [entity (d/new-component app-state entity type name data props method initializer)]
       (swap! app-state assoc-in [:diagram :entities (:uid entity)] entity)
       (let [updated (entity-by-id app-state (:uid entity))]
         (bus/fire "entity.component.added" {:entity updated})
@@ -88,7 +88,7 @@
 (defn remove-entity-component [app-state entity component-name]
   (let [component (get-entity-component app-state entity component-name)]
     (swap! app-state update-in [:diagram :entities (:uid entity) :components] dissoc component-name)
-    (d/remove-component component)))
+    (d/remove-component app-state component)))
 
 (defn remove-entity-components [app-state entity pred]
   (let [all (components-of (entity-by-id app-state (:uid entity)))

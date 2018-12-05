@@ -3,8 +3,6 @@
 
 (declare invoke-hook)
 
-(defonce components (atom {}))
-
 (defonce hooks (atom {}))
 
 (defonce COMPONENT_CHANGED "component.changed")
@@ -104,57 +102,39 @@
     :bottom 0
     val))
 
-(defn z-index-compare
-  ([components_]
-   (fn [ck1 ck2]
-     (let [component-1 (get components_ ck1)
-           component-2 (get components_ ck2)
-           z-index-1 (getp component-1 :z-index)
-           z-index-2 (getp component-2 :z-index)]
-       (compare [(resolve-z-index z-index-1) ck1]
-                [(resolve-z-index z-index-2) ck2]))))
-  ([] (z-index-compare @components)))
-
-(defn- next-z-index []
+(defn- next-z-index [app-state]
   (or
-    (let [vs (filterv #(number? (getp % :z-index)) (vals @components))]
+    (let [components (get-in @app-state [:diagram :components])
+          vs (filterv #(number? (getp % :z-index)) (vals components))]
       (when (and (not (nil? vs)) (< 0 (count vs)));
          (when-let [e (apply max-key #(getp % :z-index) vs)]
             (inc (getp e :z-index)))))
     1))
 
-(defn- ensure-z-index [component]
+(defn- ensure-z-index [app-state component]
   (when (nil? (getp component :z-index))
-    (setp component :z-index (next-z-index))))
+    (setp component :z-index (next-z-index app-state))))
 
-(defn- add-component [component]
-  (swap! components assoc (:uid component) component)
-  (bus/fire "component.added" {:component component}))
-
-(defn through [visitor]
-  (doseq [component (vals @components)] (visitor component)))
-
-(defn remove-component [component]
-  (swap! components dissoc (:uid component))
+(defn remove-component [app-state component]
+  (swap! app-state update-in [:diagram :components] dissoc (:uid component))
   (bus/fire "component.removed" {:component component}))
 
-(defn is-component [uid]
-  (not (nil? (get @components uid))))
+(defn is-component [app-state uid]
+  (not (nil? (get-in @app-state [:diagram :components uid]))))
 
 (defn new-component
- ([container type name data props method initializer]
+ ([app-state container type name data props method initializer]
   (let [initializer-data (if (nil? initializer) {} (initializer container props))
         _data  (merge initializer-data data)
         component (Component. (str (random-uuid)) name type (volatile! _data) method props (:uid container))]
-    (ensure-z-index component)
+    (ensure-z-index app-state component)
     (bus/fire "component.created" {:component component})
-    (add-component component)
+    (swap! app-state assoc-in [:diagram :components (:uid component)] component)
+    (bus/fire "component.added" {:component component})
     (assoc-in container [:components (:name component)] component)))
- ([container type name data props method]
-  (new-component container type name data props method nil)))
+ ([app-state container type name data props method]
+  (new-component app-state container type name data props method nil)))
 
-(defn get-component-def [type]
- (get @components-types type))
 
 (defn add-hook [type function hook]
   (swap! hooks assoc-in [type function] hook))

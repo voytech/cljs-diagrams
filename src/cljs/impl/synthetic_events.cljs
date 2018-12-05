@@ -19,8 +19,8 @@
                   (fn [event process-state]
                     (events/clear-state process-state))))
 
-(defn is-component [component]
-  (when (and (not (nil? component)) (d/is-component (:uid component)))
+(defn is-component [app-state component]
+  (when (and (not (nil? component)) (d/is-component app-state (:uid component)))
     component))
 
 (defn mouse-in-event []
@@ -30,13 +30,13 @@
                                        (not= (:state event) "mouse-in")
                                        (=    (:type event)  "mouse-move"))]
                          (and
-                           (not= (is-component (events/get-context process-state :in-out))
+                           (not= (is-component (:app-state event) (events/get-context process-state :in-out))
                                  (:component event))
                            (= true result)
                            (not (nil? (:component event))))))]
                   (fn [event process-state]
                     (events/schedule process-state #(events/clear-state process-state) :start)
-                    (when-let [previous-component (is-component (events/get-context process-state :in-out))]
+                    (when-let [previous-component (is-component (:app-state event) (events/get-context process-state :in-out))]
                       (events/schedule process-state
                                        (fn []
                                          (events/trigger-bus-event
@@ -50,13 +50,13 @@
                      (let [result (and (not= (:state event) "mouse-dragging-move")
                                        (not= (:state event) "mouse-out")
                                        (=    (:type event)  "mouse-move"))
-                           previous-component (is-component (events/get-context process-state :in-out))]
+                           previous-component (is-component (:app-state event) (events/get-context process-state :in-out))]
                         (and (= true result)
                              (not (nil? previous-component))
                              (not= previous-component (:component event)))))]
                   (fn [event process-state]
                     (events/schedule process-state #(events/clear-state process-state) :start)
-                    (let [previous-component (is-component (events/get-context process-state :in-out))]
+                    (let [previous-component (is-component (:app-state event) (events/get-context process-state :in-out))]
                       (if-not (nil? (:component event))
                         (do
                           (events/set-context process-state :in-out (:component event))

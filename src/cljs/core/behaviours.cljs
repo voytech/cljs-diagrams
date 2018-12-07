@@ -3,10 +3,6 @@
             [core.features :as f]
             [core.eventbus :as bus]))
 
-(defonce behaviours (volatile! {}))
-
-(defonce attached-behaviours (volatile! {}))
-
 (defrecord Behaviour [name
                       display-name
                       type
@@ -22,52 +18,49 @@
     (fn [target]
       [(ev/event-name (:type target) nil event-name)])))
 
-(defn add-behaviour [name display-name type features event-provider handler]
-  (vswap! behaviours assoc name (Behaviour. name display-name type features event-provider handler)))
+(defn add-behaviour [app-state name display-name type features event-provider handler]
+  (swap! app-state assoc-in
+    [:behaviours :definitions name]
+    (Behaviour. name display-name type features event-provider handler))
+  name)
 
 (defn validate [behaviour target]
-  (let [behaviour_ (cond
-                     (string? behaviour) (get @behaviours behaviour)
-                     (record? behaviour) (get @behaviours (:name behaviour)))]
-    (reduce f/_OR_ false (mapv #(% target) (:features behaviour)))))
-
-(defn enable [entity component-type behaviour])
-
-(defn disable [entity component-type behaviour])
+  (reduce f/_OR_ false (mapv #(% target) (:features behaviour))))
 
 (defn- render-changes [event-name]
   (bus/after-all event-name (fn [ev]
                               (bus/fire "uncommited.render")
                               (bus/fire "rendering.finish"))))
 
-(defn- attach [event-name behaviour]
-  (let [attached (or (get @attached-behaviours event-name) [])]
-    (vswap! attached-behaviours assoc event-name (conj attached (:name behaviour)))))
+(defn- attach [app-state event-name behaviour]
+  (let [attached-behaviours (or (get-in @app-state [:behaviours :attached event-name]) [])
+        with-new-behaviour (conj attached-behaviours (:name behaviour))]
+    (swap! app-state assoc-in [:behaviours :attached event-name] with-new-behaviour)))
 
-(defn- is-attached [event-name behaviour]
-  (let [attached (filter #(== (:name behaviour) %) (or (get @attached-behaviours event-name) []))]
+(defn- is-attached [app-state event-name behaviour]
+  (let [attached-behaviours (get-in @app-state [:behaviours :attached event-name])
+        attached (filter #(== (:name behaviour) %) (or attached-behaviours []))]
     (not (empty? attached))))
 
-(defn- reg [event-names behaviour]
+(defn- reg [app-state event-names behaviour]
   (doseq [event-name event-names]
-    (when-not (is-attached event-name behaviour)
+    (when-not (is-attached app-state event-name behaviour)
       (bus/on [event-name] (:handler behaviour))
-      (attach event-name behaviour)
+      (attach app-state event-name behaviour)
       (render-changes event-name))))
 
-(defn autowire [target]
-  (doseq [behaviour (vals @behaviours)]
+(defn autowire [app-state target]
+  (doseq [behaviour (vals (get-in @app-state [:behaviours :definitions]))]
      (when (validate behaviour target)
         (let [event-name-provider (:event-name-provider behaviour)
               event-names (event-name-provider target)]
-            (reg event-names behaviour)))))
-
-(defonce hooks (atom {}))
+            (reg app-state event-names behaviour)))))
 
 (defn trigger-behaviour [entity avalue component event-suffix data]
   (bus/fire (ev/event-name (:type entity) (:type component) event-suffix) data))
 
 (bus/on ["entity.component.added"] -999 (fn [event]
                                             (let [context (:context event)
-                                                  entity  (:entity context)]
-                                              (autowire entity))))
+                                                  entity  (:entity context)
+                                                  app-state (:app-state context)]
+                                              (autowire app-state entity))))

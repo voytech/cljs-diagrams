@@ -5,7 +5,8 @@
             [core.project :as p :refer [project]]
             [impl.synthetic-events :as s]
             [core.tools :as t :refer [tools]]
-            [impl.synthetic-events :as patterns]))
+            [impl.synthetic-events :as patterns]
+            [impl.behaviours.definitions :as b]))
 
 
 (defn resolve-drop "Should resolve drop events for following scenarios:
@@ -44,24 +45,36 @@
        :mouse-out (patterns/mouse-out-event)
        :mouse-point-click (patterns/mouse-click-event)
      }
-   }})
+   }
+   :behaviours [
+      b/moving-node-entity
+      b/moving-connector-entity-by
+      b/moving-connector-endpoints
+      b/make-relation
+      b/hovering-entity
+      b/leaving-entity
+      b/show-all-entity-controls
+      b/hide-all-entity-controls
+      b/show-entity-control
+      b/hide-entity-control
+   ]})
 
-(defn canvas-initializing-wrapper [app-state width height renderer]
+(defn canvas-initializing-wrapper [app-state config]
  (with-meta identity
    {:component-did-mount (fn [el]
                             (let [domid (.-id (reagent/dom-node el))]
-                              (p/initialize domid app-state width height renderer)))}))
+                              (p/initialize domid app-state config)))}))
 
 (defn Workspace [class]
   (let [config (app-config 1270 1000 :reagentsvg)
         app-state (atom {:dom {:id "project" :width 1270 :height 1000}
                          :events (:events config)
                          :diagram {:entities {}}})]
-                         
+
     [:div {:id "workspace-inner" :class (:class class)}
       [:div {:id "canvas-wrapper"
              :class "workspace-div"
              :on-drop (resolve-drop app-state)
              :on-drag-over #(.preventDefault %)}
-         [(canvas-initializing-wrapper app-state 1270 1000 :reagentsvg)
+         [(canvas-initializing-wrapper app-state config)
            [:div {:id "project" :class "canvas"}]]]]))

@@ -34,12 +34,15 @@
 ;; move all global state for entities, event-bus, behaviours, components into this function as local mutable atoms.
 ;; ===
 
-(defn initialize [id app-state width height renderer]
+(defn initialize [id app-state config]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
   (console.log "initializing event-bus ...")
   (b/initialize app-state)
+  (console.log "initializing behaviours ...")
+  (doseq [install (:behaviours config)]
+    (console.log (str "Installed behaviour: " (clj->js (install app-state)))))
   (console.log "Initializing renderer ...")
-  (r/create-renderer app-state id width height renderer)
+  (r/create-renderer app-state id (:width config) (:height config) (:renderer config))
   (console.log "dispatching events ...")
   (events/dispatch-events app-state))
 ;;--------------------------------

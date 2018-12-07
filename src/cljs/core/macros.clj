@@ -8,9 +8,6 @@
   (let [file-struct (-> a/*cljs-file* slurp read-string)]
     (name (second file-struct))))
 
-(defmacro value [value factory]
-  `(core.entities/AttributeDomain. ~value ~factory))
-
 (defmacro with-components [data options & components-vector]
   (let [components (first components-vector)]
     `(fn [app-state# entity# ~data ~options]
@@ -22,9 +19,16 @@
               (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
                 (core.components/setp component# (vl# 0) new-val#))))))))
 
-(defmacro with-domain [name body])
-
-(defmacro with-behaviours [name body])
+(defmacro defbehaviour [name display-name type features event-name-provider handler]
+  (let [nsname (resolve-namespace-name)]
+    `(defn ~name [app-state#]
+       (core.behaviours/add-behaviour app-state#
+                                      (keyword ~nsname (name '~name))
+                                      ~display-name
+                                      (keyword ~nsname (name '~type))
+                                      ~features
+                                      ~event-name-provider
+                                      ~handler))))
 
 (defmacro layout [name layout-func select-func options]
   `{~name (core.layouts.Layout. ~layout-func ~select-func ~options)})

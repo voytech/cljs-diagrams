@@ -147,9 +147,6 @@
      (when (= 0 (count component-intersections))
        (e/disconnect-entities app-state entity related-entity)))))
 
-(defn set-relation-movement-hook [sent-type rent-type hook]
-  (swap! hooks assoc-in [sent-type rent-type] hook))
-
 (defn refresh-arrow-angle [relation-component arrow-component]
   (when (not (nil? relation-component))
     (let [x1 (-> relation-component  (d/getp :x1))

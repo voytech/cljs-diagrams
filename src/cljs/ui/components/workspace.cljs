@@ -2,7 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [core.utils.dnd :as dnd]
             [ui.components.generic.basic :as cmp :refer [DynamicPagination]]
-            [core.project :as p :refer [project]]
+            [core.project :as p]
             [impl.synthetic-events :as s]
             [core.tools :as t :refer [tools]]
             [impl.synthetic-events :as patterns]

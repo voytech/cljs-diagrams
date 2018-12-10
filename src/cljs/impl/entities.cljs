@@ -20,7 +20,7 @@
       {:left (- (/ (:width bbox) 2) 25)
        :top (- (/ (:height bbox) 2) 25)})))
 
-(defentity rectangle-node
+(defentity basic-rect
   (with-layouts
     (layout :title l/default-flow-layout (cl/having-layout-property :title) (title-layout-options "title"))
     (layout :icons l/default-flow-layout (cl/having-layout-property :icons) (icons-layout-options)))
@@ -38,7 +38,7 @@
     {:left (/ (:width bbox) 2)
      :top  (/ (:height bbox) 2)}))
 
-(defentity relation
+(defentity association
   (with-layouts
     (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
   (with-components data options

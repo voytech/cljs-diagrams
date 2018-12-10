@@ -3,10 +3,10 @@
             [core.tools :as t]
             [impl.entities :as eimpl]))
 
-(t/create-tool "Rectangle Node"
+(t/create-tool "Basic Rectangle"
                :basic-tools
-               (t/ctor eimpl/rectangle-node))
+               (t/ctor eimpl/basic-rect))
 
-(t/create-tool "Relation"
+(t/create-tool "Association"
                :basic-tools
-               (t/ctor eimpl/relation [0 0 100 0]))
+               (t/ctor eimpl/association [0 0 100 0]))

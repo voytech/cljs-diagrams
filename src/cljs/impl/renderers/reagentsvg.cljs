@@ -100,7 +100,7 @@
             bbox (.getBBox domnode)]
         (d/set-data component {:width (.-width bbox) :height (.-height bbox)})
         (close-text-measure renderer-state id)
-        (bus/fire "layouts.do" {:container (e/lookup app-state component)})))))
+        (bus/fire app-state "layouts.do" {:container (e/lookup app-state component)})))))
 
 (defn Root [dom-id width height app-state renderer-state]
   (reagent/create-class {

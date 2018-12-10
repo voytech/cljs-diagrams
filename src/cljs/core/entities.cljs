@@ -70,7 +70,7 @@
      (let [uid (str (random-uuid))
            entity (Entity. uid type {} {} [] layouts)]
        (swap! app-state assoc-in [:diagram :entities uid] entity)
-       (bus/fire "entity.added" {:entity entity})
+       (bus/fire app-state "entity.added" {:entity entity})
        entity))
   ([app-state type]
    (create-entity app-state type nil)))
@@ -82,7 +82,7 @@
     (let [entity (d/new-component app-state entity type name data props method initializer)]
       (swap! app-state assoc-in [:diagram :entities (:uid entity)] entity)
       (let [updated (entity-by-id app-state (:uid entity))]
-        (bus/fire "entity.component.added" {:entity updated})
+        (bus/fire app-state "entity.component.added" {:entity updated})
         updated))))
 
 (defn remove-entity-component [app-state entity component-name]

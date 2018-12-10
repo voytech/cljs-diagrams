@@ -50,7 +50,7 @@
                  component-factory# ~components]
              (component-factory# app-state# e# data# options#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]
-               (core.eventbus/fire "entity.render" {:entity result#})
+               (core.eventbus/fire app-state# "entity.render" {:entity result#})
                result#)))))))
 
 (defmacro defcomponent [type rendering-method props initializer]

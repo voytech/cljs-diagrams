@@ -161,14 +161,15 @@
    (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
         (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))))
 
-(b/on ["layout.do"] -999 (fn [event]
-                           (when-let [{:keys [container type]} (:context event)]
-                             (do-layout (-> container :layouts type) container)
-                             (b/fire "uncommited.render")
-                             (b/fire "rendering.finish"))))
+(defn initialize [app-state]
+  (b/on app-state ["layout.do"] -999 (fn [event]
+                                       (when-let [{:keys [container type]} (:context event)]
+                                         (do-layout (-> container :layouts type) container)
+                                         (b/fire app-state "uncommited.render")
+                                         (b/fire app-state "rendering.finish"))))
 
-(b/on ["layouts.do"] -999 (fn [event]
-                            (when-let [{:keys [container]} (:context event)]
-                              (do-layouts container)
-                              (b/fire "uncommited.render")
-                              (b/fire "rendering.finish"))))
+  (b/on app-state ["layouts.do"] -999 (fn [event]
+                                        (when-let [{:keys [container]} (:context event)]
+                                          (do-layouts container)
+                                          (b/fire app-state "uncommited.render")
+                                          (b/fire app-state "rendering.finish")))))

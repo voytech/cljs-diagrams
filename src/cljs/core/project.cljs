@@ -2,6 +2,8 @@
  (:require [core.utils.dom :as dom]
            [core.utils.dnd :as dnd]
            [core.tools :as t]
+           [core.behaviours :as behaviours]
+           [core.layouts :as layouts]
            [core.eventbus :as b]
            [core.events :as events]
            [core.rendering :as r]))
@@ -12,14 +14,17 @@
 
 (defn initialize [id app-state config]
   (dom/console-log (str "Initializing relational-designer with id [ " id " ]."))
-  (console.log "initializing event-bus ...")
+  (console.log "Initializing event-bus ...")
   (b/initialize app-state)
-  (console.log "initializing behaviours ...")
+  (console.log "Initializing behaviours ...")
+  (behaviours/initialize app-state)
   (doseq [install (:behaviours config)]
     (console.log (str "Installed behaviour: " (clj->js (install app-state)))))
+  (console.log "Initializing layouts")
+  (layouts/initialize app-state)  
   (console.log "Initializing renderer ...")
   (r/create-renderer app-state id (:width config) (:height config) (:renderer config))
-  (console.log "dispatching events ...")
+  (console.log "Dispatching events ...")
   (events/dispatch-events app-state))
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type

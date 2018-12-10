@@ -36,16 +36,16 @@
   (diff-property [this p1 other p2]))
 
 (defn- changed
-  ([component properties]
-   (bus/fire COMPONENT_CHANGED {:properties properties
-                                :component component})))
+  ([app-state component properties]
+   (bus/fire app-state COMPONENT_CHANGED {:properties properties
+                                          :component component})))
 
-(defrecord Component [uid name type model rendering-method props parentRef]
+(defrecord Component [uid name type model rendering-method props parentRef propertyChangeCallback]
   IDrawable
   (model [this] @model)
   (setp [this property value]
     (vswap! model assoc property value)
-    (changed this [property])
+    (propertyChangeCallback this [property])
     (invoke-hook this :setp property value))
   (silent-setp [this property value]
     (vswap! model assoc property value)
@@ -55,7 +55,7 @@
     (invoke-hook this :set-data map_))
   (set-data [this map_]
     (vswap! model merge map_)
-    (changed this (keys map_))
+    (propertyChangeCallback this (keys map_))
     (invoke-hook this :set-data map_))
   (getp [this property] (get @model property))
   (set-border-color [this value] (setp this :border-color value))
@@ -117,7 +117,7 @@
 
 (defn remove-component [app-state component]
   (swap! app-state update-in [:diagram :components] dissoc (:uid component))
-  (bus/fire "component.removed" {:component component}))
+  (bus/fire app-state "component.removed" {:component component}))
 
 (defn is-component [app-state uid]
   (not (nil? (get-in @app-state [:diagram :components uid]))))
@@ -126,11 +126,19 @@
  ([app-state container type name data props method initializer]
   (let [initializer-data (if (nil? initializer) {} (initializer container props))
         _data  (merge initializer-data data)
-        component (Component. (str (random-uuid)) name type (volatile! _data) method props (:uid container))]
+        callback (fn [component properties] (changed app-state component properties))
+        component (Component. (str (random-uuid))
+                              name
+                              type
+                              (volatile! _data)
+                              method
+                              props
+                              (:uid container)
+                              callback)]
     (ensure-z-index app-state component)
-    (bus/fire "component.created" {:component component})
+    (bus/fire app-state "component.created" {:component component})
     (swap! app-state assoc-in [:diagram :components (:uid component)] component)
-    (bus/fire "component.added" {:component component})
+    (bus/fire app-state "component.added" {:component component})
     (assoc-in container [:components (:name component)] component)))
  ([app-state container type name data props method]
   (new-component app-state container type name data props method nil)))

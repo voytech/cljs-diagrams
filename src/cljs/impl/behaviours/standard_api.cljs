@@ -105,7 +105,7 @@
                     :app-state app-state
                     :movement-x left
                     :movement-y top}]
-     (bhv/trigger-behaviour related-entity nil nil "moveby" event-data)))
+     (bhv/trigger-behaviour app-state related-entity nil nil "moveby" event-data)))
 
 (defn default-position-related-entity [app-state entity related-entity relation left top coord-mode]
   (move-related-entity app-state entity related-entity relation left top coord-mode))

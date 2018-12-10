@@ -27,10 +27,10 @@
 (defn validate [behaviour target]
   (reduce f/_OR_ false (mapv #(% target) (:features behaviour))))
 
-(defn- render-changes [event-name]
-  (bus/after-all event-name (fn [ev]
-                              (bus/fire "uncommited.render")
-                              (bus/fire "rendering.finish"))))
+(defn- render-changes [app-state event-name]
+  (bus/after-all app-state event-name (fn [ev]
+                                        (bus/fire app-state "uncommited.render")
+                                        (bus/fire app-state "rendering.finish"))))
 
 (defn- attach [app-state event-name behaviour]
   (let [attached-behaviours (or (get-in @app-state [:behaviours :attached event-name]) [])
@@ -45,9 +45,9 @@
 (defn- reg [app-state event-names behaviour]
   (doseq [event-name event-names]
     (when-not (is-attached app-state event-name behaviour)
-      (bus/on [event-name] (:handler behaviour))
+      (bus/on app-state [event-name] (:handler behaviour))
       (attach app-state event-name behaviour)
-      (render-changes event-name))))
+      (render-changes app-state event-name))))
 
 (defn autowire [app-state target]
   (doseq [behaviour (vals (get-in @app-state [:behaviours :definitions]))]
@@ -56,11 +56,12 @@
               event-names (event-name-provider target)]
             (reg app-state event-names behaviour)))))
 
-(defn trigger-behaviour [entity avalue component event-suffix data]
-  (bus/fire (ev/event-name (:type entity) (:type component) event-suffix) data))
+(defn trigger-behaviour [app-state entity avalue component event-suffix data]
+  (bus/fire app-state (ev/event-name (:type entity) (:type component) event-suffix) data))
 
-(bus/on ["entity.component.added"] -999 (fn [event]
-                                            (let [context (:context event)
-                                                  entity  (:entity context)
-                                                  app-state (:app-state context)]
-                                              (autowire app-state entity))))
+(defn initialize [app-state]
+  (bus/on app-state ["entity.component.added"] -999 (fn [event]
+                                                      (let [context (:context event)
+                                                            entity  (:entity context)
+                                                            app-state (:app-state context)]
+                                                        (autowire app-state entity)))))

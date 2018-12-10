@@ -122,7 +122,7 @@
          event-name (event-name (-> _e :entity :type)
                                 (-> _e :component :type)
                                 (-> _e :type))]
-     (b/fire event-name _e)))
+     (b/fire (:app-state e) event-name _e)))
   ([e overrides]
    (trigger-bus-event (merge e overrides))))
 

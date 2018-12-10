@@ -8,16 +8,19 @@
   (let [file-struct (-> a/*cljs-file* slurp read-string)]
     (name (second file-struct))))
 
-(defmacro with-components [data options & components-vector]
-  (let [components (first components-vector)]
-    `(fn [app-state# entity# ~data ~options]
-       (let [left# (or (:left ~options) 0)
-             top#  (or (:top  ~options) 0)
-             _entity# (reduce (fn [agg# func#] (func# app-state# agg#)) entity# ~components)]
-          (doseq [component# (-> _entity# :components vals)]
-            (doseq [vl# [[:left left#] [:top top#]]]
-              (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
-                (core.components/setp component# (vl# 0) new-val#))))))))
+(defmacro component [func & body]
+  `(fn [app-state# entity#]
+     (~func app-state# entity# ~@body)))
+
+(defmacro with-components [data options & components]
+  `(fn [app-state# entity# ~data ~options]
+     (let [left# (or (:left ~options) 0)
+           top#  (or (:top  ~options) 0)
+           _entity# (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components))]
+        (doseq [component# (-> _entity# :components vals)]
+          (doseq [vl# [[:left left#] [:top top#]]]
+            (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
+              (core.components/setp component# (vl# 0) new-val#)))))))
 
 (defmacro defbehaviour [name display-name type features event-name-provider handler]
   (let [nsname (resolve-namespace-name)]

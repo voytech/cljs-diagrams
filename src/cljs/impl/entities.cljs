@@ -5,7 +5,7 @@
            [impl.layouts :as l]
            [core.layouts :as cl]
            [impl.behaviours.definitions :as bd])
- (:require-macros [core.macros :refer [defentity with-components with-layouts layout]]))
+ (:require-macros [core.macros :refer [defentity with-components with-layouts layout component]]))
 
 (defn title-layout-options [name]
   (fn [entity]
@@ -25,13 +25,13 @@
     (layout :title l/default-flow-layout (cl/having-layout-property :title) (title-layout-options "title"))
     (layout :icons l/default-flow-layout (cl/having-layout-property :icons) (icons-layout-options)))
   (with-components data options
-      [#(c/main %1 %2 "body"  {:round-x 5 :round-y 5} {})
-       #(c/control %1 %2 "connector-left" {} {:side :left})
-       #(c/control %1 %2 "connector-right" {} {:side :right})
-       #(c/control %1 %2 "connector-top" {} {:side :top})
-       #(c/control %1 %2 "connector-bottom" {} {:side :bottom})
-       #(c/title %1 %2 "title" {:text "An entity with a title"} {:layout :title})
-       #(c/image %1 %2 "icon-1" {:image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"} {:layout :icons})]))
+    (component c/main "body" {:round-x 5 :round-y 5} {})
+    (component c/control "connector-left" {} {:side :left})
+    (component c/control "connector-right" {} {:side :right})
+    (component c/control "connector-top" {} {:side :top})
+    (component c/control "connector-bottom" {} {:side :bottom})
+    (component c/title "title" {:text "An entity with a title"} {:layout :title})
+    (component c/image "icon-1" {:image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"} {:layout :icons})))
 
 (defn- relation-layout-options [entity]
   (let [bbox (cl/get-bbox entity)]
@@ -42,8 +42,8 @@
   (with-layouts
     (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
   (with-components data options
-     [#(c/relation %1 %2 "connector" {} {:start "start" :end "end"})
-      #(c/startpoint %1 %2"start" {} {})
-      #(c/arrow %1 %2 "arrow" {} {})
-      #(c/endpoint %1 %2 "end" {} {})
-      #(c/title %1 %2 "title" {:text "Title."} {:layout :attributes})]))
+    (component c/relation "connector" {} {:start "start" :end "end"})
+    (component c/startpoint "start" {} {})
+    (component c/arrow "arrow" {} {})
+    (component c/endpoint "end" {} {})
+    (component c/title "title" {:text "Title."} {:layout :attributes})))

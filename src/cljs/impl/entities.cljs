@@ -61,7 +61,7 @@
   (with-layouts
     (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
   (with-components data options
-    (component c/relation "connector" {} {:start "start" :end "end"})
+    (component c/relation "connector" {:border-width 3} {:start "start" :end "end"})
     (component c/startpoint "start" {} {})
     (component c/arrow "arrow" {} {})
     (component c/endpoint "end" {} {})

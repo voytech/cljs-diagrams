@@ -11,12 +11,12 @@
 
 (defn Library [class]
   [:div {:class (:class class)}
-    [components/Tabs {:name "Toolbox" :view [tv/ToolBox :basic-tools]}
+    [components/Tabs {:name "Tools" :view [tv/ToolBox :basic-tools]}
                      {:name "Attributes" :view [:div "Attributes"]}]])
 
 
 (defn Main []
   [:div.container-fluid
     [:div.row.row-offcanvas.row-offcanvas-left
-     [Library {:class "col-2 sidebar-offcanvas"}]
+     [Library {:class "col-8 sidebar-offcanvas"}]
      [Workspace {:class "col"}]]])

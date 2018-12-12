@@ -32,6 +32,7 @@
                                :font-family (simple-set :font-family)
                                :font-weight (simple-set :font-weight)
                                :font-size (simple-set :font-size)
+                               :opacity (simple-set :fill-opacity)
                                :text-align (simple-set :text-align)
                                :text (fn [svg val mdl] (assoc svg 2 val))
                                :visible (fn [svg val mdl] (assoc-in svg [1 :visibility] (if (== val true) "visible" "hidden")))

@@ -42,7 +42,7 @@
   (with-layouts
     (layout :title l/default-flow-layout (cl/having-layout-property :title) (container-title-layout-options "title")))
   (with-components data options
-    (component c/entity-shape "body" {:width 300 :height 350 :border-style :dotted :z-index :bottom} {})
+    (component c/entity-shape "body" {:width 300 :height 350 :border-style :dotted :z-index :bottom :opacity "0.4"} {})
     (component c/control "connector-left" {} {:side :left})
     (component c/control "connector-right" {} {:side :right})
     (component c/control "connector-top" {} {:side :top})

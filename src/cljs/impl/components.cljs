@@ -1,5 +1,6 @@
 (ns impl.components
-  (:require [core.components :as d])
+  (:require [core.components :as d]
+            [core.layouts :as l])
   (:require-macros [core.macros :refer [defcomponent]]))
 
 (def WIDTH 180)
@@ -38,11 +39,13 @@
 
 (defn- control-initializer []
   (fn [container props]
-    (let [point (cond
-                  (= (:side props) :left)   {:left 0 :top (/ HEIGHT 2)}
-                  (= (:side props) :right)  {:left WIDTH :top (/ HEIGHT 2)}
-                  (= (:side props) :top)    {:left (/ WIDTH 2) :top 0}
-                  (= (:side props) :bottom) {:left (/ WIDTH 2) :top HEIGHT})]
+    (let [height (-> container :size :height)
+          width  (-> container :size :width)
+          point (cond
+                  (= (:side props) :left)   {:left 0 :top (/ height 2)}
+                  (= (:side props) :right)  {:left width :top (/ height 2)}
+                  (= (:side props) :top)    {:left (/ width 2) :top 0}
+                  (= (:side props) :bottom) {:left (/ width 2) :top height})]
        {:left (- (:left point) 8)
         :top (- (:top point) 8)
         :width 16
@@ -56,7 +59,7 @@
  (fn [container props]
    {:x1  0
     :y1  0
-    :x2 WIDTH
+    :x2 (-> container :size :width)
     :y2 0
     :left 0
     :top 0
@@ -67,7 +70,7 @@
 
 (defn- endpoint-initializer [type visible]
   (fn [container props]
-     {:left (- (if (= :start type) 0 WIDTH) 8)
+     {:left (- (if (= :start type) 0 (-> container :size :width)) 8)
       :top (- 8)
       :radius 8
       :width 16
@@ -79,7 +82,7 @@
 
 (defn- arrow-initializer []
   (fn [container props]
-    {:left WIDTH
+    {:left (-> container :size :width)
      :top  0
      :origin-x :center
      :origin-y :center
@@ -88,7 +91,7 @@
      :z-index :top
      :height 20}))
 
-(defn- body-initializer []
+(defn- entity-shape-initializer []
   (fn [container props]
     {:left 0
      :top  0
@@ -96,8 +99,8 @@
      :border-style :solid
      :border-width 1
      :background-color "white"
-     :width  WIDTH
-     :height HEIGHT}))
+     :width  (-> container :size :width)
+     :height (-> container :size :height)}))
 
 
 (defcomponent relation :draw-line {} (relation-initializer))
@@ -112,7 +115,7 @@
 
 (defcomponent control :draw-rect {} (control-initializer))
 
-(defcomponent entity-shape :draw-rect {} (body-initializer))
+(defcomponent entity-shape :draw-rect {} (entity-shape-initializer))
 
 ;; ===================================
 ;; layout managed components.

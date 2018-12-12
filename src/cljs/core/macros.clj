@@ -39,7 +39,7 @@
 (defmacro with-layouts [ & body]
   `(merge ~@body))
 
-(defmacro defentity [name & body]
+(defmacro defentity [name size & body]
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
           components  (:with-components transformed)
@@ -49,7 +49,7 @@
         (throw (Error. "Provide components definition within entitity definition!")))
      `(do
         (defn ~name [app-state# data# options#]
-           (let [e# (core.entities/create-entity app-state# (keyword ~nsname (name '~name)) ~layouts)
+           (let [e# (core.entities/create-entity app-state# (keyword ~nsname (name '~name)) ~layouts ~size)
                  component-factory# ~components]
              (component-factory# app-state# e# data# options#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]

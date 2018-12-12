@@ -26,6 +26,7 @@
        :top (- (/ (:height bbox) 2) 25)})))
 
 (defentity basic-rect
+  {:width 180 :height 150}
   (with-layouts
     (layout :title l/default-flow-layout (cl/having-layout-property :title) (title-layout-options "title"))
     (layout :icons l/default-flow-layout (cl/having-layout-property :icons) (icons-layout-options)))
@@ -39,10 +40,11 @@
     (component c/image "icon-1" {:height 40 :width 40 :image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"} {:layout :icons})))
 
 (defentity container
+  {:width 300 :height 350}
   (with-layouts
     (layout :title l/default-flow-layout (cl/having-layout-property :title) (container-title-layout-options "title")))
   (with-components data options
-    (component c/entity-shape "body" {:width 300 :height 350 :border-style :dotted :z-index :bottom :opacity "0.4"} {})
+    (component c/entity-shape "body" {:border-style :dotted :z-index :bottom :opacity "0.4"} {})
     (component c/control "connector-left" {} {:side :left})
     (component c/control "connector-right" {} {:side :right})
     (component c/control "connector-top" {} {:side :top})
@@ -55,6 +57,7 @@
      :top  (/ (:height bbox) 2)}))
 
 (defentity association
+  {:width 180 :height 150}
   (with-layouts
     (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
   (with-components data options

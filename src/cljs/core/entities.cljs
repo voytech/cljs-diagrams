@@ -11,9 +11,9 @@
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 (defrecord Entity [uid
+                   size
                    type
                    components
-                   attributes
                    relationships
                    layouts])
 
@@ -66,14 +66,16 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
-  ([app-state type layouts]
+  ([app-state type layouts size]
      (let [uid (str (random-uuid))
-           entity (Entity. uid type {} {} [] layouts)]
+           entity (Entity. uid size type {} [] layouts)]
        (swap! app-state assoc-in [:diagram :entities uid] entity)
        (bus/fire app-state "entity.added" {:entity entity})
        entity))
+  ([app-state type layouts]
+   (create-entity app-state type layouts {:width 180 :height 150}))
   ([app-state type]
-   (create-entity app-state type nil)))
+   (create-entity app-state type nil {:width 180 :height 150})))
 
 (defn add-entity-component
   ([app-state entity type name data props method]

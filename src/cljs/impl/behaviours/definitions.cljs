@@ -15,7 +15,7 @@
               "Default Entity Moving"
               :node-moving
               [f/is-primary-entity]
-              (b/build-event-name [::c/main] "move")
+              (b/build-event-name [::c/entity-shape] "move")
               (fn [e]
                  (let [event (:context e)]
                     ((std/moving-entity) event)
@@ -72,7 +72,7 @@
               "Default Entity Hovering"
               :hovering
               [f/is-association-entity f/is-primary-entity]
-              (b/build-event-name [::c/startpoint ::c/endpoint ::c/main] "focus")
+              (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "focus")
               (fn [e]
                 (let [event (:context e)]
                   ((std/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -82,7 +82,7 @@
               "Default Entity Leave"
               :leaving
               [f/is-association-entity f/is-primary-entity]
-              (b/build-event-name [::c/startpoint ::c/endpoint ::c/main] "blur")
+              (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "blur")
               (fn [e]
                 (let [event (:context e)]
                   ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
@@ -92,7 +92,7 @@
               "Default Show Controls"
               :controls-show
               [f/is-primary-entity]
-              (b/build-event-name [::c/main] "focus")
+              (b/build-event-name [::c/entity-shape] "focus")
               (fn [e]
                 (let [event (:context e)]
                   (std/toggle-controls (:entity event) true)
@@ -102,7 +102,7 @@
               "Default Hide Controls"
               :controls-hide
               [f/is-primary-entity]
-              (b/build-event-name [::c/main] "focus")
+              (b/build-event-name [::c/entity-shape] "blur")
               (fn [e]
                 (let [event (:context e)]
                   (std/toggle-controls (:entity event) false)
@@ -111,19 +111,33 @@
 (defbehaviour show-entity-control
               "Default Show Control"
               :control-show
-              [f/is-primary-entity]
-              (b/build-event-name [::c/main] "focus")
+              [f/has-controls]
+              (b/build-event-name [::c/control] "focus")
               (fn [e]
                 (let [event (:context e)]
-                  (std/toggle-control (-> event :component) true)
+                  (std/toggle-control  (-> event :component) true)
                   nil)))
 
 (defbehaviour hide-entity-control
               "Default Hide Control"
               :control-hide
-              [f/is-primary-entity]
-              (b/build-event-name [::c/main] "blur")
+              [f/has-controls]
+              (b/build-event-name [::c/control] "blur")
               (fn [e]
                 (let [event (:context e)]
                   (std/toggle-control (-> event :component) false)
+                  nil)))
+
+(defbehaviour resize-entity
+              "Resize Entity"
+              :entity-resize
+              [f/has-controls]
+              (b/build-event-name [::c/control] "move")
+              (fn [e]
+                (let [event (:context e)]
+                  (std/resize-with-control (:app-state event)
+                                           (:entity event)
+                                           (:component event)
+                                           (:movement-x event)
+                                           (:movement-y event))
                   nil)))

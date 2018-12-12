@@ -7,6 +7,11 @@
                :basic-tools
                (t/ctor eimpl/basic-rect))
 
+(t/create-tool "Entity Container"
+              :basic-tools
+              (t/ctor eimpl/container))
+
+
 (t/create-tool "Association"
                :basic-tools
                (t/ctor eimpl/association [0 0 100 0]))

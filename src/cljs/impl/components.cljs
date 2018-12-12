@@ -57,18 +57,18 @@
    {:x1  0
     :y1  0
     :x2 WIDTH
-    :y2 HEIGHT
+    :y2 0
     :left 0
     :top 0
     :border-color "black"
     :border-style :solid
     :border-width 1
-    :z-index :bottom}))
+    :z-index :before-bottom}))
 
 (defn- endpoint-initializer [type visible]
   (fn [container props]
      {:left (- (if (= :start type) 0 WIDTH) 8)
-      :top (- (if (= :start type) 0 HEIGHT) 8)
+      :top (- 8)
       :radius 8
       :width 16
       :z-index :top
@@ -80,7 +80,7 @@
 (defn- arrow-initializer []
   (fn [container props]
     {:left WIDTH
-     :top  HEIGHT
+     :top  0
      :origin-x :center
      :origin-y :center
      :angle 90
@@ -112,7 +112,7 @@
 
 (defcomponent control :draw-rect {} (control-initializer))
 
-(defcomponent main :draw-rect {} (body-initializer))
+(defcomponent entity-shape :draw-rect {} (body-initializer))
 
 ;; ===================================
 ;; layout managed components.

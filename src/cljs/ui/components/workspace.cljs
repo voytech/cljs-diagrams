@@ -57,6 +57,7 @@
       b/hide-all-entity-controls
       b/show-entity-control
       b/hide-entity-control
+      b/resize-entity
    ]})
 
 (defn canvas-initializing-wrapper [app-state config]

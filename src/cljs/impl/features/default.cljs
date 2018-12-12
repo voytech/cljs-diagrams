@@ -12,7 +12,7 @@
   ((f/has-components-of-types #{::c/control}) target))
 
 (defn is-rectangular-entity [target]
-  ((f/has-components-of-types #{::c/main}) target))
+  ((f/has-components-of-types #{::c/entity-shape}) target))
 
 (defn is-associative-entity [target]
   (f/any-of-features [

@@ -41,6 +41,7 @@
                                :image-url (simple-set :href)})
 
 (defonce constants-bindings {:top 100000
+                             :before-bottom 1
                              :bottom 0})
 
 (defn- resolve-value [val]

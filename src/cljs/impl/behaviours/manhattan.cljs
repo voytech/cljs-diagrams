@@ -118,8 +118,7 @@
       (let [{:keys [src trg]} (nearest-controls-between app-state start end)
             startpoint (e/get-entity-component app-state entity "start")
             endpoint (e/get-entity-component app-state entity "end")
-            vectors (calculate-vectors app-state start src end trg)
-            oprops (original-properties app-state entity)]
+            vectors (calculate-vectors app-state start src end trg)]
         (e/remove-entity-component app-state entity "connector")
         (position-entity-endpoint app-state entity startpoint {:x (d/get-left src) :y (d/get-top src)})
         (position-entity-endpoint app-state entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})

@@ -52,7 +52,7 @@ relation-initializer is function as follows:
 
 Component means nothing without an entity, and it can only be displayed after being attached as an entity child.
 
-Lets see how entity definition looks like: 
+This is how entity definition looks like: 
 
 ```clojure
 (defentity association
@@ -68,6 +68,14 @@ Lets see how entity definition looks like:
     (component c/endpoint "end" {} {})
     (component c/title "title" {:text "Title."} {:layout :attributes})))
 ```
+
+And this is how to render this entity on DOM element: 
+
+```clojure
+(association app-state options)
+```
+
+where app-state is an application state ( will be explained ) and options are usually coordinates {:left ... :top ...}  relative to enclosing DOM element.
 
 ## Screenshots
 

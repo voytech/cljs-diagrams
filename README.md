@@ -30,7 +30,7 @@ e.g.
 where:
 relation-initializer is function as follows: 
 
-```(defn- relation-initializer []
+(defn- relation-initializer []
  (fn [container props]
    {:x1  0
     :y1  0
@@ -41,7 +41,7 @@ relation-initializer is function as follows:
     :border-color "black"
     :border-style :solid
     :border-width 1
-    :z-index :before-bottom}))```
+    :z-index :before-bottom}))
 
 'relation' is a component, a component simply groups display properties for shape and gives it a namespace qualified name. 
 'realtion-initializer' is a display property map generator for late evaluation, after component becomes child of an entity. First argument of realtion-initializer is a component owning container - an entity.  
@@ -50,18 +50,18 @@ Component means nothing without an entity, and it can only be displayed after be
 
 Lets see how entity definition looks like: 
 
-```(defentity association
+(defentity association
   {:width 180 :height 150}
   (with-layouts
     (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
   (components-templates
     (component-template ::c/relation {:border-width 3}))
   (with-components data options
-    (component c/relation "connector" {} {:start "start" :end "end"})
+    (component c/relation "connector" {} {})
     (component c/startpoint "start" {} {})
     (component c/arrow "arrow" {} {})
     (component c/endpoint "end" {} {})
-    (component c/title "title" {:text "Title."} {:layout :attributes})))```
+    (component c/title "title" {:text "Title."} {:layout :attributes})))
 
 
 ## Screenshots

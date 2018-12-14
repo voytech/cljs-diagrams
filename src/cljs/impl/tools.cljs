@@ -7,10 +7,13 @@
                :basic-tools
                (t/ctor eimpl/basic-rect))
 
+(t/create-tool "Rectangle With Icon"
+              :basic-tools
+              (t/ctor eimpl/rect-with-icon))
+
 (t/create-tool "Entity Container"
               :basic-tools
               (t/ctor eimpl/container))
-
 
 (t/create-tool "Association"
                :basic-tools

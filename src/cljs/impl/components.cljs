@@ -1,7 +1,7 @@
 (ns impl.components
   (:require [core.components :as d]
             [core.layouts :as l])
-  (:require-macros [core.macros :refer [defcomponent]]))
+  (:require-macros [core.macros :refer [defcomponent named-group component]]))
 
 (def WIDTH 180)
 (def HEIGHT 150)
@@ -149,3 +149,9 @@
 (defcomponent description :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
 (defcomponent rect :draw-rect {} (fn [c] {:border-color "black" :border-style :solid :border-width 1}))
+
+(named-group entity-controls
+  (component control "connector-left" {} {:side :left})
+  (component control "connector-right" {} {:side :right})
+  (component control "connector-top" {} {:side :top})
+  (component control "connector-bottom" {} {:side :bottom}))

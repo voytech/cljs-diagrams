@@ -17,8 +17,8 @@
 
 (defn- render-entity [renderer-state entity]
   (l/do-layouts entity)
-  (render-components renderer-state (e/components-of entity))
-  (bus/fire "rendering.finish"))
+  (render-components renderer-state (e/components-of entity)))
+  ;(bus/fire "rendering.finish"))
 
 (defn- update-property-to-redraw [renderer-state component properties]
   (let [new-properties (concat

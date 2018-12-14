@@ -28,6 +28,10 @@
             (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
               (core.components/setp component# (vl# 0) new-val#)))))))
 
+(defmacro named-group [group-name & components]
+  `(defn ~group-name [app-state# entity#]
+     (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components))))
+
 (defmacro defbehaviour [name display-name type features event-name-provider handler]
   (let [nsname (resolve-namespace-name)]
     `(defn ~name [app-state#]

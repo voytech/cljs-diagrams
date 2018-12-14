@@ -125,7 +125,8 @@
 (defn new-component
  ([app-state container type name data props method initializer]
   (let [initializer-data (if (nil? initializer) {} (initializer container props))
-        _data  (merge initializer-data data)
+        template-data (-> container :components-properties type)
+        _data  (merge initializer-data template-data data)
         callback (fn [component properties] (changed app-state component properties))
         component (Component. (str (random-uuid))
                               name

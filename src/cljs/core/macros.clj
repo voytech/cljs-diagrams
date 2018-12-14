@@ -12,6 +12,12 @@
   `(fn [app-state# entity#]
      (~func app-state# entity# ~@body)))
 
+(defmacro component-template [type property-map]
+  `{~type ~property-map})
+
+(defmacro components-templates [ & body ]
+  `(merge ~@body))
+
 (defmacro with-components [data options & components]
   `(fn [app-state# entity# ~data ~options]
      (let [left# (or (:left ~options) 0)
@@ -43,13 +49,19 @@
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
           components  (:with-components transformed)
+          components-props (:components-templates transformed)
+          has-templates (contains? transformed :components-templates)
           layouts     (:with-layouts transformed)
           has-layouts (contains? transformed :with-layouts)]
       (when (nil? components)
         (throw (Error. "Provide components definition within entitity definition!")))
      `(do
         (defn ~name [app-state# data# options#]
-           (let [e# (core.entities/create-entity app-state# (keyword ~nsname (name '~name)) ~layouts ~size)
+           (let [e# (core.entities/create-entity app-state#
+                                                 (keyword ~nsname (name '~name))
+                                                 ~layouts
+                                                 ~size
+                                                 (if ~has-templates ~components-props {}))
                  component-factory# ~components]
              (component-factory# app-state# e# data# options#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]

@@ -44,7 +44,7 @@
   (let [name (str "line-" idx)]
     (e/assert-component c/relation app-state entity name (merge props {:x1 sx :y1 sy :x2 ex :y2 ey}))))
 
-(defn- update-line-components [app-state entity path props]
+(defn- update-line-components [app-state entity path]
   (e/remove-entity-components app-state entity (fn [c] (>= (connector-idx (:name c)) (count path))))
   (-> (map-indexed (fn [idx e]
                       (update-line-component app-state
@@ -53,17 +53,16 @@
                                              (:x (first e))
                                              (:y (first e))
                                              (:x (last e))
-                                             (:y (last e))
-                                             props))
+                                             (:y (last e))))
                    path)
       last))
 
-(defn update-manhattan-layout [app-state entity start end s-normal e-normal props]
+(defn update-manhattan-layout [app-state entity start end s-normal e-normal]
   (let [points (find-path start end s-normal e-normal)
         path (find-path-lines (center-point start) (center-point end) points)
         cstart (e/get-entity-component app-state entity "start")
         cend (e/get-entity-component app-state entity "end")]
-     (-> (update-line-components app-state entity path props)
+     (-> (update-line-components app-state entity path)
          (std/refresh-arrow-angle (e/get-entity-component app-state entity "arrow")))))
 
 (defn- calculate-vectors [app-state
@@ -96,20 +95,14 @@
             y (+ (:y to-point) (/ (d/get-height arrow) 2))]
         (std/apply-effective-position arrow x y :absolute)))))
 
-(defn original-properties [app-state entity]
-  (let [line (first (e/get-entity-component app-state entity ::c/relation))]
-   (-> (d/model line)
-       (dissoc :left :top :width :height :x1 :x2 :y1 :y2))))
-
 (defn on-endpoint-event [event]
   (let [{:keys [app-state entity component movement-x movement-y]} event
         start (e/get-entity-component app-state entity "start")
         end (e/get-entity-component app-state entity "end")
-        vectors (eval-vectors (center-point start) (center-point end))
-        oprops (original-properties app-state entity)]
+        vectors (eval-vectors (center-point start) (center-point end))]
     (e/remove-entity-component app-state entity "connector")
     (position-entity-endpoint app-state entity component movement-x movement-y)
-    (update-manhattan-layout app-state entity start end (vectors 0) (vectors 1) oprops)
+    (update-manhattan-layout app-state entity start end (vectors 0) (vectors 1))
     (b/fire app-state "layout.do" {:container (e/volatile-entity app-state entity) :type :attributes})))
 
 (defn on-source-entity-event [event]
@@ -118,11 +111,10 @@
       (let [related-entity (or start end)
             active (e/get-entity-component app-state entity (if-not (nil? start) "start" "end"))
             passive (e/get-entity-component app-state entity (if-not (nil? start) "end" "start"))
-            vectors (eval-vectors (center-point active) (center-point passive))
-            oprops (original-properties app-state entity)]
+            vectors (eval-vectors (center-point active) (center-point passive))]
         (e/remove-entity-component app-state entity "connector")
         (position-entity-endpoint app-state entity active movement-x movement-y)
-        (update-manhattan-layout app-state entity active passive (vectors 0) (vectors 1) oprops))
+        (update-manhattan-layout app-state entity active passive (vectors 0) (vectors 1)))
       (let [{:keys [src trg]} (nearest-controls-between app-state start end)
             startpoint (e/get-entity-component app-state entity "start")
             endpoint (e/get-entity-component app-state entity "end")
@@ -131,5 +123,5 @@
         (e/remove-entity-component app-state entity "connector")
         (position-entity-endpoint app-state entity startpoint {:x (d/get-left src) :y (d/get-top src)})
         (position-entity-endpoint app-state entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
-        (update-manhattan-layout app-state entity src trg (vectors 0) (vectors 1) oprops)))
+        (update-manhattan-layout app-state entity src trg (vectors 0) (vectors 1))))
     (b/fire app-state "layout.do" {:container (e/volatile-entity app-state entity) :type :attributes})))

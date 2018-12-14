@@ -5,7 +5,7 @@
            [impl.layouts :as l]
            [core.layouts :as cl]
            [impl.behaviours.definitions :as bd])
- (:require-macros [core.macros :refer [defentity with-components with-layouts layout component]]))
+ (:require-macros [core.macros :refer [defentity with-components with-layouts layout component components-templates component-template]]))
 
 (defn title-layout-options [name]
   (fn [entity]
@@ -60,8 +60,10 @@
   {:width 180 :height 150}
   (with-layouts
     (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
+  (components-templates
+    (component-template ::c/relation {:border-width 3}))
   (with-components data options
-    (component c/relation "connector" {:border-width 3} {:start "start" :end "end"})
+    (component c/relation "connector" {} {:start "start" :end "end"})
     (component c/startpoint "start" {} {})
     (component c/arrow "arrow" {} {})
     (component c/endpoint "end" {} {})

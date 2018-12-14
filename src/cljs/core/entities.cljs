@@ -15,7 +15,8 @@
                    type
                    components
                    relationships
-                   layouts])
+                   layouts
+                   components-properties])
 
 (defn components-of [holder]
  (vals (:components holder)))
@@ -66,12 +67,14 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
-  ([app-state type layouts size]
+  ([app-state type layouts size component-properties]
      (let [uid (str (random-uuid))
-           entity (Entity. uid size type {} [] layouts)]
+           entity (Entity. uid size type {} [] layouts component-properties)]
        (swap! app-state assoc-in [:diagram :entities uid] entity)
        (bus/fire app-state "entity.added" {:entity entity})
        entity))
+  ([app-state type layouts size]
+   (create-entity app-state type layouts size {}))
   ([app-state type layouts]
    (create-entity app-state type layouts {:width 180 :height 150}))
   ([app-state type]

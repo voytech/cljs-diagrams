@@ -22,7 +22,7 @@ Key functionalities:
 
 
 ## Usage
-Cljs-Relation-Designer has bunch of components already present for consumers:
+Cljs-Relation-Designer has many display components already present for consumers:
 
 e.g.
 ```clojure
@@ -30,7 +30,12 @@ e.g.
 ```
 
 where:
-relation-initializer is function as follows: 
+
+'relation' - is a component, a component simply groups display properties for shape and gives it a namespace qualified name. 
+
+':draw-line' - is a rendering method dispatching key. Many shapes with similar display properties may be rendered differently. E.g. clircle may have following properties: left, top, width, height. On the other hand, rectangle may have the same set of properties too. Rendering method helps to choose right rendering logic for particular component type. 
+
+'relation-initializer' - is function as follows: 
 
 ```clojure
 (defn- relation-initializer []
@@ -46,9 +51,7 @@ relation-initializer is function as follows:
     :border-width 1
     :z-index :before-bottom}))
 ```
-
-'relation' is a component, a component simply groups display properties for shape and gives it a namespace qualified name. 
-'realtion-initializer' is a display property map generator for late evaluation, after component becomes child of an entity. First argument of realtion-initializer is a component owning container - an entity.  
+'realtion-initializer' is a display property map generator for late evaluation - at time when component becomes child of an entity. First argument of realtion-initializer is an owning entity. Reason why relation-initializer is a lazy property-map evaluator is that sometimes it may be required to know some properties of entities in order to correctly display specific component. 
 
 Component means nothing without an entity, and it can only be displayed after being attached as an entity child.
 

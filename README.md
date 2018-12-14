@@ -4,13 +4,13 @@ Clojurescript library/framework for developing different kinds of diagrams.
 Key functionalities:
 - Support for different kind of entities (diagram entity classes) via DSL 
 - Creating relationships between entities
-- Behaviours - native event handling leveraged to application events model (via core.async and simple event-bus)
-- Auto-wiring of behaviours (Subject to change)
-- Support for custom rendering engines
+- Behaviours - application events model based of native DOM events (via core.async and simple event-bus)
+- Auto-wiring of behaviours - inferring (and bus registration) of behaviours from entity specification (e.g. types of managed components) (Subject to change)
+- Support for custom rendering engines 
 - SVG renderer engine
 - Canvas renderer engine (using fabric.js)
-- Pluggable architecture via event bus and loose coupling of modules.
-- First class building blocks represeted using macros: defentity, defcomponent, defbehaviour, deflayout and so on
+- Pluggable architecture via event bus and loose coupling.
+- First class building blocks represented by macros: defentity, defcomponent, defbehaviour, deflayout and so on
 
 ## Dependencies
 
@@ -22,18 +22,23 @@ Key functionalities:
 
 
 ## Usage
-Cljs-Relation-Designer has many display components already present for consumers:
+Cljs-Relation-Designer is shipped with number of display components acting as building blocks for new entities.
+When components are composed within entity they can activate different kind of entity behaviours depending on component types.
+E.g.: 
+- when one adds 'control' components into entity, entity will automatically become resizable and connectible with other entities.
+- when one adds 'text' component, text will automatically change its border colour on hover.
 
-e.g.
+Of course there is no limitation to use only existing set of components. You can always define new components as follows:
+ 
 ```clojure
 (defcomponent relation :draw-line {} (relation-initializer))
 ```
 
 where:
 
-'relation' - is a component, a component simply groups display properties for shape and gives it a namespace qualified name. 
+'relation' - is a component function name (a component simply groups display properties for shape and gives it a namespace qualified name) 
 
-':draw-line' - is a rendering method dispatching key. Many shapes with similar display properties may be rendered differently. E.g. clircle may have following properties: left, top, width, height. On the other hand, rectangle may have the same set of properties too. Rendering method helps to choose right rendering logic for particular component type. 
+':draw-line' - is a rendering method key. Many shapes with similar display properties may be rendered differently. E.g. clircle may have following properties: left, top, width, height. On the other hand, rectangle may have the same set of properties too. Rendering method helps to choose right rendering logic for particular component type. 
 
 'relation-initializer' - is function as follows: 
 
@@ -51,7 +56,7 @@ where:
     :border-width 1
     :z-index :before-bottom}))
 ```
-'realtion-initializer' is a display property map generator for late evaluation - at time when component becomes child of an entity. First argument of realtion-initializer is an owning entity. Reason why relation-initializer is a lazy property-map evaluator is that sometimes it may be required to know some properties of entities in order to correctly display specific component. 
+'realtion-initializer' is a lazy display properties generator. First argument of realtion-initializer is an owning entity. Reason why relation-initializer is a lazy properties evaluator should be obvious. Sometimes it may be required to know some properties of entities in order to correctly display specific component. 
 
 Component means nothing without an entity, and it can only be displayed after being attached as an entity child.
 

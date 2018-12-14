@@ -25,11 +25,14 @@ Key functionalities:
 Cljs-Relation-Designer has bunch of components already present for consumers:
 
 e.g.
+```clojure
 (defcomponent relation :draw-line {} (relation-initializer))
+```
 
 where:
 relation-initializer is function as follows: 
 
+```clojure
 (defn- relation-initializer []
  (fn [container props]
    {:x1  0
@@ -42,6 +45,7 @@ relation-initializer is function as follows:
     :border-style :solid
     :border-width 1
     :z-index :before-bottom}))
+```
 
 'relation' is a component, a component simply groups display properties for shape and gives it a namespace qualified name. 
 'realtion-initializer' is a display property map generator for late evaluation, after component becomes child of an entity. First argument of realtion-initializer is a component owning container - an entity.  
@@ -50,6 +54,7 @@ Component means nothing without an entity, and it can only be displayed after be
 
 Lets see how entity definition looks like: 
 
+```clojure
 (defentity association
   {:width 180 :height 150}
   (with-layouts
@@ -62,7 +67,7 @@ Lets see how entity definition looks like:
     (component c/arrow "arrow" {} {})
     (component c/endpoint "end" {} {})
     (component c/title "title" {:text "Title."} {:layout :attributes})))
-
+```
 
 ## Screenshots
 

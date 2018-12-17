@@ -47,9 +47,9 @@
      }
    }
    :behaviours [
-      b/moving-node-entity
-      b/moving-connector-entity-by
-      b/moving-connector-endpoints
+      b/moving-rigid-entity
+      b/moving-association-entity-by
+      b/moving-association-endpoints
       b/make-relation
       b/hovering-entity
       b/leaving-entity

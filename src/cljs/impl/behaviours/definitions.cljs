@@ -5,24 +5,25 @@
             [core.entities :as e]
             [core.events :as ev]
             [core.components :as d]
-            [impl.behaviours.standard-api :as std]
+            [core.behaviour-api :as api]
+            [impl.behaviours.behaviour-api :as std]
             [impl.behaviours.manhattan :as m]
             [impl.components :as c]
             [impl.features.default :as f])
   (:require-macros [core.macros :refer [defbehaviour]]))
 
-(defbehaviour moving-node-entity
-              "Default Entity Moving"
-              :node-moving
+(defbehaviour moving-rigid-entity
+              "Shapeful Rigid Entity Moving"
+              :rigid-entity-moving
               [f/is-primary-entity]
               (b/build-event-name [::c/entity-shape] "move")
               (fn [e]
-                 (let [event (:context e)]
-                    ((std/moving-entity) event)
+                 (let [{:keys [app-state component movement-x movement-y]} (:context e)]
+                   (api/move-entity app-state component movement-x movement-y)
                     nil)))
 
-(defbehaviour moving-connector-entity-by
-              "Default Relation Link Moving By"
+(defbehaviour moving-association-entity-by
+              "Moving Association Entity By"
               :moving-by
               [f/is-association-entity]
               (b/build-event-name "moveby")
@@ -36,16 +37,20 @@
                   (m/on-source-entity-event enriched)
                   nil)))
 
-(defbehaviour moving-connector-endpoints
-              "Connector's endpoints moving [Manhattan]"
-              :connector-endpoint-moving
+(defbehaviour moving-association-endpoints
+              "Association's endpoints moving [Manhattan]"
+              :association-endpoint-moving
               [f/is-association-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ] "move")
               (fn [e]
-                (let [event (:context e)]
+                (let [event (:context e)
+                      {:keys [app-state component]} event]
                   (m/on-endpoint-event event)
-                  ((std/intersects? "body" (fn [src trg] (std/toggle-controls (:entity trg) true))
-                                           (fn [src trg] (std/toggle-controls (:entity trg) false))) (:context e))
+                  (api/collides-named-component? app-state
+                                                 component
+                                                 "body"
+                                                 (fn [src trg] (std/toggle-controls (:entity trg) true))
+                                                 (fn [src trg] (std/toggle-controls (:entity trg) false)))
                   nil)))
 
 (defbehaviour make-relation
@@ -54,17 +59,20 @@
               [f/is-association-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ] "mouse-up")
               (fn [e]
-                (let [event (:context e)
-                      app-state (-> event :app-state)]
-                  ((std/intersects-controls? (fn [src trg]
-                                               (let [ctype (-> event :component :type)
-                                                     end-type (cond
-                                                                (= ::c/endpoint ctype) {:type "end" :f std/position-endpoint}
-                                                                (= ::c/startpoint ctype) {:type  "start" :f std/position-startpoint})]
-                                                (e/connect-entities app-state (:entity src) (:entity trg) (keyword (:type end-type)))
-                                                (std/toggle-controls (:entity trg) false)
-                                                ((:f end-type) app-state (:entity src) (d/get-left (:component trg)) (d/get-top (:component trg)))))) (:context e))
-                  (std/relations-validate app-state (-> event :entity))
+                (let [{:keys [app-state component entity] :as event} (:context e)]
+                  (api/collides? app-state
+                                 component
+                                 (fn [src trg]
+                                   (console.log (clj->js src))
+                                   (console.log (clj->js trg))
+                                   (let [ctype (:type component)
+                                         end-type (cond
+                                                    (= ::c/endpoint ctype) "end"
+                                                    (= ::c/startpoint ctype) "start" )]
+                                    (e/connect-entities app-state (:entity src) (:entity trg) (keyword end-type))
+                                    (std/toggle-controls (:entity trg) false)
+                                    (std/snap-to-control app-state component (:entity trg)))))
+                  ;(api/collision-based-relations-validate app-state entity)
                   (m/on-endpoint-event event)
                   nil)))
 
@@ -74,8 +82,8 @@
               [f/is-association-entity f/is-primary-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "focus")
               (fn [e]
-                (let [event (:context e)]
-                  ((std/highlight true o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                (let [{:keys [component]} (:context e)]
+                  (api/component-hover component true o/DEFAULT_HIGHLIGHT_OPTIONS)
                   nil)))
 
 (defbehaviour leaving-entity
@@ -84,8 +92,8 @@
               [f/is-association-entity f/is-primary-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "blur")
               (fn [e]
-                (let [event (:context e)]
-                  ((std/highlight false o/DEFAULT_HIGHLIGHT_OPTIONS) event)
+                (let [{:keys [component]} (:context e)]
+                  (api/component-hover component false o/DEFAULT_HIGHLIGHT_OPTIONS)
                   nil)))
 
 (defbehaviour show-all-entity-controls

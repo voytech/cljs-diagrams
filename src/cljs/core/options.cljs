@@ -12,9 +12,9 @@
 (def INVISIBLE {:visible false})
 (def HANDLER_SMALL {:radius 8 :background-color "#fff" :border-color "black" :border-width 1.5})
 (def HANDLER_SMALLEST {:radius 8 :background-color "#fff" :border-color "black" :border-width 1.5})
-(def DEFAULT_HIGHLIGHT_OPTIONS {:highlight-color "red"
+(def DEFAULT_HIGHLIGHT_OPTIONS {:hover-color "red"
                                 :normal-color "black"
-                                :highlight-width 3
+                                :hover-width 3
                                 :normal-width 1.5})
 
 (def CONNECTOR_DEFAULT_OPTIONS (merge DEFAULT_SIZE_OPTS DEFAULT_STROKE))

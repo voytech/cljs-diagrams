@@ -125,11 +125,19 @@
  ([func app-state entity name]
   (assert-component func app-state entity name {})))
 
+(defn- is-relation-present [app-state entity related-id assoc-type]
+  (->> (entity-by-id app-state (:uid entity))
+       :relationships
+       (filterv (fn [rel] (and (= related-id (:entity-id rel)) (= assoc-type (:relation-type rel)))))
+       (count)
+       (< 0)))
+
 (defn connect-entities [app-state src trg association-type]
-  (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg)})
-        trg-rel (conj (:relationships trg) {:relation-type association-type :entity-id (:uid src)})]
-    (swap! app-state assoc-in [:diagram :entities (:uid src) :relationships] src-rel)
-    (swap! app-state assoc-in [:diagram :entities (:uid trg) :relationships] trg-rel)))
+  (when (not (is-relation-present app-state src (:uid trg) association-type))
+    (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg)})
+          trg-rel (conj (:relationships trg) {:relation-type association-type :entity-id (:uid src)})]
+      (swap! app-state assoc-in [:diagram :entities (:uid src) :relationships] src-rel)
+      (swap! app-state assoc-in [:diagram :entities (:uid trg) :relationships] trg-rel))))
 
 (defn get-related-entities [app-state entity association-type]
   (let [_entity (volatile-entity app-state entity)]

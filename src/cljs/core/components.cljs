@@ -122,6 +122,9 @@
 (defn is-component [app-state uid]
   (not (nil? (get-in @app-state [:diagram :components uid]))))
 
+(defn components [app-state]
+  (vals (get-in @app-state [:diagram :components])))
+
 (defn new-component
  ([app-state container type name data props method initializer]
   (let [initializer-data (if (nil? initializer) {} (initializer container props))

@@ -3,7 +3,7 @@
             [core.layouts :as layouts]
             [core.components :as d]
             [core.eventbus :as b]
-            [impl.behaviours.standard-api :as std]
+            [impl.behaviours.behaviour-api :as std]
             [impl.components :as c]))
 
 (defonce CONTROL_SUFFIX "-ctrl")

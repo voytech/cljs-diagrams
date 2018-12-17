@@ -1,10 +1,11 @@
-(ns impl.behaviours.standard-api
+(ns impl.behaviours.behaviour-api
   (:require [core.entities :as e]
             [core.layouts :as layouts]
             [core.components :as d]
             [core.eventbus :as b]
             [core.events :as ev]
             [core.behaviours :as bhv]
+            [core.behaviour-api :as api]
             [impl.components :as c]))
 
 (declare position-endpoint)
@@ -155,11 +156,6 @@
           y2 (-> relation-component  (d/getp :y2))]
        (d/setp arrow-component :angle (calculate-angle x1 y1 x2 y2)))))
 
-(defn- to-the-center-of [line x y shape]
-  (when (not (nil? line))
-    (d/set-data line {x (+ (d/get-left shape) (/ (d/get-width shape) 2))
-                      y (+ (d/get-top shape) (/ (d/get-height shape) 2))})))
-
 (defn insert-breakpoint []
   (fn [e]
       (let [entity (:entity e)
@@ -234,6 +230,18 @@
         (refresh-arrow-angle starts-relation-component arrow-component)))))
   ([app-state entity left top]
    (position-startpoint app-state entity left top :absolute false)))
+
+(defn nearest-control [app-state component trg-entity]
+ (let [trg-connectors (e/get-entity-component app-state trg-entity ::c/control)]
+     (->> (for [trg trg-connectors]
+            {:src component :trg trg :d (api/distance (api/center-point component) (api/center-point trg))})
+          (apply min-key #(:d %)))))
+
+(defn snap-to-control [app-state component trg-entity]
+  (let [{:keys [trg] :as n} (nearest-control app-state component trg-entity)
+         trg-center (api/center-point trg)]
+     (d/set-data component {:left (- (:x trg-center) (/ (d/get-width component) 2))
+                            :top  (- (:y trg-center) (/ (d/get-height component) 2))})))
 
 (defn position-endpoint
   ([app-state entity left top coord-mode skip?]

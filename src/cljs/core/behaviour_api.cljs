@@ -87,6 +87,12 @@
 (defn default-position-related-entity [app-state entity related-entity relation left top]
   (move-related-entity app-state entity related-entity relation left top))
 
+(defn is-relation-owner [entity relation]
+  (= (:owner relation) (:uid entity)))
+
+(defn owned-relationships [entity]
+  (filterv #(is-relation-owner entity %) (:relationships entity)))
+
 (defn move-entity [app-state component movement-x movement-y]
   (let [entity (e/lookup app-state component)
         event (:event e)]
@@ -96,7 +102,7 @@
                              movement-x
                              movement-y
                              :offset)
-    (doseq [relation (:relationships entity)]
+    (doseq [relation (owned-relationships entity)]
       (let [related-entity (e/entity-by-id app-state (:entity-id relation))]
          (default-position-related-entity app-state
                                           entity
@@ -122,7 +128,7 @@
                      (not= (:parentRef trg-comp) (:parentRef component))
                      (d/intersects? component trg-comp)
                      (feature trg-ent))
-              (callback {:component component :entity entity} {:component trg-comp :entity trg-ent}))))))) 
+              (callback {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))
 
 (defn collides-named-component? [app-state component target-name success-callback failure-callback]
   (let [entity (e/lookup app-state component)]

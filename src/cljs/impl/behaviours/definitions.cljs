@@ -78,7 +78,7 @@
                                          end-type (cond
                                                     (= ::c/endpoint ctype) "end"
                                                     (= ::c/startpoint ctype) "start" )]
-                                    (e/connect-entities app-state (:entity src) (:entity trg) (keyword end-type))
+                                    (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
                                     (std/toggle-controls (:entity trg) false)
                                     (std/snap-to-control app-state component (:entity trg)))))
                   ;(api/collision-based-relations-validate app-state entity)
@@ -96,7 +96,7 @@
                                  component
                                  f/is-container
                                  (fn [src trg]
-                                    (e/connect-entities app-state (:entity src) (:entity trg) :inclusion)))
+                                    (e/connect-entities app-state (:entity trg) (:entity src) :inclusion)))
                   nil)))
 
 (defbehaviour hovering-entity

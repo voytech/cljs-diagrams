@@ -147,8 +147,8 @@
 
 (defn connect-entities [app-state src trg association-type]
   (when (not (is-relation-present app-state src (:uid trg) association-type))
-    (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg)})
-          trg-rel (conj (:relationships trg) {:relation-type association-type :entity-id (:uid src)})]
+    (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg) :owner (:uid src)})
+          trg-rel (conj (:relationships trg) {:relation-type association-type :entity-id (:uid src) :owner (:uid src)})]
       (swap! app-state assoc-in [:diagram :entities (:uid src) :relationships] src-rel)
       (swap! app-state assoc-in [:diagram :entities (:uid trg) :relationships] trg-rel))))
 

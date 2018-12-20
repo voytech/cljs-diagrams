@@ -37,6 +37,17 @@
                   (m/on-source-entity-event enriched)
                   nil)))
 
+(defbehaviour moving-primary-entity-by
+              "Moving Primary Entity Entity By"
+              :moving-by
+              [f/is-primary-entity]
+              (b/build-event-name "moveby")
+              (fn [e]
+                 (let [{:keys [app-state entity movement-x movement-y]} (:context e)
+                       component (e/get-shape-component app-state entity)]
+                   (api/move-entity app-state component movement-x movement-y)
+                    nil)))
+
 (defbehaviour moving-association-endpoints
               "Association's endpoints moving [Manhattan]"
               :association-endpoint-moving
@@ -63,8 +74,6 @@
                   (api/collides? app-state
                                  component
                                  (fn [src trg]
-                                   (console.log (clj->js src))
-                                   (console.log (clj->js trg))
                                    (let [ctype (:type component)
                                          end-type (cond
                                                     (= ::c/endpoint ctype) "end"
@@ -74,6 +83,20 @@
                                     (std/snap-to-control app-state component (:entity trg)))))
                   ;(api/collision-based-relations-validate app-state entity)
                   (m/on-endpoint-event event)
+                  nil)))
+
+(defbehaviour make-inclusion-relation
+              "Include Entity Into Container"
+              :make-inclusion-relation
+              [f/is-primary-entity]
+              (b/build-event-name [::c/entity-shape] "mouse-up")
+              (fn [e]
+                (let [{:keys [app-state component entity] :as event} (:context e)]
+                  (api/collides? app-state
+                                 component
+                                 f/is-container
+                                 (fn [src trg]
+                                    (e/connect-entities app-state (:entity src) (:entity trg) :inclusion)))
                   nil)))
 
 (defbehaviour hovering-entity

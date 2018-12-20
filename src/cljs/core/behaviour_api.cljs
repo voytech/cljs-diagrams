@@ -96,7 +96,6 @@
                              movement-x
                              movement-y
                              :offset)
-    (console.log (clj->js entity))
     (doseq [relation (:relationships entity)]
       (let [related-entity (e/entity-by-id app-state (:entity-id relation))]
          (default-position-related-entity app-state
@@ -106,14 +105,24 @@
                                           movement-x
                                           movement-y)))))
 
-(defn collides? [app-state component callback]
-  (let [entity (e/lookup app-state component)]
-    (doseq [trg-comp (d/components app-state)]
-      (when (and (not= trg-comp component)
-                 (not= (:parentRef trg-comp) (:parentRef component))
-                 (d/intersects? component trg-comp))
+(defn collides?
+  ([app-state component callback]
+    (let [entity (e/lookup app-state component)]
+      (doseq [trg-comp (d/components app-state)]
+        (when (and (not= trg-comp component)
+                   (not= (:parentRef trg-comp) (:parentRef component))
+                   (d/intersects? component trg-comp))
+          (let [trg-ent (e/lookup app-state trg-comp)]
+            (callback {:component component :entity entity} {:component trg-comp :entity trg-ent}))))))
+  ([app-state component feature callback]
+    (let [entity (e/lookup app-state component)]
+      (doseq [trg-comp (d/components app-state)]
         (let [trg-ent (e/lookup app-state trg-comp)]
-          (callback {:component component :entity entity} {:component trg-comp :entity trg-ent}))))))
+          (when (and (not= trg-comp component)
+                     (not= (:parentRef trg-comp) (:parentRef component))
+                     (d/intersects? component trg-comp)
+                     (feature trg-ent))
+              (callback {:component component :entity entity} {:component trg-comp :entity trg-ent}))))))) 
 
 (defn collides-named-component? [app-state component target-name success-callback failure-callback]
   (let [entity (e/lookup app-state component)]
@@ -125,7 +134,7 @@
                (failure-callback {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))
 
 (defn collision-based-relations-validate [app-state entity]
-  (doseq [relation (:relationships entity)]
+  (doseq [relation (:relationships (e/entity-by-id app-state (:uid entity)))]
     (doseq [component (e/components-of entity)]
       (let [related-entity (e/entity-by-id app-state (:entity-id relation))
             collisions (filter #(d/intersects? % component) (e/components-of related-entity))]

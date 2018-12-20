@@ -29,6 +29,16 @@
      is-rectangular-entity
   ] target ))
 
+(defn is-container [target]
+  (f/check-features [
+     (fn [target]
+       (->> (:tags target)
+            (filterv #(= % :container))
+            count
+            (= 1)))
+     is-rectangular-entity
+  ] target ))
+
 (defn is-association-entity [target]
   (f/check-features [
      is-associative-entity

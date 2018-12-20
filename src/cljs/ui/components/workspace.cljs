@@ -49,8 +49,10 @@
    :behaviours [
       b/moving-rigid-entity
       b/moving-association-entity-by
+      b/moving-primary-entity-by
       b/moving-association-endpoints
       b/make-relation
+      b/make-inclusion-relation
       b/hovering-entity
       b/leaving-entity
       b/show-all-entity-controls

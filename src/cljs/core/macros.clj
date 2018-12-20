@@ -49,10 +49,18 @@
 (defmacro with-layouts [ & body]
   `(merge ~@body))
 
+(defmacro with-tags [ & body]
+  `(vector ~@body))
+
+(defmacro shape [shape-ref]
+  `~shape-ref)
+
 (defmacro defentity [name size & body]
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
           components  (:with-components transformed)
+          tags        (:with-tags transformed)
+          shape-ref   (:shape transformed)
           components-props (:components-templates transformed)
           has-templates (contains? transformed :components-templates)
           layouts     (:with-layouts transformed)
@@ -63,9 +71,11 @@
         (defn ~name [app-state# data# options#]
            (let [e# (core.entities/create-entity app-state#
                                                  (keyword ~nsname (name '~name))
+                                                 (or ~tags [])
                                                  ~layouts
                                                  ~size
-                                                 (if ~has-templates ~components-props {}))
+                                                 (if ~has-templates ~components-props {})
+                                                 (or ~shape-ref []))
                  component-factory# ~components]
              (component-factory# app-state# e# data# options#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]

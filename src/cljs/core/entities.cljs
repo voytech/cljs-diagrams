@@ -13,10 +13,12 @@
 (defrecord Entity [uid
                    size
                    type
+                   tags
                    components
                    relationships
                    layouts
-                   components-properties])
+                   components-properties
+                   shape-ref])
 
 (defn components-of [holder]
  (vals (:components holder)))
@@ -67,18 +69,25 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
-  ([app-state type layouts size component-properties]
+  ([app-state type tags layouts size component-properties shape-ref]
      (let [uid (str (random-uuid))
-           entity (Entity. uid size type {} [] layouts component-properties)]
+           entity (Entity. uid
+                           size
+                           type
+                           tags
+                           {} []
+                           layouts
+                           component-properties
+                           shape-ref)]
        (swap! app-state assoc-in [:diagram :entities uid] entity)
        (bus/fire app-state "entity.added" {:entity entity})
        entity))
   ([app-state type layouts size]
-   (create-entity app-state type layouts size {}))
+   (create-entity app-state type [] layouts size {} nil))
   ([app-state type layouts]
    (create-entity app-state type layouts {:width 180 :height 150}))
   ([app-state type]
-   (create-entity app-state type nil {:width 180 :height 150})))
+   (create-entity app-state type [] {:width 180 :height 150})))
 
 (defn add-entity-component
   ([app-state entity type name data props method]
@@ -114,6 +123,10 @@
   (if (keyword? name-or-type)
    (filter #(= name-or-type (:type %)) (components-of (entity-by-id app-state (:uid entity))))
    (get-in @app-state [:diagram :entities (:uid entity) :components name-or-type])))
+
+(defn get-shape-component [app-state entity]
+  (when-let [shape-name (:shape-ref entity)]
+    (get-entity-component app-state entity shape-name)))
 
 (defn assert-component
  ([func app-state entity name data]

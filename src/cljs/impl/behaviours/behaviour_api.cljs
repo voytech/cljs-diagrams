@@ -139,9 +139,9 @@
 
          arrow-component      (e/get-entity-component app-state entity "arrow")]
     (d/set-data endpoint-component {:left effective-left  :top  effective-top})
-    (to-the-center-of arrow-component :left :top endpoint-component)
+    (api/to-the-center-of arrow-component :left :top endpoint-component)
     (when (= false skip?)
-     (to-the-center-of ends-relation-component :x2 :y2 endpoint-component)
+     (api/to-the-center-of ends-relation-component :x2 :y2 endpoint-component)
      (refresh-arrow-angle ends-relation-component arrow-component))))
  ([app-state entity left top]
   (position-endpoint app-state entity left top :absolute false)))
@@ -178,9 +178,9 @@
     (let [side (e/component-property app-state entity (:name control) :side)
           main (first (e/get-entity-component app-state entity ::c/entity-shape))]
       (cond
-        (= side :right) (do (apply-effective-position control movement-x 0 :offset)
+        (= side :right) (do (api/apply-effective-position control movement-x 0 :offset)
                             (d/set-width main (+ (d/get-width main) movement-x)))
-        (= side :bottom) (do (apply-effective-position control 0 movement-y :offset)
+        (= side :bottom) (do (api/apply-effective-position control 0 movement-y :offset)
                              (d/set-height main (+ (d/get-height main) movement-y))))
 
         (layout-controls app-state entity)

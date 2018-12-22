@@ -11,7 +11,7 @@
 (defn has-controls [target]
   ((f/has-components-of-types #{::c/control}) target))
 
-(defn is-rectangular-entity [target]
+(defn is-shape-entity [target]
   ((f/has-components-of-types #{::c/entity-shape}) target))
 
 (defn is-associative-entity [target]
@@ -26,7 +26,7 @@
 (defn is-primary-entity [target]
   (f/check-features [
      is-associative-entity
-     is-rectangular-entity
+     is-shape-entity
   ] target ))
 
 (defn is-container [target]
@@ -36,7 +36,7 @@
             (filterv #(= % :container))
             count
             (= 1)))
-     is-rectangular-entity
+     is-shape-entity
   ] target ))
 
 (defn is-association-entity [target]

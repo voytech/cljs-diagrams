@@ -112,23 +112,20 @@
                                           movement-y)))))
 
 (defn collides?
-  ([app-state component callback]
-    (let [entity (e/lookup app-state component)]
-      (doseq [trg-comp (d/components app-state)]
-        (when (and (not= trg-comp component)
-                   (not= (:parentRef trg-comp) (:parentRef component))
-                   (d/intersects? component trg-comp))
-          (let [trg-ent (e/lookup app-state trg-comp)]
-            (callback {:component component :entity entity} {:component trg-comp :entity trg-ent}))))))
-  ([app-state component feature callback]
-    (let [entity (e/lookup app-state component)]
-      (doseq [trg-comp (d/components app-state)]
-        (let [trg-ent (e/lookup app-state trg-comp)]
-          (when (and (not= trg-comp component)
-                     (not= (:parentRef trg-comp) (:parentRef component))
-                     (d/intersects? component trg-comp)
-                     (feature trg-ent))
-              (callback {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))
+  ([app-state component feature hit-callback miss-callback]
+    (let [entity (e/lookup app-state component)
+          collisions (filterv (fn [trg-comp]
+                                (and (not= trg-comp component)
+                                     (not= (:parentRef trg-comp) (:parentRef component))
+                                     (d/intersects? component trg-comp)
+                                     (feature (e/lookup app-state trg-comp))))
+                              (d/ordered-components app-state))]
+          (when-let [collider (first collisions)]
+            (hit-callback {:component component :entity entity}
+                          {:component collider :entity (e/lookup app-state collider)})
+            (miss-callback {:component component :entity entity}))))
+  ([app-state component hit-callback miss-callback]
+    (collides? app-state component #(true) hit-callback miss-callback)))
 
 (defn collides-named-component? [app-state component target-name success-callback failure-callback]
   (let [entity (e/lookup app-state component)]

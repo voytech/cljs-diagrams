@@ -73,6 +73,7 @@
                 (let [{:keys [app-state component entity] :as event} (:context e)]
                   (api/collides? app-state
                                  component
+                                 f/is-shape-entity
                                  (fn [src trg]
                                    (let [ctype (:type component)
                                          end-type (cond
@@ -80,7 +81,8 @@
                                                     (= ::c/startpoint ctype) "start" )]
                                     (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
                                     (std/toggle-controls (:entity trg) false)
-                                    (std/snap-to-control app-state component (:entity trg)))))
+                                    (std/snap-to-control app-state component (:entity trg))))
+                                 (fn [src] ))
                   ;(api/collision-based-relations-validate app-state entity)
                   (m/on-endpoint-event event)
                   nil)))
@@ -96,7 +98,8 @@
                                  component
                                  f/is-container
                                  (fn [src trg]
-                                    (e/connect-entities app-state (:entity trg) (:entity src) :inclusion)))
+                                    (e/connect-entities app-state (:entity trg) (:entity src) :inclusion))
+                                 (fn [src] ))
                   nil)))
 
 (defbehaviour hovering-entity

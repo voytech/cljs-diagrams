@@ -125,6 +125,9 @@
 (defn components [app-state]
   (vals (get-in @app-state [:diagram :components])))
 
+(defn ordered-components [app-state]
+  (sort-by #(getp % :z-index) > (components app-state)))
+
 (defn new-component
  ([app-state container type name data props method initializer]
   (let [initializer-data (if (nil? initializer) {} (initializer container props))

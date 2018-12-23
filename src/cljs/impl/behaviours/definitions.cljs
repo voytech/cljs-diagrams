@@ -82,8 +82,8 @@
                                     (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
                                     (std/toggle-controls (:entity trg) false)
                                     (std/snap-to-control app-state component (:entity trg))))
-                                 (fn [src] ))
-                  ;(api/collision-based-relations-validate app-state entity)
+                                 (fn [src]
+                                   (api/collision-based-relations-validate app-state entity)))
                   (m/on-endpoint-event event)
                   nil)))
 
@@ -99,7 +99,8 @@
                                  f/is-container
                                  (fn [src trg]
                                     (e/connect-entities app-state (:entity trg) (:entity src) :inclusion))
-                                 (fn [src] ))
+                                 (fn [src]
+                                    (api/collision-based-relations-validate app-state entity)))
                   nil)))
 
 (defbehaviour hovering-entity

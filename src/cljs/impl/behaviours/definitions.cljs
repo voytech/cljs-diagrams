@@ -57,11 +57,11 @@
                 (let [event (:context e)
                       {:keys [app-state component]} event]
                   (m/on-endpoint-event event)
-                  (api/collides-named-component? app-state
-                                                 component
-                                                 "body"
-                                                 (fn [src trg] (std/toggle-controls (:entity trg) true))
-                                                 (fn [src trg] (std/toggle-controls (:entity trg) false)))
+                  (api/collides? app-state
+                                 component
+                                 f/has-controls
+                                 (fn [src trg] (std/toggle-controls (:entity trg) true))
+                                 (fn [src] ))
                   nil)))
 
 (defbehaviour make-relation

@@ -131,22 +131,20 @@
   ([app-state component feature hit-callback miss-callback])
   ([app-state component hit-callback miss-callback]))
 
-(defn collides-named-component? [app-state component target-name success-callback failure-callback]
-  (let [entity (e/lookup app-state component)]
-    (doseq [trg-comp (d/components app-state)]
-       (when (= target-name (:name trg-comp))
-          (let [trg-ent (e/lookup app-state trg-comp)]
-             (if (d/intersects? component trg-comp)
-               (success-callback {:component component :entity entity} {:component trg-comp :entity trg-ent})
-               (failure-callback {:component component :entity entity} {:component trg-comp :entity trg-ent})))))))
-
-(defn collision-based-relations-validate [app-state entity]
-  (doseq [relation (:relationships (e/entity-by-id app-state (:uid entity)))]
-    (doseq [component (e/components-of entity)]
-      (let [related-entity (e/entity-by-id app-state (:entity-id relation))
-            collisions (filter #(d/intersects? % component) (e/components-of related-entity))]
-        (when (= 0 (count collisions))
-          (e/disconnect-entities app-state entity related-entity))))))
+(defn collision-based-relations-validate
+  ([app-state entity]
+    (let [source-entity (e/entity-by-id app-state (:uid entity))
+          source-components (e/components-of source-entity)]
+      (doseq [relation (:relationships source-entity)]
+        (let [related-entity (e/entity-by-id app-state (:entity-id relation))
+              related-components (e/components-of related-entity)
+              result (->> (for [component source-components
+                                related related-components]
+                            (d/intersects? related component))
+                          (reduce #(or %1 %2) false))]
+          (when (false? result)
+            (e/disconnect-entities app-state entity related-entity)            
+            ))))))
 
 (defn inclusion-based-relations-validate [app-state entity]
   )

@@ -71,6 +71,7 @@
               (b/build-event-name [::c/startpoint ::c/endpoint ] "mouse-up")
               (fn [e]
                 (let [{:keys [app-state component entity] :as event} (:context e)]
+                  (api/collision-based-relations-validate app-state entity)
                   (api/collides? app-state
                                  component
                                  f/is-shape-entity
@@ -82,8 +83,7 @@
                                     (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
                                     (std/toggle-controls (:entity trg) false)
                                     (std/snap-to-control app-state component (:entity trg))))
-                                 (fn [src]
-                                   (api/collision-based-relations-validate app-state entity)))
+                                 (fn [src] ))
                   (m/on-endpoint-event event)
                   nil)))
 
@@ -94,13 +94,13 @@
               (b/build-event-name [::c/entity-shape] "mouse-up")
               (fn [e]
                 (let [{:keys [app-state component entity] :as event} (:context e)]
+                  (api/collision-based-relations-validate app-state entity)
                   (api/collides? app-state
                                  component
                                  f/is-container
                                  (fn [src trg]
                                     (e/connect-entities app-state (:entity trg) (:entity src) :inclusion))
-                                 (fn [src]
-                                    (api/collision-based-relations-validate app-state entity)))
+                                 (fn [src] ))
                   nil)))
 
 (defbehaviour hovering-entity

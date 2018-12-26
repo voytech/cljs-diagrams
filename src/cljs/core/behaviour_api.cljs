@@ -142,9 +142,8 @@
                                 related related-components]
                             (d/intersects? related component))
                           (reduce #(or %1 %2) false))]
-          (when (false? result)
-            (e/disconnect-entities app-state entity related-entity)            
-            ))))))
+          (when-not result
+            (e/disconnect-entities app-state entity related-entity)))))))
 
 (defn inclusion-based-relations-validate [app-state entity]
   )

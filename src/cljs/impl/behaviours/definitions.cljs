@@ -48,6 +48,17 @@
                    (api/move-entity app-state component movement-x movement-y)
                     nil)))
 
+(defbehaviour select-shape-entity
+              "Select object"
+              :select
+              [f/is-primary-entity]
+              (b/build-event-name [::c/entity-shape] "activate")
+              (fn [e]
+                 (console.log "activate")
+                 (let [{:keys [app-state entity]} (:context e)]
+                    (api/select app-state entity)
+                    nil)))
+
 (defbehaviour moving-association-endpoints
               "Association's endpoints moving [Manhattan]"
               :association-endpoint-moving

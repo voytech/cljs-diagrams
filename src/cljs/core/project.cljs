@@ -21,7 +21,7 @@
   (doseq [install (:behaviours config)]
     (console.log (str "Installed behaviour: " (clj->js (install app-state)))))
   (console.log "Initializing layouts")
-  (layouts/initialize app-state)  
+  (layouts/initialize app-state)
   (console.log "Initializing renderer ...")
   (r/create-renderer app-state id (:width config) (:height config) (:renderer config))
   (console.log "Dispatching events ...")

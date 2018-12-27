@@ -41,7 +41,7 @@
     (layout :icons l/default-flow-layout (cl/having-layout-property :icons) (icons-layout-options)))
   (with-components data options
     (component c/entity-shape "body" {:round-x 5 :round-y 5} {})
-    (component c/title "title" {:text "An entity with a title"} {:layout :title})
+    (component c/title "title" {:text "Object with header"} {:layout :title})
     (component c/entity-controls))
   (shape "body"))
 
@@ -52,7 +52,7 @@
     (layout :icons l/default-flow-layout (cl/having-layout-property :icons) (icons-layout-options)))
   (with-components data options
     (component c/entity-shape "body" {:round-x 5 :round-y 5} {})
-    (component c/title "title" {:text "An entity with a title"} {:layout :title})
+    (component c/title "title" {:text "Object with a header and image"} {:layout :title})
     (component c/image "icon-1" {:height 40 :width 40 :image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"} {:layout :icons})
     (component c/entity-controls))
   (shape "body"))

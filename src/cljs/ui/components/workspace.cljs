@@ -6,8 +6,7 @@
             [core.project :as p]
             [impl.synthetic-events :as s]
             [core.tools :as t :refer [tools]]
-            [impl.synthetic-events :as patterns]
-            [impl.behaviours.definitions :as b]))
+            [impl.synthetic-events :as patterns]))
 
 
 (defn resolve-drop "Should resolve drop events for following scenarios:
@@ -19,49 +18,6 @@
       (.preventDefault e)
       (dnd/dispatch-drop-event e state))))
 
-(defn app-config [width height renderer]
-  {:width width
-   :height height
-   :renderer renderer
-   :events {
-     :canonical-events {
-       "mousedown"  "mouse-down"
-       "mouseup"    "mouse-up"
-       "click"      "mouse-click"
-       "dbclick"    "mouse-db-click"
-       "mousemove"  "mouse-move"
-       "mouseenter" "mouse-enter"
-       "mouseleave" "mouse-leave"
-     }
-     :application-events {
-       "mouse-dragging-move"   "move"
-       "mouse-in"              "focus"
-       "mouse-out"             "blur"
-       "mouse-point-click"     "activate"
-     }
-     :patterns {
-       :mouse-dragging-move (patterns/mouse-dragging-move-event)
-       :mouse-move (patterns/mouse-move-event)
-       :mouse-in (patterns/mouse-in-event)
-       :mouse-out (patterns/mouse-out-event)
-       :mouse-point-click (patterns/mouse-click-event)
-     }
-   }
-   :behaviours [
-      b/moving-rigid-entity
-      b/moving-association-entity-by
-      b/moving-primary-entity-by
-      b/moving-association-endpoints
-      b/make-relation
-      b/make-inclusion-relation
-      b/hovering-entity
-      b/leaving-entity
-      b/show-all-entity-controls
-      b/hide-all-entity-controls
-      b/show-entity-control
-      b/hide-entity-control
-      b/resize-entity
-   ]})
 
 (defn canvas-initializing-wrapper [app-state config]
  (with-meta identity
@@ -69,13 +25,11 @@
                             (let [domid (.-id (reagent/dom-node el))]
                               (p/initialize domid app-state config)))}))
 
-(defn Workspace [class]
-  (let [config (app-config 1270 1000 :reagentsvg)
-        app-state (state/create-app-state "project" config)]
-    [:div {:id "workspace-inner" :class (:class class)}
-      [:div {:id "canvas-wrapper"
-             :class "workspace-div"
-             :on-drop (resolve-drop app-state)
-             :on-drag-over #(.preventDefault %)}
-         [(canvas-initializing-wrapper app-state config)
-           [:div {:id "project" :class "canvas"}]]]]))
+(defn Workspace [class app-state config]
+  [:div {:id "workspace-inner" :class (:class class)}
+    [:div {:id "canvas-wrapper"
+           :class "workspace-div"
+           :on-drop (resolve-drop app-state)
+           :on-drag-over #(.preventDefault %)}
+       [(canvas-initializing-wrapper app-state config)
+         [:div {:id "project" :class "canvas"}]]]])

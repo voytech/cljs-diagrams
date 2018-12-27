@@ -4,6 +4,7 @@
             [core.components :as d]
             [core.eventbus :as b]
             [core.events :as ev]
+            [core.state :as state]
             [core.behaviours :as bhv]
             [impl.components :as c]))
 
@@ -147,3 +148,11 @@
 
 (defn inclusion-based-relations-validate [app-state entity]
   )
+
+
+(defn select [app-state entity]
+  (state/assoc-diagram-state app-state [:selection] (:uid entity)))
+
+(defn get-selected-entity [app-state]
+  (let [uid (state/get-in-diagram-state app-state [:selection])]
+    (e/entity-by-id app-state uid)))  

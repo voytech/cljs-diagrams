@@ -6,17 +6,23 @@
             [impl.tools :as toolsimpl]
             [core.rendering :as rendering]
             [impl.renderers.reagentsvg]
+            [core.behaviour-api :as b]
+            [core.entities :as e]
+            [impl.extensions.resolvers.default :as resolvers]
             [ui.components.workspace :as ws :refer [Workspace]]))
 
-
-(defn Library [class]
+(defn Library [class app-state]
   [:div {:class (:class class)}
     [components/Tabs {:name "Tools" :view [tv/ToolBox :basic-tools]}
-                     {:name "Attributes" :view [:div "Attributes"]}]])
+                     {:name "Editing" :view
+                        [:div {:on-click (fn []
+                                           (resolvers/set-title app-state
+                                                                (b/get-selected-entity app-state)
+                                                                {:title "Hahah!"}))
+                              }  "Set title" ]}]])
 
-
-(defn Main []
+(defn Main [app-state config]
   [:div.container-fluid
     [:div.row.row-offcanvas.row-offcanvas-left
-     [Library {:class "col-8 sidebar-offcanvas"}]
-     [Workspace {:class "col"}]]])
+     [Library {:class "col-8 sidebar-offcanvas"} app-state]
+     [Workspace {:class "col"} app-state config]]])

@@ -6,7 +6,7 @@
             [impl.tools :as toolsimpl]
             [core.rendering :as rendering]
             [impl.renderers.reagentsvg]
-            [core.behaviour-api :as b]
+            [core.selection :as s]
             [core.entities :as e]
             [impl.extensions.resolvers.default :as resolvers]
             [ui.components.workspace :as ws :refer [Workspace]]))
@@ -17,7 +17,7 @@
                      {:name "Editing" :view
                         [:div {:on-click (fn []
                                            (resolvers/set-title app-state
-                                                                (b/get-selected-entity app-state)
+                                                                (s/get-selected-entity app-state)
                                                                 {:title "Hahah!"}))
                               }  "Set title" ]}]])
 

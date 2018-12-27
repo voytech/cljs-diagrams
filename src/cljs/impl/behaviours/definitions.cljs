@@ -6,6 +6,7 @@
             [core.events :as ev]
             [core.components :as d]
             [core.behaviour-api :as api]
+            [core.selection :as s]
             [impl.behaviours.behaviour-api :as std]
             [impl.behaviours.manhattan :as m]
             [impl.components :as c]
@@ -54,9 +55,8 @@
               [f/is-primary-entity]
               (b/build-event-name [::c/entity-shape] "activate")
               (fn [e]
-                 (console.log "activate")
                  (let [{:keys [app-state entity]} (:context e)]
-                    (api/select app-state entity)
+                    (s/select app-state entity)
                     nil)))
 
 (defbehaviour moving-association-endpoints

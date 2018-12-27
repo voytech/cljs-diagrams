@@ -1,36 +1,37 @@
-(ns core.eventbus)
+(ns core.eventbus
+  (:require [core.state :as state]))
 
 (defonce DEFAULT_PRIORITY 999)
 
 (defonce EVENT_STORE_CAPACITY 20)
 
 (defn add-event [app-state event]
-  (let [event-store (get-in @app-state [:event-bus :event-store])
+  (let [event-store (state/get-in-event-bus-state app-state [:event-store])
         trimmed (if (> (count event-store) EVENT_STORE_CAPACITY)
                   (subvec event-store 1)
                   event-store)]
-    (swap! app-state assoc-in [:event-bus :event-store] (conj trimmed event))))
+    (state/assoc-event-bus-state app-state [:event-store] (conj trimmed event))))
 
 (defn after-all [app-state event-name handler]
-  (swap! app-state assoc-in [:event-bus :after event-name] handler))
+  (state/assoc-event-bus-state app-state [:after event-name] handler))
 
 (defn- do-after-all [app-state event-name]
-  (when-let [handler (get-in @app-state [:event-bus :after event-name])]
+  (when-let [handler (state/get-in-event-bus-state app-state [:after event-name])]
     (handler)))
 
 (defn on
   ([app-state event-names priority callback]
    (doseq [name event-names]
-     (let [listeners (or (get-in @app-state [:event-bus :handlers name]) [])]
-       (swap! app-state assoc-in [:event-bus :handlers name] (->> (conj listeners {:priority priority :callback callback})
-                                                                  (sort-by :priority))))))
+     (let [listeners (or (state/get-in-event-bus-state app-state [:handlers name]) [])]
+       (state/assoc-event-bus-state app-state [:handlers name] (->> (conj listeners {:priority priority :callback callback})
+                                                                    (sort-by :priority))))))
 
   ([app-state event-names callback]
    (on app-state event-names DEFAULT_PRIORITY callback)))
 
 (defn off [app-state event-names]
   (doseq [name event-names]
-    (swap! app-state update-in [:event-bus :handlers] dissoc name)))
+    (state/dissoc-event-bus-state app-state [:handlers name])))
 
 (defn once [app-state event-name callback]
   (let [wrapper (fn [event]
@@ -50,12 +51,12 @@
   (not (nil? event)))
 
 (defn- append-new-event [app-state event-name context]
-  (let [event-pool (get-in @app-state [:event-bus :event-pool])]
-    (swap! app-state assoc-in [:event-bus :event-pool] (conj event-pool (make-event event-name context)))
-    (peek (get-in @app-state [:event-bus :event-pool]))))
+  (let [event-pool (state/get-in-event-bus-state app-state [:event-pool])]
+    (state/assoc-event-bus-state app-state [:event-pool] (conj event-pool (make-event event-name context)))
+    (peek (state/get-in-event-bus-state app-state [:event-pool]))))
 
 (defn- borrow-event [app-state event-name context]
-  (let [availables (vec (filterv #(is-available? %) (get-in @app-state [:event-bus :event-pool])))
+  (let [availables (vec (filterv #(is-available? %) (state/get-in-event-bus-state app-state [:event-pool])))
         event (or (peek availables) (append-new-event app-state event-name context))]
      (merge event {:type event-name
                    :context   context
@@ -83,7 +84,7 @@
 (defn fire
   ([app-state name context]
    (let [event (borrow-event app-state name (merge context {:app-state app-state}))
-         listeners (get-in @app-state [:event-bus :handlers name])]
+         listeners (state/get-in-event-bus-state app-state [:handlers name])]
      (add-event app-state event)
      (when-not (nil? listeners)
        (let [result (next listeners event)]
@@ -93,7 +94,7 @@
    (fire app-state name {})))
 
 (defn initialize [app-state]
-  (swap! app-state assoc :event-bus {
+  (state/assoc-event-bus-state app-state [] {
     :handlers {}
     :after {}
     :event-store []

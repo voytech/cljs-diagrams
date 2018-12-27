@@ -24,7 +24,7 @@
  (vals (:components holder)))
 
 (defn entity-by-id [app-state id]
- (get (:entities (state/diagram-state app-state)) id))
+ (state/get-in-diagram-state app-state [:entities id]))
 
 (defn entity-by-type [type])
 
@@ -54,7 +54,7 @@
   (id input :name))
 
 (defn- component-record [app-state input entity]
-  (let [entities (:entities (state/diagram-state app-state))]
+  (let [entities (state/get-in-diagram-state app-state [:entities])]
     (record input #(get-in entities [(entity-id entity) :components %]))))
 
 (defn is-entity [target]
@@ -79,7 +79,7 @@
                            layouts
                            component-properties
                            shape-ref)]
-       (swap! app-state assoc-in [:diagram :entities uid] entity)
+       (state/assoc-diagram-state app-state [:entities uid] entity)
        (bus/fire app-state "entity.added" {:entity entity})
        entity))
   ([app-state type layouts size]
@@ -94,14 +94,14 @@
     (add-entity-component app-state entity type name data props method nil))
   ([app-state entity type name data props method initializer]
     (let [entity (d/new-component app-state entity type name data props method initializer)]
-      (swap! app-state assoc-in [:diagram :entities (:uid entity)] entity)
+      (state/assoc-diagram-state app-state [:entities (:uid entity)] entity)
       (let [updated (entity-by-id app-state (:uid entity))]
         (bus/fire app-state "entity.component.added" {:entity updated})
         updated))))
 
 (defn remove-entity-component [app-state entity component-name]
   (let [component (get-entity-component app-state entity component-name)]
-    (swap! app-state update-in [:diagram :entities (:uid entity) :components] dissoc component-name)
+    (state/dissoc-diagram-state app-state [:entities (:uid entity) :components component-name])
     (d/remove-component app-state component)))
 
 (defn remove-entity-components [app-state entity pred]
@@ -111,18 +111,18 @@
       (remove-entity-component app-state entity (:name rem)))))
 
 (defn update-component-prop [app-state entity name prop value]
- (swap! app-state assoc-in [:diagram :entities (:uid entity) :components name :props prop] value))
+ (state/assoc-diagram-state app-state [:entities (:uid entity) :components name :props prop] value))
 
 (defn remove-component-prop [app-state entity name prop]
- (swap! app-state assoc-in [:diagram :entities (:uid entity) :components name :props ] dissoc prop))
+ (state/dissoc-diagram-state app-state [:entities (:uid entity) :components name :props prop]))
 
 (defn component-property [app-state entity name prop]
-  (get-in (state/diagram-state app-state) [:entities (:uid entity) :components name :props prop]))
+  (state/get-in-diagram-state app-state [:entities (:uid entity) :components name :props prop]))
 
 (defn get-entity-component [app-state entity name-or-type]
   (if (keyword? name-or-type)
    (filter #(= name-or-type (:type %)) (components-of (entity-by-id app-state (:uid entity))))
-   (get-in @app-state [:diagram :entities (:uid entity) :components name-or-type])))
+   (state/get-in-diagram-state app-state [:entities (:uid entity) :components name-or-type])))
 
 (defn get-shape-component [app-state entity]
   (when-let [shape-name (:shape-ref entity)]
@@ -149,8 +149,8 @@
   (when (not (is-relation-present app-state src (:uid trg) association-type))
     (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg) :owner (:uid src)})
           trg-rel (conj (:relationships trg) {:relation-type association-type :entity-id (:uid src) :owner (:uid src)})]
-      (swap! app-state assoc-in [:diagram :entities (:uid src) :relationships] src-rel)
-      (swap! app-state assoc-in [:diagram :entities (:uid trg) :relationships] trg-rel))))
+      (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
+      (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel))))
 
 (defn get-related-entities [app-state entity association-type]
   (let [_entity (volatile-entity app-state entity)]
@@ -162,12 +162,12 @@
   ([app-state src trg]
    (let [src-rel (filter #(not= (:uid trg) (:entity-id %)) (:relationships src))
          trg-rel (filter #(not= (:uid src) (:entity-id %)) (:relationships trg))]
-     (swap! app-state assoc-in [:diagram :entities (:uid src) :relationships] src-rel)
-     (swap! app-state assoc-in [:diagram :entities (:uid trg) :relationships] trg-rel)))
+     (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
+     (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel)))
   ([app-state src trg association-type]
    (let [src-rel (filter #(and (not= (:relation-type %) association-type)
                                (not= (:uid trg) (:entity-id %))) (:relationships src))
          trg-rel (filter #(and (not= (:relation-type %) association-type)
                                (not= (:uid src) (:entity-id %))) (:relationships trg))]
-     (swap! app-state assoc-in [:diagram :entities (:uid src) :relationships] src-rel)
-     (swap! app-state assoc-in [:diagram :entities (:uid trg) :relationships] trg-rel))))
+     (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
+     (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel))))

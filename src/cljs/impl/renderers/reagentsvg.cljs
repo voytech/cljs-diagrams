@@ -4,6 +4,7 @@
             [core.entities :as e]
             [core.eventbus :as b]
             [core.rendering :as r]
+            [core.state :as state]
             [core.utils.dom :as dom]
             [core.eventbus :as bus]
             [reagent.core :as reagent :refer [atom]]
@@ -81,7 +82,6 @@
   (let [source [svg-name {:id (:uid component)}]
         model (model-attributes component)
         svg (sync-svg-element source model)]
-    ;(swap! renderer-state assoc-in [:components (:uid component)]
       {:dom (if (not (nil? postprocess)) (postprocess svg) svg)
        :attributes model}))
 
@@ -95,7 +95,7 @@
   (swap! renderer-state update-in [:pending-measures] dissoc id))
 
 (defn- measure-text [app-state]
-  (let [renderer-state (-> app-state deref :renderer)]
+  (let [renderer-state (state/get-renderer-state app-state)]
     (doseq [id (-> renderer-state deref :pending-measures keys)]
       (let [domnode (dom/by-id id)
             component (get-in @renderer-state [:pending-measures id])

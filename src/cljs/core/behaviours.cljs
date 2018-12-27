@@ -1,6 +1,7 @@
 (ns core.behaviours
   (:require [core.events :as ev]
             [core.features :as f]
+            [core.state :as state]
             [core.eventbus :as bus]))
 
 (defrecord Behaviour [name
@@ -19,8 +20,8 @@
       [(ev/event-name (:type target) nil event-name)])))
 
 (defn add-behaviour [app-state name display-name type features event-provider handler]
-  (swap! app-state assoc-in
-    [:behaviours :definitions name]
+  (state/assoc-behaviours-state app-state
+    [:definitions name]
     (Behaviour. name display-name type features event-provider handler))
   name)
 
@@ -33,12 +34,12 @@
                                         (bus/fire app-state "rendering.finish"))))
 
 (defn- attach [app-state event-name behaviour]
-  (let [attached-behaviours (or (get-in @app-state [:behaviours :attached event-name]) [])
+  (let [attached-behaviours (or (state/get-in-behaviours-state app-state [:attached event-name]) [])
         with-new-behaviour (conj attached-behaviours (:name behaviour))]
-    (swap! app-state assoc-in [:behaviours :attached event-name] with-new-behaviour)))
+    (state/assoc-behaviours-state app-state [:attached event-name] with-new-behaviour)))
 
 (defn- is-attached [app-state event-name behaviour]
-  (let [attached-behaviours (get-in @app-state [:behaviours :attached event-name])
+  (let [attached-behaviours (state/get-in-behaviours-state app-state [:attached event-name])
         attached (filter #(== (:name behaviour) %) (or attached-behaviours []))]
     (not (empty? attached))))
 
@@ -50,7 +51,7 @@
       (render-changes app-state event-name))))
 
 (defn autowire [app-state target]
-  (doseq [behaviour (vals (get-in @app-state [:behaviours :definitions]))]
+  (doseq [behaviour (vals (state/get-in-behaviours-state app-state [:definitions]))]
      (when (validate behaviour target)
         (let [event-name-provider (:event-name-provider behaviour)
               event-names (event-name-provider target)]

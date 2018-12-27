@@ -1,6 +1,7 @@
 (ns ui.components.workspace
   (:require [reagent.core :as reagent :refer [atom]]
             [core.utils.dnd :as dnd]
+            [core.state :as state]
             [ui.components.generic.basic :as cmp :refer [DynamicPagination]]
             [core.project :as p]
             [impl.synthetic-events :as s]
@@ -70,10 +71,7 @@
 
 (defn Workspace [class]
   (let [config (app-config 1270 1000 :reagentsvg)
-        app-state (atom {:dom {:id "project" :width 1270 :height 1000}
-                         :events (:events config)
-                         :diagram {:entities {}}})]
-
+        app-state (state/create-app-state "project" config)]
     [:div {:id "workspace-inner" :class (:class class)}
       [:div {:id "canvas-wrapper"
              :class "workspace-div"

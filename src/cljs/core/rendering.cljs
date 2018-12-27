@@ -2,6 +2,7 @@
   (:require [core.eventbus :as bus]
             [core.entities :as e]
             [core.components :as d]
+            [core.state :as state]
             [core.layouts :as l]))
 
 (declare render)
@@ -33,28 +34,28 @@
 
   (bus/on app-state ["component.changed"] -999 (fn [event]
                                                 (let [{:keys [component app-state properties]} (:context event)
-                                                      renderer-state (-> app-state deref :renderer)]
+                                                      renderer-state (state/get-renderer-state app-state)]
                                                    (update-property-to-redraw renderer-state component properties))))
 
   (bus/on app-state ["component.added"] -999 (fn [event]
                                               (let [{:keys [component app-state]} (:context event)
-                                                    renderer-state (-> app-state deref :renderer)]
+                                                    renderer-state (state/get-renderer-state app-state)]
                                                  (update-property-to-redraw renderer-state component (keys (d/model component))))))
 
   (bus/on app-state ["component.render" "component.layout.finished"] -999 (fn [event]
                                                                             (let [{:keys [component app-state]} (:context event)
-                                                                                  renderer-state (-> app-state deref :renderer)]
+                                                                                  renderer-state (state/get-renderer-state app-state)]
                                                                                (render renderer-state component))))
 
   (bus/on app-state ["component.removed"] -999 (fn [event]
                                                  (let [{:keys [component app-state]} (:context event)
-                                                       renderer-state (-> app-state deref :renderer)]
+                                                       renderer-state (state/get-renderer-state app-state)]
                                                     (destroy-rendering-state renderer-state component))))
 
   (bus/on app-state ["entities.render"] -999 (fn [event]
                                                (let [{:keys [app-state]} (:context event)
-                                                     renderer-state (-> app-state deref :renderer)
-                                                     entities (-> app-state deref :entities deref vals)]
+                                                     renderer-state (state/get-renderer-state app-state)
+                                                     entities (vals (state/get-in-diagram-state app-state [:entities]))]
                                                   (doseq [entity entities]
                                                     (render-entity renderer-state entity)))))
 
@@ -63,23 +64,20 @@
 
   (bus/on app-state ["entity.render"] -999 (fn [event]
                                              (let [{:keys [entity app-state]} (:context event)
-                                                    renderer-state (-> app-state deref :renderer)]
+                                                    renderer-state (state/get-renderer-state app-state)]
                                                 (render-entity renderer-state entity))))
 
   (bus/on app-state ["uncommited.render"] -999 (fn [event]
                                                  (let [app-state (-> event :context :app-state)
-                                                       renderer-state (-> app-state deref :renderer)
+                                                       renderer-state (state/get-renderer-state app-state)
                                                        components (-> @renderer-state :components vals)]
                                                    (doseq [component components]
                                                       (render renderer-state (:ref component))))))
 
   (bus/on app-state ["rendering.finish"] -999 (fn [event]
-                                                (all-rendered (-> event
-                                                                  :context
-                                                                  :app-state
-                                                                  deref
-                                                                  :renderer))
-                                                nil)))
+                                                (let [app-state (-> event :context :app-state)]
+                                                  (all-rendered (state/get-renderer-state app-state))
+                                                  nil))))
 
 (defmulti initialize (fn [renderer app-state dom-id width height initial-state] renderer))
 
@@ -98,8 +96,7 @@
 (defn create-renderer [app-state dom-id width height renderer]
   (register-handlers app-state)
   (let [initial-state {:name renderer :components {}}]
-    (swap! app-state assoc :renderer
-      (initialize renderer app-state dom-id width height initial-state))))
+    (state/assoc-renderer-state app-state [] (initialize renderer app-state dom-id width height initial-state))))
 
 (defn render [renderer-state component]
   (when (not (nil? component))

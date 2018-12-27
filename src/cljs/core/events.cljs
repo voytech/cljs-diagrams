@@ -2,15 +2,16 @@
   (:require [core.eventbus :as b]
             [core.entities :as e]
             [core.components :as d]
+            [core.state :as state]
             [cljs.core.async :as async :refer [>! <! put! chan alts!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- normalise-event-type [app-state event]
-  (let [bindings (-> @app-state :events :canonical-events)]
+  (let [bindings (state/get-in-events-state app-state [:canonical-events])]
     (or (get bindings event) event)))
 
 (defn- convert-to-application-event [app-state event]
-  (let [bindings (-> @app-state :events :application-events)]
+  (let [bindings (state/get-in-events-state app-state [:application-events])]
     (or (get bindings event) event)))
 
 (defn schedule [{:keys [phases] :as processing-state} function phase]
@@ -55,8 +56,8 @@
    (when (matches? process-state key pattern) (after-match process-state key event pattern)))
 
 (defn test [process-state event]
- (doseq [key (keys (-> event :app-state deref :events :patterns))]
-    (update-test process-state key event (-> event :app-state deref :events :patterns key)))
+ (doseq [key (keys (state/get-in-events-state (:app-state event) [:patterns]))]
+    (update-test process-state key event (state/get-in-events-state (:app-state event) [:patterns key])))
  event)
 
 (defn pattern [name step-functions result-function]
@@ -169,7 +170,7 @@
   (let [output (chan)]
     (go (loop []
           (let [event (<! source-chan)
-                components (get-in @(:app-state event) [:diagram :components])]
+                components (state/get-in-diagram-state (:app-state event) [:components])]
             (put! output (->> (enrich event (or (:component @state)
                                                 (first (resolve-targets components (:left event) (:top event)))))
                               (merge event)))
@@ -189,7 +190,7 @@
 (defn dispatch-events [app-state]
   (let [events ["click" "dbclick" "mousemove" "mousedown" "mouseup"
                 "mouseenter" "mouseleave" "keypress" "keydown" "keyup"]
-        id         (-> @app-state :dom :id)
+        id         (state/get-in-state app-state :dom [:id])
         el         (js/document.getElementById id)
         process-state {:indices (volatile! {})
                        :context (volatile! {})

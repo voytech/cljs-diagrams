@@ -1,5 +1,6 @@
 (ns core.components
-  (:require [core.eventbus :as bus]))
+  (:require [core.eventbus :as bus]
+            [core.state :as state]))
 
 (declare invoke-hook)
 
@@ -104,7 +105,7 @@
 
 (defn- next-z-index [app-state]
   (or
-    (let [components (get-in @app-state [:diagram :components])
+    (let [components (or (state/get-in-diagram-state app-state [:components]) {})
           vs (filterv #(number? (getp % :z-index)) (vals components))]
       (when (and (not (nil? vs)) (< 0 (count vs)));
          (when-let [e (apply max-key #(getp % :z-index) vs)]
@@ -116,14 +117,14 @@
     (setp component :z-index (next-z-index app-state))))
 
 (defn remove-component [app-state component]
-  (swap! app-state update-in [:diagram :components] dissoc (:uid component))
+  (state/dissoc-diagram-state app-state [:components (:uid component)])
   (bus/fire app-state "component.removed" {:component component}))
 
 (defn is-component [app-state uid]
-  (not (nil? (get-in @app-state [:diagram :components uid]))))
+  (not (nil? (state/get-in-diagram-state app-state [:components uid]))))
 
 (defn components [app-state]
-  (vals (get-in @app-state [:diagram :components])))
+  (vals (state/get-in-diagram-state app-state [:components])))
 
 (defn ordered-components [app-state]
   (sort-by #(getp % :z-index) > (components app-state)))
@@ -144,7 +145,7 @@
                               callback)]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
-    (swap! app-state assoc-in [:diagram :components (:uid component)] component)
+    (state/assoc-diagram-state app-state [:components (:uid component)] component)
     (bus/fire app-state "component.added" {:component component})
     (assoc-in container [:components (:name component)] component)))
  ([app-state container type name data props method]

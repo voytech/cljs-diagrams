@@ -69,8 +69,8 @@
 (defn- calculate-vectors [app-state
                           source-entity source-control
                           target-entity target-control]
-  (let [source-control-side (e/component-property app-state source-entity (:name source-control) :side)
-        target-control-side (e/component-property app-state target-entity (:name target-control) :side)]
+  (let [source-control-side (e/component-attribute app-state source-entity (:name source-control) :side)
+        target-control-side (e/component-attribute app-state target-entity (:name target-control) :side)]
     [(if (or (= :left source-control-side) (= :right source-control-side)) :h :v)
      (if (or (= :left target-control-side) (= :right target-control-side)) :h :v)]))
 

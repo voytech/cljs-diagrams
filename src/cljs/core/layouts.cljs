@@ -137,7 +137,7 @@
   (fn [container]
     (filterv
       (fn [component]
-        (let [layout (-> component :props :layout)]
+        (let [layout (-> component :attributes :layout)]
           (= layout layout-name)))
       (get-components container))))
 

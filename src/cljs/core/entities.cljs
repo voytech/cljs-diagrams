@@ -110,14 +110,14 @@
     (doseq [rem filtered-out]
       (remove-entity-component app-state entity (:name rem)))))
 
-(defn update-component-prop [app-state entity name prop value]
- (state/assoc-diagram-state app-state [:entities (:uid entity) :components name :props prop] value))
+(defn update-component-attribute [app-state entity name attribute value]
+ (state/assoc-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute] value))
 
-(defn remove-component-prop [app-state entity name prop]
- (state/dissoc-diagram-state app-state [:entities (:uid entity) :components name :props prop]))
+(defn remove-component-attribute [app-state entity name attribute]
+ (state/dissoc-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute]))
 
-(defn component-property [app-state entity name prop]
-  (state/get-in-diagram-state app-state [:entities (:uid entity) :components name :props prop]))
+(defn component-attribute [app-state entity name attribute]
+  (state/get-in-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute]))
 
 (defn get-entity-component [app-state entity name-or-type]
   (if (keyword? name-or-type)

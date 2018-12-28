@@ -41,12 +41,19 @@
    (bus/fire app-state COMPONENT_CHANGED {:properties properties
                                           :component component})))
 
-(defrecord Component [uid name type model rendering-method attributes parentRef propertyChangeCallback]
+(defrecord Component [uid
+                      name
+                      type
+                      model
+                      rendering-method
+                      attributes
+                      parent-ref
+                      property-change-callback]
   IDrawable
   (model [this] @model)
   (setp [this property value]
     (vswap! model assoc property value)
-    (propertyChangeCallback this [property])
+    (property-change-callback this [property])
     (invoke-hook this :setp property value))
   (silent-setp [this property value]
     (vswap! model assoc property value)
@@ -56,7 +63,7 @@
     (invoke-hook this :set-data map_))
   (set-data [this map_]
     (vswap! model merge map_)
-    (propertyChangeCallback this (keys map_))
+    (property-change-callback this (keys map_))
     (invoke-hook this :set-data map_))
   (getp [this property] (get @model property))
   (set-border-color [this value] (setp this :border-color value))

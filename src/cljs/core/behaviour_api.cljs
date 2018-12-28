@@ -120,7 +120,7 @@
     (let [entity (e/lookup app-state component)
           collisions (filterv (fn [trg-comp]
                                 (and (not= trg-comp component)
-                                     (not= (:parentRef trg-comp) (:parentRef component))
+                                     (not= (:parent-ref trg-comp) (:parent-ref component))
                                      (d/intersects? component trg-comp)
                                      (feature (e/lookup app-state trg-comp))))
                               (d/ordered-components app-state))]

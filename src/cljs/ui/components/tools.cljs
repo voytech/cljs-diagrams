@@ -47,25 +47,23 @@
 (defn ToolView [{:keys [name desc type icon generator] :as tool}]
  [:div {:class "photo-thumbnail"
         :draggable "true"
-        :style {:background-image (str "url(" icon ")")
-                :background-repeat "no-repeat"
-                :background-size "contain"
-                :background-position "center"}
         :on-drag-start #(dnd/set-dnd-data (.-nativeEvent %) "tool-data" (:uid tool) "move")}
-      [:div {:class "tool-title"} (str name)]])
+      [:div {:style {:height "50%"
+                     :width "100%"
+                     :top "0px"
+                     :position "relative"
+                     :background-image (str "url(" icon ")")
+                     :background-repeat "no-repeat"
+                     :background-size "contain"
+                     :background-position "center"}}]
+      [:div {:class "tool-title" :style {:height "50%"
+                                         :position "relative"
+                                         :width "100%"
+                                         :text-align "center"
+                                         :font-size 12
+                                         :bottom "0px"}} (str name)]])
 
 (defn ToolBox [tool-type]
   [:div {:class "thumbs-container"}
     (for [tool (if (nil? tool-type) (vals @tools) (t/by-type tool-type))]
       [ToolView tool])])
-
-(defn ToolBoxWithUpload [tool-type]
-  [:div {:id (str tool-type "-id")}
-    [ImageLoader (fn [e]
-                   (resources/add-resource {:name (:name e) :type (keyword tool-type) :content (:content e)})
-                   (t/create-tool (:name e)
-                                  "Photo tool"
-                                  (keyword tool-type)
-                                  (:content e)
-                                  (t/create ctors/image (:content e))))]
-    [ToolBox (keyword tool-type)]])

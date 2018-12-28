@@ -8,16 +8,26 @@
      (dom/attrs element attributes)
      element))
 
+(defn create-element [type svg-root attributes]
+ (let [rect (dom/create-node type)]
+   (dom/append-child svg-root rect)
+   (dom/attrs rect attributes)
+   rect))
+
 (defn create-rect [svg-root attributes]
-  (let [rect (dom/create-node "RECT")]
-    (dom/append-child svg-root rect)
-    (dom/attrs rect attributes)
-    rect))
+  (create-element "RECT" svg-root attributes)
 
-(defn create-text [svg-root attributes])
+(defn create-text [svg-root attributes]
+  (create-element "TEXT" svg-root attributes))
 
-(defn create-circle [svg-root attributes])
+(defn create-circle [svg-root attributes]
+  (create-element "CIRCLE" svg-root attributes))
 
-(defn create-polygon [svg-root attributes])
+(defn create-image [svg-root attributes]
+  (create-element "IMAGE" scg-root attributes))
 
-(defn create-polyline [svg-root attributes])
+(defn create-line [svg-root attributes]
+  (create-element "LINE" scg-root attributes))
+
+(defn create-path [svg-root attributes]
+  (create-element "PATH" scg-root attributes))

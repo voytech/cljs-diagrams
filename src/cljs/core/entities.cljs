@@ -61,7 +61,7 @@
   (instance? Entity target))
 
 (defn lookup [app-state component]
-  (let [uid (:parentRef component)]
+  (let [uid (:parent-ref component)]
     (entity-by-id app-state uid)))
 
 (defn create-entity

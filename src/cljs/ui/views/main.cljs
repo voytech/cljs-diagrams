@@ -13,7 +13,7 @@
 
 (defn Library [class app-state]
   [:div {:class (:class class)}
-    [components/Tabs {:name "Tools" :view [tv/ToolBox :basic-tools]}]])
+    [components/Tabs {:name "Basic Shapes" :view [tv/ToolBox :basic-tools]}]])
 
 (defn Main [app-state config]
   [:div.container-fluid

@@ -19,8 +19,8 @@
               [f/is-primary-entity]
               (b/build-event-name [::c/entity-shape] "move")
               (fn [e]
-                 (let [{:keys [app-state component movement-x movement-y]} (:context e)]
-                   (api/move-entity app-state component movement-x movement-y)
+                 (let [{:keys [app-state component entity movement-x movement-y]} (:context e)]
+                   (api/move-entity app-state entity movement-x movement-y)
                     nil)))
 
 (defbehaviour moving-association-entity-by
@@ -44,9 +44,8 @@
               [f/is-primary-entity]
               (b/build-event-name "moveby")
               (fn [e]
-                 (let [{:keys [app-state entity movement-x movement-y]} (:context e)
-                       component (e/get-shape-component app-state entity)]
-                   (api/move-entity app-state component movement-x movement-y)
+                 (let [{:keys [app-state entity movement-x movement-y]} (:context e)]
+                   (api/move-entity app-state entity movement-x movement-y)
                     nil)))
 
 (defbehaviour select-shape-entity
@@ -57,6 +56,7 @@
               (fn [e]
                  (let [{:keys [app-state entity]} (:context e)]
                     (s/select app-state entity)
+                    (bus/fire app-state "entity.selected" {:selection entity})
                     nil)))
 
 (defbehaviour moving-association-endpoints

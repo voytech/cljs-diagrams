@@ -2,8 +2,9 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [core.utils.dnd :as dnd]
             [core.state :as state]
-            [ui.components.generic.basic :as cmp :refer [DynamicPagination]]
+            [ui.components.generic.basic :as cmp :refer [ShapePropertyEditor]]
             [core.project :as p]
+            [core.eventbus :as b]
             [impl.synthetic-events :as s]
             [core.tools :as t :refer [tools]]
             [impl.synthetic-events :as patterns]))
@@ -19,17 +20,25 @@
       (dnd/dispatch-drop-event e state))))
 
 
-(defn canvas-initializing-wrapper [app-state config]
+(defn canvas-initializing-wrapper [app-state feedback config]
  (with-meta identity
    {:component-did-mount (fn [el]
                             (let [domid (.-id (reagent/dom-node el))]
-                              (p/initialize domid app-state config)))}))
+                              (p/initialize domid app-state config)
+                              (b/on app-state ["entity.selected"] -999
+                                (fn [event]
+                                  (swap! feedback assoc :selection (-> event :context :selection)
+                                                        :show-popup true)
+                                  nil))))}))
 
 (defn Workspace [class app-state config]
   [:div {:id "workspace-inner" :class (:class class)}
-    [:div {:id "canvas-wrapper"
-           :class "workspace-div"
-           :on-drop (resolve-drop app-state)
-           :on-drag-over #(.preventDefault %)}
-       [(canvas-initializing-wrapper app-state config)
-         [:div {:id "project" :class "canvas"}]]]])
+    (let [feedback (atom {})]
+      [:div
+        [ShapePropertyEditor app-state feedback [:title]]
+        [:div {:id "canvas-wrapper"
+               :class "workspace-div"
+               :on-drop (resolve-drop app-state)
+               :on-drag-over #(.preventDefault %)}
+           [(canvas-initializing-wrapper app-state feedback config)
+             [:div {:id "project" :class "canvas"}]]]])])

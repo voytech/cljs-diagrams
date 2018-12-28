@@ -13,13 +13,7 @@
 
 (defn Library [class app-state]
   [:div {:class (:class class)}
-    [components/Tabs {:name "Tools" :view [tv/ToolBox :basic-tools]}
-                     {:name "Editing" :view
-                        [:div {:on-click (fn []
-                                           (resolvers/set-title app-state
-                                                                (s/get-selected-entity app-state)
-                                                                {:title "Hahah!"}))
-                              }  "Set title" ]}]])
+    [components/Tabs {:name "Tools" :view [tv/ToolBox :basic-tools]}]])
 
 (defn Main [app-state config]
   [:div.container-fluid

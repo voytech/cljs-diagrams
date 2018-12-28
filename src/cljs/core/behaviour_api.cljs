@@ -94,9 +94,8 @@
 (defn owned-relationships [entity]
   (filterv #(is-relation-owner entity %) (:relationships entity)))
 
-(defn move-entity [app-state component movement-x movement-y]
-  (let [entity (e/lookup app-state component)
-        event (:event e)]
+(defn move-entity [app-state entity movement-x movement-y]
+  (let [component (e/get-shape-component app-state entity)]
     (default-position-entity app-state
                              entity
                              (:name component)
@@ -111,6 +110,10 @@
                                           relation
                                           movement-x
                                           movement-y)))))
+
+(defn resize-entity [app-state entity width height])
+
+(defn rotate-entity [app-state entity angle])
 
 (defn collides?
   ([app-state component feature hit-callback miss-callback]

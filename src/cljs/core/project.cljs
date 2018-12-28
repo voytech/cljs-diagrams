@@ -6,6 +6,7 @@
            [core.layouts :as layouts]
            [core.eventbus :as b]
            [core.events :as events]
+           [impl.extensions.resolvers.default :as resolvers]
            [core.rendering :as r]))
 
 ;; ====
@@ -24,6 +25,8 @@
   (layouts/initialize app-state)
   (console.log "Initializing renderer ...")
   (r/create-renderer app-state id (:width config) (:height config) (:renderer config))
+  (console.log "Initializing resolvers ...")
+  (resolvers/initialize app-state)
   (console.log "Dispatching events ...")
   (events/dispatch-events app-state))
 ;;--------------------------------

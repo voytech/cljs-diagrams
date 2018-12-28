@@ -7,9 +7,11 @@
            [extensions.data-resolvers :as r])
  (:require-macros [extensions.macros :refer [defresolver]]))
 
-(defresolver set-title
-             f/is-shape-entity
-             (spec/keys :req-un [::title])
-             (fn [app-state entity data]
-               (e/assert-component c/title app-state entity "title" {:text (:title data)})
-               (bus/fire app-state "uncommited.render")))
+(defn initialize [app-state]
+  (r/register app-state
+              ::set-title
+              f/is-shape-entity
+              (spec/keys :req-un [::title])
+              (fn [app-state entity data]
+                (e/assert-component c/title app-state entity "title" {:text (:title data)})
+                (bus/fire app-state "uncommited.render"))))

@@ -143,7 +143,7 @@
   (component control "connector-left" {} {:side :left}
     (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)) ::w/weighted)
   (component control "connector-right" {} {:side :right}
-    (layout-hints (weighted-position 0 1) (weighted-origin 0.5 0.5)) ::w/weighted)
+    (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)) ::w/weighted)
   (component control "connector-top" {} {:side :top}
     (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)) ::w/weighted)
   (component control "connector-bottom" {} {:side :bottom}

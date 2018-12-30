@@ -29,18 +29,18 @@
     (component c/entity-shape "body" {:round-x 5 :round-y 5} {}
       (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0)) ::w/weighted)
     (component c/title "title" {:text "Object with header"} {}
-      (layout-hints (weighted-position 0.5 0.05) (weighted-origin 0.5 0)) ::w/weighted)
+      (layout-hints (weighted-position 0.5 0.1) (weighted-origin 0.5 0)) ::w/weighted)
     (component c/entity-controls))
   (shape "body"))
 
 (defentity rect-with-icon
-  {:width 180 :height 150}
+  {:width 240 :height 150}
   (with-layouts (layout ::w/weighted w/weighted-layout))
   (with-components context
     (component c/entity-shape "body" {:round-x 5 :round-y 5} {}
       (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0)) ::w/weighted)
     (component c/title "title" {:text "Object with a header and image"} {}
-      (layout-hints (weighted-position 0.5 0.05) (weighted-origin 0.5 0)) ::w/weighted)
+      (layout-hints (weighted-position 0.5 0.1) (weighted-origin 0.5 0)) ::w/weighted)
     (component c/image "icon-1" {:height 40 :width 40 :image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"} {}
       (layout-hints (weighted-position 0.5 0.5) (weighted-origin 0.5 0.5)) ::w/weighted)
     (component c/entity-controls))
@@ -54,7 +54,7 @@
     (component c/entity-shape "body" {:border-style :dotted :z-index :bottom :opacity "0.4"} {}
       (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0)) ::w/weighted)
     (component c/title "title" {:text "Put other shapes here..."} {}
-      (layout-hints (weighted-position 0 0.05) (weighted-origin 0 0)) ::w/weighted)
+      (layout-hints (weighted-position 0 0.1) (weighted-origin 0 0)) ::w/weighted)
     (component c/entity-controls))
   (shape "body"))
 

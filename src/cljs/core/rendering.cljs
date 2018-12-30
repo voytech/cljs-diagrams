@@ -65,6 +65,7 @@
   (bus/on app-state ["entity.render"] -999 (fn [event]
                                              (let [{:keys [entity app-state]} (:context event)
                                                     renderer-state (state/get-renderer-state app-state)]
+                                                (console.log (clj->js entity))    
                                                 (render-entity renderer-state entity))))
 
   (bus/on app-state ["uncommited.render"] -999 (fn [event]

@@ -73,7 +73,8 @@
            (let [e# (core.entities/create-entity app-state#
                                                  (keyword ~nsname (name '~name))
                                                  (or ~tags [])
-                                                 (merge ~size {:left context# :top context#})
+                                                 (merge ~size {:left (:left context#)
+                                                               :top (:top context#)})
                                                  (if ~has-templates ~components-props {})
                                                  (or ~shape-ref []))
                  component-factory# ~components]

@@ -1,14 +1,14 @@
 (ns impl.components
   (:require [core.components :as d]
+            [impl.layouts.weighted :as w :refer [layout-hints]]
             [core.layouts :as l :refer [layout
-                                        relative-position
-                                        relative-size
-                                        relative-origin
-                                        fill-size
-                                        no-offset
-                                        margins
-                                        layout-hints]])
-  (:require-macros [core.macros :refer [defcomponent named-group component]]))
+                                        weighted-position
+                                        weighted-size
+                                        weighted-origin
+                                        match-parent-size
+                                        match-parent-position
+                                        margins]])
+  (:require-macros [core.macros :refer [defcomponent defcomponent-group component]]))
 
 (def WIDTH 180)
 (def HEIGHT 150)
@@ -96,19 +96,19 @@
      :border-width 1
      :background-color "white"}))
 
-(defcomponent relation :draw-line {} (relation-initializer) nil)
+(defcomponent relation :draw-line {} (relation-initializer))
 
-(defcomponent arrow :draw-triangle {} (arrow-initializer) nil)
+(defcomponent arrow :draw-triangle {} (arrow-initializer))
 
-(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} (endpoint-initializer :start true) nil)
+(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} (endpoint-initializer :start true))
 
-(defcomponent endpoint :draw-circle {:end "connector"} (endpoint-initializer :end false) nil)
+(defcomponent endpoint :draw-circle {:end "connector"} (endpoint-initializer :end false))
 
-(defcomponent breakpoint :draw-circle {} (fn [e] {:moveable true :visible true :opacity 1 :z-index :top}) nil)
+(defcomponent breakpoint :draw-circle {} (fn [e] {:moveable true :visible true :opacity 1 :z-index :top}))
 
-(defcomponent control :draw-rect {} (control-initializer) nil)
+(defcomponent control :draw-rect {} (control-initializer))
 
-(defcomponent entity-shape :draw-rect {} (entity-shape-initializer) (layout-hints (no-offset) (fill-size)))
+(defcomponent entity-shape :draw-rect {} (entity-shape-initializer))
 
 ;; ===================================
 ;; layout managed components.
@@ -121,7 +121,7 @@
      :font-family "calibri"
      :font-size 12}))
 
-(defcomponent title :draw-text {:layout :attributes} (title-initializer) (layout-hints (relative-position 0.5 0.05) (relative-origin 0.5 0)))
+(defcomponent title :draw-text {:layout :attributes} (title-initializer))
 
 (defn- image-initializer [width height]
   (fn [container props]
@@ -131,20 +131,20 @@
      :width width
      :height height}))
 
-(defcomponent image :draw-image {} (image-initializer 50 50) nil)
+(defcomponent image :draw-image {} (image-initializer 50 50))
 
-(defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}) nil)
+(defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
-(defcomponent description :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}) nil)
+(defcomponent description :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
-(defcomponent rect :draw-rect {} (fn [c] {:border-color "black" :border-style :solid :border-width 1}) nil)
+(defcomponent rect :draw-rect {} (fn [c] {:border-color "black" :border-style :solid :border-width 1}))
 
-(named-group entity-controls
+(defcomponent-group entity-controls
   (component control "connector-left" {} {:side :left}
-    (layout-hints (relative-position 0 0.5) (relative-origin 0.5 0.5)))
+    (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)) ::w/weighted)
   (component control "connector-right" {} {:side :right}
-    (layout-hints (relative-position 0 1) (relative-origin 0.5 0.5)))
+    (layout-hints (weighted-position 0 1) (weighted-origin 0.5 0.5)) ::w/weighted)
   (component control "connector-top" {} {:side :top}
-    (layout-hints (relative-position 0.5 0) (relative-origin 0.5 0.5)))
+    (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)) ::w/weighted)
   (component control "connector-bottom" {} {:side :bottom}
-    (layout-hints (relative-position 0.5 1) (relative-origin 0.5 0.5))))
+    (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5))) ::w/weighted)

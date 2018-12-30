@@ -18,6 +18,13 @@
 (defmacro components-templates [ & body ]
   `(merge ~@body))
 
+(defmacro with-layouts [ & layouts]
+  `(fn [app-state# entity#]
+     (reduce (fn [agg# layout#]
+               (core.entities/add-layout app-state# agg# layout#))
+              entity#
+             (vector ~@layouts))))
+
 (defmacro with-components [context & components]
   `(fn [app-state# entity# ~context]
      (let [left# (or (:left ~context) 0)
@@ -28,7 +35,7 @@
             (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
               (core.components/setp component# (vl# 0) new-val#)))))))
 
-(defmacro named-group [group-name & components]
+(defmacro defcomponent-group [group-name & components]
   `(defn ~group-name [app-state# entity#]
      (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components))))
 
@@ -43,13 +50,8 @@
                                       ~event-name-provider
                                       ~handler))))
 
-(defmacro with-layout [ layout ]
-  `~layout)
-
 (defmacro with-tags [ & body]
   `(vector ~@body))
-
-(defmacro with-groups [ ])
 
 (defmacro shape [shape-ref]
   `~shape-ref)
@@ -58,12 +60,12 @@
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
           components  (:with-components transformed)
+          layouts     (:with-layouts transformed)
           tags        (:with-tags transformed)
           shape-ref   (:shape transformed)
           components-props (:components-templates transformed)
-          has-templates (contains? transformed :components-templates)
-          layout     (:with-layout transformed)
-          has-layout (contains? transformed :with-layout)]
+          has-layouts   (contains? transformed :with-layouts)
+          has-templates (contains? transformed :components-templates)]
       (when (nil? components)
         (throw (Error. "Provide components definition within entitity definition!")))
      `(do
@@ -71,25 +73,47 @@
            (let [e# (core.entities/create-entity app-state#
                                                  (keyword ~nsname (name '~name))
                                                  (or ~tags [])
-                                                 ~layout
                                                  (merge ~size {:left ~context :top ~context})
                                                  (if ~has-templates ~components-props {})
                                                  (or ~shape-ref []))
                  component-factory# ~components]
-             (component-factory# app-state# e# context#)
+             (component-factory# app-state#
+                                 (if ~has-layouts (~layouts app-state# e#) e#)
+                                 context#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]
                (core.eventbus/fire app-state# "entity.render" {:entity result#})
                result#)))))))
 
-(defmacro defcomponent [type rendering-method props initializer layout-hints]
+(defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
-   `(defn ~type [app-state# entity# name# data# p# layout-hints#]
-      (core.entities/add-entity-component app-state#
-                                          entity#
-                                          (keyword ~nsname (name '~type))
-                                          name#
-                                          data#
-                                          (merge ~props p#)
-                                          ~rendering-method
-                                          ~initializer
-                                          (or layout-hints# ~layout-hints)))))
+   `(defn ~type
+     ([app-state# entity# name# data# p# layout-hints# layout-ref#]
+        (core.entities/add-entity-component app-state#
+                                            entity#
+                                            (keyword ~nsname (name '~type))
+                                            name#
+                                            data#
+                                            (merge ~props p#)
+                                            ~rendering-method
+                                            ~initializer
+                                            layout-hints#
+                                            layout-ref#))
+    ([app-state# entity# name# data# p# layout-ref#]
+       (core.entities/add-entity-component app-state#
+                                           entity#
+                                           (keyword ~nsname (name '~type))
+                                           name#
+                                           data#
+                                           (merge ~props p#)
+                                           ~rendering-method
+                                           ~initializer
+                                           layout-ref#))
+     ([app-state# entity# name# data# p#]
+        (core.entities/add-entity-component app-state#
+                                            entity#
+                                            (keyword ~nsname (name '~type))
+                                            name#
+                                            data#
+                                            (merge ~props p#)
+                                            ~rendering-method
+                                            ~initializer)))))

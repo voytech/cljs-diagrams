@@ -49,6 +49,7 @@
                       attributes
                       layout-hints
                       parent-ref
+                      layout-ref
                       property-change-callback]
   IDrawable
   (model [this] @model)
@@ -138,7 +139,7 @@
   (sort-by #(getp % :z-index) > (components app-state)))
 
 (defn new-component
- ([app-state container layout-hints type name model attributes method initializer]
+ ([app-state container layout-hints layout-ref type name model attributes method initializer]
   (let [initializer-data (if (nil? initializer) {} (initializer container attributes))
         template-data (-> container :components-properties type)
         mdl  (merge initializer-data template-data model)
@@ -151,6 +152,7 @@
                               attributes
                               layout-hints
                               (:uid container)
+                              layout-ref
                               callback)]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
@@ -158,9 +160,9 @@
     (bus/fire app-state "component.added" {:component component})
     (assoc-in container [:components (:name component)] component)))
  ([app-state container type name model attributes method initializer]
-  (new-component app-state container nil type name model attributes method initilizer))
+  (new-component app-state container nil nil type name model attributes method initilizer))
  ([app-state container type name model attributes method]
-  (new-component app-state container nil type name model attributes method nil)))
+  (new-component app-state container nil nil type name model attributes method nil)))
 
 (defn add-hook [type function hook]
   (swap! hooks assoc-in [type function] hook))

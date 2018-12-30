@@ -29,10 +29,6 @@
 (defn by-type [type]
   (filter #(= type (:type %)) (vals @tools)))
 
-(defn ctor
-  ([entity data]
+(defn ctor [entity]
    (fn [app-state context]
-     (entity app-state data context)))
-  ([entity]
-   (fn [app-state context]
-     (entity app-state nil context))))
+     (entity app-state context))) 

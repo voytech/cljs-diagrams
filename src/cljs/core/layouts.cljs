@@ -2,7 +2,55 @@
   (:require [core.components :as d]
             [core.eventbus :as b]))
 
-(defrecord Layout [layout-func select-func options])
+(defrecord ComponentGroup [uid layout-definition components-refs parent-ref])
+
+(defrecord RelativePosition [rel-left rel-top])
+
+(defrecord RelativeSize [rel-width rel-height])
+
+(defrecord RelativeOriginPos [rel-orig-x rel-orig-y])
+
+(defrecord Margins [margin-left margin-top margin-bottom margin-right])
+
+(defrecord LayoutDefinition [name layout-func rel-position rel-size margins])
+
+(defrecord LayoutHints [rel-position rel-size rel-origin])
+
+(defn margins [margin-left margin-top margin-bottom margin-right]
+  (Margins. margin-left margin-top margin-bottom margin-right))
+
+(defn relative-size [rel-width rel-height]
+  (RelativeSize. rel-width rel-height))
+
+(defn relative-position [rel-left rel-top]
+  (RelativePosition. rel-left rel-top))
+
+(defn relative-origin [rel-orig-x rel-orig-y]
+  (RelativeOriginPos. rel-orig-x rel-orig-y))
+
+(defn fill-size []
+  (RelativeSize. 1 1))
+
+(defn no-offset []
+  (RelativePosition. 0 0))
+
+(defn layout
+  ([name layout-func rel-position rel-size margins]
+    (LayoutDefinition. name layout-func rel-position rel-size margins))
+  ([name layout-func rel-position margins]
+    (LayoutDefinition. name layout-func rel-position (fill-size) margins))
+  ([name layout-func rel-position]
+    (LayoutDefinition. name layout-func rel-position (fill-size) nil))
+  ([name layout-func]
+    (LayoutDefinition. name layout-func (no-offset) (fill-size) nil)))
+
+(defn layout-hints
+  ([rel-position rel-size rel-origin]
+    (LayoutHints. rel-position rel-size rel-origin))
+  ([rel-position rel-origin]
+    (LayoutHints. rel-position nil rel-origin))
+  ([rel-position]
+    (LayoutHints. rel-position nil (RelativeOriginPos. 0 0))))
 
 (defn get-components [container]
   (if (not (nil? (:components container)))

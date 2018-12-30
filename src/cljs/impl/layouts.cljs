@@ -21,3 +21,10 @@
                    context)]
     (->> (l/move element context)
          (l/next-column context (:width ebbox)))))
+
+(defn relative-layout [context element]
+  (when-let [{:keys [rel-position
+                     rel-size
+                     rel-origin] :as hints} (:layout-hints element)]
+                     
+    ))

@@ -1,6 +1,13 @@
 (ns impl.components
   (:require [core.components :as d]
-            [core.layouts :as l])
+            [core.layouts :as l :refer [layout
+                                        relative-position
+                                        relative-size
+                                        relative-origin
+                                        fill-size
+                                        no-offset
+                                        margins
+                                        layout-hints]])
   (:require-macros [core.macros :refer [defcomponent named-group component]]))
 
 (def WIDTH 180)
@@ -39,21 +46,12 @@
 
 (defn- control-initializer []
   (fn [container props]
-    (let [height (-> container :size :height)
-          width  (-> container :size :width)
-          point (cond
-                  (= (:side props) :left)   {:left 0 :top (/ height 2)}
-                  (= (:side props) :right)  {:left width :top (/ height 2)}
-                  (= (:side props) :top)    {:left (/ width 2) :top 0}
-                  (= (:side props) :bottom) {:left (/ width 2) :top height})]
-       {:left (- (:left point) 8)
-        :top (- (:top point) 8)
-        :width 16
-        :height 16
-        :opacity 1
-        :background-color "white"
-        :border-color "black"
-        :visible true})))
+     {:width 16
+      :height 16
+      :opacity 1
+      :background-color "white"
+      :border-color "black"
+      :visible true}))
 
 (defn- relation-initializer []
  (fn [container props]
@@ -93,65 +91,60 @@
 
 (defn- entity-shape-initializer []
   (fn [container props]
-    {:left 0
-     :top  0
-     :border-color "black"
+    {:border-color "black"
      :border-style :solid
      :border-width 1
-     :background-color "white"
-     :width  (-> container :size :width)
-     :height (-> container :size :height)}))
+     :background-color "white"}))
 
+(defcomponent relation :draw-line {} (relation-initializer) nil)
 
-(defcomponent relation :draw-line {} (relation-initializer))
+(defcomponent arrow :draw-triangle {} (arrow-initializer) nil)
 
-(defcomponent arrow :draw-triangle {} (arrow-initializer))
+(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} (endpoint-initializer :start true) nil)
 
-(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} (endpoint-initializer :start true))
+(defcomponent endpoint :draw-circle {:end "connector"} (endpoint-initializer :end false) nil)
 
-(defcomponent endpoint :draw-circle {:end "connector"} (endpoint-initializer :end false))
+(defcomponent breakpoint :draw-circle {} (fn [e] {:moveable true :visible true :opacity 1 :z-index :top}) nil)
 
-(defcomponent breakpoint :draw-circle {} (fn [e] {:moveable true :visible true :opacity 1 :z-index :top}))
+(defcomponent control :draw-rect {} (control-initializer) nil)
 
-(defcomponent control :draw-rect {} (control-initializer))
-
-(defcomponent entity-shape :draw-rect {} (entity-shape-initializer))
+(defcomponent entity-shape :draw-rect {} (entity-shape-initializer) (layout-hints (no-offset) (fill-size)))
 
 ;; ===================================
 ;; layout managed components.
 ;; ===================================
 (defn- title-initializer []
   (fn [container props]
-    {:left 0
-     :top  0
-     :border-color "black"
+    {:border-color "black"
      :border-style :solid
      :border-width 1
      :font-family "calibri"
      :font-size 12}))
 
-(defcomponent title :draw-text {:layout :attributes} (title-initializer))
+(defcomponent title :draw-text {:layout :attributes} (title-initializer) (layout-hints (relative-position 0.5 0.05) (relative-origin 0.5 0)))
 
 (defn- image-initializer [width height]
   (fn [container props]
-    {:left 0
-     :top  0
-     :border-color "black"
+    {:border-color "black"
      :border-style :solid
      :border-width 1
      :width width
      :height height}))
 
-(defcomponent image :draw-image {} (image-initializer 50 50))
+(defcomponent image :draw-image {} (image-initializer 50 50) nil)
 
-(defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
+(defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}) nil)
 
-(defcomponent description :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
+(defcomponent description :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}) nil)
 
-(defcomponent rect :draw-rect {} (fn [c] {:border-color "black" :border-style :solid :border-width 1}))
+(defcomponent rect :draw-rect {} (fn [c] {:border-color "black" :border-style :solid :border-width 1}) nil)
 
 (named-group entity-controls
-  (component control "connector-left" {} {:side :left})
-  (component control "connector-right" {} {:side :right})
-  (component control "connector-top" {} {:side :top})
-  (component control "connector-bottom" {} {:side :bottom}))
+  (component control "connector-left" {} {:side :left}
+    (layout-hints (relative-position 0 0.5) (relative-origin 0.5 0.5)))
+  (component control "connector-right" {} {:side :right}
+    (layout-hints (relative-position 0 1) (relative-origin 0.5 0.5)))
+  (component control "connector-top" {} {:side :top}
+    (layout-hints (relative-position 0.5 0) (relative-origin 0.5 0.5)))
+  (component control "connector-bottom" {} {:side :bottom}
+    (layout-hints (relative-position 0.5 1) (relative-origin 0.5 0.5))))

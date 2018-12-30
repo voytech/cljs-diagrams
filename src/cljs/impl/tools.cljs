@@ -25,4 +25,4 @@
                ""
                :basic-tools
                "https://www.freeiconspng.com/uploads/data-connector-icon-7.png"
-               (t/ctor eimpl/association [0 0 100 0]))
+               (t/ctor eimpl/association))

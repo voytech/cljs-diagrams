@@ -11,12 +11,13 @@
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 (defrecord Entity [uid
-                   size
+                   bbox
                    type
                    tags
                    components
                    relationships
-                   layouts
+                   layout-definition
+                   groups
                    components-properties
                    shape-ref])
 
@@ -69,31 +70,32 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
-  ([app-state type tags layouts size component-properties shape-ref]
+  ([app-state type tags layout-definition bbox component-properties shape-ref]
      (let [uid (str (random-uuid))
            entity (Entity. uid
-                           size
+                           bbox
                            type
                            tags
                            {} []
-                           layouts
+                           layout-definition
+                           {} ;groups
                            component-properties
                            shape-ref)]
        (state/assoc-diagram-state app-state [:entities uid] entity)
        (bus/fire app-state "entity.added" {:entity entity})
        entity))
-  ([app-state type layouts size]
-   (create-entity app-state type [] layouts size {} nil))
-  ([app-state type layouts]
-   (create-entity app-state type layouts {:width 180 :height 150}))
-  ([app-state type]
-   (create-entity app-state type [] {:width 180 :height 150})))
+  ([app-state type layout-definition size]
+   (create-entity app-state type [] layout-definition size {} nil))
+  ([app-state type layout-definition]
+   (create-entity app-state type layout-definition {:width 180 :height 150})))
 
 (defn add-entity-component
   ([app-state entity type name data props method]
     (add-entity-component app-state entity type name data props method nil))
   ([app-state entity type name data props method initializer]
-    (let [entity (d/new-component app-state entity type name data props method initializer)]
+    (add-entity-component app-state entity type name data props method initializer nil))
+  ([app-state entity type name data props method initializer layout-hints]
+    (let [entity (d/new-component app-state entity layout-hints type name data props method initializer)]
       (state/assoc-diagram-state app-state [:entities (:uid entity)] entity)
       (let [updated (entity-by-id app-state (:uid entity))]
         (bus/fire app-state "entity.component.added" {:entity updated})
@@ -137,6 +139,37 @@
     (get-entity-component app-state entity name)))
  ([func app-state entity name]
   (assert-component func app-state entity name {})))
+
+(defn add-group
+  ([app-state entity name layout-func relative-bbox margins]
+    (let [group (l/ComponentGroup.
+                   (str (random-uuid))
+                   (l/LayoutDefinition.
+                     name layout-func relative-bbox margins)
+                   []
+                   (:uid entity))]
+      (state/assoc-diagram-state app-state [:entities (:uid entity) :groups (:name layout-definition)] group)
+      (let [updated (entity-by-id app-state (:uid entity))]
+        (bus/fire app-state "entity.group.added" {:entity updated})
+        updated)))
+  ([app-state entity name layout-func relative-bbox]
+    (add-group app-state entity name layout-func relative-bbox nil)))
+
+(defn remove-group [app-state entity group-name]
+  (state/dissoc-diagram-state app-state [:entities (:uid entity) :groups group-name]))
+
+(defn get-group [app-state entity group-name]
+  (state/get-in-diagram-state app-state [:entities (:uid entity) :groups group-name]))
+
+(defn assert-group [app-state entity name layout-func relative-bbox margins]
+  (let [group (get-group app-state entity name)]
+    (if (nil? group)
+      (add-group app-state entity name layout-func relative-bbox margins)
+      (let [modified (-> group
+                         (assoc :relative-bbox relative-bbox)
+                         (assoc :margins margins)
+                         (assoc :layout-func layout-func))]
+        (state/assoc-diagram-state app-state [:entities (:uid entity) :groups name] modified)))))
 
 (defn- is-relation-present [app-state entity related-id assoc-type]
   (->> (entity-by-id app-state (:uid entity))

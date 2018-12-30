@@ -18,10 +18,10 @@
 (defmacro components-templates [ & body ]
   `(merge ~@body))
 
-(defmacro with-components [data options & components]
-  `(fn [app-state# entity# ~data ~options]
-     (let [left# (or (:left ~options) 0)
-           top#  (or (:top  ~options) 0)
+(defmacro with-components [context & components]
+  `(fn [app-state# entity# ~context]
+     (let [left# (or (:left ~context) 0)
+           top#  (or (:top  ~context) 0)
            _entity# (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components))]
         (doseq [component# (-> _entity# :components vals)]
           (doseq [vl# [[:left left#] [:top top#]]]
@@ -43,14 +43,13 @@
                                       ~event-name-provider
                                       ~handler))))
 
-(defmacro layout [name layout-func select-func options]
-  `{~name (core.layouts.Layout. ~layout-func ~select-func ~options)})
-
-(defmacro with-layouts [ & body]
-  `(merge ~@body))
+(defmacro with-layout [ layout ]
+  `~layout)
 
 (defmacro with-tags [ & body]
   `(vector ~@body))
+
+(defmacro with-groups [ ])
 
 (defmacro shape [shape-ref]
   `~shape-ref)
@@ -63,28 +62,28 @@
           shape-ref   (:shape transformed)
           components-props (:components-templates transformed)
           has-templates (contains? transformed :components-templates)
-          layouts     (:with-layouts transformed)
-          has-layouts (contains? transformed :with-layouts)]
+          layout     (:with-layout transformed)
+          has-layout (contains? transformed :with-layout)]
       (when (nil? components)
         (throw (Error. "Provide components definition within entitity definition!")))
      `(do
-        (defn ~name [app-state# data# options#]
+        (defn ~name [app-state# context#]
            (let [e# (core.entities/create-entity app-state#
                                                  (keyword ~nsname (name '~name))
                                                  (or ~tags [])
-                                                 ~layouts
-                                                 ~size
+                                                 ~layout
+                                                 (merge ~size {:left ~context :top ~context})
                                                  (if ~has-templates ~components-props {})
                                                  (or ~shape-ref []))
                  component-factory# ~components]
-             (component-factory# app-state# e# data# options#)
+             (component-factory# app-state# e# context#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]
                (core.eventbus/fire app-state# "entity.render" {:entity result#})
                result#)))))))
 
-(defmacro defcomponent [type rendering-method props initializer]
+(defmacro defcomponent [type rendering-method props initializer layout-hints]
   (let [nsname (resolve-namespace-name)]
-   `(defn ~type [app-state# entity# name# data# p#]
+   `(defn ~type [app-state# entity# name# data# p# layout-hints#]
       (core.entities/add-entity-component app-state#
                                           entity#
                                           (keyword ~nsname (name '~type))
@@ -92,4 +91,5 @@
                                           data#
                                           (merge ~props p#)
                                           ~rendering-method
-                                          ~initializer))))
+                                          ~initializer
+                                          (or layout-hints# ~layout-hints)))))

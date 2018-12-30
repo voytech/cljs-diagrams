@@ -60,6 +60,7 @@
 
 (defentity association
   {:width 180 :height 150}
+  (with-layouts (layout ::w/weighted w/weighted-layout))
   (components-templates
     (component-template ::c/relation {:border-width 3}))
   (with-components context

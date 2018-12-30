@@ -104,7 +104,7 @@
     (e/remove-entity-component app-state entity "connector")
     (position-entity-endpoint app-state entity component movement-x movement-y)
     (update-manhattan-layout app-state entity start end (vectors 0) (vectors 1))
-    (b/fire app-state "layout.do" {:container (e/volatile-entity app-state entity) :type :attributes})))
+    (b/fire app-state "layouts.do" {:container (e/volatile-entity app-state entity)})))
 
 (defn on-source-entity-event [event]
   (let [{:keys [app-state entity start end movement-x movement-y]} event]
@@ -124,4 +124,4 @@
         (position-entity-endpoint app-state entity startpoint {:x (d/get-left src) :y (d/get-top src)})
         (position-entity-endpoint app-state entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
         (update-manhattan-layout app-state entity src trg (vectors 0) (vectors 1))))
-    (b/fire app-state "layout.do" {:container (e/volatile-entity app-state entity) :type :attributes})))
+    (b/fire app-state "layouts.do" {:container (e/volatile-entity app-state entity)})))

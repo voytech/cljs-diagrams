@@ -2,30 +2,31 @@
 
 Clojurescript library/framework for developing different kinds of diagrams.  
 Key functionalities:
-- Support for different kind of entities (diagram entity classes) via DSL 
-- Creating relationships between entities
-- Behaviours - application events model based of native DOM events (via core.async and simple event-bus)
+- Large library with wide range of reusable shapes (this is a joke!)
+- Support for custom diagram shapes
+- Defining shapes using DSL based on macro system
+- Creating various relationships between entities (not only association links but for e.g. aggregation or composition or whathever)
+- Behaviours abstraction - various event handlers (on steroids) with automatic source shape recognition via shape features preconditions, 
 - Auto-wiring of behaviours - inferring (and bus registration) of behaviours from entity specification (e.g. types of managed components) (Subject to change)
 - Support for custom rendering engines 
-- SVG renderer engine
-- Canvas renderer engine (using fabric.js)
-- Pluggable architecture via event bus and loose coupling.
-- First class building blocks represented by macros: defentity, defcomponent, defbehaviour, deflayout and so on
+- SVG renderer engine - for reagent
+- SVG renderer engine - for vanilla js (todo)
+- Canvas renderer engine (using fabric.js) (to refactor)
+- Pluggable architecture via event bus
+- Quite advanced shape layout system
+- Higher level, application data maps resolvers - A way to apply state known to upper layer, so it can be rendered on shape. E.g.: Assume we have to-do shape somewhere on canvas. When user adds todo item to list managed by his application - by using data-resolver - a todo list may be properly updated and rendered onto shape, without using component and shape api directly. 
 
 ## Dependencies
 
 - java 1.8+
 - [boot][1]
 
-## Architecture 
-
-
 
 ## Usage
-Cljs-Relation-Designer is shipped with number of display components acting as building blocks for new entities.
-When components are composed within entity they can activate different kind of entity behaviours depending on component types.
+Cljs-Relation-Designer is shipped with number of display components acting as building blocks for new shapes.
+Types of components belonging to particular shape are determining shape features and behaviours.
 E.g.: 
-- when one adds 'control' components into entity, entity will automatically become resizable and connectible with other entities.
+- when one adds 'control' components to shape, shape will automatically become resizable and connectible with other shapes.
 - when one adds 'text' component, text will automatically change its border colour on hover.
 
 Of course there is no limitation to use only existing set of components. You can always define new components as follows:
@@ -56,34 +57,31 @@ where:
     :border-width 1
     :z-index :before-bottom}))
 ```
-'realtion-initializer' is a lazy display properties generator. First argument of realtion-initializer is an owning entity. Reason why relation-initializer is a lazy properties evaluator should be obvious. Sometimes it may be required to know some properties of entities in order to correctly display specific component. 
+'realtion-initializer' is a lazy property evaluator. First argument of realtion-initializer is an owning entity. Sometimes it may be required to know some properties of entities in order to correctly display specific component. 
 
-Component means nothing without an entity, and it can only be displayed after being attached as an entity child.
+Component means nothing without shape, and it can only be displayed after being attached as an shape child.
 
-This is how entity definition looks like: 
+This is how shape definition looks like: 
 
 ```clojure
-(defentity association
+(defentity basic-rect
   {:width 180 :height 150}
-  (with-layouts
-    (layout :attributes l/default-flow-layout (cl/having-layout-property :attributes) relation-layout-options))
-  (components-templates
-    (component-template ::c/relation {:border-width 3}))
-  (with-components data options
-    (component c/relation "connector" {} {})
-    (component c/startpoint "start" {} {})
-    (component c/arrow "arrow" {} {})
-    (component c/endpoint "end" {} {})
-    (component c/title "title" {:text "Title."} {:layout :attributes})))
+  (with-layouts (layout ::w/weighted w/weighted-layout))
+  (with-components context
+    (component c/entity-shape "body" {:round-x 5 :round-y 5} {}
+      (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0)) ::w/weighted)
+    (component c/title "title" {:text "Object with header"} {}
+      (layout-hints (weighted-position 0.5 0.1) (weighted-origin 0.5 0)) ::w/weighted)
+    (component c/entity-controls)))
 ```
 
 And this is how to render this entity on DOM element: 
 
 ```clojure
-(association app-state options)
+(basic-rect app-state options)
 ```
 
-where app-state is an application state ( will be explained ) and options are usually coordinates {:left ... :top ...}  relative to enclosing DOM element.
+where app-state is an application state and options are usually coordinates {:left ... :top ...}  relative to enclosing DOM element.
 
 ## Screenshots
 

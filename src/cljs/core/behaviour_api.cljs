@@ -68,14 +68,18 @@
   (let [component (e/get-entity-component app-state entity component-name)]
     (apply-effective-position component left top coord-mode)))
 
-(defn default-position-entity [app-state entity ref-component-name left top coord-mode]
- (let [effective-offset (calculate-effective-offset app-state entity ref-component-name left top coord-mode)]
-   (doseq [component (e/components-of entity)]
-     (let [effective-left  (+ (d/getp component :left) (:left effective-offset))
-           effective-top   (+ (d/getp component :top) (:top effective-offset))]
-       (if (= ref-component-name (:name component))
-         (default-position-entity-component app-state entity (:name component) left top :offset)
-         (default-position-entity-component app-state entity (:name component) effective-left effective-top :absolute))))))
+(defn default-position-entity [app-state entity ref-component-name mx my coord-mode]
+  (let [bbox (:bbox entity)
+        {:keys [left top]} bbox]
+    (doseq [component (filterv #(not (some? (:layout-ref %))) (e/components-of entity))]
+      (let [effective-offset (calculate-effective-offset app-state entity ref-component-name mx my coord-mode)
+            effective-left  (+ (d/getp component :left) (:left effective-offset))
+            effective-top   (+ (d/getp component :top) (:top effective-offset))]
+        (if (= ref-component-name (:name component))
+          (default-position-entity-component app-state entity (:name component) mx my :offset)
+          (default-position-entity-component app-state entity (:name component) effective-left effective-top :absolute))))
+    (-> (e/set-bbox app-state entity (merge bbox {:left (+ left mx) :top (+ top my)}))
+        (layouts/do-layouts))))
 
 (defn move-related-entity [app-state entity related-entity relation left top]
   (let [event-data {:entity related-entity
@@ -95,7 +99,8 @@
   (filterv #(is-relation-owner entity %) (:relationships entity)))
 
 (defn move-entity [app-state entity movement-x movement-y]
-  (let [component (e/get-shape-component app-state entity)]
+  (let [component (e/get-shape-component app-state entity)
+        entity (e/entity-by-id app-state (:uid entity))]
     (default-position-entity app-state
                              entity
                              (:name component)

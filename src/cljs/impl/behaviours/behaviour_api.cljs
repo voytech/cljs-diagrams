@@ -155,36 +155,32 @@
   (when (= ::c/control (:type control))
       (d/set-data control {:visible toggle :border-color "#ff0000"})))
 
-(defn layout-controls [app-state entity]
-  (let [controls (e/get-entity-component app-state entity ::c/control)
-        main (first (e/get-entity-component app-state entity ::c/entity-shape))
-        shape-left (d/get-left main)
-        shape-top (d/get-top main)
-        shape-width (d/get-width main)
-        shape-height (d/get-height main)]
-     (doseq [control controls]
-       (let [side (get-in control [:attributes :side])
-             width (/ (d/get-width control) 2)
-             height (/ (d/get-height control) 2)]
-         (cond
-           (= :left   side) (d/set-data control {:left (- shape-left width) :top (- (+ shape-top (/ shape-height 2)) height)})
-           (= :right  side) (d/set-data control {:left (- (+ shape-left shape-width) width) :top (- (+ shape-top (/ shape-height 2)) height)})
-           (= :bottom side) (d/set-data control {:left (- (+ shape-left (/ shape-width 2)) width) :top (- (+ shape-top shape-height) height)})
-           (= :top    side) (d/set-data control {:left (- (+ shape-left (/ shape-width 2)) width) :top (- shape-top height)})
-           )))))
-
 (defn resize-with-control [app-state entity control movement-x movement-y]
-  (when (= ::c/control (:type control))
-    (let [side (e/component-attribute app-state entity (:name control) :side)
-          main (first (e/get-entity-component app-state entity ::c/entity-shape))]
-      (cond
-        (= side :right) (do (api/apply-effective-position control movement-x 0 :offset)
-                            (d/set-width main (+ (d/get-width main) movement-x)))
-        (= side :bottom) (do (api/apply-effective-position control 0 movement-y :offset)
-                             (d/set-height main (+ (d/get-height main) movement-y))))
+  (let [entity (e/entity-by-id app-state (:uid entity))]
+    (when (= ::c/control (:type control))
+      (let [side (e/component-attribute app-state entity (:name control) :side)
+            bbox (:bbox entity)]
+        (-> (cond
+              (= side :right)  (e/set-bbox app-state entity (merge bbox {:width (+ (:width bbox) movement-x)}))
+              (= side :bottom) (e/set-bbox app-state entity (merge bbox {:height (+ (:height bbox) movement-y)})))
+            (layouts/do-layouts))))))
 
-        (layout-controls app-state entity)
-        (layouts/do-layouts entity))))
+(defn calc-association-bbox [app-state entity]
+  (let [startpoint (first (e/get-entity-component app-state entity ::c/startpoint))
+        endpoint   (first (e/get-entity-component app-state entity ::c/endpoint))
+        components [startpoint endpoint]]
+    (when (and (some? startpoint) (some? endpoint))
+      (let [leftmost   (apply min-key (concat [#(d/get-left %)] components))
+            rightmost  (apply max-key (concat [#(+ (d/get-left %) (d/get-width %))] components))
+            topmost    (apply min-key (concat [#(d/get-top %)] components))
+            bottommost (apply max-key (concat [#(+ (d/get-top %) (d/get-height %))] components))]
+        (-> (e/set-bbox app-state
+                        entity
+                     {:left   (d/get-left leftmost)
+                      :top    (d/get-top topmost)
+                      :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
+                      :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})
+            (layouts/do-layouts))))))
 
 (defn moving-endpoint []
    (fn [e]

@@ -85,6 +85,12 @@
   ([app-state type bbox]
    (create-entity app-state type [] bbox {} nil)))
 
+(defn set-bbox [app-state entity bbox]
+  (state/assoc-diagram-state app-state [:entities (:uid entity) :bbox] bbox)
+  (let [updated (entity-by-id app-state (:uid entity))]
+    (bus/fire app-state "entity.bbox.set" {:entity updated})
+    updated))    
+
 (defn add-entity-component
   ([app-state entity type name data props method]
     (add-entity-component app-state entity type name data props method nil))

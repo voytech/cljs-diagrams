@@ -115,7 +115,6 @@
 (defn do-layouts [entity]
   (let [context (volatile! (create-evaluation-context entity))]
     (doseq [component (filterv #(some? (:layout-ref %)) (e/components-of entity))]
-      (console.log "Executing layout...")
       (when-let [layout (get-in entity [:layouts (:layout-ref component)])]
         (vswap! context assoc (:name layout)
           ((:layout-func layout) entity

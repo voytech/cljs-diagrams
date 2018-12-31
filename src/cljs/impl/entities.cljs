@@ -65,7 +65,10 @@
     (component-template ::c/relation {:border-width 3}))
   (with-components context
     (component c/relation "connector" {} {:start "start" :end "end"})
-    (component c/startpoint "start" {} {})
+    (component c/startpoint "start" {:left 0 :top 0} {})
     (component c/arrow "arrow" {} {})
     (component c/endpoint "end" {} {})
-    (component c/title "title" {:text "Title."} {})))
+    (component c/rectangle "bg" {:background-color "white" :width 100 :height 18} {}
+      (layout-hints (weighted-position 0.5 0.5) (weighted-origin 0.5 0.5)) ::w/weighted)
+    (component c/title "title" {:text "Title."} {}
+      (layout-hints (weighted-position 0.5 0.5) (weighted-origin 0.5 -0.1)) ::w/weighted)))

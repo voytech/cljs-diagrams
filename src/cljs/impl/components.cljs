@@ -64,7 +64,7 @@
     :border-color "black"
     :border-style :solid
     :border-width 1
-    :z-index :before-bottom}))
+    :z-index 0}))
 
 (defn- endpoint-initializer [type visible]
   (fn [container props]
@@ -121,7 +121,7 @@
      :font-family "calibri"
      :font-size 12}))
 
-(defcomponent title :draw-text {:layout :attributes} (title-initializer))
+(defcomponent title :draw-text {} (title-initializer))
 
 (defn- image-initializer [width height]
   (fn [container props]
@@ -133,11 +133,11 @@
 
 (defcomponent image :draw-image {} (image-initializer 50 50))
 
-(defcomponent text :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
+(defcomponent text :draw-text {} (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
-(defcomponent description :draw-text {} (fn [c] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
+(defcomponent description :draw-text {} (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
 
-(defcomponent rect :draw-rect {} (fn [c] {:border-color "black" :border-style :solid :border-width 1}))
+(defcomponent rectangle :draw-rect {} (fn [c p] {:border-color "black" :border-style :solid :border-width 1}))
 
 (defcomponent-group entity-controls
   (component control "connector-left" {} {:side :left}

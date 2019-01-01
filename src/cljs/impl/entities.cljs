@@ -64,6 +64,8 @@
   (components-templates
     (component-template ::c/relation {:border-width 3}))
   (with-components context
+    (component c/bounding-box "bbox" {} {}
+      (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0)) ::w/weighted)
     (component c/relation "connector" {} {:start "start" :end "end"})
     (component c/startpoint "start" {:left 0 :top 0} {})
     (component c/arrow "arrow" {} {})

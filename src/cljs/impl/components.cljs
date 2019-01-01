@@ -139,6 +139,8 @@
 
 (defcomponent rectangle :draw-rect {} (fn [c p] {:border-color "black" :border-style :solid :border-width 1}))
 
+(defcomponent bounding-box :draw-rect {} (fn [c p] {:border-color "lightgray" :border-style :dotted :opacity 0.1 :border-width 1 :visible false}))
+
 (defcomponent-group entity-controls
   (component control "connector-left" {} {:side :left}
     (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)) ::w/weighted)

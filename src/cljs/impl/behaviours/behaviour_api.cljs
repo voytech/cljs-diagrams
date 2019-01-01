@@ -146,6 +146,10 @@
  ([app-state entity left top]
   (position-endpoint app-state entity left top :absolute false)))
 
+(defn toggle-bbox [bbox toggle]
+  (when (= ::c/bounding-box (:type bbox))
+      (d/set-data bbox {:visible toggle})))
+
 (defn toggle-controls [entity toggle]
   (doseq [component (e/components-of entity)]
     (when (= ::c/control (:type component))

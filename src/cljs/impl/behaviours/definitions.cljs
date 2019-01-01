@@ -174,6 +174,27 @@
                   (std/toggle-control (-> event :component) false)
                   nil)))
 
+(defbehaviour show-bbox
+              "Show Bounding Box"
+              :bbox-show
+              [f/is-association-entity f/is-primary-entity]
+              (b/build-event-name [::c/bounding-box] "focus")
+              (fn [e]
+                (let [event (:context e)]
+                  (console.log "bbox")
+                  (std/toggle-bbox  (-> event :component) true)
+                  nil)))
+
+(defbehaviour hide-bbox
+              "Hide Bounding Box"
+              :bbox-hide
+              [f/is-association-entity f/is-primary-entity]
+              (b/build-event-name [::c/bounding-box] "blur")
+              (fn [e]
+                (let [event (:context e)]
+                  (std/toggle-bbox (-> event :component) false)
+                  nil)))
+
 (defbehaviour resize-entity
               "Resize Entity"
               :entity-resize

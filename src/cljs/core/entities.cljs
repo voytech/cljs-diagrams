@@ -104,7 +104,7 @@
         updated))))
 
 (defn remove-entity-component [app-state entity component-name]
-  (let [component (get-entity-component app-state entity component-name)]
+  (let [component (get-entity-component entity component-name)]
     (state/dissoc-diagram-state app-state [:entities (:uid entity) :components component-name])
     (d/remove-component app-state component)))
 
@@ -123,22 +123,23 @@
 (defn component-attribute [app-state entity name attribute]
   (state/get-in-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute]))
 
-(defn get-entity-component [app-state entity name-or-type]
+(defn get-entity-component [entity name-or-type]
   (if (keyword? name-or-type)
-   (filter #(= name-or-type (:type %)) (components-of (entity-by-id app-state (:uid entity))))
-   (state/get-in-diagram-state app-state [:entities (:uid entity) :components name-or-type])))
+   (filter #(= name-or-type (:type %)) (components-of entity))
+   (get-in entity [:components name-or-type])))
 
 (defn get-shape-component [app-state entity]
   (when-let [shape-name (:shape-ref entity)]
-    (get-entity-component app-state entity shape-name)))
+    (get-entity-component entity shape-name)))
 
 (defn assert-component
  ([func app-state entity name data]
-  (let [component (get-entity-component app-state entity name)]
+  (let [entity (entity-by-id app-state (:uid entity))
+        component (get-entity-component entity name)]
     (if (nil? component)
       (func app-state entity name data {})
       (d/set-data component data))
-    (get-entity-component app-state entity name)))
+    (get-entity-component entity name)))
  ([func app-state entity name]
   (assert-component func app-state entity name {})))
 

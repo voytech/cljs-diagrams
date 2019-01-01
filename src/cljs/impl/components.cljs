@@ -1,6 +1,6 @@
 (ns impl.components
   (:require [core.components :as d :refer [layout-attributes]]
-            [impl.layouts.weighted :as w :refer [layout-hints]]
+            [impl.layouts.expression :as w :refer [layout-hints]]
             [core.layouts :as l :refer [layout
                                         weighted-position
                                         weighted-size
@@ -143,10 +143,10 @@
 
 (defcomponent-group entity-controls
   (component control "connector-left" {} {:side :left}
-    (layout-attributes ::w/weighted  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5))))
+    (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5))))
   (component control "connector-right" {} {:side :right}
-    (layout-attributes ::w/weighted (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5))))
+    (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5))))
   (component control "connector-top" {} {:side :top}
-    (layout-attributes ::w/weighted (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5))))
+    (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5))))
   (component control "connector-bottom" {} {:side :bottom}
-    (layout-attributes ::w/weighted (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))))
+    (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))))

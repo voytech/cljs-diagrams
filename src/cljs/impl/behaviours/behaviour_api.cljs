@@ -47,8 +47,8 @@
       (let [entity (:entity e)
             line (:component e)
             app-state (-> e :app-state)
-            line-start-breakpoint (e/get-entity-component app-state entity (:start (:attributes line)))
-            line-end-breakpoint   (e/get-entity-component app-state entity (:end (:attributes line)))
+            line-start-breakpoint (e/get-entity-component entity (:start (:attributes line)))
+            line-end-breakpoint   (e/get-entity-component entity (:end (:attributes line)))
             oeX  (d/getp line :x2)
             oeY  (d/getp line :y2)
             eX   (:left e)
@@ -71,10 +71,10 @@
     (let [entity     (:entity e)
           breakpoint (:component e)
           app-state (-> e :app-state)
-          line-end   (e/get-entity-component app-state entity (:start  (:attributes breakpoint)))
-          line-endpoint (e/get-entity-component app-state entity (:end (:attributes line-end)))
-          line-start (e/get-entity-component app-state entity (:end   (:attributes breakpoint)))
-          line-startpoint (e/get-entity-component app-state entity (:start (:attributes line-start)))
+          line-end   (e/get-entity-component entity (:start  (:attributes breakpoint)))
+          line-endpoint (e/get-entity-component entity (:end (:attributes line-end)))
+          line-start (e/get-entity-component entity (:end   (:attributes breakpoint)))
+          line-startpoint (e/get-entity-component entity (:start (:attributes line-start)))
           is-penultimate? (:penultimate (:attributes breakpoint))]
        (e/remove-entity-component app-state entity (:name breakpoint))
        (e/remove-entity-component app-state entity (:name line-end))
@@ -86,13 +86,13 @@
 
 (defn position-breakpoint
   ([app-state entity name left top coord-mode]
-   (let [breakpoint-component (e/get-entity-component app-state entity name)
+   (let [breakpoint-component (e/get-entity-component entity name)
          position (effective-position app-state breakpoint-component left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         starts-relation-component (e/get-entity-component app-state entity (:start (:attributes breakpoint-component)))
-         ends-relation-component (e/get-entity-component app-state entity (:end (:attributes breakpoint-component)))
-         arrow-component (e/get-entity-component app-state entity "arrow")]
+         starts-relation-component (e/get-entity-component entity (:start (:attributes breakpoint-component)))
+         ends-relation-component (e/get-entity-component entity (:end (:attributes breakpoint-component)))
+         arrow-component (e/get-entity-component entity "arrow")]
      (d/set-data  breakpoint-component {:left effective-left :top  effective-top})
      (api/to-the-center-of starts-relation-component  :x1 :y1 breakpoint-component)
      (api/to-the-center-of ends-relation-component :x2 :y2 breakpoint-component)
@@ -103,12 +103,12 @@
 
 (defn position-startpoint
   ([app-state entity left top coord-mode skip?]
-   (let [startpoint-component (e/get-entity-component app-state entity "start")
+   (let [startpoint-component (e/get-entity-component entity "start")
          position (effective-position startpoint-component left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         starts-relation-component (e/get-entity-component app-state entity (:start (:attributes startpoint-component)))
-         arrow-component (e/get-entity-component app-state entity "arrow")]
+         starts-relation-component (e/get-entity-component entity (:start (:attributes startpoint-component)))
+         arrow-component (e/get-entity-component entity "arrow")]
      (d/set-data startpoint-component {:left effective-left :top  effective-top})
      (when (= false skip?)
       (api/to-the-center-of starts-relation-component :x1 :y1 startpoint-component)
@@ -118,7 +118,7 @@
    (position-startpoint app-state entity left top :absolute false)))
 
 (defn nearest-control [app-state component trg-entity]
- (let [trg-connectors (e/get-entity-component app-state trg-entity ::c/control)]
+ (let [trg-connectors (e/get-entity-component trg-entity ::c/control)]
      (->> (for [trg trg-connectors]
             {:src component :trg trg :d (api/distance (api/center-point component) (api/center-point trg))})
           (apply min-key #(:d %)))))
@@ -131,13 +131,13 @@
 
 (defn position-endpoint
   ([app-state entity left top coord-mode skip?]
-   (let [endpoint-component  (e/get-entity-component app-state entity "end")
+   (let [endpoint-component  (e/get-entity-component entity "end")
          position (effective-position endpoint-component left top coord-mode)
          effective-left (:x position)
          effective-top  (:y position)
-         ends-relation-component  (e/get-entity-component app-state entity (:end (:attributes endpoint-component)))
+         ends-relation-component  (e/get-entity-component entity (:end (:attributes endpoint-component)))
 
-         arrow-component      (e/get-entity-component app-state entity "arrow")]
+         arrow-component      (e/get-entity-component entity "arrow")]
     (d/set-data endpoint-component {:left effective-left  :top  effective-top})
     (api/to-the-center-of arrow-component :left :top endpoint-component)
     (when (= false skip?)
@@ -170,8 +170,8 @@
             (layouts/do-layouts))))))
 
 (defn calc-association-bbox [app-state entity]
-  (let [startpoint (first (e/get-entity-component app-state entity ::c/startpoint))
-        endpoint   (first (e/get-entity-component app-state entity ::c/endpoint))
+  (let [startpoint (first (e/get-entity-component entity ::c/startpoint))
+        endpoint   (first (e/get-entity-component entity ::c/endpoint))
         components [startpoint endpoint]]
     (when (and (some? startpoint) (some? endpoint))
       (let [leftmost   (apply min-key (concat [#(d/get-left %)] components))

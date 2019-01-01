@@ -61,10 +61,10 @@
 (defn update-manhattan-layout [app-state entity start end s-normal e-normal]
   (let [points (find-path start end s-normal e-normal)
         path (find-path-lines (center-point start) (center-point end) points)
-        cstart (e/get-entity-component app-state entity "start")
-        cend (e/get-entity-component app-state entity "end")]
+        cstart (e/get-entity-component entity "start")
+        cend (e/get-entity-component entity "end")]
      (-> (update-line-components app-state entity path)
-         (std/refresh-arrow-angle (e/get-entity-component app-state entity "arrow")))))
+         (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))
 
 (defn- calculate-vectors [app-state
                           source-entity source-control
@@ -75,8 +75,8 @@
      (if (or (= :left target-control-side) (= :right target-control-side)) :h :v)]))
 
 (defn- nearest-controls-between [app-state src-entity trg-entity]
-  (let [src-connectors (e/get-entity-component app-state src-entity ::c/control)
-        trg-connectors (e/get-entity-component app-state trg-entity ::c/control)]
+  (let [src-connectors (e/get-entity-component src-entity ::c/control)
+        trg-connectors (e/get-entity-component trg-entity ::c/control)]
       (->> (for [src src-connectors
                  trg trg-connectors]
              {:src src :trg trg :d (distance (center-point src) (center-point trg))})
@@ -86,20 +86,20 @@
   ([app-state entity component movement-x movement-y]
     (api/apply-effective-position component movement-x movement-y :offset)
     (when (= (:type component) ::c/endpoint)
-      (let [arrow (e/get-entity-component app-state entity "arrow")]
+      (let [arrow (e/get-entity-component entity "arrow")]
         (api/apply-effective-position arrow movement-x movement-y :offset))))
   ([app-state entity endpoint to-point]
     (api/apply-effective-position endpoint (:x to-point) (:y to-point) :absolute)
     (when (= (:type endpoint) ::c/endpoint)
-      (let [arrow (e/get-entity-component app-state entity "arrow")
+      (let [arrow (e/get-entity-component entity "arrow")
             x (+ (:x to-point) (/ (d/get-width arrow) 2))
             y (+ (:y to-point) (/ (d/get-height arrow) 2))]
         (api/apply-effective-position arrow x y :absolute)))))
 
 (defn on-endpoint-event [event]
   (let [{:keys [app-state entity component movement-x movement-y]} event
-        start (e/get-entity-component app-state entity "start")
-        end (e/get-entity-component app-state entity "end")
+        start (e/get-entity-component entity "start")
+        end (e/get-entity-component entity "end")
         vectors (eval-vectors (center-point start) (center-point end))]
     (e/remove-entity-component app-state entity "connector")
     (position-entity-endpoint app-state entity component movement-x movement-y)
@@ -111,15 +111,15 @@
   (let [{:keys [app-state entity start end movement-x movement-y]} event]
     (if (or (nil? start) (nil? end))
       (let [related-entity (or start end)
-            active (e/get-entity-component app-state entity (if-not (nil? start) "start" "end"))
-            passive (e/get-entity-component app-state entity (if-not (nil? start) "end" "start"))
+            active (e/get-entity-component entity (if-not (nil? start) "start" "end"))
+            passive (e/get-entity-component entity (if-not (nil? start) "end" "start"))
             vectors (eval-vectors (center-point active) (center-point passive))]
         (e/remove-entity-component app-state entity "connector")
         (position-entity-endpoint app-state entity active movement-x movement-y)
         (update-manhattan-layout app-state entity active passive (vectors 0) (vectors 1)))
       (let [{:keys [src trg]} (nearest-controls-between app-state start end)
-            startpoint (e/get-entity-component app-state entity "start")
-            endpoint (e/get-entity-component app-state entity "end")
+            startpoint (e/get-entity-component entity "start")
+            endpoint (e/get-entity-component entity "end")
             vectors (calculate-vectors app-state start src end trg)]
         (e/remove-entity-component app-state entity "connector")
         (position-entity-endpoint app-state entity startpoint {:x (d/get-left src) :y (d/get-top src)})

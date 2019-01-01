@@ -28,7 +28,7 @@
                                                (:normal-width options))}))
 
 (defn show [app-state entity component-name show]
- (let [component (e/get-entity-component app-state entity component-name)]
+ (let [component (e/get-entity-component entity component-name)]
    (d/setp component :visible show)))
 
 (defn calculate-offset [component left top]
@@ -38,7 +38,7 @@
 (defn calculate-effective-offset [app-state entity component-name left top coord-mode]
  (if (= :offset coord-mode)
    {:left left :top top}
-   (let [component (e/get-entity-component app-state entity component-name)]
+   (let [component (e/get-entity-component entity component-name)]
      (calculate-offset component left top))))
 
 (defn effective-position
@@ -65,7 +65,7 @@
                             coord-mode)))
 
 (defn default-position-entity-component [app-state entity component-name left top coord-mode]
-  (let [component (e/get-entity-component app-state entity component-name)]
+  (let [component (e/get-entity-component entity component-name)]
     (apply-effective-position component left top coord-mode)))
 
 (defn default-position-entity [app-state entity ref-component-name mx my coord-mode]

@@ -32,5 +32,4 @@
   (let [type (get-dnd-data event "m-key")]
     (if (nil? type) "file" type)))
 
-
 (defmulti dispatch-drop-event data-transfer-type)

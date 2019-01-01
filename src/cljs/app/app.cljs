@@ -1,8 +1,10 @@
 (ns app.app
   (:require [reagent.core :as reagent :refer [atom]]
             [core.utils.dom :as dom]
+            [core.utils.dnd :as dnd]
             [core.project :as project]
             [impl.behaviours.definitions :as b]
+            [impl.renderers.svg :as svg]
             [core.state :as state]
             [impl.synthetic-events :as patterns]
             [ui.views.main :as m]))
@@ -54,8 +56,19 @@
       b/hide-bbox
    ]})
 
+(defn resolve-drop "Should resolve drop events for following scenarios:
+                   1. The drag source is from the library component (image is dragged)
+                   2. The drag source comes from desktop (Use FileApi to load image)"
+  [state]
+  (fn [event]
+    (.preventDefault event)
+    (dnd/dispatch-drop-event event state)))
+
 (defn init []
-  (let [config (app-config 1270 1000 :reagentsvg)
+  (let [config (app-config 1270 1000 :svg)
         app-state (state/create-app-state "project" config)]
-    (reagent/render-component [m/Main app-state config]
-      (.getElementById js/document "container"))))
+    (reagent/render-component [m/Library {:class "col-8 sidebar-offcanvas"} app-state]
+      (.getElementById js/document "reagent-panel-app"))
+    (let [canvas-wrapper (dom/by-id "canvas-wrapper")]
+      (.addEventListener canvas-wrapper "drop" (resolve-drop app-state))
+      (.addEventListener canvas-wrapper "dragover" #(.preventDefault %)))))

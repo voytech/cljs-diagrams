@@ -41,15 +41,16 @@
    (bus/fire app-state COMPONENT_CHANGED {:properties properties
                                           :component component})))
 
+(defrecord LayoutAttributes [layout-ref layout-order layout-hints])
+
 (defrecord Component [uid
                       name
                       type
                       model
                       rendering-method
                       attributes
-                      layout-hints
                       parent-ref
-                      layout-ref
+                      layout-attributes
                       property-change-callback]
   IDrawable
   (model [this] @model)
@@ -139,7 +140,7 @@
   (sort-by #(getp % :z-index) > (components app-state)))
 
 (defn new-component
- ([app-state container layout-hints layout-ref type name model attributes method initializer]
+ ([app-state container layout-attributes type name model attributes method initializer]
   (let [initializer-data (if (nil? initializer) {} (initializer container attributes))
         template-data (-> container :components-properties type)
         mdl  (merge initializer-data template-data model)
@@ -150,9 +151,8 @@
                               (volatile! mdl)
                               method
                               attributes
-                              layout-hints
                               (:uid container)
-                              layout-ref
+                              layout-attributes
                               callback)]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
@@ -160,9 +160,17 @@
     (bus/fire app-state "component.added" {:component component})
     (assoc-in container [:components (:name component)] component)))
  ([app-state container type name model attributes method initializer]
-  (new-component app-state container nil nil type name model attributes method initilizer))
+  (new-component app-state container nil type name model attributes method initilizer))
  ([app-state container type name model attributes method]
-  (new-component app-state container nil nil type name model attributes method nil)))
+  (new-component app-state container nil type name model attributes method nil)))
+
+(defn layout-attributes
+  ([layout-ref layout-order layout-hints]
+    (LayoutAttributes. layout-ref layout-order layout-hints))
+  ([layout-ref layout-hints]
+    (layout-attributes layout-ref 0 layout-hints))
+  ([layout-ref]
+    (layout-attributes layout-ref nil)))
 
 (defn add-hook [type function hook]
   (swap! hooks assoc-in [type function] hook))

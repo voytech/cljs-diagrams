@@ -89,17 +89,15 @@
   (state/assoc-diagram-state app-state [:entities (:uid entity) :bbox] bbox)
   (let [updated (entity-by-id app-state (:uid entity))]
     (bus/fire app-state "entity.bbox.set" {:entity updated})
-    updated))    
+    updated))
 
 (defn add-entity-component
   ([app-state entity type name data props method]
     (add-entity-component app-state entity type name data props method nil))
   ([app-state entity type name data props method initializer]
-    (add-entity-component app-state entity type name data props method initializer nil nil))
-  ([app-state entity type name data props method initializer layout-ref]
-    (add-entity-component app-state entity type name data props method initializer nil layout-ref))
-  ([app-state entity type name data props method initializer layout-hints layout-ref]
-    (let [entity (d/new-component app-state entity layout-hints layout-ref type name data props method initializer)]
+    (add-entity-component app-state entity type name data props method initializer nil))
+  ([app-state entity type name data props method initializer layout-attributes]
+    (let [entity (d/new-component app-state entity layout-attributes type name data props method initializer)]
       (state/assoc-diagram-state app-state [:entities (:uid entity)] entity)
       (let [updated (entity-by-id app-state (:uid entity))]
         (bus/fire app-state "entity.component.added" {:entity updated})
@@ -169,7 +167,7 @@
 (defn get-layout [app-state entity layout-name]
   (state/get-in-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))
 
-(defn assert-group [app-state entity name layout-func position size margins]
+(defn assert-layout [app-state entity name layout-func position size margins]
   (let [layout (get-layout app-state entity name)]
     (if (nil? layout)
       (add-layout app-state entity name layout-func position size margins)

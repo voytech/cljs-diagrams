@@ -114,8 +114,10 @@
 
 (defn do-layouts [entity]
   (let [context (volatile! (create-evaluation-context entity))]
-    (doseq [component (filterv #(some? (:layout-ref %)) (e/components-of entity))]
-      (when-let [layout (get-in entity [:layouts (:layout-ref component)])]
+    (doseq [component (->> (e/components-of entity)
+                           (filterv #(some? (-> % :layout-attributes :layout-ref)))
+                           (sort-by #(-> % :layout-attributes :layout-order)))]
+      (when-let [layout (get-in entity [:layouts (-> component :layout-attributes :layout-ref)])]
         (vswap! context assoc (:name layout)
           ((:layout-func layout) entity
                                  component

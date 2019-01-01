@@ -15,11 +15,13 @@
 
 (defn obtain-component-bbox [entity component]
   (let [bbox (:bbox entity)
-        {:keys [position size origin]} (-> component :layout-hints)
+        hints (-> component :layout-attributes :layout-hints)
+        layout-ref (-> component :layout-attributes :layout-ref)
+        {:keys [position size origin]} hints
         {:keys [left top]} position
         {:keys [width height]} size
         {:keys [orig-x orig-y]} origin]
-    (if-let [layout (get-in entity [:layouts (:layout-ref component)])]
+    (if-let [layout (get-in entity [:layouts layout-ref])]
       (let [layout-pos  (l/absolute-position-of-layout entity layout)
             layout-size (l/absolute-size-of-layout entity layout)
             effective-width (cond

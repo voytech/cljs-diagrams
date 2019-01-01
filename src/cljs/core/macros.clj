@@ -88,18 +88,7 @@
 (defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
    `(defn ~type
-     ([app-state# entity# name# data# p# layout-hints# layout-ref#]
-        (core.entities/add-entity-component app-state#
-                                            entity#
-                                            (keyword ~nsname (name '~type))
-                                            name#
-                                            data#
-                                            (merge ~props p#)
-                                            ~rendering-method
-                                            ~initializer
-                                            layout-hints#
-                                            layout-ref#))
-    ([app-state# entity# name# data# p# layout-ref#]
+    ([app-state# entity# name# data# p# layout-attributes#]
        (core.entities/add-entity-component app-state#
                                            entity#
                                            (keyword ~nsname (name '~type))
@@ -108,7 +97,7 @@
                                            (merge ~props p#)
                                            ~rendering-method
                                            ~initializer
-                                           layout-ref#))
+                                           layout-attributes#))
      ([app-state# entity# name# data# p#]
         (core.entities/add-entity-component app-state#
                                             entity#

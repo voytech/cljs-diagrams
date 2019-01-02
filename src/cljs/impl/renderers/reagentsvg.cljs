@@ -22,7 +22,7 @@
                                :height (simple-set :height)
                                :angle  (fn [svg val mdl]
                                           (assoc-in svg [1 :transform]
-                                            (str "rotate(" val "," (:left mdl) "," (:top mdl) ")" )))
+                                            (str "rotate(" val "," (:left mdl) "," (:top mdl) ")")))
                                :x1 (simple-set :x1)
                                :y1 (simple-set :y1)
                                :x2 (simple-set :x2)
@@ -49,7 +49,7 @@
 (defn- resolve-value [val]
  (if (keyword? val)
    (or (val constants-bindings) val)
-    val))
+   val))
 
 (defn- model-attributes [component]
   (let [model (d/model component)]
@@ -64,9 +64,9 @@
 
 (defn- sync-svg-element
   ([svg component-model]
-    (sync-svg-element svg component-model (keys component-model)))
+   (sync-svg-element svg component-model (keys component-model)))
   ([svg component-model attributes]
-    (reduce (resolve-attribute-wrapper component-model) svg attributes)))
+   (reduce (resolve-attribute-wrapper component-model) svg attributes)))
 
 (defn- update-svg-element [renderer-state component postprocess]
   (let [rendering-component (get-in @renderer-state [:components (:uid component)])
@@ -106,16 +106,16 @@
 
 (defn Root [dom-id width height app-state renderer-state]
   (reagent/create-class {
-    :display-name  "Root"
-    :component-did-update
-        (fn [this old-argv] (measure-text app-state))
-    :reagent-render (fn [dom-id width height app-state renderer-state]
-                      [:svg {:id (str dom-id "-svg") :width width :height height}
-                        (doall
-                          (for [svg (z-index-sorted (-> renderer-state deref :components))]
-                            ^{:key (-> svg :attributes :id)}
-                            (:dom svg)))])
-                    }))
+                         :display-name  "Root"
+                         :component-did-update
+                         (fn [this old-argv] (measure-text app-state))
+                         :reagent-render (fn [dom-id width height app-state renderer-state]
+                                           [:svg {:id (str dom-id "-svg") :width width :height height}
+                                             (doall
+                                               (for [svg (z-index-sorted (-> renderer-state deref :components))]
+                                                 ^{:key (-> svg :attributes :id)}
+                                                 (:dom svg)))])}))
+
 
 ;;==========================================================================================================
 ;; rendering context initialization
@@ -147,8 +147,8 @@
   (fn [svg]
     (let [mdl (model-attributes component)]
       (-> svg
-         (assoc-in [1 :cx] (+ (:left mdl ) (:radius mdl)) )
-         (assoc-in [1 :cy] (+ (:top  mdl ) (:radius mdl)) ) ))))
+         (assoc-in [1 :cx] (+ (:left mdl ) (:radius mdl)))
+         (assoc-in [1 :cy] (+ (:top  mdl ) (:radius mdl)))))))
 
 (defmethod r/do-render [:reagentsvg :draw-circle] [renderer-state component]
   (update-svg-element renderer-state component (circle component)))

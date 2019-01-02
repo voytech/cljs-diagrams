@@ -70,18 +70,18 @@
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
   ([app-state type tags bbox component-properties shape-ref]
-     (let [uid (str (random-uuid))
-           entity (Entity. uid
-                           bbox
-                           type
-                           tags
-                           {} []
-                           {} ;layouts
-                           component-properties
-                           shape-ref)]
-       (state/assoc-diagram-state app-state [:entities uid] entity)
-       (bus/fire app-state "entity.added" {:entity entity})
-       entity))
+   (let [uid (str (random-uuid))
+         entity (Entity. uid
+                         bbox
+                         type
+                         tags
+                         {} []
+                         {} ;layouts
+                         component-properties
+                         shape-ref)]
+     (state/assoc-diagram-state app-state [:entities uid] entity)
+     (bus/fire app-state "entity.added" {:entity entity})
+     entity))
   ([app-state type bbox]
    (create-entity app-state type [] bbox {} nil)))
 
@@ -93,15 +93,15 @@
 
 (defn add-entity-component
   ([app-state entity type name data props method]
-    (add-entity-component app-state entity type name data props method nil))
+   (add-entity-component app-state entity type name data props method nil))
   ([app-state entity type name data props method initializer]
-    (add-entity-component app-state entity type name data props method initializer nil))
+   (add-entity-component app-state entity type name data props method initializer nil))
   ([app-state entity type name data props method initializer layout-attributes]
-    (let [entity (d/new-component app-state entity layout-attributes type name data props method initializer)]
-      (state/assoc-diagram-state app-state [:entities (:uid entity)] entity)
-      (let [updated (entity-by-id app-state (:uid entity))]
-        (bus/fire app-state "entity.component.added" {:entity updated})
-        updated))))
+   (let [entity (d/new-component app-state entity layout-attributes type name data props method initializer)]
+     (state/assoc-diagram-state app-state [:entities (:uid entity)] entity)
+     (let [updated (entity-by-id app-state (:uid entity))]
+       (bus/fire app-state "entity.component.added" {:entity updated})
+       updated))))
 
 (defn remove-entity-component [app-state entity component-name]
   (let [component (get-entity-component entity component-name)]
@@ -145,22 +145,22 @@
 
 (defn add-layout
   ([app-state entity layout]
-    (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
-    (let [updated (entity-by-id app-state (:uid entity))]
-      (bus/fire app-state "entity.layout.added" {:entity updated})
-      updated))
+   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
+   (let [updated (entity-by-id app-state (:uid entity))]
+     (bus/fire app-state "entity.layout.added" {:entity updated})
+     updated))
   ([app-state entity name layout-func position size margins]
-    (let [layout (l/layout name layout-func position size margins)]
-      (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
-      (let [updated (entity-by-id app-state (:uid entity))]
-        (bus/fire app-state "entity.layout.added" {:entity updated})
-        updated)))
+   (let [layout (l/layout name layout-func position size margins)]
+     (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
+     (let [updated (entity-by-id app-state (:uid entity))]
+       (bus/fire app-state "entity.layout.added" {:entity updated})
+       updated)))
   ([app-state entity name layout-func position margins]
-    (add-layout app-state entity name layout-func position (l/match-parent-size) margins))
+   (add-layout app-state entity name layout-func position (l/match-parent-size) margins))
   ([app-state entity name layout-func position]
-    (add-layout app-state entity name layout-func position (l/match-parent-size) nil))
+   (add-layout app-state entity name layout-func position (l/match-parent-size) nil))
   ([app-state entity name layout-func]
-    (add-layout app-state entity name layout-func (l/match-parent-position) (l/match-parent-size) margins)))
+   (add-layout app-state entity name layout-func (l/match-parent-position) (l/match-parent-size) margins)))
 
 (defn remove-layout [app-state entity layout-name]
   (state/dissoc-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))

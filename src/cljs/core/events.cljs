@@ -202,8 +202,8 @@
                         (position-delta-chan)
                         (enriching-chan process-state)
                         (pattern-test-chan process-state))]
-          (go (loop []
-                (let [event (<! sink-chan)]
-                  (on-phase process-state :completed)
-                  (trigger-bus-event event)
-                  (recur))))))
+       (go (loop []
+             (let [event (<! sink-chan)]
+               (on-phase process-state :completed)
+               (trigger-bus-event event)
+               (recur))))))

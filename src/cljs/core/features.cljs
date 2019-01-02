@@ -1,4 +1,4 @@
-(ns core.features )
+(ns core.features)
 
 (defn- all-components-to [target what]
   (->> target

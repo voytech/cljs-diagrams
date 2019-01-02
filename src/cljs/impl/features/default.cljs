@@ -16,34 +16,34 @@
 
 (defn is-associative-entity [target]
   (f/any-of-features [
-     has-endpoints
-     has-controls
-  ] target))
+                      has-endpoints
+                      has-controls]
+   target))
 
 (defn is-interactive-entity [target]
   ((f/has-components-of-types #{::c/control}) target))
 
 (defn is-primary-entity [target]
   (f/check-features [
-     is-associative-entity
-     is-shape-entity
-  ] target ))
+                     is-associative-entity
+                     is-shape-entity]
+   target))
 
 (defn is-container [target]
   (f/check-features [
-     (fn [target]
-       (->> (:tags target)
-            (filterv #(= % :container))
-            count
-            (= 1)))
-     is-shape-entity
-  ] target ))
+                     (fn [target]
+                       (->> (:tags target)
+                            (filterv #(= % :container))
+                            count
+                            (= 1)))
+                     is-shape-entity]
+   target))
 
 (defn is-association-entity [target]
   (f/check-features [
-     is-associative-entity
-     has-relation
-  ] target ))
+                     is-associative-entity
+                     has-relation]
+   target))
 
 (defn is-selection-attribute [target]
   (let [attribute (:attribute target)]
@@ -55,6 +55,6 @@
 
 (defn is-text-attribute [target]
   (f/check-features [
-     is-single-attribute
-     (f/has-components-of-types #{::c/text})
-  ] target ))
+                     is-single-attribute
+                     (f/has-components-of-types #{::c/text})]
+   target))

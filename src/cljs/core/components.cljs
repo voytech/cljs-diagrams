@@ -166,11 +166,11 @@
 
 (defn layout-attributes
   ([layout-ref layout-order layout-hints]
-    (LayoutAttributes. layout-ref layout-order layout-hints))
+   (LayoutAttributes. layout-ref layout-order layout-hints))
   ([layout-ref layout-hints]
-    (layout-attributes layout-ref 0 layout-hints))
+   (layout-attributes layout-ref 0 layout-hints))
   ([layout-ref]
-    (layout-attributes layout-ref nil)))
+   (layout-attributes layout-ref nil)))
 
 (defn add-hook [type function hook]
   (swap! hooks assoc-in [type function] hook))

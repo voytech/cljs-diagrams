@@ -19,56 +19,56 @@
 
 (defn width-of
   ([component-name margin]
-    (fn [entity layout]
-      (let [component (e/get-entity-component entity component-name)]
-        (+ (d/get-width component) margin))))
+   (fn [entity layout]
+     (let [component (e/get-entity-component entity component-name)]
+       (+ (d/get-width component) margin))))
   ([component-name]
-    (width-of component-name 0)))
+   (width-of component-name 0)))
 
 (defn height-of
   ([component-name margin]
-    (fn [entity layout]
-      (let [component (e/get-entity-component entity component-name)]
-        (+ (d/get-height component) margin))))
+   (fn [entity layout]
+     (let [component (e/get-entity-component entity component-name)]
+       (+ (d/get-height component) margin))))
   ([component-name]
-    (height-of component-name 0)))
+   (height-of component-name 0)))
 
 (defn left-of
   ([component-name margin]
-    (fn [entity layout]
-      (let [component (e/get-entity-component entity component-name)]
-        (- (d/get-left component) margin))))
+   (fn [entity layout]
+     (let [component (e/get-entity-component entity component-name)]
+       (- (d/get-left component) margin))))
   ([component-name]
-    (left-of component-name 0)))
+   (left-of component-name 0)))
 
 (defn top-of
   ([component-name margin]
-    (fn [entity layout]
-      (let [component (e/get-entity-component entity component-name)]
-        (- (d/get-top component) margin))))
+   (fn [entity layout]
+     (let [component (e/get-entity-component entity component-name)]
+       (- (d/get-top component) margin))))
   ([component-name]
-    (top-of component-name 0)))
+   (top-of component-name 0)))
 
 (defn size-of
   ([component-name margin-x margin-y]
-    (size-expression (width-of component-name margin-x)
-                     (height-of component-name margin-y)))
+   (size-expression (width-of component-name margin-x)
+                    (height-of component-name margin-y)))
   ([component-name] (size-of component-name 0 0)))
 
 (defn position-of
   ([component-name margin-x margin-y]
-    (position-expression (left-of component-name margin-x)
-                         (top-of component-name margin-y)))
+   (position-expression (left-of component-name margin-x)
+                        (top-of component-name margin-y)))
   ([component-name]
-    (position-of component-name 0 0)))
+   (position-of component-name 0 0)))
 
 (defn layout-hints
   ([position size origin]
-    (LayoutHints. position size origin))
+   (LayoutHints. position size origin))
   ([position origin]
-    (LayoutHints. position nil origin))
+   (LayoutHints. position nil origin))
   ([position]
-    (LayoutHints. position nil (l/weighted-origin 0 0))))
+   (LayoutHints. position nil (l/weighted-origin 0 0))))
 
 (defn obtain-component-bbox [entity component]
   (let [bbox (:bbox entity)

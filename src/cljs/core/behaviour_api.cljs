@@ -71,7 +71,7 @@
 (defn default-position-entity [app-state entity ref-component-name mx my coord-mode]
   (let [bbox (:bbox entity)
         {:keys [left top]} bbox]
-    (doseq [component (filterv #(not (some? (:layout-ref %))) (e/components-of entity))]
+    (doseq [component (filterv #(not (some? (-> % :layout-attributes :layout-ref))) (e/components-of entity))]
       (let [effective-offset (calculate-effective-offset app-state entity ref-component-name mx my coord-mode)
             effective-left  (+ (d/getp component :left) (:left effective-offset))
             effective-top   (+ (d/getp component :top) (:top effective-offset))]

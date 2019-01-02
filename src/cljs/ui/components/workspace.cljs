@@ -41,4 +41,4 @@
                :on-drop (resolve-drop app-state)
                :on-drag-over #(.preventDefault %)}
            [(canvas-initializing-wrapper app-state feedback config)
-             [:div {:id "project" :class "canvas"}]]]])])
+            [:div {:id "project" :class "canvas"}]]]])])

@@ -50,10 +50,10 @@
 
 (defn size
   ([width height]
-    (size-of-type width height :abs))
+   (size-of-type width height :abs))
   ([type-width width type-height height]
-    (LSize. {:value width :type type-width}
-            {:value height :type type-height})))
+   (LSize. {:value width :type type-width}
+           {:value height :type type-height})))
 
 (defn match-parent-size []
   (weighted-size 1 1))
@@ -63,13 +63,13 @@
 
 (defn layout
   ([name layout-func position size margins]
-    (Layout. name layout-func position size margins))
+   (Layout. name layout-func position size margins))
   ([name layout-func position margins]
-    (Layout. name layout-func position (match-parent-size) margins))
+   (Layout. name layout-func position (match-parent-size) margins))
   ([name layout-func position]
-    (Layout. name layout-func position (match-parent-size) nil))
+   (Layout. name layout-func position (match-parent-size) nil))
   ([name layout-func]
-    (Layout. name layout-func (match-parent-position) (match-parent-size) nil)))
+   (Layout. name layout-func (match-parent-position) (match-parent-size) nil)))
 
 (defn absolute-position-of-layout [entity layout]
   (let [bbox (:bbox entity)]
@@ -109,7 +109,7 @@
 (defn create-evaluation-context [entity]
    (->> (mapv (fn [layout]
                  {(:name layout) (create-context layout)})
-               (-> entity :layouts vals))
+              (-> entity :layouts vals))
         (apply merge)))
 
 (defn do-layouts [entity]

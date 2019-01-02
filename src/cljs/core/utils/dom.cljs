@@ -85,8 +85,21 @@
         (attr "id" id))
     element))
 
+(defn create-ns-node [nms tag id]
+  (let [element (.createElementNS js/document nms tag)]
+    (-> element
+        (attr "id" id))
+    element))
+
+(defn remove-by-id [id]
+  (when-let [elem (by-id id)]
+    (.removeChild (.-parentElement elem) elem)))    
+
 (defn attr [elem name val]
-  (.attr (j-query elem) name val))
+  (.setAttribute elem name val))
+
+(defn set-text [elem text]
+  (.text (j-query elem) text))
 
 (defn attrs [elem attrs]
   (when-let [target (j-query elem)]

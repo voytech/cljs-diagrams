@@ -122,19 +122,19 @@
 
 (defn collides?
   ([app-state component feature hit-callback miss-callback]
-    (let [entity (e/lookup app-state component)
-          collisions (filterv (fn [trg-comp]
-                                (and (not= trg-comp component)
-                                     (not= (:parent-ref trg-comp) (:parent-ref component))
-                                     (d/intersects? component trg-comp)
-                                     (feature (e/lookup app-state trg-comp))))
-                              (d/ordered-components app-state))]
-          (if-let [collider (first collisions)]
-            (hit-callback {:component component :entity entity}
-                          {:component collider :entity (e/lookup app-state collider)})
-            (miss-callback {:component component :entity entity}))))
+   (let [entity (e/lookup app-state component)
+         collisions (filterv (fn [trg-comp]
+                               (and (not= trg-comp component)
+                                    (not= (:parent-ref trg-comp) (:parent-ref component))
+                                    (d/intersects? component trg-comp)
+                                    (feature (e/lookup app-state trg-comp))))
+                             (d/ordered-components app-state))]
+        (if-let [collider (first collisions)]
+          (hit-callback {:component component :entity entity}
+                        {:component collider :entity (e/lookup app-state collider)})
+          (miss-callback {:component component :entity entity}))))
   ([app-state component hit-callback miss-callback]
-    (collides? app-state component #(true) hit-callback miss-callback)))
+   (collides? app-state component #(true) hit-callback miss-callback)))
 
 (defn includes?
   ([app-state component feature hit-callback miss-callback])
@@ -142,17 +142,16 @@
 
 (defn collision-based-relations-validate
   ([app-state entity]
-    (let [source-entity (e/entity-by-id app-state (:uid entity))
-          source-components (e/components-of source-entity)]
-      (doseq [relation (:relationships source-entity)]
-        (let [related-entity (e/entity-by-id app-state (:entity-id relation))
-              related-components (e/components-of related-entity)
-              result (->> (for [component source-components
-                                related related-components]
-                            (d/intersects? related component))
-                          (reduce #(or %1 %2) false))]
-          (when-not result
-            (e/disconnect-entities app-state entity related-entity)))))))
+   (let [source-entity (e/entity-by-id app-state (:uid entity))
+         source-components (e/components-of source-entity)]
+     (doseq [relation (:relationships source-entity)]
+       (let [related-entity (e/entity-by-id app-state (:entity-id relation))
+             related-components (e/components-of related-entity)
+             result (->> (for [component source-components
+                               related related-components]
+                           (d/intersects? related component))
+                         (reduce #(or %1 %2) false))]
+         (when-not result
+           (e/disconnect-entities app-state entity related-entity)))))))
 
-(defn inclusion-based-relations-validate [app-state entity]
-  )
+(defn inclusion-based-relations-validate [app-state entity])

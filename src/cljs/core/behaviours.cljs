@@ -13,11 +13,11 @@
 
 (defn build-event-name
   ([component-types event-name]
-    (fn [target]
-       (mapv #(ev/event-name (:type target) % event-name) component-types)))
+   (fn [target]
+      (mapv #(ev/event-name (:type target) % event-name) component-types)))
   ([event-name]
-    (fn [target]
-      [(ev/event-name (:type target) nil event-name)])))
+   (fn [target]
+     [(ev/event-name (:type target) nil event-name)])))
 
 (defn add-behaviour [app-state name display-name type features event-provider handler]
   (state/assoc-behaviours-state app-state

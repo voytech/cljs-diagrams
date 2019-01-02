@@ -15,14 +15,14 @@
 (defmacro component-template [type property-map]
   `{~type ~property-map})
 
-(defmacro components-templates [ & body ]
+(defmacro components-templates [ & body]
   `(merge ~@body))
 
 (defmacro with-layouts [ & layouts]
   `(fn [app-state# entity#]
      (reduce (fn [agg# layout#]
                (core.entities/add-layout app-state# agg# layout#))
-              entity#
+             entity#
              (vector ~@layouts))))
 
 (defmacro with-components [context & components]
@@ -88,22 +88,22 @@
 (defmacro defcomponent [type rendering-method props initializer]
   (let [nsname (resolve-namespace-name)]
    `(defn ~type
-    ([app-state# entity# name# data# p# layout-attributes#]
-       (core.entities/add-entity-component app-state#
-                                           entity#
-                                           (keyword ~nsname (name '~type))
-                                           name#
-                                           data#
-                                           (merge ~props p#)
-                                           ~rendering-method
-                                           ~initializer
-                                           layout-attributes#))
+     ([app-state# entity# name# data# p# layout-attributes#]
+      (core.entities/add-entity-component app-state#
+                                          entity#
+                                          (keyword ~nsname (name '~type))
+                                          name#
+                                          data#
+                                          (merge ~props p#)
+                                          ~rendering-method
+                                          ~initializer
+                                          layout-attributes#))
      ([app-state# entity# name# data# p#]
-        (core.entities/add-entity-component app-state#
-                                            entity#
-                                            (keyword ~nsname (name '~type))
-                                            name#
-                                            data#
-                                            (merge ~props p#)
-                                            ~rendering-method
-                                            ~initializer)))))
+      (core.entities/add-entity-component app-state#
+                                          entity#
+                                          (keyword ~nsname (name '~type))
+                                          name#
+                                          data#
+                                          (merge ~props p#)
+                                          ~rendering-method
+                                          ~initializer)))))

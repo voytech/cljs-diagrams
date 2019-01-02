@@ -5,12 +5,13 @@
             [core.rendering :as r]
             [core.state :as state]
             [core.utils.dom :as dom]
+            [core.utils.svg :as svg]
             [core.eventbus :as bus]
             [impl.components :as impld]))
 
 (defn- simple-set [to]
   (fn [svg val mdl]
-    (assoc-in svg [1 to] val)))
+    (dom/attr svg (name to) val)))
 
 (defonce svg-property-mapping {:left (simple-set :x)
                                :top  (simple-set :y)
@@ -19,8 +20,8 @@
                                :width  (simple-set :width)
                                :height (simple-set :height)
                                :angle  (fn [svg val mdl]
-                                          (assoc-in svg [1 :transform]
-                                            (str "rotate(" val "," (:left mdl) "," (:top mdl) ")" )))
+                                          (dom/attr svg "transform"
+                                            (str "rotate(" val "," (:left mdl) "," (:top mdl) ")")))
                                :x1 (simple-set :x1)
                                :y1 (simple-set :y1)
                                :x2 (simple-set :x2)
@@ -33,8 +34,8 @@
                                :font-size (simple-set :font-size)
                                :opacity (simple-set :fill-opacity)
                                :text-align (simple-set :text-align)
-                               :text (fn [svg val mdl] (assoc svg 2 val))
-                               :visible (fn [svg val mdl] (assoc-in svg [1 :visibility] (if (== val true) "visible" "hidden")))
+                               :text (fn [svg val mdl] (dom/set-text svg val))
+                               :visible (fn [svg val mdl] (dom/attr svg "visibility" (if (== val true) "visible" "hidden")))
                                :color (simple-set :stroke)
                                :border-style (simple-set :stroke-style)
                                :border-width (simple-set :stroke-width)
@@ -47,81 +48,56 @@
 (defn- resolve-value [val]
  (if (keyword? val)
    (or (val constants-bindings) val)
-    val))
+   val))
 
 (defn- model-attributes [component]
   (let [model (d/model component)]
     (apply merge (mapv (fn [e] {e (resolve-value (e model))}) (keys model)))))
 
-(defn- resolve-attribute-wrapper [model]
-  (fn [svg attribute]
-    (let [func (attribute svg-property-mapping)]
-       (if (not (nil? func))
-         (func svg (resolve-value (attribute model)) model)
-         svg))))
-
 (defn- sync-svg-element
   ([svg component-model]
-    (sync-svg-element svg component-model (keys component-model)))
+   (sync-svg-element svg component-model (keys component-model)))
   ([svg component-model attributes]
-    (reduce (resolve-attribute-wrapper component-model) svg attributes)))
+   (doseq [attribute attributes]
+     (let [func (attribute svg-property-mapping)]
+       (when (not (nil? func))
+         (func svg (resolve-value (attribute component-model)) component-model))))))
 
 (defn- update-svg-element [renderer-state component postprocess]
   (let [rendering-component (get-in @renderer-state [:components (:uid component)])
-        source (:dom rendering-component)
+        source  (dom/by-id (:uid component))
         model  (model-attributes component)
-        properties (:redraw-properties rendering-component)
-        svg (sync-svg-element source model properties)]
-    (swap! renderer-state assoc-in [:components (:uid component)]
-      {:dom (if (not (nil? postprocess)) (postprocess svg) svg)
-       :attributes model})))
+        properties (:redraw-properties rendering-component)]
+    (sync-svg-element source model properties)
+    (when (not (nil? postprocess)) (postprocess source))))
 
 (defn- create-svg-element [renderer-state svg-name component postprocess]
-  (let [source [svg-name {:id (:uid component)}]
-        model (model-attributes component)
-        svg (sync-svg-element source model)]
-      {:dom (if (not (nil? postprocess)) (postprocess svg) svg)
-       :attributes model}))
+  (let [root (dom/by-id (-> renderer-state deref :root))
+        source (svg/create-element svg-name root {})
+        model (model-attributes component)]
+      (sync-svg-element source model)
+      (dom/attr source "id" (:uid component))
+      (when (not (nil? postprocess)) (postprocess source))))
 
 (defn- z-index-sorted [svg-components]
   (sort-by #(-> % :attributes :z-index) (vals svg-components)))
 
-(defn- request-text-measure [renderer-state component]
-  (swap! renderer-state assoc-in [:pending-measures (:uid component)] component))
+(defn- measure-text [app-state component]
+  (when-let [domnode (dom/by-id (:uid component))]
+    (let [bbox (.getBBox domnode)]
+      (d/set-data component {:width (.-width bbox) :height (.-height bbox)}))))
+      ;(bus/fire app-state "layouts.do" {:container (e/lookup app-state component)}))))
 
-(defn- close-text-measure [renderer-state id]
-  (swap! renderer-state update-in [:pending-measures] dissoc id))
-
-(defn- measure-text [app-state]
-  (let [renderer-state (state/get-renderer-state app-state)]
-    (doseq [id (-> renderer-state deref :pending-measures keys)]
-      (let [domnode (dom/by-id id)
-            component (get-in @renderer-state [:pending-measures id])
-            bbox (.getBBox domnode)]
-        (d/set-data component {:width (.-width bbox) :height (.-height bbox)})
-        (close-text-measure renderer-state id)
-        (bus/fire app-state "layouts.do" {:container (e/lookup app-state component)})))))
-
-(defn Root [dom-id width height app-state renderer-state]
-  (reagent/create-class {
-    :display-name  "Root"
-    :component-did-update
-        (fn [this old-argv] (measure-text app-state))
-    :reagent-render (fn [dom-id width height app-state renderer-state]
-                      [:svg {:id (str dom-id "-svg") :width width :height height}
-                        (doall
-                          (for [svg (z-index-sorted (-> renderer-state deref :components))]
-                            ^{:key (-> svg :attributes :id)}
-                            (:dom svg)))])
-                    }))
-
+(defmethod r/is-state-created :svg [renderer-state component]
+   (some? (dom/by-id (:uid component))))
 ;;==========================================================================================================
 ;; rendering context initialization
 ;;==========================================================================================================
 (defmethod r/initialize :svg [renderer app-state dom-id width height initial-state]
   (let [renderer-state (atom initial-state)]
-    (swap! renderer-state assoc :pending-measures {})
-    (reagent/render-component [Root (str dom-id "-svg") width height app-state renderer-state] (dom/by-id dom-id))
+    (swap! renderer-state assoc :measure (fn [component] (measure-text app-state component))
+                                :root (str dom-id "-svg"))
+    (svg/create-svg dom-id "svg" {:width width :height height})
     renderer-state))
 
 (defmethod r/all-rendered :svg [state context])
@@ -132,10 +108,11 @@
   (update-svg-element renderer-state component nil))
 
 (defmethod r/create-rendering-state [:svg :draw-rect] [renderer-state component]
-  (create-svg-element renderer-state :rect component nil))
+  (create-svg-element renderer-state "rect" component nil))
 
 (defmethod r/destroy-rendering-state [:svg :draw-rect] [renderer-state component]
-  (swap! renderer-state update :components dissoc (:uid component)))
+  (swap! renderer-state update :components dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))
 
 ;;==========================================================================================================
 ;; circle rendering
@@ -144,19 +121,19 @@
 (defn- circle [component]
   (fn [svg]
     (let [mdl (model-attributes component)]
-      (-> svg
-         (assoc-in [1 :cx] (+ (:left mdl ) (:radius mdl)) )
-         (assoc-in [1 :cy] (+ (:top  mdl ) (:radius mdl)) ) ))))
+      (dom/attrs svg {"cx" (+ (:left mdl ) (:radius mdl))
+                      "cy" (+ (:top  mdl ) (:radius mdl))}))))
 
 (defmethod r/do-render [:svg :draw-circle] [renderer-state component]
   (update-svg-element renderer-state component (circle component)))
 
 
 (defmethod r/create-rendering-state [:svg :draw-circle] [renderer-state component]
-  (create-svg-element renderer-state :circle component (circle component)))
+  (create-svg-element renderer-state "circle" component (circle component)))
 
 (defmethod r/destroy-rendering-state [:svg :draw-circle] [renderer-state component]
-  (swap! renderer-state update :components dissoc (:uid component)))
+  (swap! renderer-state update :components dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))
 
 ;;==========================================================================================================
 ;; line rendering
@@ -165,10 +142,11 @@
   (update-svg-element renderer-state component nil))
 
 (defmethod r/create-rendering-state [:svg :draw-line] [renderer-state component]
-  (create-svg-element renderer-state :line component nil))
+  (create-svg-element renderer-state "line" component nil))
 
 (defmethod r/destroy-rendering-state [:svg :draw-line] [renderer-state component]
-  (swap! renderer-state update-in [:components] dissoc (:uid component)))
+  (swap! renderer-state update-in [:components] dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))
 
 ;;==========================================================================================================
 ;; triangle rendering
@@ -186,32 +164,31 @@
 
 (defn- triangle [component]
   (fn [svg]
-    (assoc-in svg [1 :d] (triangle-from-pos component))))
+    (dom/attr svg "d" (triangle-from-pos component))))
 
 (defmethod r/do-render [:svg :draw-triangle] [renderer-state component]
   (update-svg-element renderer-state component (triangle component)))
 
 (defmethod r/create-rendering-state [:svg :draw-triangle] [renderer-state component]
-  (create-svg-element renderer-state :path component (triangle component)))
+  (create-svg-element renderer-state "path" component (triangle component)))
 
 (defmethod r/destroy-rendering-state [:svg :draw-triangle] [renderer-state component]
-  (swap! renderer-state update :components dissoc (:uid component)))
+  (swap! renderer-state update :components dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))
 
 ;;==========================================================================================================
 ;; text rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:svg :draw-text] [renderer-state component]
-  (let [properties (get-in @renderer-state [:components (:uid component) :redraw-properties])]
-    (when (some #(= :text %) properties)
-      (request-text-measure renderer-state component)))
-  (update-svg-element renderer-state component nil))
+  (update-svg-element renderer-state component nil)
+  ((:measure @renderer-state) component))
 
 (defmethod r/create-rendering-state [:svg :draw-text] [renderer-state component]
-  (create-svg-element renderer-state :text component nil))
+  (create-svg-element renderer-state "text" component nil))
 
 (defmethod r/destroy-rendering-state [:svg :draw-text] [renderer-state component]
-  (close-text-measure renderer-state (:uid component))
-  (swap! renderer-state update :components dissoc (:uid component)))
+  (swap! renderer-state update :components dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))
 
 ;;==========================================================================================================
 ;; image rendering
@@ -220,7 +197,8 @@
   (update-svg-element renderer-state component nil))
 
 (defmethod r/create-rendering-state [:svg :draw-image] [renderer-state component]
-  (create-svg-element renderer-state :image component nil))
+  (create-svg-element renderer-state "image" component nil))
 
 (defmethod r/destroy-rendering-state [:svg :draw-image] [renderer-state component]
-  (swap! renderer-state update :components dissoc (:uid component)))
+  (swap! renderer-state update :components dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))

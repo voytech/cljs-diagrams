@@ -65,7 +65,7 @@
   (bus/on app-state ["entity.render"] -999 (fn [event]
                                              (let [{:keys [entity app-state]} (:context event)
                                                     renderer-state (state/get-renderer-state app-state)]
-                                                (console.log (clj->js entity))    
+                                                (console.log (clj->js entity))
                                                 (render-entity renderer-state entity))))
 
   (bus/on app-state ["uncommited.render"] -999 (fn [event]
@@ -81,6 +81,8 @@
                                                   nil))))
 
 (defmulti initialize (fn [renderer app-state dom-id width height initial-state] renderer))
+
+(defmulti is-state-created (fn [renderer-state component] (renderer-name renderer-state)))
 
 (defmulti all-rendered (fn [renderer-state] (renderer-name renderer-state)))
 
@@ -102,13 +104,8 @@
 (defn render [renderer-state component]
   (when (not (nil? component))
     (let [component-state (get-in @renderer-state [:components (:uid component)])]
-      (when (or (nil? component-state)
-                (empty? component-state)
-                (empty? (:dom component-state)))
-        (swap! renderer-state assoc-in
-          [:components (:uid component)]
-          (merge component-state
-                 (create-rendering-state renderer-state component))))
+      (when (not (is-state-created renderer-state component))
+         (create-rendering-state renderer-state component))
       (do-render renderer-state component)
       (swap! renderer-state update-in
         [:components (:uid component)] dissoc :redraw-properties))))

@@ -21,7 +21,7 @@
               (fn [e]
                  (let [{:keys [app-state component entity movement-x movement-y]} (:context e)]
                    (api/move-entity app-state entity movement-x movement-y)
-                    nil)))
+                   nil)))
 
 (defbehaviour moving-association-entity-by
               "Moving Association Entity By"
@@ -46,7 +46,7 @@
               (fn [e]
                  (let [{:keys [app-state entity movement-x movement-y]} (:context e)]
                    (api/move-entity app-state entity movement-x movement-y)
-                    nil)))
+                   nil)))
 
 (defbehaviour select-shape-entity
               "Select object"
@@ -72,7 +72,7 @@
                                  component
                                  f/has-controls
                                  (fn [src trg] (std/toggle-controls (:entity trg) true))
-                                 (fn [src] ))
+                                 (fn [src]))
                   nil)))
 
 (defbehaviour make-relation
@@ -90,11 +90,11 @@
                                    (let [ctype (:type component)
                                          end-type (cond
                                                     (= ::c/endpoint ctype) "end"
-                                                    (= ::c/startpoint ctype) "start" )]
+                                                    (= ::c/startpoint ctype) "start")]
                                     (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
                                     (std/toggle-controls (:entity trg) false)
                                     (std/snap-to-control app-state component (:entity trg))))
-                                 (fn [src] ))
+                                 (fn [src]))
                   (m/on-endpoint-event event)
                   nil)))
 
@@ -111,7 +111,7 @@
                                  f/is-container
                                  (fn [src trg]
                                     (e/connect-entities app-state (:entity trg) (:entity src) :inclusion))
-                                 (fn [src] ))
+                                 (fn [src]))
                   nil)))
 
 (defbehaviour hovering-entity

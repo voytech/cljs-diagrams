@@ -84,17 +84,17 @@
 
 (defn- position-entity-endpoint
   ([app-state entity component movement-x movement-y]
-    (api/apply-effective-position component movement-x movement-y :offset)
-    (when (= (:type component) ::c/endpoint)
-      (let [arrow (e/get-entity-component entity "arrow")]
-        (api/apply-effective-position arrow movement-x movement-y :offset))))
+   (api/apply-effective-position component movement-x movement-y :offset)
+   (when (= (:type component) ::c/endpoint)
+     (let [arrow (e/get-entity-component entity "arrow")]
+       (api/apply-effective-position arrow movement-x movement-y :offset))))
   ([app-state entity endpoint to-point]
-    (api/apply-effective-position endpoint (:x to-point) (:y to-point) :absolute)
-    (when (= (:type endpoint) ::c/endpoint)
-      (let [arrow (e/get-entity-component entity "arrow")
-            x (+ (:x to-point) (/ (d/get-width arrow) 2))
-            y (+ (:y to-point) (/ (d/get-height arrow) 2))]
-        (api/apply-effective-position arrow x y :absolute)))))
+   (api/apply-effective-position endpoint (:x to-point) (:y to-point) :absolute)
+   (when (= (:type endpoint) ::c/endpoint)
+     (let [arrow (e/get-entity-component entity "arrow")
+           x (+ (:x to-point) (/ (d/get-width arrow) 2))
+           y (+ (:y to-point) (/ (d/get-height arrow) 2))]
+       (api/apply-effective-position arrow x y :absolute)))))
 
 (defn on-endpoint-event [event]
   (let [{:keys [app-state entity component movement-x movement-y]} event

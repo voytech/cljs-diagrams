@@ -95,8 +95,7 @@
 
 (defn initialize [app-state]
   (state/assoc-event-bus-state app-state [] {
-    :handlers {}
-    :after {}
-    :event-store []
-    :event-pool []
-    }))
+                                             :handlers {}
+                                             :after {}
+                                             :event-store []
+                                             :event-pool []}))

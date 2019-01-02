@@ -14,47 +14,47 @@
    :height height
    :renderer renderer
    :events {
-     :canonical-events {
-       "mousedown"  "mouse-down"
-       "mouseup"    "mouse-up"
-       "click"      "mouse-click"
-       "dbclick"    "mouse-db-click"
-       "mousemove"  "mouse-move"
-       "mouseenter" "mouse-enter"
-       "mouseleave" "mouse-leave"
-     }
-     :application-events {
-       "mouse-dragging-move"   "move"
-       "mouse-in"              "focus"
-       "mouse-out"             "blur"
-       "mouse-point-click"     "activate"
-     }
-     :patterns {
-       :mouse-dragging-move (patterns/mouse-dragging-move-event)
-       :mouse-move (patterns/mouse-move-event)
-       :mouse-in (patterns/mouse-in-event)
-       :mouse-out (patterns/mouse-out-event)
-       :mouse-point-click (patterns/mouse-click-event)
-     }
-   }
+            :canonical-events {
+                               "mousedown"  "mouse-down"
+                               "mouseup"    "mouse-up"
+                               "click"      "mouse-click"
+                               "dbclick"    "mouse-db-click"
+                               "mousemove"  "mouse-move"
+                               "mouseenter" "mouse-enter"
+                               "mouseleave" "mouse-leave"}
+
+            :application-events {
+                                 "mouse-dragging-move"   "move"
+                                 "mouse-in"              "focus"
+                                 "mouse-out"             "blur"
+                                 "mouse-point-click"     "activate"}
+
+            :patterns {
+                       :mouse-dragging-move (patterns/mouse-dragging-move-event)
+                       :mouse-move (patterns/mouse-move-event)
+                       :mouse-in (patterns/mouse-in-event)
+                       :mouse-out (patterns/mouse-out-event)
+                       :mouse-point-click (patterns/mouse-click-event)}}
+
+
    :behaviours [
-      b/moving-rigid-entity
-      b/moving-association-entity-by
-      b/moving-primary-entity-by
-      b/moving-association-endpoints
-      b/make-relation
-      b/make-inclusion-relation
-      b/hovering-entity
-      b/leaving-entity
-      b/show-all-entity-controls
-      b/hide-all-entity-controls
-      b/show-entity-control
-      b/hide-entity-control
-      b/resize-entity
-      b/select-shape-entity
-      b/show-bbox
-      b/hide-bbox
-   ]})
+                b/moving-rigid-entity
+                b/moving-association-entity-by
+                b/moving-primary-entity-by
+                b/moving-association-endpoints
+                b/make-relation
+                b/make-inclusion-relation
+                b/hovering-entity
+                b/leaving-entity
+                b/show-all-entity-controls
+                b/hide-all-entity-controls
+                b/show-entity-control
+                b/hide-entity-control
+                b/resize-entity
+                b/select-shape-entity
+                b/show-bbox
+                b/hide-bbox]})
+
 
 (defn resolve-drop "Should resolve drop events for following scenarios:
                    1. The drag source is from the library component (image is dragged)
@@ -71,4 +71,5 @@
       (.getElementById js/document "reagent-panel-app"))
     (let [canvas-wrapper (dom/by-id "canvas-wrapper")]
       (.addEventListener canvas-wrapper "drop" (resolve-drop app-state))
-      (.addEventListener canvas-wrapper "dragover" #(.preventDefault %)))))
+      (.addEventListener canvas-wrapper "dragover" #(.preventDefault %))
+      (project/initialize "project" app-state config))))

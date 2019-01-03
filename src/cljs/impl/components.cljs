@@ -10,40 +10,6 @@
                                         margins]])
   (:require-macros [core.macros :refer [defcomponent defcomponent-group component]]))
 
-(def WIDTH 180)
-(def HEIGHT 150)
-
-(defn- setup-bbox [drawable p p1 p2 p3 p4]
-  (when (or (= p p1) (= p p2))
-    (if (>= (d/getp drawable p1) (d/getp drawable p2))
-      (do (d/setp drawable p3 (d/getp drawable p2))
-          (d/setp drawable p4 (- (d/getp drawable p1) (d/getp drawable p2))))
-      (do (d/setp drawable p3 (d/getp drawable p1))
-          (d/setp drawable p4 (- (d/getp drawable p2) (d/getp drawable p1)))))))
-
-(defn- dimmension [drawable d2 d1]
-  (- (d/getp drawable d2)
-     (d/getp drawable d1)))
-
-(defn- manage-related-properties [drawable p]
-  (d/suppress-hook ::relation :setp ;; prevent circular dependency invocations
-    (fn []
-      (cond
-        (= p :left) (let [width (dimmension drawable :x2 :x1)]
-                      (d/setp drawable :x1 (d/getp drawable :left))
-                      (d/setp drawable :x2 (+ (d/getp drawable :left) width)))
-        (= p :top)  (let [height (dimmension drawable :y2 :y1)]
-                      (d/setp drawable :y1 (d/getp drawable :top))
-                      (d/setp drawable :y2 (+ (d/getp drawable :top) height)))
-        :else (do (setup-bbox drawable p :x1 :x2 :left :width)
-                  (setup-bbox drawable p :y1 :y2 :top  :height))))))
-
-(d/add-hook ::relation :setp manage-related-properties)
-
-(d/add-hook ::relation :set-data (fn [drawable data]
-                                     (doseq [p (keys data)]
-                                      (manage-related-properties drawable p))))
-
 (defn- control-initializer []
   (fn [container props]
      {:width 16
@@ -96,7 +62,19 @@
      :border-width 1
      :background-color "white"}))
 
-(defcomponent relation :draw-line {} (relation-initializer))
+(defn poly-line-initializer []
+  (fn [container props]
+    {:points  [0 0 (-> container :bbox :width) 0]
+     :left 0
+     :top 0
+     :border-color "black"
+     :border-style :solid
+     :border-width 1
+     :z-index 0}))
+
+;(defcomponent relation :draw-line {} (relation-initializer))
+
+(defcomponent relation :draw-poly-line {} (poly-line-initializer))
 
 (defcomponent arrow :draw-triangle {} (arrow-initializer))
 

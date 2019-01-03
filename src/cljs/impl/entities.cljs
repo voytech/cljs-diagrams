@@ -68,7 +68,8 @@
   (with-components context
     (component c/bounding-box "bbox" {} {}
       (layout-attributes ::w/expression  (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0))))
-    (component c/relation "connector" {} {:start "start" :end "end"})
+    ;(component c/relation "connector" {} {:start "start" :end "end"})
+    (component c/relation "connector" {} {})
     (component c/startpoint "start" {:left 0 :top 0} {})
     (component c/arrow "arrow" {} {})
     (component c/endpoint "end" {} {})

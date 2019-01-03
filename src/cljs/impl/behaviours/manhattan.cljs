@@ -7,8 +7,6 @@
             [impl.behaviours.behaviour-api :as std]
             [impl.components :as c]))
 
-(defonce CONTROL_SUFFIX "-ctrl")
-(defonce LINE_PREFIX "line-")
 
 (defn- center-point [cmp]
   (let [mx (+ (d/get-left cmp) (/ (d/get-width cmp) 2))
@@ -33,38 +31,18 @@
 (defn- find-path [start end s-normal e-normal]
    (find-connection-points (center-point start) (center-point end) s-normal e-normal))
 
-(defn- find-path-lines [start-point end-point mid-points]
-  (let [all-points (flatten [start-point mid-points end-point])]
-     (partition 2 1 all-points)))
-
-(defn- connector-idx [name]
-  (let [splt (clojure.string/split name #"-")]
-    (if (> (count splt) 1) (cljs.reader/read-string (splt 1)) -1)))
-
-(defn- update-line-component [app-state entity idx sx sy ex ey props]
-  (let [name (str "line-" idx)]
-    (e/assert-component c/relation app-state entity name (merge props {:x1 sx :y1 sy :x2 ex :y2 ey}))))
-
-(defn- update-line-components [app-state entity path]
-  (e/remove-entity-components app-state entity (fn [c] (>= (connector-idx (:name c)) (count path))))
-  (-> (map-indexed (fn [idx e]
-                      (update-line-component app-state
-                                             (e/volatile-entity app-state entity)
-                                             idx
-                                             (:x (first e))
-                                             (:y (first e))
-                                             (:x (last e))
-                                             (:y (last e))))
-                   path)
-      last))
+(defn to-polyline-points [start end points]
+   (->  (mapv (fn [entry] [(:x entry) (:y entry)]) (flatten [start points end]))
+        (flatten)))
 
 (defn update-manhattan-layout [app-state entity start end s-normal e-normal]
   (let [points (find-path start end s-normal e-normal)
-        path (find-path-lines (center-point start) (center-point end) points)
-        cstart (e/get-entity-component entity "start")
-        cend (e/get-entity-component entity "end")]
-     (-> (update-line-components app-state entity path)
-         (std/refresh-arrow-angle (e/get-entity-component entity "arrow")))))
+        polyline-points (to-polyline-points (center-point start) (center-point end) points)
+        polyline (first (e/get-entity-component entity ::c/relation))]
+     (d/setp polyline :points polyline-points)
+     (std/refresh-arrow-angle
+       (take-last 4 polyline-points)
+       (e/get-entity-component entity "arrow"))))
 
 (defn- calculate-vectors [app-state
                           source-entity source-control
@@ -101,7 +79,6 @@
         start (e/get-entity-component entity "start")
         end (e/get-entity-component entity "end")
         vectors (eval-vectors (center-point start) (center-point end))]
-    (e/remove-entity-component app-state entity "connector")
     (position-entity-endpoint app-state entity component movement-x movement-y)
     (update-manhattan-layout app-state entity start end (vectors 0) (vectors 1))
     (std/calc-association-bbox app-state entity)))
@@ -114,14 +91,12 @@
             active (e/get-entity-component entity (if-not (nil? start) "start" "end"))
             passive (e/get-entity-component entity (if-not (nil? start) "end" "start"))
             vectors (eval-vectors (center-point active) (center-point passive))]
-        (e/remove-entity-component app-state entity "connector")
         (position-entity-endpoint app-state entity active movement-x movement-y)
         (update-manhattan-layout app-state entity active passive (vectors 0) (vectors 1)))
       (let [{:keys [src trg]} (nearest-controls-between app-state start end)
             startpoint (e/get-entity-component entity "start")
             endpoint (e/get-entity-component entity "end")
             vectors (calculate-vectors app-state start src end trg)]
-        (e/remove-entity-component app-state entity "connector")
         (position-entity-endpoint app-state entity startpoint {:x (d/get-left src) :y (d/get-top src)})
         (position-entity-endpoint app-state entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
         (update-manhattan-layout app-state entity src trg (vectors 0) (vectors 1))))

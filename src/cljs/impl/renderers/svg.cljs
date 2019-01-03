@@ -19,6 +19,13 @@
                                :round-y (simple-set :ry)
                                :width  (simple-set :width)
                                :height (simple-set :height)
+                               :points (fn [svg val mdl]
+                                          (console.log (clj->js (partition 2 val)))
+                                          (dom/attr svg "points"
+                                            (reduce (fn [agg point]
+                                                      (str agg " " (nth point 0) "," (nth point 1) ))
+                                                    ""
+                                                    (partition 2 val))))
                                :angle  (fn [svg val mdl]
                                           (dom/attr svg "transform"
                                             (str "rotate(" val "," (:left mdl) "," (:top mdl) ")")))
@@ -91,8 +98,6 @@
       (doseq [prev-dom (mapv #(dom/get-child-at parent %) (reverse (range count)))]
         (when (not= (dom/attr prev-dom "id") (:uid component))
           (let [prev-dom-z-index (dom/attr prev-dom "data-z-index")]
-            ;(console.log prev-dom-z-in)
-            ;(console.log z-index)
             (when (> prev-dom-z-index z-index)
               (dom/insert-before node prev-dom))))))))
 
@@ -186,6 +191,23 @@
   (create-svg-element renderer-state "path" component (triangle component)))
 
 (defmethod r/destroy-rendering-state [:svg :draw-triangle] [renderer-state component]
+  (swap! renderer-state update :components dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))
+
+  ;;==========================================================================================================
+  ;; poly-line rendering
+  ;;==========================================================================================================
+(defn- remove-fill []
+  (fn [svg]
+    (dom/attr svg "fill" "none")))
+
+(defmethod r/do-render [:svg :draw-poly-line] [renderer-state component]
+  (update-svg-element renderer-state component (remove-fill)))
+
+(defmethod r/create-rendering-state [:svg :draw-poly-line] [renderer-state component]
+  (create-svg-element renderer-state "polyline" component nil))
+
+(defmethod r/destroy-rendering-state [:svg :draw-poly-line] [renderer-state component]
   (swap! renderer-state update :components dissoc (:uid component))
   (dom/remove-by-id (:uid component)))
 

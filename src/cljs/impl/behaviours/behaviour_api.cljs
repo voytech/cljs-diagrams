@@ -34,12 +34,12 @@
                           (js/Math.atan (/ y x))))))]
       (+ (/ (* angle 180) PI) 90)))
 
-(defn refresh-arrow-angle [relation-component arrow-component]
-  (when (not (nil? relation-component))
-    (let [x1 (-> relation-component  (d/getp :x1))
-          y1 (-> relation-component  (d/getp :y1))
-          x2 (-> relation-component  (d/getp :x2))
-          y2 (-> relation-component  (d/getp :y2))]
+(defn refresh-arrow-angle [heading-vector arrow-component]
+  (when (not (nil? heading-vector))
+    (let [x1 (nth heading-vector 0)
+          y1 (nth heading-vector 1)
+          x2 (nth heading-vector 2)
+          y2 (nth heading-vector 3)]
        (d/setp arrow-component :angle (calculate-angle x1 y1 x2 y2)))))
 
 (defn insert-breakpoint []

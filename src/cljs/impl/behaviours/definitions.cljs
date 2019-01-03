@@ -66,8 +66,9 @@
               (b/build-event-name [::c/startpoint ::c/endpoint ] "move")
               (fn [e]
                 (let [event (:context e)
-                      {:keys [app-state component]} event]
-                  (m/on-endpoint-event event)
+                      {:keys [app-state entity component movement-x movement-y]} event
+                      end-type (if (= ::c/startpoint (:type component)) :start :end)]
+                  (m/endpoint-move app-state entity end-type movement-x movement-y)
                   (api/collides? app-state
                                  component
                                  f/has-controls
@@ -81,7 +82,11 @@
               [f/is-association-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ] "mouse-up")
               (fn [e]
-                (let [{:keys [app-state component entity] :as event} (:context e)]
+                (let [{:keys [app-state component entity] :as event} (:context e)
+                      ctype (:type component)
+                      end-type (cond
+                                 (= ::c/endpoint ctype) :end
+                                 (= ::c/startpoint ctype) :start)]
                   (api/collision-based-relations-validate app-state entity)
                   (api/collides? app-state
                                  component
@@ -95,7 +100,7 @@
                                     (std/toggle-controls (:entity trg) false)
                                     (std/snap-to-control app-state component (:entity trg))))
                                  (fn [src]))
-                  (m/on-endpoint-event event)
+                  ;(m/endpoint-move app-state entity end-type movement-x movement-y)
                   nil)))
 
 (defbehaviour make-inclusion-relation

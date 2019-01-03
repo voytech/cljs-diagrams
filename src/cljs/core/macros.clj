@@ -25,6 +25,9 @@
              entity#
              (vector ~@layouts))))
 
+(defmacro resolve-data [data]
+  `~data)
+
 (defmacro with-components [context & components]
   `(fn [app-state# entity# ~context]
      (let [left# (or (:left ~context) 0)
@@ -64,7 +67,9 @@
           tags        (:with-tags transformed)
           shape-ref   (:shape transformed)
           components-props (:components-templates transformed)
+          resolve-data  (:resolve-data transformed)
           has-layouts   (contains? transformed :with-layouts)
+          has-data      (contains? transformed :resolve-data)
           has-templates (contains? transformed :components-templates)]
       (when (nil? components)
         (throw (Error. "Provide components definition within entitity definition!")))
@@ -83,6 +88,8 @@
                                  context#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]
                (core.eventbus/fire app-state# "entity.render" {:entity result#})
+               (when ~has-data
+                 (extensions.data-resolvers/apply-data app-state# result# (merge ~resolve-data context#)))
                result#)))))))
 
 (defmacro defcomponent [type rendering-method props initializer]

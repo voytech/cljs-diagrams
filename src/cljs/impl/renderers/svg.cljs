@@ -20,7 +20,6 @@
                                :width  (simple-set :width)
                                :height (simple-set :height)
                                :points (fn [svg val mdl]
-                                          (console.log (clj->js (partition 2 val)))
                                           (dom/attr svg "points"
                                             (reduce (fn [agg point]
                                                       (str agg " " (nth point 0) "," (nth point 1) ))

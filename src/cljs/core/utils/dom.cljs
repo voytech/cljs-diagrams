@@ -39,8 +39,11 @@
 (defn remove-element [element]
   (.remove (j-query element)))
 
-(defn children-count [element]
-  (.-length (.children (j-query element))))
+(defn child-count [element]
+  (.-length (.-childNodes element)))
+
+(defn get-child-at [parent index]
+  (aget (.-childNodes parent) index))
 
 (defn hide-childs [parent])
 
@@ -52,8 +55,9 @@
 (defn child-at [parent index]
   (.get (j-query parent) index))
 
-(defn swap-childs [child1 child2]
-  (.insertBefore (j-query child2) child1))
+(defn insert-before [insert before]
+  (let [parent (.-parentNode insert)]
+    (.insertBefore parent insert before)))
 
 (defn swap-childs-idx [parent idx1 idx2]
   (swap-childs (child-at parent idx1)
@@ -93,10 +97,13 @@
 
 (defn remove-by-id [id]
   (when-let [elem (by-id id)]
-    (.removeChild (.-parentElement elem) elem)))    
+    (.removeChild (.-parentElement elem) elem)))
 
-(defn attr [elem name val]
-  (.setAttribute elem name val))
+(defn attr
+  ([elem name val]
+    (.setAttribute elem name val))
+  ([elem name]
+    (.getAttribute elem name)))
 
 (defn set-text [elem text]
   (.text (j-query elem) text))

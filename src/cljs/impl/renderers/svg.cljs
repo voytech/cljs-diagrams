@@ -68,6 +68,8 @@
         source  (dom/by-id (:uid component))
         model  (model-attributes component)
         properties (:redraw-properties rendering-component)]
+    (when (some #(= :z-index %) properties)
+      (refresh-z-index component))
     (sync-svg-element source model properties)
     (when (not (nil? postprocess)) (postprocess source))))
 
@@ -77,16 +79,27 @@
         model (model-attributes component)]
       (sync-svg-element source model)
       (dom/attr source "id" (:uid component))
+      (dom/attr source "data-z-index" (resolve-value (d/getp component :z-index)))
       (when (not (nil? postprocess)) (postprocess source))))
 
-(defn- z-index-sorted [svg-components]
-  (sort-by #(-> % :attributes :z-index) (vals svg-components)))
+(defn- refresh-z-index [component]
+  (let [node (dom/by-id (:uid component))
+        parent (.-parentNode node)
+        count (dom/child-count parent)
+        z-index (resolve-value (d/getp component :z-index))]
+    (when (not=  z-index (dom/attr node "data-z-index"))
+      (doseq [prev-dom (mapv #(dom/get-child-at parent %) (reverse (range count)))]
+        (when (not= (dom/attr prev-dom "id") (:uid component))
+          (let [prev-dom-z-index (dom/attr prev-dom "data-z-index")]
+            ;(console.log prev-dom-z-in)
+            ;(console.log z-index)
+            (when (> prev-dom-z-index z-index)
+              (dom/insert-before node prev-dom))))))))
 
 (defn- measure-text [app-state component]
   (when-let [domnode (dom/by-id (:uid component))]
     (let [bbox (.getBBox domnode)]
       (d/set-data component {:width (.-width bbox) :height (.-height bbox)}))))
-      ;(bus/fire app-state "layouts.do" {:container (e/lookup app-state component)}))))
 
 (defmethod r/is-state-created :svg [renderer-state component]
    (some? (dom/by-id (:uid component))))

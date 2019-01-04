@@ -11,9 +11,11 @@
             [impl.extensions.resolvers.default :as resolvers]
             [ui.components.workspace :as ws :refer [Workspace]]))
 
-(defn Library [class app-state]
+(defn Library [class app-state feedback]
   [:div {:class (:class class)}
-    [components/Tabs {:name "Basic Shapes" :view [tv/ToolBox :basic-tools]}]])
+    [components/ShapePropertyEditor app-state feedback [:title]]
+    [:div
+      [components/Tabs {:name "Basic Shapes" :view [tv/ToolBox :basic-tools]}]]])
 
 (defn Main [app-state config]
   [:div.container-fluid

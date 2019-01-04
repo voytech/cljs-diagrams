@@ -4,6 +4,7 @@
             [core.utils.dnd :as dnd]
             [core.project :as project]
             [impl.behaviours.definitions :as b]
+            [core.eventbus :as bus]
             [impl.renderers.svg :as svg]
             [core.state :as state]
             [impl.synthetic-events :as patterns]
@@ -64,12 +65,21 @@
     (.preventDefault event)
     (dnd/dispatch-drop-event event state)))
 
+(defn register-selection-feedback [app-state feedback]
+  (bus/on app-state ["entity.selected"] -999
+    (fn [event]
+      (swap! feedback assoc :selection (-> event :context :selection)
+                            :show-popup true)
+      nil)))
+
 (defn init []
   (let [config (app-config 1270 1000 :svg)
+        feedback (atom {})
         app-state (state/create-app-state "project" config)]
-    (reagent/render-component [m/Library {:class "col-8 sidebar-offcanvas"} app-state]
+    (reagent/render-component [m/Library {:class "col-8 sidebar-offcanvas"} app-state feedback]
       (.getElementById js/document "reagent-panel-app"))
     (let [canvas-wrapper (dom/by-id "canvas-wrapper")]
       (.addEventListener canvas-wrapper "drop" (resolve-drop app-state))
       (.addEventListener canvas-wrapper "dragover" #(.preventDefault %))
-      (project/initialize "project" app-state config))))
+      (project/initialize "project" app-state config)
+      (register-selection-feedback app-state feedback))))

@@ -74,19 +74,28 @@
 
 ;(defcomponent relation :draw-line {} (relation-initializer))
 
-(defcomponent relation :draw-poly-line {} (poly-line-initializer))
+(defcomponent relation {:rendering-method :draw-poly-line
+                        :initializer (poly-line-initializer)})
 
-(defcomponent arrow :draw-triangle {} (arrow-initializer))
+(defcomponent arrow {:rendering-method :draw-triangle
+                     :initializer (arrow-initializer)})
 
-(defcomponent startpoint :draw-circle {:start "connector" :penultimate true} (endpoint-initializer :start true))
+(defcomponent startpoint {:rendering-method :draw-circle
+                          :attributes {:start "connector" :penultimate true}
+                          :initializer (endpoint-initializer :start true)})
 
-(defcomponent endpoint :draw-circle {:end "connector"} (endpoint-initializer :end false))
+(defcomponent endpoint {:rendering-method :draw-circle
+                        :attributes {:end "connector"}
+                        :initializer (endpoint-initializer :end false)})
 
-(defcomponent breakpoint :draw-circle {} (fn [e] {:moveable true :visible true :opacity 1 :z-index :top}))
+(defcomponent breakpoint {:rendering-method :draw-circle
+                          :initializer (fn [e] {:moveable true :visible true :opacity 1 :z-index :top})})
 
-(defcomponent control :draw-rect {} (control-initializer))
+(defcomponent control {:rendering-method :draw-rect
+                       :initializer (control-initializer)})
 
-(defcomponent entity-shape :draw-rect {} (entity-shape-initializer))
+(defcomponent entity-shape {:rendering-method :draw-rect
+                            :initializer (entity-shape-initializer)})
 
 ;; ===================================
 ;; layout managed components.
@@ -99,7 +108,8 @@
      :font-family "calibri"
      :font-size 12}))
 
-(defcomponent title :draw-text {} (title-initializer))
+(defcomponent title {:rendering-method :draw-text
+                     :initializer (title-initializer)})
 
 (defn- image-initializer [width height]
   (fn [container props]
@@ -109,22 +119,31 @@
      :width width
      :height height}))
 
-(defcomponent image :draw-image {} (image-initializer 50 50))
+(defcomponent image {:rendering-method :draw-image
+                     :initializer (image-initializer 50 50)})
 
-(defcomponent text :draw-text {} (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
+(defcomponent text {:rendering-method :draw-text
+                    :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
 
-(defcomponent description :draw-text {} (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12}))
+(defcomponent description {:rendering-method :draw-text
+                           :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
 
-(defcomponent rectangle :draw-rect {} (fn [c p] {:border-color "black" :border-style :solid :border-width 1}))
+(defcomponent rectangle {:rendering-method :draw-rect
+                         :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1})})
 
-(defcomponent bounding-box :draw-rect {} (fn [c p] {:border-color "lightgray" :border-style :dotted :opacity 0.1 :border-width 1 :visible false}))
+(defcomponent bounding-box {:rendering-method :draw-rect
+                            :initializer (fn [c p] {:border-color "lightgray" :border-style :dotted :opacity 0.1 :border-width 1 :visible false})})
 
 (defcomponent-group entity-controls
-  (component control "connector-left" {} {:side :left}
-    (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5))))
-  (component control "connector-right" {} {:side :right}
-    (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5))))
-  (component control "connector-top" {} {:side :top}
-    (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5))))
-  (component control "connector-bottom" {} {:side :bottom}
-    (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))))
+  (component control {:name  "connector-left"
+                      :attributes {:side :left}
+                      :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
+  (component control {:name  "connector-right"
+                      :attributes {:side :right}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
+  (component control {:name  "connector-top"
+                      :attributes {:side :top}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
+  (component control {:name "connector-bottom"
+                      :attributes {:side :bottom}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))

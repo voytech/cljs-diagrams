@@ -196,12 +196,10 @@
   ;;==========================================================================================================
   ;; poly-line rendering
   ;;==========================================================================================================
-(defn- remove-fill []
-  (fn [svg]
-    (dom/attr svg "fill" "none")))
+
 
 (defmethod r/do-render [:svg :draw-poly-line] [renderer-state component]
-  (update-svg-element renderer-state component (remove-fill)))
+  (update-svg-element renderer-state component nil))
 
 (defmethod r/create-rendering-state [:svg :draw-poly-line] [renderer-state component]
   (create-svg-element renderer-state "polyline" component nil))

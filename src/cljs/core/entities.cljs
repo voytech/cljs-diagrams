@@ -91,17 +91,12 @@
     (bus/fire app-state "entity.bbox.set" {:entity updated})
     updated))
 
-(defn add-entity-component
-  ([app-state entity type name data props method]
-   (add-entity-component app-state entity type name data props method nil))
-  ([app-state entity type name data props method initializer]
-   (add-entity-component app-state entity type name data props method initializer nil))
-  ([app-state entity type name data props method initializer layout-attributes]
-   (let [entity (d/new-component app-state entity layout-attributes type name data props method initializer)]
+(defn add-entity-component [app-state entity args-map]
+   (let [entity (d/new-component app-state entity args-map)]
      (state/assoc-diagram-state app-state [:entities (:uid entity)] entity)
      (let [updated (entity-by-id app-state (:uid entity))]
        (bus/fire app-state "entity.component.added" {:entity updated})
-       updated))))
+       updated)))
 
 (defn remove-entity-component [app-state entity component-name]
   (let [component (get-entity-component entity component-name)]
@@ -137,15 +132,15 @@
   (let [entity (entity-by-id app-state (:uid entity))
         component (get-entity-component entity name)]
     (if (nil? component)
-      (func app-state entity name data {})
+      (func app-state entity {:name name :model data})
       (d/set-data component data))
     (get-entity-component entity name)))
  ([func app-state entity name]
   (assert-component func app-state entity name {})))
 
 (defn add-layout
-  ([app-state entity layout]
-   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
+  ([app-state entity layout]component
+   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)component
    (let [updated (entity-by-id app-state (:uid entity))]
      (bus/fire app-state "entity.layout.added" {:entity updated})
      updated))

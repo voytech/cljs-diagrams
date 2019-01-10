@@ -92,25 +92,12 @@
                  (extensions.data-resolvers/apply-data app-state# result# (merge ~resolve-data context#)))
                result#)))))))
 
-(defmacro defcomponent [type rendering-method props initializer]
+(defmacro defcomponent [type {:keys [rendering-method attributes initializer] :as args}]
   (let [nsname (resolve-namespace-name)]
-   `(defn ~type
-     ([app-state# entity# name# data# p# layout-attributes#]
+   `(defn ~type [app-state# entity# args-map#]
       (core.entities/add-entity-component app-state#
                                           entity#
-                                          (keyword ~nsname (name '~type))
-                                          name#
-                                          data#
-                                          (merge ~props p#)
-                                          ~rendering-method
-                                          ~initializer
-                                          layout-attributes#))
-     ([app-state# entity# name# data# p#]
-      (core.entities/add-entity-component app-state#
-                                          entity#
-                                          (keyword ~nsname (name '~type))
-                                          name#
-                                          data#
-                                          (merge ~props p#)
-                                          ~rendering-method
-                                          ~initializer)))))
+                                          (merge ~args
+                                                 {:type (keyword ~nsname (name '~type))}
+                                                 args-map#
+                                                 {:attributes (merge ~attributes (:attributes args-map#))})))))

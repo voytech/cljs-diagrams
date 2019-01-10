@@ -2,9 +2,6 @@
   (:require [core.eventbus :as bus]
             [core.state :as state]))
 
-(declare invoke-hook)
-
-(defonce hooks (atom {}))
 
 (defonce COMPONENT_CHANGED "component.changed")
 
@@ -56,18 +53,14 @@
   (model [this] @model)
   (setp [this property value]
     (vswap! model assoc property value)
-    (property-change-callback this [property])
-    (invoke-hook this :setp property value))
+    (property-change-callback this [property]))
   (silent-setp [this property value]
-    (vswap! model assoc property value)
-    (invoke-hook this :setp property value))
+    (vswap! model assoc property value))
   (silent-set-data [this map_]
-    (vswap! model merge map_)
-    (invoke-hook this :set-data map_))
+    (vswap! model merge map_))
   (set-data [this map_]
     (vswap! model merge map_)
-    (property-change-callback this (keys map_))
-    (invoke-hook this :set-data map_))
+    (property-change-callback this (keys map_)))
   (getp [this property] (get @model property))
   (set-border-color [this value] (setp this :border-color value))
   (set-background-color [this value] (setp this :background-color value))
@@ -139,30 +132,47 @@
 (defn ordered-components [app-state]
   (sort-by #(getp % :z-index) > (components app-state)))
 
+(defn default-model-callback [app-state bbox-draw]
+  (fn [component properties]
+     (if (and (some? bbox-draw)
+              (some #(or (= :left %)
+                         (= :top %)
+                         (= :width %)
+                         (= :height %)) properties))
+       (let [alter-mdl (bbox-draw component)]
+         (silent-set-data component alter-mdl)
+         (changed app-state component (concat properties (keys alter-mdl))))
+       (changed app-state component properties))))
+
 (defn new-component
- ([app-state container layout-attributes type name model attributes method initializer]
-  (let [initializer-data (if (nil? initializer) {} (initializer container attributes))
-        template-data (-> container :components-properties type)
-        mdl  (merge initializer-data template-data model)
-        callback (fn [component properties] (changed app-state component properties))
-        component (Component. (str (random-uuid))
-                              name
-                              type
-                              (volatile! mdl)
-                              method
-                              attributes
-                              (:uid container)
-                              layout-attributes
-                              callback)]
-    (ensure-z-index app-state component)
-    (bus/fire app-state "component.created" {:component component})
-    (state/assoc-diagram-state app-state [:components (:uid component)] component)
-    (bus/fire app-state "component.added" {:component component})
-    (assoc-in container [:components (:name component)] component)))
- ([app-state container type name model attributes method initializer]
-  (new-component app-state container nil type name model attributes method initilizer))
- ([app-state container type name model attributes method]
-  (new-component app-state container nil type name model attributes method nil)))
+ ([app-state container arg-map]
+   (let [{:keys [name
+                 type
+                 model
+                 bbox-draw
+                 attributes
+                 layout-attributes
+                 rendering-method
+                 initializer
+                 ]} arg-map
+         initializer-data (if (nil? initializer) {} (initializer container attributes))
+         template-data (-> container :components-properties type)
+         mdl (merge initializer-data template-data model)
+         callback (default-model-callback app-state bbox-draw)
+         component (Component. (str (random-uuid))
+                               name
+                               type
+                               (volatile! mdl)
+                               rendering-method
+                               attributes
+                               (:uid container)
+                               layout-attributes
+                               callback)]
+     (ensure-z-index app-state component)
+     (bus/fire app-state "component.created" {:component component})
+     (state/assoc-diagram-state app-state [:components (:uid component)] component)
+     (bus/fire app-state "component.added" {:component component})
+     (assoc-in container [:components (:name component)] component))))
 
 (defn layout-attributes
   ([layout-ref layout-order layout-hints]
@@ -171,18 +181,3 @@
    (layout-attributes layout-ref 0 layout-hints))
   ([layout-ref]
    (layout-attributes layout-ref nil)))
-
-(defn add-hook [type function hook]
-  (swap! hooks assoc-in [type function] hook))
-
-(defn suppress-hook [type function call]
-  (let [hook (get-in @hooks [type function])]
-    (swap! hooks update-in [type] dissoc function)
-    (let [result (call)]
-      (add-hook type function hook)
-      result)))
-
-(defn- invoke-hook [drawable function & args]
-  (let [type (:type drawable)]
-     (when-let [hook (get-in @hooks [type function])]
-        (apply hook drawable args))))

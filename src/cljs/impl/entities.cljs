@@ -29,10 +29,19 @@
   {:width 180 :height 150}
   (with-layouts (layout ::w/expression w/expression-layout))
   (with-components context
-    (component c/entity-shape "body" {:round-x 5 :round-y 5} {}
-      (layout-attributes ::w/expression (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0))))
-    (component c/title "title" {:text "Object with header"} {}
-      (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0.1) (weighted-origin 0.5 0))))
+    (component c/entity-shape {:name "body"
+                               :model {:round-x 5 :round-y 5}
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
+    (component c/title {:name  "title"
+                        :model {:text "Object with header"}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 0.1)
+                                                                (weighted-origin 0.5 0)))})
     (component c/entity-controls))
   (shape "body"))
 
@@ -40,12 +49,25 @@
   {:width 240 :height 150}
   (with-layouts (layout ::w/expression w/expression-layout))
   (with-components context
-    (component c/entity-shape "body" {:round-x 5 :round-y 5} {}
-      (layout-attributes ::w/expression (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0))))
-    (component c/title "title" {:text "Object with a header and image"} {}
-      (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0.1) (weighted-origin 0.5 0))))
-    (component c/image "icon-1" {:height 40 :width 40 :image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"} {}
-      (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0.5) (weighted-origin 0.5 0.5))))
+    (component c/entity-shape {:name  "body"
+                               :model {:round-x 5 :round-y 5}
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
+    (component c/title {:name "title"
+                        :model {:text "Object with a header and image"}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 0.1)
+                                                                (weighted-origin 0.5 0)))})
+    (component c/image {:name  "icon-1"
+                        :model {:height 40 :width 40 :image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 0.5)
+                                                                (weighted-origin 0.5 0.5)))})
     (component c/entity-controls))
   (shape "body"))
 
@@ -54,10 +76,19 @@
   (with-tags :container)
   (with-layouts (layout ::w/expression w/expression-layout))
   (with-components context
-    (component c/entity-shape "body" {:border-style :dotted :z-index :bottom :opacity "0.4"} {}
-      (layout-attributes ::w/expression (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0))))
-    (component c/title "title" {:text "Put other shapes here..."} {}
-      (layout-attributes ::w/expression (layout-hints (weighted-position 0 0.1) (weighted-origin 0 0))))
+    (component c/entity-shape {:name  "body"
+                               :model {:border-style :dotted :z-index :bottom :opacity "0.4"}
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
+    (component c/title {:name "title"
+                        :model {:text "Put other shapes here..."}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0 0.1)
+                                                                (weighted-origin 0 0)))})
     (component c/entity-controls))
   (shape "body"))
 
@@ -68,13 +99,26 @@
   (components-templates
     (component-template ::c/relation {:border-width 3}))
   (with-components context
-    (component c/bounding-box "bbox" {} {}
-      (layout-attributes ::w/expression  (layout-hints (match-parent-position) (match-parent-size) (weighted-origin 0 0))))
-    (component c/relation "connector" {} {})
-    (component c/startpoint "start" {:left 0 :top 0} {})
-    (component c/arrow "arrow" {} {})
-    (component c/endpoint "end" {} {})
-    (component c/rectangle "bg" {:background-color "white"} {}
-      (layout-attributes ::w/expression 1 (layout-hints (position-of "title") (size-of "title" 4 4) (weighted-origin 0 0.75))))
-    (component c/title "title" {:text "Title."} {}
-      (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0.5) (weighted-origin 0.5 -0.1))))))
+    (component c/bounding-box {:name "bbox"
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
+    (component c/relation {:name  "connector"})
+    (component c/startpoint {:name "start" :model {:left 0 :top 0}})
+    (component c/arrow {:name "arrow" })
+    (component c/endpoint {:name  "end" })
+    (component c/rectangle {:name "bg"
+                            :model {:background-color "white"}
+                            :layout-attributes (layout-attributes ::w/expression 1
+                                                                  (layout-hints
+                                                                    (position-of "title")
+                                                                    (size-of "title" 4 4)
+                                                                    (weighted-origin 0 0.75)))})
+    (component c/title {:name "title"
+                        :model {:text "Title."}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 0.5)
+                                                                (weighted-origin 0.5 -0.1)))})))

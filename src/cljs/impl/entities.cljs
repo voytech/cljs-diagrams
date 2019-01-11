@@ -105,10 +105,49 @@
                                                                        (match-parent-position)
                                                                        (match-parent-size)
                                                                        (weighted-origin 0 0)))})
-    (component c/relation {:name  "connector"})
+    (component c/relation {:name  "connector"
+                           :attributes
+                            {:decorators
+                              {:head ["arrow" "end"]
+                               :tail ["start"]}}})
     (component c/startpoint {:name "start" :model {:left 0 :top 0}})
-    (component c/arrow {:name "arrow" })
-    (component c/endpoint {:name  "end" })
+    (component c/arrow {:name "arrow"})
+    (component c/endpoint {:name  "end" :model {:visible true}})
+    (component c/rectangle {:name "bg"
+                            :model {:background-color "white"}
+                            :layout-attributes (layout-attributes ::w/expression 1
+                                                                  (layout-hints
+                                                                    (position-of "title")
+                                                                    (size-of "title" 4 4)
+                                                                    (weighted-origin 0 0.75)))})
+    (component c/title {:name "title"
+                        :model {:text "Title."}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 0.5)
+                                                                (weighted-origin 0.5 -0.1)))})))
+
+(defentity link
+  {:width 180 :height 150}
+  (resolve-data {:x1 50 :y1 50 :x2 230 :y2 85})
+  (with-layouts (layout ::w/expression w/expression-layout))
+  (components-templates
+    (component-template ::c/relation {:border-width 2}))
+  (with-components context
+    (component c/bounding-box {:name "bbox"
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
+    (component c/relation {:name  "connector"
+                           :model {:stroke-style :dashed}
+                           :attributes
+                            {:decorators
+                              {:head ["end"]
+                               :tail ["start"]}}})
+    (component c/startpoint {:name "start" :model {:left 0 :top 0}})
+    (component c/endpoint {:name  "end" :model {:visible true}})
     (component c/rectangle {:name "bg"
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1

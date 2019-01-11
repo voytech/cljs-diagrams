@@ -34,72 +34,47 @@
                           (js/Math.atan (/ y x))))))]
       (+ (/ (* angle 180) PI) 90)))
 
-(defn refresh-arrow-angle [heading-vector arrow-component]
+(defn refresh-decorator-angle [{:keys [x1 y1 x2 y2] :as heading-vector} decorator]
   (when (not (nil? heading-vector))
-    (let [x1 (nth heading-vector 0)
-          y1 (nth heading-vector 1)
-          x2 (nth heading-vector 2)
-          y2 (nth heading-vector 3)]
-       (d/setp arrow-component :angle (calculate-angle x1 y1 x2 y2)))))
+    (d/setp decorator :angle (calculate-angle x1 y1 x2 y2))))
 
-(defn insert-breakpoint []
-  (fn [e]
-      (let [entity (:entity e)
-            line (:component e)
-            app-state (-> e :app-state)
-            line-start-breakpoint (e/get-entity-component entity (:start (:attributes line)))
-            line-end-breakpoint   (e/get-entity-component entity (:end (:attributes line)))
-            oeX  (d/getp line :x2)
-            oeY  (d/getp line :y2)
-            eX   (:left e)
-            eY   (:top e)]
-        (when (= ::c/relation (:type line))
-          (d/set-data line {:x2 eX :y2 eY})
-          (let [relation-id   (str (random-uuid))
-                breakpoint-id (str (random-uuid))
-                is-penultimate (= true (:penultimate (:attributes line-start-breakpoint)))]
-            (-> entity
-              (e/add-entity-component app-state ::c/relation relation-id  {:x1 eX :y1 eY :x2 oeX :y2 oeY} {:start breakpoint-id :end (:name line-end-breakpoint)})
-              (e/add-entity-component app-state ::c/breakpoint breakpoint-id {:point [eX eY]} {:end (:name line) :start relation-id :penultimate is-penultimate}))
-            (e/update-component-attribute app-state entity (:name line) :end breakpoint-id)
-            (e/update-component-attribute app-state entity (:name line-end-breakpoint) :end relation-id)
-            (when (= true is-penultimate)
-              (e/update-component-attribute app-state entity (:name line-start-breakpoint) :penultimate false)))))))
+(defn tail-vector [relation]
+  (let [rel-points (d/getp relation :points )
+        v (take 4 rel-points)]
+    {:x1 (nth v 2) :y1 (nth v 3) :x2 (nth v 0) :y2 (nth v 1)}))
 
-(defn dissoc-breakpoint []
-  (fn [e]
-    (let [entity     (:entity e)
-          breakpoint (:component e)
-          app-state (-> e :app-state)
-          line-end   (e/get-entity-component entity (:start  (:attributes breakpoint)))
-          line-endpoint (e/get-entity-component entity (:end (:attributes line-end)))
-          line-start (e/get-entity-component entity (:end   (:attributes breakpoint)))
-          line-startpoint (e/get-entity-component entity (:start (:attributes line-start)))
-          is-penultimate? (:penultimate (:attributes breakpoint))]
-       (e/remove-entity-component app-state entity (:name breakpoint))
-       (e/remove-entity-component app-state entity (:name line-end))
-       (e/update-component-attribute app-state entity (:name line-start) :end (:name line-endpoint))
-       (e/update-component-attribute app-state entity (:name line-endpoint) :end (:name line-start))
-       (e/update-component-attribute app-state entity (:name line-startpoint) :penultimate is-penultimate?)
-       (d/set-data drawable {:x2 (+ (d/getp line-endpoint :left) (/ (d/getp line-endpoint :width) 2))
-                             :y2 (+ (d/getp line-endpoint :top) (/ (d/getp line-endpoint :height) 2))}))))
+(defn head-vector [relation]
+  (let [rel-points (d/getp relation :points )
+        v (take-last 4 rel-points)]
+    {:x1 (nth v 0) :y1 (nth v 1) :x2 (nth v 2) :y2 (nth v 3)}))
 
-(defn position-breakpoint
-  ([app-state entity name left top coord-mode]
-   (let [breakpoint-component (e/get-entity-component entity name)
-         position (effective-position app-state breakpoint-component left top coord-mode)
-         effective-left (:x position)
-         effective-top  (:y position)
-         starts-relation-component (e/get-entity-component entity (:start (:attributes breakpoint-component)))
-         ends-relation-component (e/get-entity-component entity (:end (:attributes breakpoint-component)))
-         arrow-component (e/get-entity-component entity "arrow")]
-     (d/set-data  breakpoint-component {:left effective-left :top  effective-top})
-     (api/to-the-center-of starts-relation-component  :x1 :y1 breakpoint-component)
-     (api/to-the-center-of ends-relation-component :x2 :y2 breakpoint-component)
-     (when (= true (:penultimate (:attributes breakpoint-component)))
-       (refresh-arrow-angle starts-relation-component arrow-component))))
-  ([app-state entity name left top]
-   (position-breakpoint app-state entity name left top :absolute)))
+(defn get-relation-end [entity]
+  (when-let [relation (first (e/get-entity-component entity ::c/relation))]
+    (let [end (take-last 2 (d/getp relation :points))]
+      {:x (first end) :y (last end)})))
+
+(defn get-relation-start [entity]
+  (when-let [relation (first (e/get-entity-component entity ::c/relation))]
+    (let [end (take 2 (d/getp relation :points))]
+      {:x (first end) :y (last end)})))
+
+(defn get-decorators [entity type]
+  (let [relation (first (e/get-entity-component entity ::c/relation))
+        names (get-in relation [:attributes :decorators type])]
+   (mapv #(e/get-entity-component entity %) names)))
+
+(defn align-decorators [entity]
+  (let [head-decs (get-decorators entity :head)
+        tail-decs (get-decorators entity :tail)
+        start-pos (get-relation-start entity)
+        end-pos   (get-relation-end entity)
+        relation  (first (e/get-entity-component entity ::c/relation))]
+    (doseq [head head-decs]
+      (d/set-data head {:left (:x end-pos) :top (:y end-pos)}))
+      ;(refresh-decorator-angle (head-vector relation) head)
+    (doseq [tail tail-decs]
+      (d/set-data tail {:left (:x start-pos) :top (:y start-pos)}))))
+      ;(refresh-decorator-angle (tail-vector relation) tail))))
 
 (defn position-startpoint
   ([app-state entity left top coord-mode skip?]
@@ -113,7 +88,7 @@
      (when (= false skip?)
       (api/to-the-center-of starts-relation-component :x1 :y1 startpoint-component)
       (when (= true (:penultimate (:attributes startpoint-component)))
-        (refresh-arrow-angle starts-relation-component arrow-component)))))
+        (refresh-decorator-angle starts-relation-component arrow-component)))))
   ([app-state entity left top]
    (position-startpoint app-state entity left top :absolute false)))
 
@@ -142,7 +117,7 @@
     (api/to-the-center-of arrow-component :left :top endpoint-component)
     (when (= false skip?)
      (api/to-the-center-of ends-relation-component :x2 :y2 endpoint-component)
-     (refresh-arrow-angle ends-relation-component arrow-component))))
+     (refresh-decorator-angle ends-relation-component arrow-component))))
  ([app-state entity left top]
   (position-endpoint app-state entity left top :absolute false)))
 
@@ -169,8 +144,10 @@
               (= side :bottom) (e/set-bbox app-state entity (merge bbox {:height (+ (:height bbox) movement-y)})))
             (layouts/do-layouts))))))
 
+
 (defn calc-association-bbox [app-state entity]
-  (let [startpoint (first (e/get-entity-component entity ::c/startpoint))
+  (let [entity     (e/entity-by-id app-state (:uid entity))
+        startpoint (first (e/get-entity-component entity ::c/startpoint))
         endpoint   (first (e/get-entity-component entity ::c/endpoint))
         components [startpoint endpoint]]
     (when (and (some? startpoint) (some? endpoint))

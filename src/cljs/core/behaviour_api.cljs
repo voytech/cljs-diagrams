@@ -120,6 +120,23 @@
 
 (defn rotate-entity [app-state entity angle])
 
+(defn refresh-bbox [app-state entity use-component-names]
+  (let [entity     (e/entity-by-id app-state (:uid entity))
+        components (mapv #(e/get-entity-component entity %) use-component-names)]
+    (when (some? components)
+      (let [leftmost   (apply min-key (concat [#(d/get-left %)] components))
+            rightmost  (apply max-key (concat [#(+ (d/get-left %) (d/get-width %))] components))
+            topmost    (apply min-key (concat [#(d/get-top %)] components))
+            bottommost (apply max-key (concat [#(+ (d/get-top %) (d/get-height %))] components))]
+        (-> (e/set-bbox app-state
+                        entity
+                     {:left   (d/get-left leftmost)
+                      :top    (d/get-top topmost)
+                      :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
+                      :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})
+            (layouts/do-layouts))))))
+
+
 (defn collides?
   ([app-state component feature hit-callback miss-callback]
    (let [entity (e/lookup app-state component)

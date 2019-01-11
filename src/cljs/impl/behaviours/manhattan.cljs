@@ -13,7 +13,7 @@
         my (+ (d/get-top cmp) (/ (d/get-height cmp) 2))]
     {:x mx :y my}))
 
-(defn- eval-vectors [start end]
+(defn eval-vectors [start end]
    (if (> (- (:x end) (:x start)) (- (:y end) (:y start))) [:h :v] [:v :h]))
 
 (defn- find-connection-points [sp ep s-normal e-normal]
@@ -39,10 +39,7 @@
   (let [points (find-path start end s-normal e-normal)
         polyline-points (to-polyline-points start end points)
         polyline (first (e/get-entity-component entity ::c/relation))]
-     (d/setp polyline :points polyline-points)
-     (std/refresh-arrow-angle
-       (take-last 4 polyline-points)
-       (e/get-entity-component entity "arrow"))))
+     (d/setp polyline :points polyline-points)))
 
 (defn- calculate-vectors [app-state
                           source-entity source-control
@@ -60,42 +57,40 @@
              {:src src :trg trg :d (distance (center-point src) (center-point trg))})
            (apply min-key #(:d %)))))
 
-(defn- position-entity-endpoint
-  ([app-state entity component movement-x movement-y]
-   (api/apply-effective-position component movement-x movement-y :offset)
-   (when (= (:type component) ::c/endpoint)
-     (let [arrow (e/get-entity-component entity "arrow")]
-       (api/apply-effective-position arrow movement-x movement-y :offset))))
-  ([app-state entity endpoint to-point]
-   (api/apply-effective-position endpoint (:x to-point) (:y to-point) :absolute)
-   (when (= (:type endpoint) ::c/endpoint)
-     (let [arrow (e/get-entity-component entity "arrow")
-           x (+ (:x to-point) (/ (d/get-width arrow) 2))
-           y (+ (:y to-point) (/ (d/get-height arrow) 2))]
-       (api/apply-effective-position arrow x y :absolute)))))
+(defn move-point [pos movement-x movement-y]
+  {:x (+ (:x pos) movement-x) :y (+ (:y pos) movement-y)})
 
 (defn endpoint-move
   ([app-state entity end-type new-active-pos]
-    (let [passive (e/get-entity-component entity (if (= :start end-type) "end" "start"))
-          active (e/get-entity-component entity (if (= :start end-type) "start" "end"))
-          passive-pos (center-point passive)
-          vectors (eval-vectors passive-pos new-active-pos)]
-      (position-entity-endpoint app-state entity active {:x (- (:x new-active-pos)
-                                                               (/  (d/get-width active) 2))
-                                                         :y (- (:y new-active-pos)
-                                                               (/  (d/get-height active) 2))})
-      (update-manhattan-layout app-state entity passive-pos new-active-pos (vectors 0) (vectors 1))
+    (let [entity (e/entity-by-id app-state (:uid entity))
+          tail-pos (if (= :start end-type)
+                      new-active-pos
+                      (std/get-relation-start entity))
+          head-pos (if (= :start end-type)
+                      (std/get-relation-end entity)
+                      new-active-pos)
+          vectors (eval-vectors tail-pos head-pos)]
+      (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+      (std/align-decorators (e/entity-by-id app-state (:uid entity)))
       (std/calc-association-bbox app-state entity)))
   ([app-state entity end-type movement-x movement-y]
-      (let [passive (e/get-entity-component entity (if (= :start end-type) "end" "start"))
-            active (e/get-entity-component entity (if (= :start end-type) "start" "end"))
-            passive-pos (center-point passive)
-            active-pos (center-point active)
-            new-active-pos {:x (+ (:x active-pos) movement-x) :y (+ (:y active-pos) movement-y)}
-            vectors (eval-vectors passive-pos new-active-pos)]
-        (position-entity-endpoint app-state entity active movement-x movement-y)
-        (update-manhattan-layout app-state entity passive-pos new-active-pos (vectors 0) (vectors 1))
+      (let [entity (e/entity-by-id app-state (:uid entity))
+            tail-pos (if (= :start end-type)
+                        (move-point (std/get-relation-start entity) movement-x movement-y)
+                        (std/get-relation-start entity))
+            head-pos (if (= :start end-type)
+                        (std/get-relation-end entity)
+                        (move-point (std/get-relation-end entity) movement-x movement-y))
+            vectors (eval-vectors tail-pos head-pos)]
+        (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+        (std/align-decorators (e/entity-by-id app-state (:uid entity)))
         (std/calc-association-bbox app-state entity))))
+
+(defn set-relation-endpoints [app-state entity tail-pos head-pos]
+  (let [vectors (eval-vectors tail-pos head-pos)]
+    (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+    (std/align-decorators (e/entity-by-id app-state (:uid entity)))
+    (std/calc-association-bbox app-state entity)))
 
 (defn on-source-entity-event [event]
   (let [{:keys [app-state entity start end movement-x movement-y]} event]
@@ -110,8 +105,5 @@
             startpoint (e/get-entity-component entity "start")
             endpoint (e/get-entity-component entity "end")
             vectors (calculate-vectors app-state start src end trg)]
-        (position-entity-endpoint app-state entity startpoint {:x (d/get-left src) :y (d/get-top src)})
-        (position-entity-endpoint app-state entity endpoint {:x (d/get-left trg) :y (d/get-top trg)})
         (update-manhattan-layout app-state entity (center-point src) (center-point trg) (vectors 0) (vectors 1))))
     (std/calc-association-bbox app-state entity)))
-    ;(b/fire app-state "layouts.do" {:container (e/volatile-entity app-state entity)})))

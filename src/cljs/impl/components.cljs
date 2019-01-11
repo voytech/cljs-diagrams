@@ -28,7 +28,7 @@
     :left 0
     :top 0
     :border-color "black"
-    :border-style :solid
+    :stroke-style :dashed
     :border-width 1
     :z-index 0}))
 
@@ -68,7 +68,8 @@
      :left 0
      :top 0
      :border-color "black"
-     :border-style :solid
+     :background-color "none"
+     :stroke-style :solid
      :border-width 1
      :z-index 0}))
 
@@ -77,7 +78,21 @@
 (defcomponent relation {:rendering-method :draw-poly-line
                         :initializer (poly-line-initializer)})
 
-(defcomponent arrow {:rendering-method :draw-triangle
+(defn triangle-bbox-draw []
+  (fn [component]
+    (let [x (d/get-left component)
+          y (d/get-top component)
+          width (d/get-width component)
+          height (d/get-height component)]
+     {:points [(- x (/ width 2))
+               (+ y (/ height 2))
+               (+ x (/ width 2))
+               (+ y (/ height 2))
+               x
+               (- y (/ height 2))]})))
+
+(defcomponent arrow {:rendering-method :draw-poly-line
+                     :bbox-draw (triangle-bbox-draw)
                      :initializer (arrow-initializer)})
 
 (defcomponent startpoint {:rendering-method :draw-circle
@@ -132,7 +147,7 @@
                          :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1})})
 
 (defcomponent bounding-box {:rendering-method :draw-rect
-                            :initializer (fn [c p] {:border-color "lightgray" :border-style :dotted :opacity 0.1 :border-width 1 :visible false})})
+                            :initializer (fn [c p] {:border-color "gray" :stroke-style :dashed :opacity 0.1 :border-width 1 :visible false})})
 
 (defcomponent-group entity-controls
   (component control {:name  "connector-left"

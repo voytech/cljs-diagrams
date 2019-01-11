@@ -25,6 +25,7 @@
                                                       (str agg " " (nth point 0) "," (nth point 1) ))
                                                     ""
                                                     (partition 2 val))))
+                               :svg-path (simple-set :d)
                                :angle  (fn [svg val mdl]
                                           (dom/attr svg "transform"
                                             (str "rotate(" val "," (:left mdl) "," (:top mdl) ")")))
@@ -44,6 +45,10 @@
                                :visible (fn [svg val mdl] (dom/attr svg "visibility" (if (== val true) "visible" "hidden")))
                                :color (simple-set :stroke)
                                :border-style (simple-set :stroke-style)
+                               :stroke-style (fn [svg val mdl]
+                                  (cond
+                                    (= val :dashed) (dom/attr svg "stroke-dasharray" "5,5")
+                                    :else           (dom/attr svg "stroke-dasharray" "none")))
                                :border-width (simple-set :stroke-width)
                                :image-url (simple-set :href)})
 
@@ -166,30 +171,15 @@
   (dom/remove-by-id (:uid component)))
 
 ;;==========================================================================================================
-;; triangle rendering
+;; svg path rendering
 ;;==========================================================================================================
-(defn- triangle-from-pos [component]
-  (let [model (model-attributes component)
-        x (:left model)
-        y (:top model)
-        width (:width model)
-        height (:height model)]
-   (str "M " (- x (/ width 2)) "," (+ y (/ height 2)) " "
-             (+ x (/ width 2)) "," (+ y (/ height 2)) " "
-              x "," (- y (/ height 2))
-        " z")))
+(defmethod r/do-render [:svg :draw-svg-path] [renderer-state component]
+  (update-svg-element renderer-state component nil))
 
-(defn- triangle [component]
-  (fn [svg]
-    (dom/attr svg "d" (triangle-from-pos component))))
+(defmethod r/create-rendering-state [:svg :draw-svg-path] [renderer-state component]
+  (create-svg-element renderer-state "path" component nil))
 
-(defmethod r/do-render [:svg :draw-triangle] [renderer-state component]
-  (update-svg-element renderer-state component (triangle component)))
-
-(defmethod r/create-rendering-state [:svg :draw-triangle] [renderer-state component]
-  (create-svg-element renderer-state "path" component (triangle component)))
-
-(defmethod r/destroy-rendering-state [:svg :draw-triangle] [renderer-state component]
+(defmethod r/destroy-rendering-state [:svg :draw-svg-path] [renderer-state component]
   (swap! renderer-state update :components dissoc (:uid component))
   (dom/remove-by-id (:uid component)))
 

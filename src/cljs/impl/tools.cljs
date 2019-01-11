@@ -26,3 +26,9 @@
                :basic-tools
                "https://www.freeiconspng.com/uploads/data-connector-icon-7.png"
                (t/ctor eimpl/association))
+
+(t/create-tool "Link"
+              ""
+              :basic-tools
+              "https://www.freeiconspng.com/uploads/data-connector-icon-7.png"
+              (t/ctor eimpl/link))               

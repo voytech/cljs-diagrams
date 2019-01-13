@@ -50,9 +50,13 @@
      :top  0
      :origin-x :center
      :origin-y :center
-     :angle 90
+     :angle 0
      :width 20
      :z-index :top
+     :border-color "black"
+     :border-style :solid
+     :border-width 3
+     :background-color "none"
      :height 20}))
 
 (defn- entity-shape-initializer []
@@ -84,12 +88,10 @@
           y (d/get-top component)
           width (d/get-width component)
           height (d/get-height component)]
-     {:points [(- x (/ width 2))
-               (+ y (/ height 2))
-               (+ x (/ width 2))
-               (+ y (/ height 2))
-               x
-               (- y (/ height 2))]})))
+     {:angle (d/getp component :angle)
+      :points [x y
+               (+ x width) (+ y (/ height 2))
+               x (+ y height)]})))
 
 (defcomponent arrow {:rendering-method :draw-poly-line
                      :bbox-draw (triangle-bbox-draw)

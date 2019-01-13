@@ -32,7 +32,7 @@
                         (if (< y 0)
                           (+ (js/Math.atan (/ y x)) (* 2 PI))
                           (js/Math.atan (/ y x))))))]
-      (+ (/ (* angle 180) PI) 90)))
+       (/ (* angle 180) PI)))
 
 (defn refresh-decorator-angle [{:keys [x1 y1 x2 y2] :as heading-vector} decorator]
   (when (not (nil? heading-vector))
@@ -70,11 +70,13 @@
         end-pos   (get-relation-end entity)
         relation  (first (e/get-entity-component entity ::c/relation))]
     (doseq [head head-decs]
-      (d/set-data head {:left (:x end-pos) :top (:y end-pos)}))
-      ;(refresh-decorator-angle (head-vector relation) head)
+      (d/set-data head {:left (- (:x end-pos) (/ (d/get-width head) 2))
+                        :top (- (:y end-pos) (/ (d/get-height head) 2)) })
+      (refresh-decorator-angle (head-vector relation) head))
     (doseq [tail tail-decs]
-      (d/set-data tail {:left (:x start-pos) :top (:y start-pos)}))))
-      ;(refresh-decorator-angle (tail-vector relation) tail))))
+      (d/set-data tail {:left (- (:x start-pos) (/ (d/get-width tail) 2))
+                        :top (- (:y start-pos) (/ (d/get-height tail) 2))})
+      (refresh-decorator-angle (tail-vector relation) tail))))
 
 (defn position-startpoint
   ([app-state entity left top coord-mode skip?]

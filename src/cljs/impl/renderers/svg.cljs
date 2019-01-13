@@ -28,7 +28,7 @@
                                :svg-path (simple-set :d)
                                :angle  (fn [svg val mdl]
                                           (dom/attr svg "transform"
-                                            (str "rotate(" val "," (:left mdl) "," (:top mdl) ")")))
+                                            (str "rotate(" val "," (+ (:left mdl) (/ (:width mdl) 2)) "," (+ (:top mdl) (/ (:height mdl) 2)) ")")))
                                :x1 (simple-set :x1)
                                :y1 (simple-set :y1)
                                :x2 (simple-set :x2)

@@ -111,10 +111,7 @@
                               {:head ["arrow" "end"]
                                :tail ["start"]}}})
     (component c/startpoint {:name "start" :model {:left 0 :top 0}})
-
-    (component c/endpoint {:name  "end" :model {:visible true
-                                                :opacity 0.4
-                                                }})
+    (component c/endpoint {:name "end" :model {:visible false }})
     (component c/arrow {:name "arrow"})
     (component c/rectangle {:name "bg"
                             :model {:background-color "white"}

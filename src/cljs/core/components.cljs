@@ -103,6 +103,8 @@
 (defn resolve-z-index [val]
   (case val
     :top 100000
+    :before-top 99999
+    :before-bottom 1
     :bottom 0
     val))
 

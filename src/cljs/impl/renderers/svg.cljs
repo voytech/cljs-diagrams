@@ -53,6 +53,7 @@
                                :image-url (simple-set :href)})
 
 (defonce constants-bindings {:top 100000
+                             :before-top 99999  
                              :before-bottom 1
                              :bottom 0})
 

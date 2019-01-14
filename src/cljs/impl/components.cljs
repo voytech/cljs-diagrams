@@ -52,7 +52,7 @@
      :origin-y :center
      :angle 0
      :width 20
-     :z-index :top
+     :z-index :before-top
      :border-color "black"
      :border-style :solid
      :border-width 3

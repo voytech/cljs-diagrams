@@ -69,6 +69,13 @@
                                               (match-parent-position)
                                               (match-parent-size)
                                               (weighted-origin 0 0)))})
+    (component c/rectangle {:name "bg"
+                            :model {:background-color "white"}
+                            :layout-attributes (layout-attributes ::w/expression 1
+                                                                  (layout-hints
+                                                                    (position-of "title")
+                                                                    (size-of "title" 4 4)
+                                                                    (weighted-origin 0 0.75)))})
     (component c/title {
       :name "title"
       :model  {:text "Start"}
@@ -95,6 +102,13 @@
                                               (match-parent-position)
                                               (match-parent-size)
                                               (weighted-origin 0 0)))})
+    (component c/rectangle {:name "bg"
+                            :model {:background-color "white"}
+                            :layout-attributes (layout-attributes ::w/expression 1
+                                                                  (layout-hints
+                                                                    (position-of "title")
+                                                                    (size-of "title" 4 4)
+                                                                    (weighted-origin 0 0.75)))})
     (component c/title {
       :name "title"
       :model  {:text "End"}
@@ -121,6 +135,13 @@
                                                (match-parent-position)
                                                (match-parent-size)
                                                (weighted-origin 0 0)))})
+    (component c/rectangle {:name "bg"
+                            :model {:background-color "white"}
+                            :layout-attributes (layout-attributes ::w/expression 1
+                                                                   (layout-hints
+                                                                     (position-of "title")
+                                                                     (size-of "title" 4 4)
+                                                                     (weighted-origin 0 0.75)))})
     (component c/title {
       :name "title"
       :model {:text "Gateway"}

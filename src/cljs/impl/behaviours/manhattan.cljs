@@ -96,14 +96,17 @@
   (let [{:keys [app-state entity start end movement-x movement-y]} event]
     (if (or (nil? start) (nil? end))
       (let [related-entity (or start end)
-            active (e/get-entity-component entity (if-not (nil? start) "start" "end"))
-            passive (e/get-entity-component entity (if-not (nil? start) "end" "start"))
-            vectors (eval-vectors (center-point active) (center-point passive))]
-        (position-entity-endpoint app-state entity active movement-x movement-y)
-        (update-manhattan-layout app-state entity (center-point active) (center-point passive) (vectors 0) (vectors 1)))
+            tail-pos (if (some? start)
+                        (move-point (std/get-relation-start entity) movement-x movement-y)
+                        (std/get-relation-start entity))
+            head-pos (if (some? start)
+                        (std/get-relation-end entity)
+                        (move-point (std/get-relation-end entity) movement-x movement-y))
+            vectors (eval-vectors tail-pos head-pos)]
+        (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+        (std/align-decorators (e/entity-by-id app-state (:uid entity))))
       (let [{:keys [src trg]} (nearest-controls-between app-state start end)
-            startpoint (e/get-entity-component entity "start")
-            endpoint (e/get-entity-component entity "end")
             vectors (calculate-vectors app-state start src end trg)]
-        (update-manhattan-layout app-state entity (center-point src) (center-point trg) (vectors 0) (vectors 1))))
+        (update-manhattan-layout app-state entity (center-point src) (center-point trg) (vectors 0) (vectors 1))
+        (std/align-decorators (e/entity-by-id app-state (:uid entity)))))
     (std/calc-association-bbox app-state entity)))

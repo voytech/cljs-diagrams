@@ -87,6 +87,7 @@
                                  (if ~has-layouts (~layouts app-state# e#) e#)
                                  context#)
              (let [result# (core.entities/entity-by-id app-state# (:uid e#))]
+               (core.eventbus/fire app-state# "layouts.do" {:container result#})
                (core.eventbus/fire app-state# "entity.render" {:entity result#})
                (when ~has-data
                  (extensions.data-resolvers/apply-data app-state# result# (merge ~resolve-data context#)))

@@ -100,7 +100,6 @@
                                     (std/toggle-controls (:entity trg) false)
                                     (std/snap-to-control app-state component (:entity trg))))
                                  (fn [src]))
-                  ;(m/endpoint-move app-state entity end-type movement-x movement-y)
                   nil)))
 
 (defbehaviour make-inclusion-relation

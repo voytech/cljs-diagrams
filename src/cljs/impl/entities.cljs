@@ -63,7 +63,7 @@
                                                                 (weighted-position 0.5 0.1)
                                                                 (weighted-origin 0.5 0)))})
     (component c/image {:name  "icon-1"
-                        :model {:height 40 :width 40 :image-url "https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png"}
+                        :model {:height 40 :width 40 :image-url "/icons/settings.svg"}
                         :layout-attributes (layout-attributes ::w/expression
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.5)

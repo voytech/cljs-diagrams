@@ -22,7 +22,7 @@
                                :points (fn [svg val mdl]
                                           (dom/attr svg "points"
                                             (reduce (fn [agg point]
-                                                      (str agg " " (nth point 0) "," (nth point 1) ))
+                                                      (str agg " " (nth point 0) "," (nth point 1)))
                                                     ""
                                                     (partition 2 val))))
                                :svg-path (simple-set :d)
@@ -46,14 +46,14 @@
                                :color (simple-set :stroke)
                                :border-style (simple-set :stroke-style)
                                :stroke-style (fn [svg val mdl]
-                                  (cond
-                                    (= val :dashed) (dom/attr svg "stroke-dasharray" "5,5")
-                                    :else           (dom/attr svg "stroke-dasharray" "none")))
+                                              (cond
+                                                (= val :dashed) (dom/attr svg "stroke-dasharray" "5,5")
+                                                :else           (dom/attr svg "stroke-dasharray" "none")))
                                :border-width (simple-set :stroke-width)
                                :image-url (simple-set :href)})
 
 (defonce constants-bindings {:top 100000
-                             :before-top 99999  
+                             :before-top 99999
                              :before-bottom 1
                              :bottom 0})
 

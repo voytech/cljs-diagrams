@@ -162,16 +162,16 @@ img.page-thumb{
 }
 
 .thumbs-container{
-  margin-left:auto;
-  margin-right:auto;
+  margin-left:2px;
+  margin-right:2px;
+  border-style: none;
 }
 
 .photo-thumbnail{
   position:relative;
   padding-top: 10px;
-  border-color:lightgray;
   border-width:2px;
-  border-style:solid;
+  border-style: none;
   display:block;
   margin: 2px 2px 2px 2px;
   text-align: center;

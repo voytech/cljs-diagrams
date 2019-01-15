@@ -9,20 +9,20 @@
                "http://icons.iconarchive.com/icons/icons8/ios7/128/Editing-Rectangle-icon.png"
                (t/ctor bpmn/activity))
 
-(t/create-tool "Gateway"
+(t/create-tool "Gate"
               ""
               :bpmn
-              "http://icons.iconarchive.com/icons/icons8/ios7/128/Editing-Rectangle-icon.png"
-              (t/ctor bpmn/gateway))               
+              "/icons/bpmn_gate.svg"
+              (t/ctor bpmn/gateway))
 
 (t/create-tool "Start Event"
               ""
               :bpmn
-              "http://icons.iconarchive.com/icons/icons8/ios7/128/Editing-Rectangle-icon.png"
+              "/icons/bpmn_start.svg"
               (t/ctor bpmn/process-start))
 
 (t/create-tool "End Event"
               ""
               :bpmn
-              "http://icons.iconarchive.com/icons/icons8/ios7/128/Editing-Rectangle-icon.png"
+              "/icons/bpmn_end.svg"
               (t/ctor bpmn/process-end))

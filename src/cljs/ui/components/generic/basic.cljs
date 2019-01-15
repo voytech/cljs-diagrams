@@ -20,7 +20,7 @@
 (defn ShapePropertyEditor [app-state feedback properties]
   [:div {:id "shape-property-editor"
          :class "modal"
-         :style {:display (if (:show-popup @feedback) "block" "none")} }
+         :style {:display (if (:show-popup @feedback) "block" "none")}}
     [:div {:class "modal-content"}
       (let [state (atom {})]
         [:form
@@ -28,7 +28,7 @@
             ^{:key property}
             [:input {:id (str "input-" (name property))
                      :placeholder (str "Enter " (name property))
-                     :on-change #(swap! state assoc-in [property] (-> % .-target .-value)) }])
+                     :on-change #(swap! state assoc-in [property] (-> % .-target .-value))}])
           [:button {:type "button"
                     :on-click (fn []
                                   (swap! feedback assoc :show-popup false)
@@ -36,6 +36,5 @@
                                       app-state
                                       (:selection @feedback)
                                       @state))}
-                    "Submit"]
-          [:button {:type "button" :on-click #(swap! feedback assoc :show-popup false)} "Cancel"]
-          ])]])
+                   "Submit"]
+          [:button {:type "button" :on-click #(swap! feedback assoc :show-popup false)} "Cancel"]])]])

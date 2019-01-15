@@ -10,10 +10,10 @@
                                         margins]])
   (:require-macros [core.macros :refer [defcomponent defcomponent-group component]]))
 
-(defn- control-initializer []
+(defn- control-initializer [size]
   (fn [container props]
-     {:width 16
-      :height 16
+     {:width size
+      :height size
       :opacity 1
       :background-color "white"
       :border-color "black"
@@ -34,12 +34,11 @@
 
 (defn- endpoint-initializer [type visible]
   (fn [container props]
-     {:left (- (if (= :start type) 0 (-> container :size :width)) 8)
-      :top (- 8)
-      :radius 8
-      :width 16
+     {:left (- (if (= :start type) 0 (-> container :size :width)) 5)
+      :top (- 5)
+      :width 10
       :z-index :top
-      :height 16
+      :height 10
       :background-color "white"
       :border-color "black"
       :visible visible}))
@@ -77,8 +76,6 @@
      :border-width 1
      :z-index 0}))
 
-;(defcomponent relation :draw-line {} (relation-initializer))
-
 (defcomponent relation {:rendering-method :draw-poly-line
                         :initializer (poly-line-initializer)})
 
@@ -97,19 +94,17 @@
                      :bbox-draw (triangle-bbox-draw)
                      :initializer (arrow-initializer)})
 
-(defcomponent startpoint {:rendering-method :draw-circle
-                          :attributes {:start "connector" :penultimate true}
+(defcomponent startpoint {:rendering-method :draw-rect
                           :initializer (endpoint-initializer :start true)})
 
-(defcomponent endpoint {:rendering-method :draw-circle
-                        :attributes {:end "connector"}
+(defcomponent endpoint {:rendering-method :draw-rect
                         :initializer (endpoint-initializer :end false)})
 
 (defcomponent breakpoint {:rendering-method :draw-circle
                           :initializer (fn [e] {:moveable true :visible true :opacity 1 :z-index :top})})
 
 (defcomponent control {:rendering-method :draw-rect
-                       :initializer (control-initializer)})
+                       :initializer (control-initializer 16)})
 
 (defcomponent entity-shape {:rendering-method :draw-rect
                             :initializer (entity-shape-initializer)})
@@ -163,4 +158,22 @@
                       :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
   (component control {:name "connector-bottom"
                       :attributes {:side :bottom}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))
+
+(defcomponent-group small-controls
+  (component control {:name  "connector-left"
+                      :attributes {:side :left}
+                      :model {:width 10 :height 10}
+                      :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
+  (component control {:name  "connector-right"
+                      :attributes {:side :right}
+                      :model {:width 10 :height 10}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
+  (component control {:name  "connector-top"
+                      :attributes {:side :top}
+                      :model {:width 10 :height 10}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
+  (component control {:name "connector-bottom"
+                      :attributes {:side :bottom}
+                      :model {:width 10 :height 10}
                       :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))

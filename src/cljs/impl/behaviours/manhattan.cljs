@@ -62,29 +62,29 @@
 
 (defn endpoint-move
   ([app-state entity end-type new-active-pos]
-    (let [entity (e/entity-by-id app-state (:uid entity))
-          tail-pos (if (= :start end-type)
-                      new-active-pos
-                      (std/get-relation-start entity))
-          head-pos (if (= :start end-type)
-                      (std/get-relation-end entity)
-                      new-active-pos)
-          vectors (eval-vectors tail-pos head-pos)]
-      (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
-      (std/align-decorators (e/entity-by-id app-state (:uid entity)))
-      (std/calc-association-bbox app-state entity)))
+   (let [entity (e/entity-by-id app-state (:uid entity))
+         tail-pos (if (= :start end-type)
+                     new-active-pos
+                     (std/get-relation-start entity))
+         head-pos (if (= :start end-type)
+                     (std/get-relation-end entity)
+                     new-active-pos)
+         vectors (eval-vectors tail-pos head-pos)]
+     (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+     (std/align-decorators (e/entity-by-id app-state (:uid entity)))
+     (std/calc-association-bbox app-state entity)))
   ([app-state entity end-type movement-x movement-y]
-      (let [entity (e/entity-by-id app-state (:uid entity))
-            tail-pos (if (= :start end-type)
-                        (move-point (std/get-relation-start entity) movement-x movement-y)
-                        (std/get-relation-start entity))
-            head-pos (if (= :start end-type)
-                        (std/get-relation-end entity)
-                        (move-point (std/get-relation-end entity) movement-x movement-y))
-            vectors (eval-vectors tail-pos head-pos)]
-        (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
-        (std/align-decorators (e/entity-by-id app-state (:uid entity)))
-        (std/calc-association-bbox app-state entity))))
+   (let [entity (e/entity-by-id app-state (:uid entity))
+         tail-pos (if (= :start end-type)
+                     (move-point (std/get-relation-start entity) movement-x movement-y)
+                     (std/get-relation-start entity))
+         head-pos (if (= :start end-type)
+                     (std/get-relation-end entity)
+                     (move-point (std/get-relation-end entity) movement-x movement-y))
+         vectors (eval-vectors tail-pos head-pos)]
+     (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+     (std/align-decorators (e/entity-by-id app-state (:uid entity)))
+     (std/calc-association-bbox app-state entity))))
 
 (defn set-relation-endpoints [app-state entity tail-pos head-pos]
   (let [vectors (eval-vectors tail-pos head-pos)]

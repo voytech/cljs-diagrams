@@ -32,20 +32,20 @@
   (with-layouts (layout ::w/expression w/expression-layout))
   (with-components context
     (component c/entity-shape {
-      :name "main"
-      :model {:round-x 15 :round-y 15}
-      :layout-attributes (layout-attributes ::w/expression
-                                            (layout-hints
-                                              (match-parent-position)
-                                              (match-parent-size)
-                                              (weighted-origin 0 0)))})
+                               :name "main"
+                               :model {:round-x 15 :round-y 15}
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
     (component c/title {
-      :name "title"
-      :model {:text "Activity"}
-      :layout-attributes (layout-attributes ::w/expression
-                                            (layout-hints
-                                              (weighted-position 0.5 0.5)
-                                              (weighted-origin 0.5 0.5)))})
+                        :name "title"
+                        :model {:text "Activity"}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 0.5)
+                                                                (weighted-origin 0.5 0.5)))})
     (component c/entity-controls))
   (shape "main"))
 
@@ -60,15 +60,15 @@
   (with-layouts (layout ::w/expression w/expression-layout))
   (with-components context
     (component c/entity-shape {
-      :name "main"
-      :rendering-method :draw-circle
-      :bbox-draw (event-bbox-draw)
-      :model {:radius 20}
-      :layout-attributes (layout-attributes ::w/expression
-                                            (layout-hints
-                                              (match-parent-position)
-                                              (match-parent-size)
-                                              (weighted-origin 0 0)))})
+                               :name "main"
+                               :rendering-method :draw-circle
+                               :bbox-draw (event-bbox-draw)
+                               :model {:radius 20}
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
     (component c/rectangle {:name "bg"
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1
@@ -77,13 +77,13 @@
                                                                     (size-of "title" 4 4)
                                                                     (weighted-origin 0 0.75)))})
     (component c/title {
-      :name "title"
-      :model  {:text "Start"}
-      :layout-attributes (layout-attributes ::w/expression
-                                            (layout-hints
-                                              (weighted-position 0.5 1)
-                                              (weighted-origin 0.5 -1.5)))})
-    (component c/entity-controls))
+                        :name "title"
+                        :model  {:text "Start"}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 1)
+                                                                (weighted-origin 0.5 -1.5)))})
+    (component c/small-controls))
   (shape "main"))
 
 (defentity process-end
@@ -93,15 +93,15 @@
     (component-template ::c/entity-shape {:border-width 5}))
   (with-components context
     (component c/entity-shape {
-      :name "main"
-      :rendering-method :draw-circle
-      :bbox-draw (event-bbox-draw)
-      :model {:radius 20 :border-width 5}
-      :layout-attributes (layout-attributes ::w/expression
-                                            (layout-hints
-                                              (match-parent-position)
-                                              (match-parent-size)
-                                              (weighted-origin 0 0)))})
+                               :name "main"
+                               :rendering-method :draw-circle
+                               :bbox-draw (event-bbox-draw)
+                               :model {:radius 20 :border-width 5}
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
     (component c/rectangle {:name "bg"
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1
@@ -110,13 +110,13 @@
                                                                     (size-of "title" 4 4)
                                                                     (weighted-origin 0 0.75)))})
     (component c/title {
-      :name "title"
-      :model  {:text "End"}
-      :layout-attributes (layout-attributes ::w/expression
-                                            (layout-hints
-                                              (weighted-position 0.5 1)
-                                              (weighted-origin 0.5 -1.5)))})
-    (component c/entity-controls))
+                        :name "title"
+                        :model  {:text "End"}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 1)
+                                                                (weighted-origin 0.5 -1.5)))})
+    (component c/small-controls))
   (shape "main"))
 
 
@@ -127,14 +127,14 @@
     (component-template ::c/entity-shape {:border-width 5}))
   (with-components context
     (component c/entity-shape {
-       :name "main"
-       :rendering-method :draw-poly-line
-       :bbox-draw (bpmnc/diamond-bbox-draw)
-       :layout-attributes (layout-attributes ::w/expression
-                                             (layout-hints
-                                               (match-parent-position)
-                                               (match-parent-size)
-                                               (weighted-origin 0 0)))})
+                               :name "main"
+                               :rendering-method :draw-poly-line
+                               :bbox-draw (bpmnc/diamond-bbox-draw)
+                               :layout-attributes (layout-attributes ::w/expression
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
     (component c/rectangle {:name "bg"
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1
@@ -143,11 +143,11 @@
                                                                      (size-of "title" 4 4)
                                                                      (weighted-origin 0 0.75)))})
     (component c/title {
-      :name "title"
-      :model {:text "Gateway"}
-      :layout-attributes (layout-attributes ::w/expression
-                                            (layout-hints
-                                              (weighted-position 0.5 1)
-                                              (weighted-origin 0.5 -1.5)))})
-    (component c/entity-controls))
+                        :name "title"
+                        :model {:text "Gateway"}
+                        :layout-attributes (layout-attributes ::w/expression
+                                                              (layout-hints
+                                                                (weighted-position 0.5 1)
+                                                                (weighted-origin 0.5 -1.5)))})
+    (component c/small-controls))
   (shape "main"))

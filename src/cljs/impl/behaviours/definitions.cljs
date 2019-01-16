@@ -96,7 +96,6 @@
                                     (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
                                     (std/toggle-controls (:entity trg) false)
                                     (m/refresh-manhattan-layout app-state entity)))
-                                    ;(std/snap-to-control app-state component (:entity trg))))
                                  (fn [src]))
                   nil)))
 

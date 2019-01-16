@@ -35,8 +35,8 @@
    (->  (mapv (fn [entry] [(:x entry) (:y entry)]) (flatten [start points end]))
         (flatten)))
 
-(defn update-manhattan-layout [app-state entity start end s-normal e-normal]
-  (let [points (find-path start end s-normal e-normal)
+(defn update-manhattan-layout [app-state entity start end normals]
+  (let [points (find-path start end (normals 0) (normals 1))
         polyline-points (to-polyline-points start end points)
         polyline (first (e/get-entity-component entity ::c/relation))]
      (d/setp polyline :points polyline-points)))
@@ -74,7 +74,7 @@
                      (std/get-relation-end entity)
                      new-active-pos)
          vectors (eval-vectors tail-pos head-pos)]
-     (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+     (update-manhattan-layout app-state entity tail-pos head-pos vectors)
      (std/align-decorators (e/entity-by-id app-state (:uid entity)))
      (std/calc-association-bbox app-state entity)))
   ([app-state entity end-type movement-x movement-y]
@@ -86,37 +86,36 @@
                      (std/get-relation-end entity)
                      (move-point (std/get-relation-end entity) movement-x movement-y))
          vectors (eval-vectors tail-pos head-pos)]
-     (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+     (update-manhattan-layout app-state entity tail-pos head-pos vectors)
      (std/align-decorators (e/entity-by-id app-state (:uid entity)))
      (std/calc-association-bbox app-state entity))))
 
+(defn manhattan-data [tail-pos head-pos]
+  (let [normals  (eval-vectors tail-pos head-pos)]
+    {:tail tail-pos :head head-pos :vectors normals}))
+
 (defn refresh-manhattan-layout [app-state entity]
   (let [source-entity (first (e/get-related-entities app-state entity :start))
-        target-entity (first (e/get-related-entities app-state entity :end))]
-    (cond
-      (and (some? source-entity) (nil? target-entity))
-      (let [tail-pos (-> (nearest-control source-entity (std/get-relation-end entity))
-                         (center-point))
-            head-pos (std/get-relation-end entity)
-            vectors (eval-vectors tail-pos head-pos)]
-        (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
-        (std/align-decorators (e/entity-by-id app-state (:uid entity))))
-      (and (some? target-entity) (nil? source-entity))
-      (let [tail-pos (std/get-relation-start entity)
-            head-pos (-> (nearest-control target-entity (std/get-relation-start entity))
-                         (center-point))
-            vectors (eval-vectors tail-pos head-pos)]
-        (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
-        (std/align-decorators (e/entity-by-id app-state (:uid entity))))
-      (and (some? source-entity) (some? target-entity))
-      (let [{:keys [src trg]} (nearest-controls-between app-state source-entity target-entity)
-               vectors (calculate-vectors app-state source-entity src target-entity trg)]
-           (update-manhattan-layout app-state entity (center-point src) (center-point trg) (vectors 0) (vectors 1))
-           (std/align-decorators (e/entity-by-id app-state (:uid entity)))))
+        target-entity (first (e/get-related-entities app-state entity :end))
+        update (cond
+                 (and (some? source-entity) (nil? target-entity))
+                 (manhattan-data (-> (nearest-control source-entity (std/get-relation-end entity))
+                                     (center-point))
+                                 (std/get-relation-end entity))
+                 (and (some? target-entity) (nil? source-entity))
+                 (manhattan-data (std/get-relation-start entity)
+                                 (-> (nearest-control target-entity (std/get-relation-start entity))
+                                     (center-point)))                      
+                 (and (some? source-entity) (some? target-entity))
+                 (let [{:keys [src trg]} (nearest-controls-between app-state source-entity target-entity)
+                       vectors (calculate-vectors app-state source-entity src target-entity trg)]
+                   {:tail (center-point src) :head (center-point trg) :vectors vectors}))]
+    (update-manhattan-layout app-state entity (:tail update) (:head update) (:vectors update))
+    (std/align-decorators (e/entity-by-id app-state (:uid entity)))
     (std/calc-association-bbox app-state entity)))
 
 (defn set-relation-endpoints [app-state entity tail-pos head-pos]
   (let [vectors (eval-vectors tail-pos head-pos)]
-    (update-manhattan-layout app-state entity tail-pos head-pos (vectors 0) (vectors 1))
+    (update-manhattan-layout app-state entity tail-pos head-pos vectors)
     (std/align-decorators (e/entity-by-id app-state (:uid entity)))
     (std/calc-association-bbox app-state entity)))

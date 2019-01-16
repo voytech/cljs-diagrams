@@ -39,12 +39,12 @@
     (d/setp decorator :angle (calculate-angle x1 y1 x2 y2))))
 
 (defn tail-vector [relation]
-  (let [rel-points (d/getp relation :points )
+  (let [rel-points (d/getp relation :points)
         v (take 4 rel-points)]
     {:x1 (nth v 2) :y1 (nth v 3) :x2 (nth v 0) :y2 (nth v 1)}))
 
 (defn head-vector [relation]
-  (let [rel-points (d/getp relation :points )
+  (let [rel-points (d/getp relation :points)
         v (take-last 4 rel-points)]
     {:x1 (nth v 0) :y1 (nth v 1) :x2 (nth v 2) :y2 (nth v 3)}))
 
@@ -71,7 +71,7 @@
         relation  (first (e/get-entity-component entity ::c/relation))]
     (doseq [head head-decs]
       (d/set-data head {:left (- (:x end-pos) (/ (d/get-width head) 2))
-                        :top (- (:y end-pos) (/ (d/get-height head) 2)) })
+                        :top (- (:y end-pos) (/ (d/get-height head) 2))})
       (refresh-decorator-angle (head-vector relation) head))
     (doseq [tail tail-decs]
       (d/set-data tail {:left (- (:x start-pos) (/ (d/get-width tail) 2))

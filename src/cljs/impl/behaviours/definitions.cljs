@@ -31,11 +31,8 @@
               (fn [e]
                 (let [event (:context e)
                       entity (:entity event)
-                      app-state (-> event :app-state)
-                      start (first (e/get-related-entities app-state entity :start))
-                      end (first (e/get-related-entities app-state entity :end))
-                      enriched (merge event {:start start :end end})]
-                  (m/on-source-entity-event enriched)
+                      app-state (-> event :app-state)]
+                  (m/refresh-manhattan-layout app-state entity)
                   nil)))
 
 (defbehaviour moving-primary-entity-by
@@ -98,7 +95,8 @@
                                                     (= ::c/startpoint ctype) "start")]
                                     (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
                                     (std/toggle-controls (:entity trg) false)
-                                    (std/snap-to-control app-state component (:entity trg))))
+                                    (m/refresh-manhattan-layout app-state entity)))
+                                    ;(std/snap-to-control app-state component (:entity trg))))
                                  (fn [src]))
                   nil)))
 

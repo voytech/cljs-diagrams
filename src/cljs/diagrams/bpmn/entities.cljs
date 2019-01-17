@@ -90,7 +90,7 @@
   {:width 40 :height 40}
   (with-layouts (layout ::w/expression w/expression-layout))
   (components-templates
-    (component-template ::c/entity-shape {:border-width 5}))
+    (component-template "main" {:border-width 5}))
   (with-components context
     (component c/entity-shape {
                                :name "main"

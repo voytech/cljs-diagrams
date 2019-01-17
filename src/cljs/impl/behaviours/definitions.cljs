@@ -121,8 +121,8 @@
               [f/is-association-entity f/is-primary-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "focus")
               (fn [e]
-                (let [{:keys [component]} (:context e)]
-                  (api/component-hover component true o/DEFAULT_HIGHLIGHT_OPTIONS)
+                (let [{:keys [component entity]} (:context e)]
+                  (api/component-hover entity component true o/DEFAULT_HIGHLIGHT_OPTIONS)
                   nil)))
 
 (defbehaviour leaving-entity
@@ -131,8 +131,8 @@
               [f/is-association-entity f/is-primary-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "blur")
               (fn [e]
-                (let [{:keys [component]} (:context e)]
-                  (api/component-hover component false o/DEFAULT_HIGHLIGHT_OPTIONS)
+                (let [{:keys [component entity]} (:context e)]
+                  (api/component-hover entity component false o/DEFAULT_HIGHLIGHT_OPTIONS)
                   nil)))
 
 (defbehaviour show-all-entity-controls

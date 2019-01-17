@@ -148,33 +148,33 @@
 
 (defn new-component
  ([app-state container arg-map]
-   (let [{:keys [name
-                 type
-                 model
-                 bbox-draw
-                 attributes
-                 layout-attributes
-                 rendering-method
-                 initializer
-                 ]} arg-map
-         initializer-data (if (nil? initializer) {} (initializer container attributes))
-         template-data (-> container :components-properties type)
-         mdl (merge initializer-data template-data model)
-         callback (default-model-callback app-state bbox-draw)
-         component (Component. (str (random-uuid))
-                               name
-                               type
-                               (volatile! mdl)
-                               rendering-method
-                               attributes
-                               (:uid container)
-                               layout-attributes
-                               callback)]
-     (ensure-z-index app-state component)
-     (bus/fire app-state "component.created" {:component component})
-     (state/assoc-diagram-state app-state [:components (:uid component)] component)
-     (bus/fire app-state "component.added" {:component component})
-     (assoc-in container [:components (:name component)] component))))
+  (let [{:keys [name
+                type
+                model
+                bbox-draw
+                attributes
+                layout-attributes
+                rendering-method
+                initializer]}
+        arg-map
+        initializer-data (if (nil? initializer) {} (initializer container attributes))
+        template-data (get-in container [:components-properties name])
+        mdl (merge initializer-data template-data model)
+        callback (default-model-callback app-state bbox-draw)
+        component (Component. (str (random-uuid))
+                              name
+                              type
+                              (volatile! mdl)
+                              rendering-method
+                              attributes
+                              (:uid container)
+                              layout-attributes
+                              callback)]
+    (ensure-z-index app-state component)
+    (bus/fire app-state "component.created" {:component component})
+    (state/assoc-diagram-state app-state [:components (:uid component)] component)
+    (bus/fire app-state "component.added" {:component component})
+    (assoc-in container [:components (:name component)] component))))
 
 (defn layout-attributes
   ([layout-ref layout-order layout-hints]

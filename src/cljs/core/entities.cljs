@@ -118,6 +118,9 @@
 (defn component-attribute [app-state entity name attribute]
   (state/get-in-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute]))
 
+(defn preset-component-properties [entity name]
+  (get-in entity [:components-properties name]))
+
 (defn get-entity-component [entity name-or-type]
   (if (keyword? name-or-type)
    (filter #(= name-or-type (:type %)) (components-of entity))

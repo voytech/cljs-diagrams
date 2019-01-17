@@ -17,10 +17,6 @@
     [components/ShapePropertyEditor app-state feedback [:title]]
     [:div
       [components/Tabs {:name "Basic" :view [tv/ToolBox :basic-tools]}
-                       {:name "BPMN" :view [tv/ToolBox :bpmn]}]]])
-
-(defn Main [app-state config]
-  [:div.container-fluid
-    [:div.row.row-offcanvas.row-offcanvas-left
-     [Library {:class "col-8 sidebar-offcanvas"} app-state]
-     [Workspace {:class "col"} app-state config]]])
+                       {:name "BPMN" :view [tv/ToolBox :bpmn]}
+                       {:name "UML" :view [tv/ToolBox :bpmn]}
+                       {:name "Other" :view [tv/ToolBox :bpmn]}]]])

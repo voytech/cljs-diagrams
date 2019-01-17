@@ -76,7 +76,7 @@
   (let [config (app-config 1270 1000 :svg)
         feedback (atom {})
         app-state (state/create-app-state "project" config)]
-    (reagent/render-component [m/Library {:class "col-8 sidebar-offcanvas"} app-state feedback]
+    (reagent/render-component [m/Library {:class "toolbox"} app-state feedback]
       (.getElementById js/document "reagent-panel-app"))
     (let [canvas-wrapper (dom/by-id "canvas-wrapper")]
       (.addEventListener canvas-wrapper "drop" (resolve-drop app-state))

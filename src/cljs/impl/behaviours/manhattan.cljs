@@ -105,7 +105,7 @@
                  (and (some? target-entity) (nil? source-entity))
                  (manhattan-data (std/get-relation-start entity)
                                  (-> (nearest-control target-entity (std/get-relation-start entity))
-                                     (center-point)))                      
+                                     (center-point)))
                  (and (some? source-entity) (some? target-entity))
                  (let [{:keys [src trg]} (nearest-controls-between app-state source-entity target-entity)
                        vectors (calculate-vectors app-state source-entity src target-entity trg)]

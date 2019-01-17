@@ -14,7 +14,8 @@
           (for [child childs]
            ^{:key (:name child)}
            [:li {:class "nav-item"}
-            [:a (if (= (:name child) @active) {:class "nav-link active"} {:class "nav-link" :on-click #(reset! active (:name child))}) (:name child)]]))]
+            [:a (if (= (:name child) @active) {:class "nav-link active"} {:class "nav-link" :on-click #(reset! active (:name child))})
+                (if (= (:name child) @active) [:b (:name child)] (:name child))]]))]
        (:view (first (filter #(= @active (:name %)) childs)))])))
 
 (defn ShapePropertyEditor [app-state feedback properties]

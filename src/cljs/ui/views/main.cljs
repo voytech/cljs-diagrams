@@ -16,7 +16,7 @@
   [:div {:class (:class class)}
     [components/ShapePropertyEditor app-state feedback [:title]]
     [:div
-      [components/Tabs {:name "Basic" :view [tv/ToolBox :basic-tools]}
+      [components/Tabs {:name "Basic Shapes" :view [tv/ToolBox :basic-tools]}
                        {:name "BPMN" :view [tv/ToolBox :bpmn]}
                        {:name "UML" :view [tv/ToolBox :bpmn]}
                        {:name "Other" :view [tv/ToolBox :bpmn]}]]])

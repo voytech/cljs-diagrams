@@ -146,7 +146,6 @@
               (= side :bottom) (e/set-bbox app-state entity (merge bbox {:height (+ (:height bbox) movement-y)})))
             (layouts/do-layouts))))))
 
-
 (defn calc-association-bbox [app-state entity]
   (let [entity     (e/entity-by-id app-state (:uid entity))
         startpoint (first (e/get-entity-component entity ::c/startpoint))

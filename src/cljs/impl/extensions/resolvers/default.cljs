@@ -20,6 +20,14 @@
                 (bus/fire app-state "uncommited.render")))
 
   (r/register app-state
+              ::write-notes
+              f/is-shape-entity
+              (spec/keys :req-un [::notes])
+              (fn [app-state entity data]
+                (e/assert-component c/text app-state entity "note" {:text (:notes data)})
+                (bus/fire app-state "uncommited.render")))
+                
+  (r/register app-state
               ::make-association
               f/is-association-entity
               (spec/keys :req-un [::x1 ::y1 ::x2 ::y2])

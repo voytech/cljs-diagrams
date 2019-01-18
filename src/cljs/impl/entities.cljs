@@ -94,7 +94,7 @@
 
 (defentity association
   {:width 180 :height 150}
-  (resolve-data {:x1 50 :y1 50 :x2 230 :y2 85})
+  (resolve-data {:x1 0 :y1 0 :x2 230 :y2 85})
   (with-layouts (layout ::w/expression w/expression-layout))
   (components-templates
     (component-template "connector" {:border-width 3}))
@@ -129,7 +129,7 @@
 
 (defentity link
   {:width 180 :height 150}
-  (resolve-data {:x1 50 :y1 50 :x2 230 :y2 85})
+  (resolve-data {:x1 0 :y1 0 :x2 230 :y2 85})
   (with-layouts (layout ::w/expression w/expression-layout))
   (components-templates
     (component-template "connector" {:border-width 2}))

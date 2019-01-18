@@ -23,7 +23,6 @@
 
 (defn component-hover [entity component bln options]
   (let [original-model (e/preset-component-properties entity (:name component))
-        _ (console.log (clj->js original-model))
         normal-color (or (:border-color original-model) (:normal-color options))
         normal-width (or (:border-width original-model) (:normal-width options))]
     (d/set-data component {:border-color (if bln (:hover-color options)
@@ -139,7 +138,6 @@
                       :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
                       :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})
             (layouts/do-layouts))))))
-
 
 (defn collides?
   ([app-state component feature hit-callback miss-callback]

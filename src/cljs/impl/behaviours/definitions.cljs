@@ -13,8 +13,8 @@
             [impl.features.default :as f])
   (:require-macros [core.macros :refer [defbehaviour]]))
 
-(defbehaviour moving-rigid-entity
-              "Shapeful Rigid Entity Moving"
+(defbehaviour moving-shape-entity
+              "Shapeful Entity Moving"
               :rigid-entity-moving
               [f/is-primary-entity]
               (b/build-event-name [::c/entity-shape] "move")

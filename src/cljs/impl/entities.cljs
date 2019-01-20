@@ -22,7 +22,6 @@
                                        component-template
                                        resolve-data
                                        defcomponent-group
-                                       shape
                                        with-tags]]))
 
 (defentity basic-rect
@@ -42,8 +41,8 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.1)
                                                                 (weighted-origin 0.5 0)))})
-    (component c/entity-controls))
-  (shape "body"))
+    (component c/entity-controls)))
+
 
 (defentity rect-with-icon
   {:width 240 :height 150}
@@ -68,8 +67,7 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.5)
                                                                 (weighted-origin 0.5 0.5)))})
-    (component c/entity-controls))
-  (shape "body"))
+    (component c/entity-controls)))
 
 (defentity container
   {:width 300 :height 350}
@@ -89,8 +87,7 @@
                                                               (layout-hints
                                                                 (weighted-position 0 0.1)
                                                                 (weighted-origin 0 0)))})
-    (component c/entity-controls))
-  (shape "body"))
+    (component c/entity-controls)))
 
 (defentity association
   {:width 180 :height 150}

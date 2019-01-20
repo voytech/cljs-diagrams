@@ -56,16 +56,12 @@
 (defmacro with-tags [ & body]
   `(vector ~@body))
 
-(defmacro shape [shape-ref]
-  `~shape-ref)
-
 (defmacro defentity [name size & body]
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
           components  (:with-components transformed)
           layouts     (:with-layouts transformed)
           tags        (:with-tags transformed)
-          shape-ref   (:shape transformed)
           components-props (:components-templates transformed)
           resolve-data  (:resolve-data transformed)
           has-layouts   (contains? transformed :with-layouts)
@@ -80,8 +76,7 @@
                                                  (or ~tags [])
                                                  (merge ~size {:left (:left context#)
                                                                :top (:top context#)})
-                                                 (if ~has-templates ~components-props {})
-                                                 (or ~shape-ref []))
+                                                 (if ~has-templates ~components-props {}))
                  component-factory# ~components]
              (component-factory# app-state#
                                  (if ~has-layouts (~layouts app-state# e#) e#)

@@ -39,7 +39,7 @@
 
 
    :behaviours [
-                b/moving-rigid-entity
+                b/moving-shape-entity
                 b/moving-association-entity-by
                 b/moving-primary-entity-by
                 b/moving-association-endpoints

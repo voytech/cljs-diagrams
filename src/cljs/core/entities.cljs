@@ -17,8 +17,7 @@
                    components
                    relationships
                    layouts
-                   components-properties
-                   shape-ref])
+                   components-properties])
 
 (defn components-of [holder]
  (vals (:components holder)))
@@ -69,7 +68,7 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
-  ([app-state type tags bbox component-properties shape-ref]
+  ([app-state type tags bbox component-properties]
    (let [uid (str (random-uuid))
          entity (Entity. uid
                          bbox
@@ -77,13 +76,12 @@
                          tags
                          {} []
                          {} ;layouts
-                         component-properties
-                         shape-ref)]
+                         component-properties)]
      (state/assoc-diagram-state app-state [:entities uid] entity)
      (bus/fire app-state "entity.added" {:entity entity})
      entity))
   ([app-state type bbox]
-   (create-entity app-state type [] bbox {} nil)))
+   (create-entity app-state type [] bbox {})))
 
 (defn set-bbox [app-state entity bbox]
   (state/assoc-diagram-state app-state [:entities (:uid entity) :bbox] bbox)
@@ -125,10 +123,6 @@
   (if (keyword? name-or-type)
    (filter #(= name-or-type (:type %)) (components-of entity))
    (get-in entity [:components name-or-type])))
-
-(defn get-shape-component [app-state entity]
-  (when-let [shape-name (:shape-ref entity)]
-    (get-entity-component entity shape-name)))
 
 (defn assert-component
  ([func app-state entity name data]

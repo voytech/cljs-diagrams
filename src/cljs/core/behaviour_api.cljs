@@ -102,7 +102,7 @@
   (filterv #(is-relation-owner entity %) (:relationships entity)))
 
 (defn move-entity [app-state entity movement-x movement-y]
-  (let [component (e/get-shape-component app-state entity)
+  (let [component (first (e/get-entity-component entity ::c/entity-shape))
         entity (e/entity-by-id app-state (:uid entity))]
     (default-position-entity app-state
                              entity

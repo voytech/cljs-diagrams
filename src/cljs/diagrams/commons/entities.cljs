@@ -23,7 +23,6 @@
                                        component-template
                                        resolve-data
                                        defcomponent-group
-                                       shape
                                        with-tags]]))
 
 
@@ -46,5 +45,4 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.5)
                                                                 (weighted-origin 0.5 0.5)))})
-    (component c/entity-controls))
-  (shape "main"))
+    (component c/entity-controls)))

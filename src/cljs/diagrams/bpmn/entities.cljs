@@ -23,7 +23,6 @@
                                        component-template
                                        resolve-data
                                        defcomponent-group
-                                       shape
                                        with-tags]]))
 
 
@@ -46,8 +45,7 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.5)
                                                                 (weighted-origin 0.5 0.5)))})
-    (component c/entity-controls))
-  (shape "main"))
+    (component c/entity-controls)))
 
 (defn event-bbox-draw []
   (fn [component]
@@ -83,8 +81,7 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 1)
                                                                 (weighted-origin 0.5 -1.5)))})
-    (component c/small-controls))
-  (shape "main"))
+    (component c/small-controls)))
 
 (defentity process-end
   {:width 40 :height 40}
@@ -116,8 +113,7 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 1)
                                                                 (weighted-origin 0.5 -1.5)))})
-    (component c/small-controls))
-  (shape "main"))
+    (component c/small-controls)))
 
 
 (defentity gateway
@@ -149,5 +145,4 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 1)
                                                                 (weighted-origin 0.5 -1.5)))})
-    (component c/small-controls))
-  (shape "main"))
+    (component c/small-controls)))

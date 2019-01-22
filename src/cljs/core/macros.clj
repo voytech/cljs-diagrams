@@ -31,12 +31,8 @@
 (defmacro with-components [context & components]
   `(fn [app-state# entity# ~context]
      (let [left# (or (:left ~context) 0)
-           top#  (or (:top  ~context) 0)
-           _entity# (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components))]
-        (doseq [component# (-> _entity# :components vals)]
-          (doseq [vl# [[:left left#] [:top top#]]]
-            (let [new-val# (+ (vl# 1) (core.components/getp component# (vl# 0)))]
-              (core.components/setp component# (vl# 0) new-val#)))))))
+           top#  (or (:top  ~context) 0)]
+       (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components)))))
 
 (defmacro defcomponent-group [group-name & components]
   `(defn ~group-name [app-state# entity#]

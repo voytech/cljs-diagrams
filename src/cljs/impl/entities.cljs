@@ -41,7 +41,8 @@
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.1)
                                                                 (weighted-origin 0.5 0)))})
-    (component c/entity-controls)))
+    (component c/entity-controls)
+    (component c/shape-editing)))
 
 
 (defentity rect-with-icon
@@ -144,17 +145,4 @@
                               {:head ["end"]
                                :tail ["start"]}}})
     (component c/startpoint {:name "start" :model {:left 0 :top 0}})
-    (component c/endpoint {:name  "end" :model {:visible true}})
-    (component c/rectangle {:name "bg"
-                            :model {:background-color "white"}
-                            :layout-attributes (layout-attributes ::w/expression 1
-                                                                  (layout-hints
-                                                                    (position-of "title")
-                                                                    (size-of "title" 4 4)
-                                                                    (weighted-origin 0 0.75)))})
-    (component c/title {:name "title"
-                        :model {:text "Title."}
-                        :layout-attributes (layout-attributes ::w/expression
-                                                              (layout-hints
-                                                                (weighted-position 0.5 0.5)
-                                                                (weighted-origin 0.5 -0.1)))})))
+    (component c/endpoint {:name  "end" :model {:visible true}})))

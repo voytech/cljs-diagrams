@@ -42,6 +42,7 @@
                                :opacity (simple-set :fill-opacity)
                                :text-align (simple-set :text-align)
                                :text (fn [svg val mdl] (dom/set-text svg val))
+                               :word-wrap (fn [svg val mdl] (dom/text svg val))
                                :visible (fn [svg val mdl] (dom/attr svg "visibility" (if (== val true) "visible" "hidden")))
                                :color (simple-set :stroke)
                                :border-style (simple-set :stroke-style)
@@ -87,7 +88,9 @@
 
 (defn- create-svg-element [renderer-state svg-name component postprocess]
   (let [root (dom/by-id (-> renderer-state deref :root))
-        source (svg/create-element svg-name root {})
+        source (if (= "textarea" svg-name)
+                 (svg/create-textarea root {})
+                 (svg/create-element svg-name root {}))
         model (model-attributes component)]
       (sync-svg-element source model)
       (dom/attr source "id" (:uid component))
@@ -210,6 +213,20 @@
   (create-svg-element renderer-state "text" component nil))
 
 (defmethod r/destroy-rendering-state [:svg :draw-text] [renderer-state component]
+  (swap! renderer-state update :components dissoc (:uid component))
+  (dom/remove-by-id (:uid component)))
+
+;;==========================================================================================================
+;; textarea rendering
+;;==========================================================================================================
+(defmethod r/do-render [:svg :draw-textarea] [renderer-state component]
+  (update-svg-element renderer-state component nil)
+  ((:measure @renderer-state) component))
+
+(defmethod r/create-rendering-state [:svg :draw-textarea] [renderer-state component]
+  (create-svg-element renderer-state "textarea" component nil))
+
+(defmethod r/destroy-rendering-state [:svg :draw-textarea] [renderer-state component]
   (swap! renderer-state update :components dissoc (:uid component))
   (dom/remove-by-id (:uid component)))
 

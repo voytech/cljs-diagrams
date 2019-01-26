@@ -123,19 +123,31 @@
 (defcomponent title {:rendering-method :draw-text
                      :initializer (title-initializer)})
 
-(defn- image-initializer [width height]
-  (fn [container props]
-    {:border-color "black"
-     :border-style :solid
-     :border-width 1
-     :width width
-     :height height}))
+(defn- image-initializer
+  ([width height]
+   (fn [container props]
+     {:border-color "black"
+      :stroke-style :solid
+      :border-width 1
+      :width width
+      :height height}))
+  ([width height image]
+   (fn [container props]
+     {:border-color "black"
+      :stroke-style :solid
+      :border-width 1
+      :image-url image
+      :width width
+      :height height})))
 
 (defcomponent image {:rendering-method :draw-image
                      :initializer (image-initializer 50 50)})
 
 (defcomponent text {:rendering-method :draw-text
                     :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
+
+(defcomponent textarea {:rendering-method :draw-textarea
+                        :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
 
 (defcomponent description {:rendering-method :draw-text
                            :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
@@ -145,6 +157,20 @@
 
 (defcomponent bounding-box {:rendering-method :draw-rect
                             :initializer (fn [c p] {:border-color "gray" :stroke-style :dashed :opacity 0.1 :border-width 1 :visible false})})
+
+(defcomponent remove {:rendering-method :draw-image
+                      :initializer (image-initializer 20 20 "/icons/remove.svg")})
+
+(defcomponent edit {:rendering-method :draw-image
+                    :initializer (image-initializer 20 20 "/icons/edit.svg")})
+
+(defcomponent-group shape-editing
+  (component edit   {:name  "edit"
+                     :model {:width 20 :height 20 :background-color "red"}
+                     :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 1 0) (weighted-origin 2 1.2)))})
+  (component remove {:name  "remove"
+                     :model {:width 20 :height 20}
+                     :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 1 0) (weighted-origin 1 1.2)))}))
 
 (defcomponent-group entity-controls
   (component control {:name  "connector-left"
@@ -176,4 +202,22 @@
   (component control {:name "connector-bottom"
                       :attributes {:side :bottom}
                       :model {:width 10 :height 10}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))
+
+(defcomponent-group smallest-controls
+  (component control {:name  "connector-left"
+                      :attributes {:side :left}
+                      :model {:width 8 :height 8}
+                      :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
+  (component control {:name  "connector-right"
+                      :attributes {:side :right}
+                      :model {:width 8 :height 8}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
+  (component control {:name  "connector-top"
+                      :attributes {:side :top}
+                      :model {:width 8 :height 8}
+                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
+  (component control {:name "connector-bottom"
+                      :attributes {:side :bottom}
+                      :model {:width 8 :height 8}
                       :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))

@@ -101,9 +101,9 @@
 
 (defn attr
   ([elem name val]
-    (.setAttribute elem name val))
+   (.setAttribute elem name val))
   ([elem name]
-    (.getAttribute elem name)))
+   (.getAttribute elem name)))
 
 (defn set-text [elem text]
   (.text (j-query elem) text))

@@ -38,7 +38,7 @@
                                                                        (match-parent-position)
                                                                        (match-parent-size)
                                                                        (weighted-origin 0 0)))})
-    (component c/text {
+    (component c/textarea {}
                         :name "note"
                         :model {:text "Lorem ipsum dolor sit amet,
                                        consectetur adipisicing elit,
@@ -59,5 +59,5 @@
                                                               (layout-hints
                                                                 (match-parent-position)
                                                                 (match-parent-size)
-                                                                (weighted-origin 0 0)))})
+                                                                (weighted-origin 0 0))))
     (component c/entity-controls)))

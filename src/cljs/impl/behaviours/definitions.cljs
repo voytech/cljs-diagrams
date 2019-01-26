@@ -49,7 +49,7 @@
               "Select object"
               :select
               [f/is-primary-entity]
-              (b/build-event-name [::c/entity-shape] "activate")
+              (b/build-event-name [::c/edit] "activate")
               (fn [e]
                  (let [{:keys [app-state entity]} (:context e)]
                     (s/select app-state entity)

@@ -40,9 +40,12 @@
                                :font-weight (simple-set :font-weight)
                                :font-size (simple-set :font-size)
                                :opacity (simple-set :fill-opacity)
+                               ;; Text attributes
                                :text-align (simple-set :text-align)
-                               :text (fn [svg val mdl] (dom/set-text svg val))
-                               :word-wrap (fn [svg val mdl] (dom/text svg val))
+                               :text (fn [svg val mdl] (svg/set-text svg val))
+                               :multiline-text (fn [svg val mdl] (svg/svg-attr svg val))
+                               :text-overflow (fn [svg val mdl])
+                               ;; ---
                                :visible (fn [svg val mdl] (dom/attr svg "visibility" (if (== val true) "visible" "hidden")))
                                :color (simple-set :stroke)
                                :border-style (simple-set :stroke-style)

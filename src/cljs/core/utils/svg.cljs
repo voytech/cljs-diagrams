@@ -41,7 +41,31 @@
 (defn tokenize [text]
   (str/split text #"\s+"))
 
-(defn propagatable-g-attributes [g])
+(defn is-propagatable [attrib]
+  (and (not= "x" attrib)
+       (not= "y" attrib)
+       (not= "width" attrib)
+       (not= "height" attrib)))
+
+(defn propagatable-attributes [g]
+  (let [attributes (.-attributes g)
+        count (.-length attributes)]
+    (apply merge (mapv (fn [cnt]
+                          (let [attr (aget attributes cnt)]
+                             {(.-name attr) (.-value attr)})
+                        (range count))))))
+
+(defn propagate-attributes [elem attribs]
+  (let [count (dom/child-count elem)]
+    (doseq [child (mapv #(dom/get-child-at elem %) (range count))]
+      (doseq [attribkey (fiterv is-propagatable (keys attribs))]
+        (dom/attr child attribkey (get attribs attribkey))))))
+
+(defn propagate-attribute [elem attrib val]
+  (when (is-propagatable attrib)
+    (let [count (dom/child-count elem)]
+      (doseq [child (mapv #(dom/get-child-at elem %) (range count))]
+        (dom/attr child attrib val)))))
 
 (defn set-multiline-text [svg]
   (let [text (dom/attr svg "data-text")
@@ -53,9 +77,9 @@
         height (dom/attr svg "data-height")
         words (tokenize text)]
     (doseq [word words]
-      (let [attribs (merge (propagatable-g-attributes svg)
+      (let [attribs (merge (propagatable-attributes svg)
                            {"x" @x "y" @y})
-            word-node (create-text svg)]
+            word-node (create-text svg attribs)]
         (dom/set-text word-node (str word " "))
         (let [bbox (.getBBox word-node)
               wn-width (.-width bbox)
@@ -65,26 +89,22 @@
             (do (vreset! x orig-x)
                 (vreset! y (+ @y wn-height)))))))))
 
-
 (defn set-singleline-text [svg])
 
 (defn set-text-internal [svg]
-  (if (= "break-words" (dom/attr svg "data-word-wrap"))
+  (if (true? (dom/attr svg "data-multiline-text"))
     (set-multiline-text svg)
     (set-singleline-text svg)))
 
 (defn is-word-wrap [name val]
-  (and (= :word-wrap (keyword name))
-       (= :break-words (keyword val))))
-
-(defn propagate-g-attr [elem name val]
-  (let [attr (dom/attr elem (str "data-" name))]
-    ()))
+  (and (= :multiline-text (keyword name))
+       (true? val)))
 
 (defn g-attr [elem name val]
   (if (and (= "G" (-.nodeName elem))
            (not= "id" name))
-    (dom/attr elem (str "data-" name) val)
+    (do (dom/attr elem (str "data-" name) val)
+        (propagate-attribute elem name val))
     (dom/attr elem name val)))
 
 (defn svg-attr [elem name val]

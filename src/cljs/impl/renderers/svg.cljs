@@ -5,7 +5,7 @@
             [core.rendering :as r]
             [core.state :as state]
             [core.utils.dom :as dom]
-            [core.utils.svg :as svg]
+            [core.utils.svg :as s]
             [core.eventbus :as bus]
             [impl.components :as impld]))
 
@@ -42,8 +42,8 @@
                                :opacity (simple-set :fill-opacity)
                                ;; Text attributes
                                :text-align (simple-set :text-align)
-                               :text (fn [svg val mdl] (svg/set-text svg val))
-                               :multiline-text (fn [svg val mdl] (svg/svg-attr svg val))
+                               :text (fn [svg val mdl] (s/set-text svg val))
+                               :multiline-text (fn [svg val mdl] (s/svg-attr svg val))
                                :text-overflow (fn [svg val mdl])
                                ;; ---
                                :visible (fn [svg val mdl] (dom/attr svg "visibility" (if (== val true) "visible" "hidden")))
@@ -92,8 +92,8 @@
 (defn- create-svg-element [renderer-state svg-name component postprocess]
   (let [root (dom/by-id (-> renderer-state deref :root))
         source (if (= "textarea" svg-name)
-                 (svg/create-textarea root {})
-                 (svg/create-element svg-name root {}))
+                 (s/create-textarea root {})
+                 (s/create-element svg-name root {}))
         model (model-attributes component)]
       (sync-svg-element source model)
       (dom/attr source "id" (:uid component))
@@ -126,7 +126,7 @@
   (let [renderer-state (atom initial-state)]
     (swap! renderer-state assoc :measure (fn [component] (measure-text app-state component))
                                 :root (str dom-id "-svg"))
-    (svg/create-svg dom-id "svg" {:width width :height height})
+    (s/create-svg dom-id "svg" {:width width :height height})
     renderer-state))
 
 (defmethod r/all-rendered :svg [state context])

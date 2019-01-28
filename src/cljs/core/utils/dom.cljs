@@ -95,6 +95,21 @@
         (attr "id" id))
     element))
 
+(defn remove-childs [parent]
+  (while (not (nil? (.-firstChild parent)))
+    (let [child (.-firstChild parent)]
+      (.removeChild parent child))))
+
+(defn- next [listeners event]
+  (let [listener (first listeners)]
+    (when-not (nil? listener)
+      (let [result ((:callback listener) event)]
+        (if (nil? result)
+          (when (and (not (:cancelBubble event))
+                     (not (:defaultPrevented event)))
+            (recur (rest listeners) event))
+          result)))))
+
 (defn remove-by-id [id]
   (when-let [elem (by-id id)]
     (.removeChild (.-parentElement elem) elem)))

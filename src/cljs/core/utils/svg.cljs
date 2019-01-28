@@ -50,10 +50,11 @@
 (defn propagatable-attributes [g]
   (let [attributes (.-attributes g)
         count (.-length attributes)]
-    (apply merge (mapv (fn [cnt]
-                          (let [attr (aget attributes cnt)]
-                             {(.-name attr) (.-value attr)})
-                        (range count))))))
+    (apply merge  (->> (range count)
+                       (mapv (fn [idx]
+                               (let [attr (aget attributes idx)]
+                                 {(.-name attr) (.-value attr)})))
+                       (fiterv #(is-propagatable (first (keys %))))))))
 
 (defn propagate-attributes [elem attribs]
   (let [count (dom/child-count elem)]
@@ -67,6 +68,9 @@
       (doseq [child (mapv #(dom/get-child-at elem %) (range count))]
         (dom/attr child attrib val)))))
 
+(defn layout-multiline-text [svg]
+  )
+
 (defn set-multiline-text [svg]
   (let [text (dom/attr svg "data-text")
         orig-x (dom/attr svg "data-x")
@@ -76,9 +80,9 @@
         width (dom/attr svg "data-width")
         height (dom/attr svg "data-height")
         words (tokenize text)]
+    (dom/remove-childs svg)
     (doseq [word words]
-      (let [attribs (merge (propagatable-attributes svg)
-                           {"x" @x "y" @y})
+      (let [attribs   (merge (propagatable-attributes svg) {"x" @x "y" @y})
             word-node (create-text svg attribs)]
         (dom/set-text word-node (str word " "))
         (let [bbox (.getBBox word-node)
@@ -90,6 +94,7 @@
                 (vreset! y (+ @y wn-height)))))))))
 
 (defn set-singleline-text [svg])
+  (dom/set-text svg (dom/attr svg "data-text"))
 
 (defn set-text-internal [svg]
   (if (true? (dom/attr svg "data-multiline-text"))
@@ -100,8 +105,11 @@
   (and (= :multiline-text (keyword name))
        (true? val)))
 
+(defn is-g [elem]
+  (= "G" (-.nodeName elem)))
+
 (defn g-attr [elem name val]
-  (if (and (= "G" (-.nodeName elem))
+  (if (and (is-g elem)
            (not= "id" name))
     (do (dom/attr elem (str "data-" name) val)
         (propagate-attribute elem name val))
@@ -113,5 +121,5 @@
     (set-text-internal elem)))
 
 (defn set-text [elem text]
-  (dom/attr svg "data-text" text)
+  (dom/attr elem "data-text" text)
   (set-text-internal elem))

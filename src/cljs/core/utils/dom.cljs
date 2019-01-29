@@ -40,10 +40,10 @@
   (.remove (j-query element)))
 
 (defn child-count [element]
-  (.-length (.-childNodes element)))
+  (.-length (.-children element)))
 
 (defn get-child-at [parent index]
-  (aget (.-childNodes parent) index))
+  (aget (.-children parent) index))
 
 (defn hide-childs [parent])
 

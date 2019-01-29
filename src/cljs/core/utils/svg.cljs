@@ -45,17 +45,17 @@
   (and (not= "x" attrib)
        (not= "y" attrib)
        (not= "width" attrib)
-       (not= "height" attrib)))
+       (not= "height" attrib)
+       (not= "data-text" attrib)))
 
 (defn propagatable-attributes [g]
   (let [attributes (.-attributes g)
         count (.-length attributes)]
     (apply merge  (->> (range count)
-                       (mapv (fn [idx]
-                               (let [attr (aget attributes idx)]
-                                 {(.-name attr) (.-value attr)})))
-                       (fiterv #(is-propagatable (first (keys %))))))))
-
+                       (mapv #(aget attributes %))
+                       (filterv #(is-propagatable (.-name %)))
+                       (mapv (fn [attr] {(.-name attr) (.-value attr)}))))))
+                       
 (defn propagate-attributes [elem attribs]
   (let [count (dom/child-count elem)]
     (doseq [child (mapv #(dom/get-child-at elem %) (range count))]
@@ -68,8 +68,7 @@
       (doseq [child (mapv #(dom/get-child-at elem %) (range count))]
         (dom/attr child attrib val)))))
 
-(defn layout-multiline-text [svg]
-  )
+(defn layout-multiline-text [svg])
 
 (defn set-multiline-text [svg]
   (let [text (dom/attr svg "data-text")
@@ -93,11 +92,11 @@
             (do (vreset! x orig-x)
                 (vreset! y (+ @y wn-height)))))))))
 
-(defn set-singleline-text [svg])
-  (dom/set-text svg (dom/attr svg "data-text"))
+(defn set-singleline-text [svg]
+  (dom/set-text svg (dom/attr svg "data-text")))
 
 (defn set-text-internal [svg]
-  (if (true? (dom/attr svg "data-multiline-text"))
+  (if (= "true" (dom/attr svg "data-multiline-text"))
     (set-multiline-text svg)
     (set-singleline-text svg)))
 
@@ -106,7 +105,8 @@
        (true? val)))
 
 (defn is-g [elem]
-  (= "G" (-.nodeName elem)))
+  (or (= "g" (.-nodeName elem))
+      (= "G" (.-nodeName elem))))
 
 (defn g-attr [elem name val]
   (if (and (is-g elem)
@@ -120,6 +120,6 @@
   (when (is-word-wrap name val)
     (set-text-internal elem)))
 
-(defn set-text [elem text]
+(defn svg-set-text [elem text]
   (dom/attr elem "data-text" text)
   (set-text-internal elem))

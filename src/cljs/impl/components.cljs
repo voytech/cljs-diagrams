@@ -147,7 +147,7 @@
                     :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
 
 (defcomponent textarea {:rendering-method :draw-textarea
-                        :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
+                        :initializer (fn [c p] {:multiline-text true :border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})
 
 (defcomponent description {:rendering-method :draw-text
                            :initializer (fn [c p] {:border-color "black" :border-style :solid :border-width 1 :font-family "calibri" :font-size 12})})

@@ -13,12 +13,16 @@
   (fn [svg val mdl]
     (dom/attr svg (name to) val)))
 
-(defonce svg-property-mapping {:left (simple-set :x)
-                               :top  (simple-set :y)
+(defn- svg-set [to]
+  (fn [svg val mdl]
+    (s/svg-attr svg (name to) val)))
+
+(defonce svg-property-mapping {:left (svg-set :x)
+                               :top  (svg-set :y)
                                :round-x (simple-set :rx)
                                :round-y (simple-set :ry)
-                               :width  (simple-set :width)
-                               :height (simple-set :height)
+                               :width  (svg-set :width)
+                               :height (svg-set :height)
                                :points (fn [svg val mdl]
                                           (dom/attr svg "points"
                                             (reduce (fn [agg point]
@@ -36,15 +40,16 @@
                                :border-color  (simple-set :stroke)
                                :background-color (simple-set :fill)
                                :radius (simple-set :r)
-                               :font-family (simple-set :font-family)
-                               :font-weight (simple-set :font-weight)
-                               :font-size (simple-set :font-size)
+                               :font-family (svg-set :font-family)
+                               :font-weight (svg-set :font-weight)
+                               :font-size (svg-set :font-size)
                                :opacity (simple-set :fill-opacity)
                                ;; Text attributes
-                               :text-align (simple-set :text-align)
-                               :text (fn [svg val mdl] (s/set-text svg val))
-                               :multiline-text (fn [svg val mdl] (s/svg-attr svg val))
-                               :text-overflow (fn [svg val mdl])
+                               :text-align (svg-set :text-align)
+                               :text (fn [svg val mdl]
+                                       (s/svg-set-text svg val))
+                               :multiline-text (svg-set :multiline-text)
+                               :text-overflow (svg-set :text-overflow)
                                ;; ---
                                :visible (fn [svg val mdl] (dom/attr svg "visibility" (if (== val true) "visible" "hidden")))
                                :color (simple-set :stroke)
@@ -223,8 +228,7 @@
 ;; textarea rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:svg :draw-textarea] [renderer-state component]
-  (update-svg-element renderer-state component nil)
-  ((:measure @renderer-state) component))
+  (update-svg-element renderer-state component nil))
 
 (defmethod r/create-rendering-state [:svg :draw-textarea] [renderer-state component]
   (create-svg-element renderer-state "textarea" component nil))

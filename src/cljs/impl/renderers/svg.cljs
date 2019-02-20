@@ -49,8 +49,6 @@
                                :text (fn [svg val mdl]
                                        (dom/attr svg "dominant-baseline" "hanging")
                                        (dom/set-text svg val))
-                               :multiline-text (svg-set :multiline-text)
-                               :text-overflow (svg-set :text-overflow)
                                ;; ---
                                :visible (fn [svg val mdl] (dom/attr svg "visibility" (if (== val true) "visible" "hidden")))
                                :color (simple-set :stroke)
@@ -97,9 +95,7 @@
 
 (defn- create-svg-element [renderer-state svg-name component postprocess]
   (let [root (dom/by-id (-> renderer-state deref :root))
-        source (if (= "textarea" svg-name)
-                 (s/create-textarea root {})
-                 (s/create-element svg-name root {}))
+        source (s/create-element svg-name root {})
         model (model-attributes component)]
       (sync-svg-element source model)
       (dom/attr source "id" (:uid component))
@@ -224,19 +220,7 @@
 (defmethod r/destroy-rendering-state [:svg :draw-text] [renderer-state component]
   (swap! renderer-state update :components dissoc (:uid component))
   (dom/remove-by-id (:uid component)))
-
-;;==========================================================================================================
-;; textarea rendering
-;;==========================================================================================================
-(defmethod r/do-render [:svg :draw-textarea] [renderer-state component]
-  (update-svg-element renderer-state component nil))
-
-(defmethod r/create-rendering-state [:svg :draw-textarea] [renderer-state component]
-  (create-svg-element renderer-state "textarea" component nil))
-
-(defmethod r/destroy-rendering-state [:svg :draw-textarea] [renderer-state component]
-  (swap! renderer-state update :components dissoc (:uid component))
-  (dom/remove-by-id (:uid component)))
+ 
 
 ;;==========================================================================================================
 ;; image rendering

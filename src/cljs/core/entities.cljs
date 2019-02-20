@@ -119,10 +119,13 @@
 (defn preset-component-properties [entity name]
   (get-in entity [:components-properties name]))
 
-(defn get-entity-component [entity name-or-type]
+(defn get-entity-component
+ ([entity name-or-type]
   (if (keyword? name-or-type)
    (filter #(= name-or-type (:type %)) (components-of entity))
    (get-in entity [:components name-or-type])))
+ ([app-state entity name-or-type]
+  (get-entity-component (entity-by-id app-state (:uid entity)) name-or-type)))
 
 (defn assert-component
  ([func app-state entity name data]
@@ -131,7 +134,7 @@
     (if (nil? component)
       (func app-state entity {:name name :model data})
       (d/set-data component data))
-    (get-entity-component entity name)))
+    (get-entity-component app-state entity name)))
  ([func app-state entity name]
   (assert-component func app-state entity name {})))
 

@@ -71,16 +71,16 @@
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1
                                                                   (layout-hints
-                                                                    (position-of "title")
-                                                                    (size-of "title" 4 4)
-                                                                    (weighted-origin 0 0.75)))})
+                                                                    (position-of "title" 4 0)
+                                                                    (size-of "title" 8 0)
+                                                                    (weighted-origin 0 0)))})
     (component c/title {
                         :name "title"
                         :model  {:text "Start"}
                         :layout-attributes (layout-attributes ::w/expression
                                                               (layout-hints
                                                                 (weighted-position 0.5 1)
-                                                                (weighted-origin 0.5 -1.5)))})
+                                                                (weighted-origin 0.5 0)))})
     (component c/small-controls)))
 
 (defentity process-end
@@ -103,16 +103,16 @@
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1
                                                                   (layout-hints
-                                                                    (position-of "title")
-                                                                    (size-of "title" 4 4)
-                                                                    (weighted-origin 0 0.75)))})
+                                                                    (position-of "title" 4 0)
+                                                                    (size-of "title" 8 0)
+                                                                    (weighted-origin 0 0)))})
     (component c/title {
                         :name "title"
                         :model  {:text "End"}
                         :layout-attributes (layout-attributes ::w/expression
                                                               (layout-hints
                                                                 (weighted-position 0.5 1)
-                                                                (weighted-origin 0.5 -1.5)))})
+                                                                (weighted-origin 0.5 0)))})
     (component c/small-controls)))
 
 
@@ -135,14 +135,14 @@
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1
                                                                    (layout-hints
-                                                                     (position-of "title")
-                                                                     (size-of "title" 4 4)
-                                                                     (weighted-origin 0 0.75)))})
+                                                                     (position-of "title" 4 0)
+                                                                     (size-of "title" 8 0)
+                                                                     (weighted-origin 0 0)))})
     (component c/title {
                         :name "title"
                         :model {:text "Gateway"}
                         :layout-attributes (layout-attributes ::w/expression
                                                               (layout-hints
                                                                 (weighted-position 0.5 1)
-                                                                (weighted-origin 0.5 -1.5)))})
+                                                                (weighted-origin 0.5 0)))})
     (component c/small-controls)))

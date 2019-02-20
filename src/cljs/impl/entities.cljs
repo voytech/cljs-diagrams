@@ -115,15 +115,15 @@
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes ::w/expression 1
                                                                   (layout-hints
-                                                                    (position-of "title")
-                                                                    (size-of "title" 4 4)
-                                                                    (weighted-origin 0 0.75)))})
+                                                                    (position-of "title" 4 2)
+                                                                    (size-of "title" 8 4)
+                                                                    (weighted-origin 0 0)))})
     (component c/title {:name "title"
                         :model {:text "Title."}
                         :layout-attributes (layout-attributes ::w/expression
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.5)
-                                                                (weighted-origin 0.5 -0.1)))})))
+                                                                (weighted-origin 0.5 0)))})))
 
 (defentity link
   {:width 180 :height 150}

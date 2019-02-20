@@ -1,11 +1,13 @@
 (ns impl.extensions.resolvers.default
  (:require [core.entities :as e]
+           [core.components :as d]
            [impl.components :as c]
            [impl.behaviours.manhattan :as m]
            [core.behaviour-api :as api]
            [impl.behaviours.behaviour-api :as stdapi]
            [impl.features.default :as f]
            [clojure.spec.alpha :as spec]
+           [clojure.string :as str]
            [core.eventbus :as bus]
            [extensions.data-resolvers :as r])
  (:require-macros [extensions.macros :refer [defresolver]]))
@@ -24,9 +26,22 @@
               f/is-shape-entity
               (spec/keys :req-un [::notes])
               (fn [app-state entity data]
-                (e/assert-component c/text app-state entity "note" {:text (:notes data)})
-                (bus/fire app-state "uncommited.render")))
-                
+                (let [bbox (:bbox entity)
+                      word-space 5
+                      right-edge (+ (:width bbox) (:left bbox))
+                      left (volatile! (:left bbox))
+                      top  (volatile! (:top bbox))]
+                  (doseq [[idx word] (map-indexed (fn [idx itm] [idx itm]) (str/split (:notes data) #"\s+"))]
+                    (let [component (e/assert-component c/text app-state entity
+                                                        (str "note-wd-" idx)
+                                                        {:text word :left @left :top @top})]
+                      (bus/fire app-state "uncommited.render")
+                      (let [next-col (+ @left (d/get-width component) word-space)
+                            new-line? (> next-col right-edge)]
+                        (vreset! left (if new-line? (:left bbox) next-col))
+                        (when new-line? (vreset! top (+ @top (d/get-height component)))))))
+                  (bus/fire app-state "uncommited.render"))))
+
   (r/register app-state
               ::make-association
               f/is-association-entity

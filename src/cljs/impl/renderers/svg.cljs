@@ -40,14 +40,15 @@
                                :border-color  (simple-set :stroke)
                                :background-color (simple-set :fill)
                                :radius (simple-set :r)
+                               :opacity (simple-set :fill-opacity)
+                               ;; Text attributes
                                :font-family (svg-set :font-family)
                                :font-weight (svg-set :font-weight)
                                :font-size (svg-set :font-size)
-                               :opacity (simple-set :fill-opacity)
-                               ;; Text attributes
                                :text-align (svg-set :text-align)
                                :text (fn [svg val mdl]
-                                       (s/svg-set-text svg val))
+                                       (dom/attr svg "dominant-baseline" "hanging")
+                                       (dom/set-text svg val))
                                :multiline-text (svg-set :multiline-text)
                                :text-overflow (svg-set :text-overflow)
                                ;; ---

@@ -13,16 +13,12 @@
   (fn [svg val mdl]
     (dom/attr svg (name to) val)))
 
-(defn- svg-set [to]
-  (fn [svg val mdl]
-    (s/svg-attr svg (name to) val)))
-
-(defonce svg-property-mapping {:left (svg-set :x)
-                               :top  (svg-set :y)
+(defonce svg-property-mapping {:left (simple-set :x)
+                               :top  (simple-set :y)
                                :round-x (simple-set :rx)
                                :round-y (simple-set :ry)
-                               :width  (svg-set :width)
-                               :height (svg-set :height)
+                               :width  (simple-set :width)
+                               :height (simple-set :height)
                                :points (fn [svg val mdl]
                                           (dom/attr svg "points"
                                             (reduce (fn [agg point]
@@ -42,10 +38,10 @@
                                :radius (simple-set :r)
                                :opacity (simple-set :fill-opacity)
                                ;; Text attributes
-                               :font-family (svg-set :font-family)
-                               :font-weight (svg-set :font-weight)
-                               :font-size (svg-set :font-size)
-                               :text-align (svg-set :text-align)
+                               :font-family (simple-set :font-family)
+                               :font-weight (simple-set :font-weight)
+                               :font-size (simple-set :font-size)
+                               :text-align (simple-set :text-align)
                                :text (fn [svg val mdl]
                                        (dom/attr svg "dominant-baseline" "hanging")
                                        (dom/set-text svg val))
@@ -220,7 +216,7 @@
 (defmethod r/destroy-rendering-state [:svg :draw-text] [renderer-state component]
   (swap! renderer-state update :components dissoc (:uid component))
   (dom/remove-by-id (:uid component)))
- 
+
 
 ;;==========================================================================================================
 ;; image rendering

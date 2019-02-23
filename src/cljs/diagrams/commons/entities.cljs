@@ -31,7 +31,7 @@
   {:width 180 :height 150}
   (resolve-data {:notes "Here we can wrtie some multiline notes. Not too long tough."})
   (with-layouts (layout ::w/expression w/expression-layout)
-                (layout ::f/flow f/flow-layout))
+                (layout ::f/flow f/flow-layout (weighted-position 0.1 0.1) (weighted-size 0.8 0.8) nil))
   (with-components context
     (component c/entity-shape {
                                :name "main"

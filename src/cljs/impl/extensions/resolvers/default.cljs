@@ -36,7 +36,7 @@
                     (let [component (e/assert-component c/text app-state entity
                                                         {:name (str "note-wd-" idx)
                                                          :model {:text word :left @left :top @top}
-                                                         :layout-attributes (fl/flow-layout-attributes idx 5)})]
+                                                         :layout-attributes (fl/flow-layout-attributes "notes" idx 5)})]
                       (bus/fire app-state "uncommited.render")))
                   (bus/fire app-state "layouts.do" {:container entity}))))
 

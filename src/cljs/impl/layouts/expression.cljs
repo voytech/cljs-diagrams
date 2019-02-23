@@ -118,7 +118,7 @@
 
 (defmethod l/create-context ::expression [entity layout] {})
 
-(defn expression-layout [entity component context]
+(defmethod l/layout-function ::expression [entity component context]
   (when-let [bbox (obtain-component-bbox entity component)]
     (d/set-data component bbox))
   context)

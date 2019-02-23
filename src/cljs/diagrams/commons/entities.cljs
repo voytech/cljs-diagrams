@@ -30,13 +30,13 @@
 (defentity note
   {:width 180 :height 150}
   (resolve-data {:notes "Here we can wrtie some multiline notes. Not too long tough."})
-  (with-layouts (layout ::w/expression w/expression-layout)
-                (layout ::f/flow f/flow-layout (weighted-position 0.1 0.1) (weighted-size 0.8 0.8) nil))
+  (with-layouts (layout "main" ::w/expression)
+                (layout "notes" ::f/flow (weighted-position 0.1 0.1) (weighted-size 0.8 0.8) nil))
   (with-components context
     (component c/entity-shape {
                                :name "main"
                                :model {:stroke-style :dashed :background-color "#ffff99"}
-                               :layout-attributes (layout-attributes ::w/expression
+                               :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
                                                                        (match-parent-position)
                                                                        (match-parent-size)

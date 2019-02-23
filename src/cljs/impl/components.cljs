@@ -8,7 +8,7 @@
                                         match-parent-size
                                         match-parent-position
                                         margins]])
-  (:require-macros [core.macros :refer [defcomponent defcomponent-group component]]))
+  (:require-macros [core.macros :refer [defcomponent defcomponent-group with-layouts component]]))
 
 (defn- control-initializer [size]
   (fn [container props]
@@ -165,59 +165,63 @@
                     :initializer (image-initializer 20 20 "/icons/edit.svg")})
 
 (defcomponent-group shape-editing
+  (with-layouts (layout "edit-buttons" ::w/expression))
   (component edit   {:name  "edit"
                      :model {:width 20 :height 20 :background-color "red"}
-                     :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 1 0) (weighted-origin 2 1.2)))})
+                     :layout-attributes (layout-attributes "edit-buttons"  (layout-hints (weighted-position 1 0) (weighted-origin 2 1.2)))})
   (component remove {:name  "remove"
                      :model {:width 20 :height 20}
-                     :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 1 0) (weighted-origin 1 1.2)))}))
+                     :layout-attributes (layout-attributes "edit-buttons"  (layout-hints (weighted-position 1 0) (weighted-origin 1 1.2)))}))
 
 (defcomponent-group entity-controls
+  (with-layouts (layout "controls" ::w/expression))
   (component control {:name  "connector-left"
                       :attributes {:side :left}
-                      :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls"  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
   (component control {:name  "connector-right"
                       :attributes {:side :right}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
   (component control {:name  "connector-top"
                       :attributes {:side :top}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
   (component control {:name "connector-bottom"
                       :attributes {:side :bottom}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))
 
 (defcomponent-group small-controls
+  (with-layouts (layout "controls" ::w/expression))
   (component control {:name  "connector-left"
                       :attributes {:side :left}
                       :model {:width 10 :height 10}
-                      :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls"  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
   (component control {:name  "connector-right"
                       :attributes {:side :right}
                       :model {:width 10 :height 10}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
   (component control {:name  "connector-top"
                       :attributes {:side :top}
                       :model {:width 10 :height 10}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
   (component control {:name "connector-bottom"
                       :attributes {:side :bottom}
                       :model {:width 10 :height 10}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))
 
 (defcomponent-group smallest-controls
+  (with-layouts (layout "controls" ::w/expression))
   (component control {:name  "connector-left"
                       :attributes {:side :left}
                       :model {:width 8 :height 8}
-                      :layout-attributes (layout-attributes ::w/expression  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls"  (layout-hints (weighted-position 0 0.5) (weighted-origin 0.5 0.5)))})
   (component control {:name  "connector-right"
                       :attributes {:side :right}
                       :model {:width 8 :height 8}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 1 0.5) (weighted-origin 0.5 0.5)))})
   (component control {:name  "connector-top"
                       :attributes {:side :top}
                       :model {:width 8 :height 8}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 0.5 0) (weighted-origin 0.5 0.5)))})
   (component control {:name "connector-bottom"
                       :attributes {:side :bottom}
                       :model {:width 8 :height 8}
-                      :layout-attributes (layout-attributes ::w/expression (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))
+                      :layout-attributes (layout-attributes "controls" (layout-hints (weighted-position 0.5 1) (weighted-origin 0.5 0.5)))}))

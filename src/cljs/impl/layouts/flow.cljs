@@ -74,7 +74,7 @@
             :left 0
             :height 0}})
 
-(defn flow-layout [entity component context]
+(defmethod l/layout-function ::flow [entity component context]
   (let [cbbox (c/get-bbox component)
         padding (-> component :layout-attributes :layout-hints :padding)
         context  (recalc-line-height context cbbox)
@@ -83,5 +83,5 @@
     (-> (move component context)
         (next-column (+ padding (:width cbbox))))))
 
-(defn flow-layout-attributes [idx padding]
-  (c/layout-attributes ::flow idx (LayoutHints. padding)))
+(defn flow-layout-attributes [name idx padding]
+  (c/layout-attributes name idx (LayoutHints. padding)))

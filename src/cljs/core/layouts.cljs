@@ -11,7 +11,7 @@
 
 (defrecord Margins [margin-left margin-top margin-bottom margin-right])
 
-(defrecord Layout [name layout-func position size margins])
+(defrecord Layout [name type position size margins])
 
 (defrecord LayoutEvaluationContext [entity context])
 
@@ -62,14 +62,14 @@
   (weighted-position 0 0))
 
 (defn layout
-  ([name layout-func position size margins]
-   (Layout. name layout-func position size margins))
-  ([name layout-func position margins]
-   (Layout. name layout-func position (match-parent-size) margins))
-  ([name layout-func position]
-   (Layout. name layout-func position (match-parent-size) nil))
-  ([name layout-func]
-   (Layout. name layout-func (match-parent-position) (match-parent-size) nil)))
+  ([name type position size margins]
+   (Layout. name type position size margins))
+  ([name type position margins]
+   (Layout. name type position (match-parent-size) margins))
+  ([name type position]
+   (Layout. name type position (match-parent-size) nil))
+  ([name type]
+   (Layout. name type (match-parent-position) (match-parent-size) nil)))
 
 (defn absolute-position-of-layout [entity layout]
   (let [bbox (:bbox entity)]
@@ -104,11 +104,13 @@
 
 (defn move-entity-by [app-state entity offset])
 
-(defmulti create-context (fn [entity layout] (:name layout)))
+(defmulti create-context (fn [entity layout] (:type layout)))
+
+(defmulti layout-function (fn [entity component context] (:layout-type context)))
 
 (defn create-evaluation-context [entity]
    (->> (mapv (fn [layout]
-                 {(:name layout) (create-context entity layout)})
+                 {(:name layout) (assoc (create-context entity layout) :layout-type (:type layout))})
               (-> entity :layouts vals))
         (apply merge)))
 
@@ -119,9 +121,9 @@
                            (sort-by #(-> % :layout-attributes :layout-order)))]
       (when-let [layout (get-in entity [:layouts (-> component :layout-attributes :layout-ref)])]
         (vswap! context assoc (:name layout)
-          ((:layout-func layout) entity
-                                 component
-                                 (get @context (:name layout))))))))
+          (layout-function entity
+                           component
+                           (get @context (:name layout))))))))
 
 (defn initialize [app-state]
   (b/on app-state ["layouts.do"] -999 (fn [event]

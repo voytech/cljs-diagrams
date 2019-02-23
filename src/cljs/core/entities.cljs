@@ -144,8 +144,8 @@
     (get-entity-component app-state entity (:name args-map)))))
 
 (defn add-layout
-  ([app-state entity layout]component
-   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)component
+  ([app-state entity layout]
+   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
    (let [updated (entity-by-id app-state (:uid entity))]
      (bus/fire app-state "entity.layout.added" {:entity updated})
      updated))

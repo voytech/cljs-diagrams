@@ -104,11 +104,11 @@
 
 (defn move-entity-by [app-state entity offset])
 
-(defmulti create-context :name)
+(defmulti create-context (fn [entity layout] (:name layout)))
 
 (defn create-evaluation-context [entity]
    (->> (mapv (fn [layout]
-                 {(:name layout) (create-context layout)})
+                 {(:name layout) (create-context entity layout)})
               (-> entity :layouts vals))
         (apply merge)))
 
@@ -125,7 +125,7 @@
 
 (defn initialize [app-state]
   (b/on app-state ["layouts.do"] -999 (fn [event]
-                                        (when-let [{:keys [container]} (:context event)]
-                                          (do-layouts container)
+                                        (when-let [{:keys [container app-state]} (:context event)]
+                                          (do-layouts (e/entity-by-id app-state (:uid container)))
                                           (b/fire app-state "uncommited.render")
                                           (b/fire app-state "rendering.finish")))))

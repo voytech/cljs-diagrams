@@ -116,7 +116,7 @@
                         (= :exp (-> top :type)) ((:value top) entity layout bounds)
                         :else (d/get-left component)) origin-offset-y)}))))
 
-(defmethod l/create-context ::expression [layout] {})
+(defmethod l/create-context ::expression [entity layout] {})
 
 (defn expression-layout [entity component context]
   (when-let [bbox (obtain-component-bbox entity component)]

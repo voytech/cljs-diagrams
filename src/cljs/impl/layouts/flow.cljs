@@ -2,20 +2,19 @@
   (:require [core.layouts :as l]
             [core.components :as c]))
 
+(defrecord LayoutHints [padding])
+
 (defn next-column [context offset]
    (assoc-in context [:coords :left] (+ (-> context :coords :left) offset)))
 
 (defn next-row [context]
    (merge context {:coords {:top (+ (-> context :coords :top)
                                     (-> context :coords :height))
-                            :left (or (-> context :options :left) 0)
+                            :left 0
                             :height 0}}))
 
 (defn to-first-column [context bbox]
   (assoc-in context [:coords :left] (:left bbox)))
-
-(defn to-first-row [cotnext bbox]
-  (assoc-in context [:coords :top] (:top bbox)))
 
 (defn reset [context path value]
   (assoc-in context path value))
@@ -23,60 +22,66 @@
 (defn reset-line-height [context]
   (reset context [:coords :height] 0))
 
-(defn absolute-top [context bbox]
-  (+ (:top bbox) (-> context :coords :top)))
+(defn layout-left-edge [context]
+  (-> context :orig-pos :left))
 
-(defn absolute-left [context bbox]
-  (+ (:left bbox) (-> context :coords :left)))
-
-(defn container-left-edge [bbox]
-  (:left bbox))
-
-(defn container-right-edge [bbox]
-  (let [{:keys [left width]} bbox]
+(defn layout-right-edge [context]
+  (let [left (-> context :orig-pos :left)
+        width (-> context :orig-size :width)]
     (+ left width)))
 
-(defn container-top-edge [bbox]
-  (:top bbox))
+(defn layout-top-edge [context]
+  (-> context :orig-pos :top))
 
-(defn container-bottom-edge [bbox]
-  (let [{:keys [top height]} bbox]
+(defn layout-bottom-edge [context]
+  (let [top (-> context :orig-pos :top)
+        height (-> context :orig-size :height)]
     (+ top height)))
 
-(defn move [element context]
+(defn absolute-top [context]
+  (+ (layout-top-edge context) (-> context :coords :top)))
+
+(defn absolute-left [context]
+  (+ (layout-left-edge context) (-> context :coords :left)))
+
+(defn move [component context]
   (let [left (absolute-left context)
         top  (absolute-top context)]
-    (move-element element left top)
+    (c/set-data component {:left left :top top})
     context))
 
-(defn exceeds-container-width? [context element bbox]
-  (> (+ (absolute-left context bbox) (c/get-width element)) (container-right-edge bbox)))
+(defn exceeds-container-width? [context component]
+  (> (+ (absolute-left context) (c/get-width component)) (layout-right-edge context)))
 
-(defn exceeds-container-height? [context element bbox]
-  (> (+ (absolute-top context bbox) (c/get-height element)) (container-bottom-edge bbox)))
+(defn exceeds-container-height? [context component]
+  (> (+ (absolute-top context) (c/get-height component)) (layout-bottom-edge context)))
 
-(defn- recalc-line-height [context ebbox]
+(defn- recalc-line-height [context cbbox]
   (let [coords (:coords context)]
-    (->> (if (> (:height ebbox) (:height coords))
-           (:height ebbox)
+    (->> (if (> (:height cbbox) (:height coords))
+           (:height cbbox)
            (:height coords))
          (assoc-in context [:coords :height]))))
 
-(defn- is-new-row? [context element bbox]
-  (and (l/exceeds-container-width? context element bbox)
+(defn- is-new-row? [context component]
+  (and (exceeds-container-width? context component)
        (> (-> context :coords :left) 0)))
 
-(defmethod l/create-context ::flow [layout]
-  {:coords {:top 0
+(defmethod l/create-context ::flow [entity layout]
+  {:orig-pos  (l/absolute-position-of-layout entity layout)
+   :orig-size (l/absolute-size-of-layout entity layout)
+   :coords {:top 0
             :left 0
             :height 0}})
 
 (defn flow-layout [entity component context]
-  (let [ebbox (:bbox entity)
-        context  (recalc-line-height context ebbox)
-        new-row? (is-new-row? context component ebbox)
-        context  (if new-row?
-                   (to-first-column (next-row context) ebbox)
-                   context)]
-    (->> (l/move component context)
-         (next-column context (:width ebbox)))))
+  (let [cbbox (c/get-bbox component)
+        padding (-> component :layout-attributes :layout-hints :padding)
+        context  (recalc-line-height context cbbox)
+        new-row? (is-new-row? context component)
+        context  (if new-row? (next-row context) context)]
+    (-> (move component context)
+        (next-column (+ padding (:width cbbox))))))
+
+(defn flow-layout-attributes [idx padding]
+  (c/layout-attributes ::flow idx (LayoutHints. padding)))

@@ -135,8 +135,13 @@
       (func app-state entity {:name name :model data})
       (d/set-data component data))
     (get-entity-component app-state entity name)))
- ([func app-state entity name]
-  (assert-component func app-state entity name {})))
+ ([func app-state entity args-map]
+  (let [entity (entity-by-id app-state (:uid entity))
+        component (get-entity-component entity (:name args-map))]
+    (if (nil? component)
+      (func app-state entity args-map)
+      (d/set-data component (:model args-map)))
+    (get-entity-component app-state entity (:name args-map)))))
 
 (defn add-layout
   ([app-state entity layout]component

@@ -3,6 +3,7 @@
            [core.components :as d]
            [impl.components :as c]
            [impl.behaviours.manhattan :as m]
+           [impl.layouts.flow :as fl]
            [core.behaviour-api :as api]
            [impl.behaviours.behaviour-api :as stdapi]
            [impl.features.default :as f]
@@ -33,14 +34,11 @@
                       top  (volatile! (:top bbox))]
                   (doseq [[idx word] (map-indexed (fn [idx itm] [idx itm]) (str/split (:notes data) #"\s+"))]
                     (let [component (e/assert-component c/text app-state entity
-                                                        (str "note-wd-" idx)
-                                                        {:text word :left @left :top @top})]
-                      (bus/fire app-state "uncommited.render")
-                      (let [next-col (+ @left (d/get-width component) word-space)
-                            new-line? (> next-col right-edge)]
-                        (vreset! left (if new-line? (:left bbox) next-col))
-                        (when new-line? (vreset! top (+ @top (d/get-height component)))))))
-                  (bus/fire app-state "uncommited.render"))))
+                                                        {:name (str "note-wd-" idx)
+                                                         :model {:text word :left @left :top @top}
+                                                         :layout-attributes (fl/flow-layout-attributes idx 5)})]
+                      (bus/fire app-state "uncommited.render")))
+                  (bus/fire app-state "layouts.do" {:container entity}))))
 
   (r/register app-state
               ::make-association

@@ -3,6 +3,7 @@
            [core.components :as d :refer [layout-attributes]]
            [impl.components :as c]
            [diagrams.bpmn.components :as bpmnc]
+           [impl.layouts.flow :as f]
            [impl.layouts.expression :as w :refer [layout-hints
                                                   position-of
                                                   size-of]]
@@ -29,7 +30,8 @@
 (defentity note
   {:width 180 :height 150}
   (resolve-data {:notes "Here we can wrtie some multiline notes. Not too long tough."})
-  (with-layouts (layout ::w/expression w/expression-layout))
+  (with-layouts (layout ::w/expression w/expression-layout)
+                (layout ::f/flow f/flow-layout))
   (with-components context
     (component c/entity-shape {
                                :name "main"

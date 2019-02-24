@@ -50,6 +50,7 @@
   (bus/on app-state ["component.removed"] -999 (fn [event]
                                                  (let [{:keys [component app-state]} (:context event)
                                                        renderer-state (state/get-renderer-state app-state)]
+                                                    (console.log "Destory")   
                                                     (destroy-rendering-state renderer-state component))))
 
   (bus/on app-state ["entities.render"] -999 (fn [event]

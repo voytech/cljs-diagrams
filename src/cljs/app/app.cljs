@@ -53,6 +53,7 @@
                 b/hide-entity-control
                 b/resize-entity
                 b/select-shape-entity
+                b/remove-entity
                 b/show-bbox
                 b/hide-bbox]})
 

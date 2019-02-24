@@ -56,6 +56,16 @@
                     (bus/fire app-state "entity.selected" {:selection entity})
                     nil)))
 
+(defbehaviour remove-entity
+              "Remove object"
+              :remove
+              [f/is-primary-entity]
+              (b/build-event-name [::c/remove] "activate")
+              (fn [e]
+                 (let [{:keys [app-state entity]} (:context e)]
+                    (e/remove-entity app-state entity)
+                    nil)))
+
 (defbehaviour moving-association-endpoints
               "Association's endpoints moving [Manhattan]"
               :association-endpoint-moving

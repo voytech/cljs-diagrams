@@ -83,6 +83,12 @@
   ([app-state type bbox]
    (create-entity app-state type [] bbox {})))
 
+(defn remove-entity [app-state entity]
+  (let [entity (entity-by-id app-state (:uid entity))]
+    ;remove-relations
+    (remove-entity-components app-state entity some?)
+    (state/dissoc-diagram-state app-state [:entities (:uid entity)])))
+
 (defn set-bbox [app-state entity bbox]
   (state/assoc-diagram-state app-state [:entities (:uid entity) :bbox] bbox)
   (let [updated (entity-by-id app-state (:uid entity))]

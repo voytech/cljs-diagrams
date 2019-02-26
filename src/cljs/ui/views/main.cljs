@@ -9,7 +9,6 @@
             [diagrams.commons.tools :as toolcommons]
 
             [core.rendering :as rendering]
-            [impl.renderers.reagentsvg]
             [core.selection :as s]
             [core.entities :as e]
             [impl.extensions.resolvers.default :as resolvers]

@@ -9,104 +9,107 @@
 (declare all-rendered)
 (declare destroy-rendering-state)
 
-(defn renderer-name [renderer-state]
-  (-> renderer-state deref :name))
+(defn remove-component [app-state component]
+  (let [renderer-state (state/get-renderer-state app-state)]
+    (destroy-rendering-state renderer-state component)
+    (state/dissoc-renderer-state app-state [:components (:uid component)])))
 
-(defn- render-components [renderer-state components]
+(defn render-components [app-state components]
   (doseq [component components]
-    (render renderer-state component)))
+    (render app-state component)))
 
-(defn- render-entity [renderer-state entity]
+(defn render-entity [app-state entity]
   (l/do-layouts entity)
-  (render-components renderer-state (e/components-of entity)))
-  ;(bus/fire "rendering.finish"))
+  (render-components app-state (e/components-of entity)))
 
-(defn- update-property-to-redraw [renderer-state component properties]
+(defn mark-for-redraw [app-state component properties]
   (let [new-properties (concat
-                          (or (get-in @renderer-state [:components (:uid component) :redraw-properties]) #{})
+                          (or (state/get-in-renderer-state app-state [:components (:uid component) :redraw-properties])
+                              #{})
                           properties)]
-    (swap! renderer-state assoc-in [:components (:uid component)] {:redraw-properties new-properties :ref component})))
+    (state/assoc-renderer-state app-state [:components (:uid component)] {:redraw-properties new-properties :ref component})))
 
+(defn redraw-properties [renderer-state component]
+  (get-in renderer-state [:components (:uid component) :redraw-properties]))
 
-(defn- register-handlers [app-state]
+(defn register-handlers [app-state]
   (bus/on app-state ["component.created"] -999 (fn [event]
                                                 (let [{:keys [component app-state]} (:context event)])))
 
   (bus/on app-state ["component.changed"] -999 (fn [event]
-                                                (let [{:keys [component app-state properties]} (:context event)
-                                                      renderer-state (state/get-renderer-state app-state)]
-                                                   (update-property-to-redraw renderer-state component properties))))
+                                                (let [{:keys [component app-state properties]} (:context event)]
+                                                   (mark-for-redraw app-state component properties))))
 
   (bus/on app-state ["component.added"] -999 (fn [event]
-                                              (let [{:keys [component app-state]} (:context event)
-                                                    renderer-state (state/get-renderer-state app-state)]
-                                                 (update-property-to-redraw renderer-state component (keys (d/model component))))))
+                                              (let [{:keys [component app-state]} (:context event)]
+                                                 (mark-for-redraw app-state component (keys (d/model component))))))
 
   (bus/on app-state ["component.render" "component.layout.finished"] -999 (fn [event]
-                                                                            (let [{:keys [component app-state]} (:context event)
-                                                                                  renderer-state (state/get-renderer-state app-state)]
-                                                                               (render renderer-state component))))
+                                                                            (let [{:keys [component app-state]} (:context event)]
+                                                                               (render app-state component))))
 
   (bus/on app-state ["component.removed"] -999 (fn [event]
-                                                 (let [{:keys [component app-state]} (:context event)
-                                                       renderer-state (state/get-renderer-state app-state)]
-                                                    (console.log "Destory")   
-                                                    (destroy-rendering-state renderer-state component))))
+                                                 (let [{:keys [component app-state]} (:context event)]
+                                                    (remove-component app-state component))))
 
   (bus/on app-state ["entities.render"] -999 (fn [event]
                                                (let [{:keys [app-state]} (:context event)
-                                                     renderer-state (state/get-renderer-state app-state)
                                                      entities (vals (state/get-in-diagram-state app-state [:entities]))]
                                                   (doseq [entity entities]
-                                                    (render-entity renderer-state entity)))))
+                                                    (render-entity app-state entity)))))
 
   (bus/on app-state ["entity.added"] -999 (fn [event]
                                             (let [context (:context event)])))
 
   (bus/on app-state ["entity.render"] -999 (fn [event]
-                                             (let [{:keys [entity app-state]} (:context event)
-                                                    renderer-state (state/get-renderer-state app-state)]
-                                                (console.log (clj->js entity))
-                                                (render-entity renderer-state entity))))
+                                             (let [{:keys [entity app-state]} (:context event)]
+                                                (render-entity app-state entity))))
 
   (bus/on app-state ["uncommited.render"] -999 (fn [event]
                                                  (let [app-state (-> event :context :app-state)
-                                                       renderer-state (state/get-renderer-state app-state)
-                                                       components (-> @renderer-state :components vals)]
+                                                       components (-> (state/get-in-renderer-state app-state [:components])
+                                                                      vals)]
                                                    (doseq [component components]
-                                                      (render renderer-state (:ref component))))))
+                                                      (render app-state (:ref component))))))
 
   (bus/on app-state ["rendering.finish"] -999 (fn [event]
                                                 (let [app-state (-> event :context :app-state)]
                                                   (all-rendered (state/get-renderer-state app-state))
                                                   nil))))
 
-(defmulti initialize (fn [renderer app-state dom-id width height initial-state] renderer))
+(defn dispatch-vector [renderer-state component & rest]
+  [(:name renderer-state) (or (:rendering-method component) (:type component))])
 
-(defmulti is-state-created (fn [renderer-state component] (renderer-name renderer-state)))
+(defn dispatch-scalar [renderer-state & rest]
+  (:name renderer-state))
 
-(defmulti all-rendered (fn [renderer-state] (renderer-name renderer-state)))
+(defmulti initialize (fn [renderer dom-id width height] renderer))
 
-(defmulti do-render (fn [renderer-state component] [(renderer-name renderer-state) (or (:rendering-method component) (:type component))]))
+(defmulti is-state-created dispatch-scalar)
 
-(defmulti create-rendering-state (fn [renderer-state component] [(renderer-name renderer-state) (or (:rendering-method component) (:type component))]))
+(defmulti all-rendered dispatch-scalar)
+
+(defmulti do-render dispatch-vector)
+
+(defmulti create-rendering-state dispatch-vector)
 
 (defmethod create-rendering-state :default [renderer-state component])
 
-(defmulti destroy-rendering-state (fn [renderer-state component] [(renderer-name renderer-state) (or (:rendering-method component) (:type component))]))
+(defmulti destroy-rendering-state dispatch-vector)
 
 (defmethod destroy-rendering-state :default [renderer-state component])
 
 (defn create-renderer [app-state dom-id width height renderer]
   (register-handlers app-state)
-  (let [initial-state {:name renderer :components {}}]
-    (state/assoc-renderer-state app-state [] (initialize renderer app-state dom-id width height initial-state))))
+  (let [state (merge {:name renderer :components {}}
+                     (initialize renderer dom-id width height))]
+    (state/assoc-renderer-state app-state [] state)))
 
-(defn render [renderer-state component]
+(defn render [app-state component]
   (when (not (nil? component))
-    (let [component-state (get-in @renderer-state [:components (:uid component)])]
+    (let [renderer-state (state/get-renderer-state app-state)]
       (when (not (is-state-created renderer-state component))
          (create-rendering-state renderer-state component))
-      (do-render renderer-state component)
-      (swap! renderer-state update-in
-        [:components (:uid component)] dissoc :redraw-properties))))
+      (->> (redraw-properties renderer-state component)
+           (do-render renderer-state component))
+      (state/dissoc-renderer-state app-state [:components (:uid component) :redraw-properties]))))

@@ -1,9 +1,9 @@
 (ns ui.components.generic.basic
   (:require [reagent.core :as reagent :refer [atom]]
-            [core.project :as p]
-            [core.selection :as s]
-            [extensions.data-resolvers :as resolvers]
-            [core.utils.dom :as dom]))
+            [cljs-diagrams.core.project :as p]
+            [cljs-diagrams.core.selection :as s]
+            [cljs-diagrams.extensions.data-resolvers :as resolvers]
+            [cljs-diagrams.core.utils.dom :as dom]))
 
 (defn Tabs [& childs]
   (let [active (atom (:name (first childs)))]

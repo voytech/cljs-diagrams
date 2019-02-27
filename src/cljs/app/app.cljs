@@ -1,13 +1,13 @@
 (ns app.app
   (:require [reagent.core :as reagent :refer [atom]]
-            [core.utils.dom :as dom]
-            [core.utils.dnd :as dnd]
-            [core.project :as project]
-            [impl.behaviours.definitions :as b]
-            [core.eventbus :as bus]
-            [impl.renderers.svg :as svg]
-            [core.state :as state]
-            [impl.synthetic-events :as patterns]
+            [cljs-diagrams.core.utils.dom :as dom]
+            [cljs-diagrams.core.utils.dnd :as dnd]
+            [cljs-diagrams.core.project :as project]
+            [cljs-diagrams.impl.behaviours.definitions :as b]
+            [cljs-diagrams.core.eventbus :as bus]
+            [cljs-diagrams.impl.renderers.svg :as svg]
+            [cljs-diagrams.core.state :as state]
+            [cljs-diagrams.impl.synthetic-events :as patterns]
             [ui.views.main :as m]))
 
 (defn app-config [width height renderer]

@@ -1,13 +1,13 @@
 (ns ui.components.workspace
   (:require [reagent.core :as reagent :refer [atom]]
-            [core.utils.dnd :as dnd]
-            [core.state :as state]
+            [cljs-diagrams.core.utils.dnd :as dnd]
+            [cljs-diagrams.core.state :as state]
             [ui.components.generic.basic :as cmp :refer [ShapePropertyEditor]]
-            [core.project :as p]
-            [core.eventbus :as b]
-            [impl.synthetic-events :as s]
-            [core.tools :as t :refer [tools]]
-            [impl.synthetic-events :as patterns]))
+            [cljs-diagrams.core.project :as p]
+            [cljs-diagrams.core.eventbus :as b]
+            [cljs-diagrams.impl.synthetic-events :as s]
+            [cljs-diagrams.core.tools :as t :refer [tools]]
+            [cljs-diagrams.impl.synthetic-events :as patterns]))
 
 
 (defn resolve-drop "Should resolve drop events for following scenarios:

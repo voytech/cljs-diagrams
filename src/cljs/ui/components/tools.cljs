@@ -1,8 +1,8 @@
 (ns ui.components.tools
   (:require [reagent.core :as reagent :refer [atom]]
-            [core.utils.dnd :as dnd]
-            [core.resources :as resources]
-            [core.tools :as t :refer [tools]]))
+            [cljs-diagrams.core.utils.dnd :as dnd]
+            [cljs-diagrams.core.resources :as resources]
+            [cljs-diagrams.core.tools :as t :refer [tools]]))
 
 (declare select-files!)
 

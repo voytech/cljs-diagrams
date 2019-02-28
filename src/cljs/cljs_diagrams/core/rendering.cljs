@@ -27,9 +27,17 @@
                           (or (state/get-in-renderer-state app-state [:components (:uid component) :redraw-properties])
                               #{})
                           properties)]
-    (state/assoc-renderer-state app-state [:components (:uid component)] {:redraw-properties new-properties :ref component})))
+    (state/assoc-renderer-state app-state [:components (:uid component)] {:redraw-properties new-properties :ref component})
+    new-properties))
 
-(defn redraw-properties [renderer-state component]
+(defn mark-all-for-redraw [app-state component]
+  (mark-for-redraw app-state component (keys (d/model component))))
+
+(defn mark-all-components-for-redraw [app-state entity]
+  (doseq [component (e/components-of entity)]
+    (mark-all-for-redraw app-state component)))
+
+(defn get-redraw-properties [renderer-state component]
   (get-in renderer-state [:components (:uid component) :redraw-properties]))
 
 (defn register-handlers [app-state]
@@ -42,7 +50,7 @@
 
   (bus/on app-state ["component.added"] -999 (fn [event]
                                               (let [{:keys [component app-state]} (:context event)]
-                                                 (mark-for-redraw app-state component (keys (d/model component))))))
+                                                 (mark-all-for-redraw app-state component))))
 
   (bus/on app-state ["component.render" "component.layout.finished"] -999 (fn [event]
                                                                             (let [{:keys [component app-state]} (:context event)]
@@ -110,6 +118,16 @@
     (let [renderer-state (state/get-renderer-state app-state)]
       (when (not (is-state-created renderer-state component))
          (create-rendering-state renderer-state component))
-      (->> (redraw-properties renderer-state component)
+      (->> (get-redraw-properties renderer-state component)
            (do-render renderer-state component))
       (state/dissoc-renderer-state app-state [:components (:uid component) :redraw-properties]))))
+
+(defn render-all-properties [app-state component]
+  (when (not (nil? component))
+    (mark-all-for-redraw app-state component)
+    (render app-state component)))
+
+(defn render-diagram [app-state]
+  (doseq [entity (vals (state/get-in-diagram-state app-state [:entities]))]
+    (mark-all-components-for-redraw app-state entity)
+    (render-entity app-state entity)))

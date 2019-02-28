@@ -2,9 +2,9 @@
  (:require [cljs-diagrams.core.entities :as e]
            [cljs-diagrams.core.components :as cc :refer [layout-attributes]]
            [cljs-diagrams.impl.components :as c]
-           [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints]
-                                                  position-of
-                                                  size-of]
+           [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints
+                                                                position-of
+                                                                size-of]]
            [cljs-diagrams.core.layouts :as cl :refer [layout
                                                       weighted-position
                                                       weighted-size

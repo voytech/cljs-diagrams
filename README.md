@@ -1,4 +1,4 @@
-# Cljs-Relational-Designer
+# cljs-diagrams
 ## Rationale
 Clojurescript library/framework for creating different kinds of diagrams. Primarily for use as dependency for cljs apps. 
 

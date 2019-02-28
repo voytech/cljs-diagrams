@@ -1,7 +1,9 @@
 (ns cljs-diagrams.core.utils.commons)
 
-(defn makeRefs [container]
-  (conj (:parentsRefs container) {(type container)  (:uid container)})
+(defn save [key data]
+  (let [lstorage (.-localStorage js/window)]
+    (.setItem lstorage key data)))
 
-(defn refs [container]
-  (or (:parentsRefs container) []))
+(defn load [key]
+  (let [lstorage (.-localStorage js/window)]
+    (.getItem lstorage key)))

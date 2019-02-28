@@ -14,14 +14,6 @@
     (destroy-rendering-state renderer-state component)
     (state/dissoc-renderer-state app-state [:components (:uid component)])))
 
-(defn render-components [app-state components]
-  (doseq [component components]
-    (render app-state component)))
-
-(defn render-entity [app-state entity]
-  (l/do-layouts entity)
-  (render-components app-state (e/components-of entity)))
-
 (defn mark-for-redraw [app-state component properties]
   (let [new-properties (concat
                           (or (state/get-in-renderer-state app-state [:components (:uid component) :redraw-properties])
@@ -33,12 +25,15 @@
 (defn mark-all-for-redraw [app-state component]
   (mark-for-redraw app-state component (keys (d/model component))))
 
-(defn mark-all-components-for-redraw [app-state entity]
-  (doseq [component (e/components-of entity)]
-    (mark-all-for-redraw app-state component)))
-
 (defn get-redraw-properties [renderer-state component]
   (get-in renderer-state [:components (:uid component) :redraw-properties]))
+
+(defn render-entity [app-state entity force-all]
+  (l/do-layouts entity)
+  (doseq [component (e/components-of entity)]
+    (when force-all (mark-all-for-redraw app-state component))
+    (render app-state component)))
+
 
 (defn register-handlers [app-state]
   (bus/on app-state ["component.created"] -999 (fn [event]
@@ -130,4 +125,4 @@
 (defn render-diagram [app-state]
   (doseq [entity (vals (state/get-in-diagram-state app-state [:entities]))]
     (mark-all-components-for-redraw app-state entity)
-    (render-entity app-state entity)))
+    (render-entity app-state entity true)))

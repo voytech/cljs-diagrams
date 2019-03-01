@@ -8,6 +8,7 @@
 (declare render)
 (declare all-rendered)
 (declare destroy-rendering-state)
+(declare render-diagram)
 
 (defn remove-component [app-state component]
   (let [renderer-state (state/get-renderer-state app-state)]
@@ -55,11 +56,7 @@
                                                  (let [{:keys [component app-state]} (:context event)]
                                                     (remove-component app-state component))))
 
-  (bus/on app-state ["entities.render"] -999 (fn [event]
-                                               (let [{:keys [app-state]} (:context event)
-                                                     entities (vals (state/get-in-diagram-state app-state [:entities]))]
-                                                  (doseq [entity entities]
-                                                    (render-entity app-state entity)))))
+  (bus/on app-state ["diagram.render"] -999 (fn [event] (render-diagram (-> event :context :app-state))))
 
   (bus/on app-state ["entity.added"] -999 (fn [event]
                                             (let [context (:context event)])))
@@ -123,6 +120,6 @@
     (render app-state component)))
 
 (defn render-diagram [app-state]
+  (state/dissoc-renderer-state app-state [:components])
   (doseq [entity (vals (state/get-in-diagram-state app-state [:entities]))]
-    (mark-all-components-for-redraw app-state entity)
     (render-entity app-state entity true)))

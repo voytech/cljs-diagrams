@@ -1,9 +1,9 @@
 (ns cljs-diagrams.core.utils.commons)
 
-(defn save [key data]
+(defn save-to-storage [key data]
   (let [lstorage (.-localStorage js/window)]
     (.setItem lstorage key data)))
 
-(defn load [key]
+(defn load-from-storage [key]
   (let [lstorage (.-localStorage js/window)]
     (.getItem lstorage key)))

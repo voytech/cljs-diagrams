@@ -217,3 +217,22 @@
                                (not= (:uid src) (:entity-id %))) (:relationships trg))]
      (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
      (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel))))
+
+
+(defn normalize-layout [layout]
+  (-> (into {} layout)
+      (assoc :position (into {} (:position layout)))
+      (assoc :size (into {} (:size layout)))
+      (assoc :margins (into {} (:margins layout)))))
+
+(defn normalize [entity]
+  {:uid  (:uid entity)
+   :type (:type entity)
+   :bbox (:bbox entity)
+   :tags (:tags entity)
+   :relationships (:relationships entity)
+   :component-properties (:component-properties entity)
+   :layouts (mapv normalize-layout (-> entity :layouts vals))
+   :components (mapv d/normalize (-> entity :components vals))})
+
+(defn denormalize [app-state edn])

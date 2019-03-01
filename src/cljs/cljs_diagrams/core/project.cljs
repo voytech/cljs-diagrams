@@ -9,42 +9,52 @@
            [cljs-diagrams.core.events :as events]
            [cljs-diagrams.impl.extensions.resolvers.default :as resolvers]
            [cljs-diagrams.core.state :as state]
+           [cljs-diagrams.core.entities :as e]
            [cljs-diagrams.core.rendering :as r]))
 
-;; ====
-;; move all global state for entities, event-bus, behaviours, components into this function as local mutable atoms.
-;; ===
-
 (defn normalize-component [component]
-  (-> (assoc component :model (-> component :model deref))
+  (-> (into {} component)
+      (assoc  :model (-> component :model deref))
       (dissoc :property-change-callback)))
 
 (defn normalize-entity [entity]
-  (assoc entity :components (mapv normalize-component (vals (:components entity)))))
+  (let [components (vals (:components entity))]
+    (-> (into {} entity)
+        (assoc :components (mapv normalize-component components)))))
 
 (defn edn [app-state]
-  (->> (state/get-diagram-state app-state [:entities])
+  (->> (state/get-in-diagram-state app-state [:entities])
        vals
-       (mapv normalize-entity)
+       (mapv e/normalize)
        prn-str))
 
 (defn save [app-state]
-  (commons/save (str "diagram-" (.getTime (js/Date.))) (edn app-state)))
+  (commons/save-to-storage "diagram" (edn app-state)))
 
-(defn load [name app-state]
-  (let [data (commons/load name)]))
+(defn recreate-components [app-state entities]
+  (let [components (reduce #(concat %1 (vals (:components %2))) [] entities)
+        c-map (group-by :uid components)]
+    (state/assoc-diagram-state app-state [:components] c-map)))
 
-(defn enable-state-persist [app-state]
-  (b/on app-state ["state.save"] -999 (fn [event]
-                                        (let [context (:context event)
-                                              app-state (:app-state context)]
-                                          (save app-state)))))
+(defn reload-entities [app-state entities]
+  (let [denormalized (mapv e/denormalize entities)]
+    (state/assoc-diagram-state app-state [:entities] (group-by :uid denormalized))))
+
+(defn load [app-state]
+  (console.log (commons/load-from-storage "diagram"))
+  (let [entities (-> (commons/load-from-storage "diagram") (cljs.reader/read-string))]
+    (recreate-components app-state entities)
+    (reload-entities app-state entities)
+    (b/fire app-state "diagram.render")))
+
+(defn enable-snapshots [app-state]
+  (b/on app-state ["state.save"] -999 (fn [event] (save (-> event :context :app-state)))))
 
 (defn initialize [id app-state config]
   (dom/console-log (str "Initializing cljs-diagrams within DOM node with id [ " id " ]."))
   (console.log "Initializing event-bus ...")
   (b/initialize app-state)
-  (enable-state-persist app-state)
+  (enable-snapshots app-state)
   (console.log "Initializing behaviours ...")
   (behaviours/initialize app-state)
   (doseq [install (:behaviours config)]
@@ -57,6 +67,7 @@
   (resolvers/initialize app-state)
   (console.log "Dispatching events ...")
   (events/dispatch-events app-state))
+
 ;;--------------------------------
 ;; API dnd event handling with dispatching on transfer type
 ;;---------------------------------

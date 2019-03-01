@@ -17,6 +17,7 @@
 (defn Library [class app-state feedback]
   [:div {:class (:class class)}
     [components/ShapePropertyEditor app-state feedback [:title :notes]]
+    [components/Snapshots app-state]
     [:div
       [components/Tabs {:name "Basic Shapes" :view [tv/ToolBox :basic-tools]}
                        {:name "BPMN" :view [tv/ToolBox :bpmn]}

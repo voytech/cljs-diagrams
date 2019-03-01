@@ -2,7 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs-diagrams.core.utils.dnd :as dnd]
             [cljs-diagrams.core.state :as state]
-            [ui.components.generic.basic :as cmp :refer [ShapePropertyEditor]]
+            [ui.components.generic.basic :as cmp :refer [ShapePropertyEditor, Snapshots]]
             [cljs-diagrams.core.project :as p]
             [cljs-diagrams.core.eventbus :as b]
             [cljs-diagrams.impl.synthetic-events :as s]
@@ -36,6 +36,7 @@
     (let [feedback (atom {})]
       [:div
         [ShapePropertyEditor app-state feedback [:title]]
+        [Snapshots app-state]
         [:div {:id "canvas-wrapper"
                :class "workspace-div"
                :on-drop (resolve-drop app-state)

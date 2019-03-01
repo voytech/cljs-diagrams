@@ -183,3 +183,11 @@
    (layout-attributes layout-ref 0 layout-hints))
   ([layout-ref]
    (layout-attributes layout-ref nil)))
+
+ (defn normalize [component]
+   (let [derecord (into {} component)]
+     (-> derecord
+         (assoc  :model (-> component :model deref))
+         (dissoc :layout-attributes)
+         (dissoc :initializer)
+         (dissoc :property-change-callback))))

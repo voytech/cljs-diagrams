@@ -18,6 +18,19 @@
                 (if (= (:name child) @active) [:b (:name child)] (:name child))]]))]
        (:view (first (filter #(= @active (:name %)) childs)))])))
 
+(defn all-snapshots []
+  )
+
+(defn Snapshots [app-state]
+  [:div
+    [:form
+      [:button {:type "button"
+                :on-click (fn [] (p/load app-state))}
+               "Load"]
+      [:button {:type "button"
+                :on-click (fn [] (p/save app-state))}
+                "Save"]]])
+
 (defn ShapePropertyEditor [app-state feedback properties]
   [:div {:id "shape-property-editor"
          :class "modal"

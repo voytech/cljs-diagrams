@@ -148,24 +148,11 @@
       (d/set-data component (:model args-map)))
     (get-entity-component app-state entity (:name args-map)))))
 
-(defn add-layout
-  ([app-state entity layout]
-   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
-   (let [updated (entity-by-id app-state (:uid entity))]
-     (bus/fire app-state "entity.layout.added" {:entity updated})
-     updated))
-  ([app-state entity name layout-func position size margins]
-   (let [layout (l/layout name layout-func position size margins)]
-     (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
-     (let [updated (entity-by-id app-state (:uid entity))]
-       (bus/fire app-state "entity.layout.added" {:entity updated})
-       updated)))
-  ([app-state entity name layout-func position margins]
-   (add-layout app-state entity name layout-func position (l/match-parent-size) margins))
-  ([app-state entity name layout-func position]
-   (add-layout app-state entity name layout-func position (l/match-parent-size) nil))
-  ([app-state entity name layout-func]
-   (add-layout app-state entity name layout-func (l/match-parent-position) (l/match-parent-size) margins)))
+(defn add-layout [app-state entity layout]
+  (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
+  (let [updated (entity-by-id app-state (:uid entity))]
+    (bus/fire app-state "entity.layout.added" {:entity updated})
+    updated))
 
 (defn remove-layout [app-state entity layout-name]
   (state/dissoc-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))
@@ -173,15 +160,18 @@
 (defn get-layout [app-state entity layout-name]
   (state/get-in-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))
 
-(defn assert-layout [app-state entity name layout-func position size margins]
+(defn assert-layout [app-state entity name type position size margins]
   (let [layout (get-layout app-state entity name)]
     (if (nil? layout)
-      (add-layout app-state entity name layout-func position size margins)
+      (add-layout app-state entity {:name name
+                                    :type type
+                                    :position position
+                                    :size size
+                                    :margins margins})
       (let [modified (-> layout
                          (assoc :position position)
                          (assoc :size size)
-                         (assoc :margins margins)
-                         (assoc :layout-func layout-func))]
+                         (assoc :margins margins))]
         (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts name] modified)))))
 
 (defn- is-relation-present [app-state entity related-id assoc-type]
@@ -217,22 +207,3 @@
                                (not= (:uid src) (:entity-id %))) (:relationships trg))]
      (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
      (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel))))
-
-
-(defn normalize-layout [layout]
-  (-> (into {} layout)
-      (assoc :position (into {} (:position layout)))
-      (assoc :size (into {} (:size layout)))
-      (assoc :margins (into {} (:margins layout)))))
-
-(defn normalize [entity]
-  {:uid  (:uid entity)
-   :type (:type entity)
-   :bbox (:bbox entity)
-   :tags (:tags entity)
-   :relationships (:relationships entity)
-   :component-properties (:component-properties entity)
-   :layouts (mapv normalize-layout (-> entity :layouts vals))
-   :components (mapv d/normalize (-> entity :components vals))})
-
-(defn denormalize [app-state edn])

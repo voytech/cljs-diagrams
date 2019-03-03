@@ -10,22 +10,13 @@
            [cljs-diagrams.impl.extensions.resolvers.default :as resolvers]
            [cljs-diagrams.core.state :as state]
            [cljs-diagrams.core.entities :as e]
+           [cljs-diagrams.core.edn :as edn]
            [cljs-diagrams.core.rendering :as r]))
-
-(defn normalize-component [component]
-  (-> (into {} component)
-      (assoc  :model (-> component :model deref))
-      (dissoc :property-change-callback)))
-
-(defn normalize-entity [entity]
-  (let [components (vals (:components entity))]
-    (-> (into {} entity)
-        (assoc :components (mapv normalize-component components)))))
 
 (defn edn [app-state]
   (->> (state/get-in-diagram-state app-state [:entities])
        vals
-       (mapv e/normalize)
+       (mapv edn/normalize-entity)
        prn-str))
 
 (defn save [app-state]
@@ -37,18 +28,17 @@
     (state/assoc-diagram-state app-state [:components] c-map)))
 
 (defn reload-entities [app-state entities]
-  (let [denormalized (mapv e/denormalize entities)]
+  (let [denormalized (mapv #(edn/recreate-entity app-state %) entities)]
     (state/assoc-diagram-state app-state [:entities] (group-by :uid denormalized))))
 
 (defn load [app-state]
-  (console.log (commons/load-from-storage "diagram"))
   (let [entities (-> (commons/load-from-storage "diagram") (cljs.reader/read-string))]
-    (recreate-components app-state entities)
+    ;(recreate-components app-state entities)
     (reload-entities app-state entities)
     (b/fire app-state "diagram.render")))
 
 (defn enable-snapshots [app-state]
-  (b/on app-state ["state.save"] -999 (fn [event] (save (-> event :context :app-state)))))
+  (b/on app-state ["entity.built"] -999 (fn [event] (save (-> event :context :app-state)))))
 
 (defn initialize [id app-state config]
   (dom/console-log (str "Initializing cljs-diagrams within DOM node with id [ " id " ]."))

@@ -69,7 +69,16 @@
   ([name type position]
    (Layout. name type position (match-parent-size) nil))
   ([name type]
-   (Layout. name type (match-parent-position) (match-parent-size) nil)))
+   (Layout. name type (match-parent-position) (match-parent-size) nil))
+  ([data]
+   (let [{:keys [name type position size margins]} data]
+     (Layout. name type
+              (LPosition. (:left position) (:top position))
+              (LSize. (:width size) (:height size))
+              (Margins. (:margin-left margins)
+                        (:margin-top margins)
+                        (:margin-bottom margins)
+                        (:margin-right margins))))))
 
 (defn absolute-position-of-layout [entity layout]
   (let [bbox (:bbox entity)]

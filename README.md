@@ -1,4 +1,4 @@
-# cljs-diagrams
+# cljs-diagrams (WIP)
 ## Rationale
 Clojurescript library/framework for creating different kinds of diagrams. Primarily for use as dependency for cljs apps. 
 

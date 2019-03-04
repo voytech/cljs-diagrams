@@ -1,104 +1,116 @@
 (ns cljs-diagrams.core.components
   (:require [cljs-diagrams.core.eventbus :as bus]
+            [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.state :as state]))
 
+(spec/def ::component (spec/keys :req-un [::uid
+                                          ::name
+                                          ::type
+                                          ::model
+                                          ::rendering-method
+                                          ::attributes
+                                          ::layout-attributes
+                                          ::property-change-callback
+                                          ::parent-ref]))
+
+(spec/def ::layout-attributes (spec/keys :req-un [::layout-ref
+                                                  ::layout-order
+                                                  ::layout-hints]))
 
 (defonce COMPONENT_CHANGED "component.changed")
-
-(defprotocol IDrawable
-  (update-state [this state])
-  (state [this])
-  (model [this])
-  (setp [this property value])
-  (silent-setp [this property value])
-  (set-data [this map_])
-  (silent-set-data [this map_])
-  (getp [this property])
-  (set-border-color [this color])
-  (set-background-color [this color])
-  (set-border-style [this style])
-  (set-border-width [this width])
-  (set-left [this left])
-  (set-top [this top])
-  (set-width [this width])
-  (set-height [this height])
-  (get-left [this])
-  (get-top [this])
-  (get-width [this])
-  (get-height [this])
-  (get-bbox [this])
-  (intersects? [this other])
-  (contains? [this other])
-  (contains-point? [this x y])
-  (diff-properties [this other props])
-  (diff-property [this p1 other p2]))
 
 (defn- changed
   ([app-state component properties]
    (bus/fire app-state COMPONENT_CHANGED {:properties properties
                                           :component component})))
 
-(defrecord LayoutAttributes [layout-ref layout-order layout-hints])
+(defn model [component] (-> component :model deref))
 
-(defrecord Component [uid
-                      name
-                      type
-                      model
-                      rendering-method
-                      attributes
-                      parent-ref
-                      layout-attributes
-                      property-change-callback]
-  IDrawable
-  (model [this] @model)
-  (setp [this property value]
-    (vswap! model assoc property value)
-    (property-change-callback this [property]))
-  (silent-setp [this property value]
-    (vswap! model assoc property value))
-  (silent-set-data [this map_]
-    (vswap! model merge map_))
-  (set-data [this map_]
-    (vswap! model merge map_)
-    (property-change-callback this (keys map_)))
-  (getp [this property] (get @model property))
-  (set-border-color [this value] (setp this :border-color value))
-  (set-background-color [this value] (setp this :background-color value))
-  (set-border-style [this value] (setp this :border-style value))
-  (set-border-width [this value] (setp this :border-width value))
-  (set-left [this value] (setp this :left value))
-  (set-top [this value] (setp this :top value))
-  (set-width [this value] (setp this :width value))
-  (set-height [this value] (setp this :height value))
-  (get-left [this] (getp this :left))
-  (get-top [this] (getp this :top))
-  (get-width [this] (getp this :width))
-  (get-height [this] (getp this :height))
-  (get-bbox [this] {:left (get-left this)
-                    :top (get-top this)
-                    :width (get-width this)
-                    :height (get-height this)})
-  (intersects? [this other]
-    (let [tbbox (get-bbox this)
-          obbox (get-bbox other)]
-      (or
-       (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
-            (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))
-       (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
-            (<= (:top obbox) (:top tbbox)) (>= (+ (:top obbox) (:height obbox)) (:top tbbox)))
-       (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
-            (<= (:top obbox) (:top tbbox)) (>= (+ (:top obbox) (:height obbox)) (:top tbbox)))
-       (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
-            (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox))))))
+(defn setp [component property value]
+  (vswap! (:model component) assoc property value)
+  (let [pcc (:property-change-callback component)]
+    (pcc component [property])))
 
-  (contains? [this other])
-  (contains-point? [this x y]
-    (and (>= x (get-left this)) (<= x (+ (get-left this) (get-width this)))
-         (>= y (get-top this)) (<= y (+ (get-top this) (get-height this)))))
-  (diff-properties [this other properties]
-    (filterv #(not= (getp this %1) (getp other %2)) properties))
-  (diff-property [this p1 other p2]
-    (not= (getp this p1) (getp other p2))))
+(defn silent-setp [component property value]
+  (vswap! (:model component) assoc property value))
+
+(defn silent-set-data [component map_]
+  (vswap! (:model component) merge map_))
+
+(defn set-data [component map_]
+  (vswap! (:model component) merge map_)
+  (let [pcc (:property-change-callback component)]
+    (pcc component (keys map_))))
+
+(defn getp [component property]
+  (-> component :model deref property))
+
+(defn set-border-color [component value]
+  (setp component :border-color value))
+
+(defn set-background-color [component value]
+  (setp component :background-color value))
+
+(defn set-border-style [component value]
+  (setp component :border-style value))
+
+(defn set-border-width [component value]
+  (setp component :border-width value))
+
+(defn set-left [component value]
+  (setp component :left value))
+
+(defn set-top [component value]
+  (setp component :top value))
+
+(defn set-width [component value]
+  (setp component :width value))
+
+(defn set-height [component value]
+  (setp component :height value))
+
+(defn get-left [component]
+  (getp component :left))
+
+(defn get-top [component]
+  (getp component :top))
+
+(defn get-width [component]
+  (getp component :width))
+
+(defn get-height [component]
+  (getp component :height))
+
+(defn get-bbox [component]
+  {:left (get-left component)
+   :top (get-top component)
+   :width (get-width component)
+   :height (get-height component)})
+
+(defn intersects? [component other]
+  (let [tbbox (get-bbox component)
+        obbox (get-bbox other)]
+    (or
+     (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
+          (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox)))
+     (and (<= (:left tbbox) (:left obbox)) (>= (+ (:left tbbox) (:width tbbox)) (:left obbox))
+          (<= (:top obbox) (:top tbbox)) (>= (+ (:top obbox) (:height obbox)) (:top tbbox)))
+     (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
+          (<= (:top obbox) (:top tbbox)) (>= (+ (:top obbox) (:height obbox)) (:top tbbox)))
+     (and (<= (:left obbox) (:left tbbox)) (>= (+ (:left obbox) (:width obbox)) (:left tbbox))
+          (<= (:top tbbox) (:top obbox)) (>= (+ (:top tbbox) (:height tbbox)) (:top obbox))))))
+
+(defn contains? [component other])
+
+(defn contains-point? [component x y]
+  (and (>= x (get-left component)) (<= x (+ (get-left component) (get-width component)))
+       (>= y (get-top component)) (<= y (+ (get-top component) (get-height component)))))
+
+(defn diff-properties [component other properties]
+  (filterv #(not= (getp component %1) (getp other %2)) properties))
+
+(defn diff-property [component p1 other p2]
+  (not= (getp component p1) (getp other p2)))
 
 (defn resolve-z-index [val]
   (case val
@@ -161,15 +173,15 @@
         template-data (get-in container [:components-properties name])
         mdl (merge initializer-data template-data model)
         callback (default-model-callback app-state bbox-draw)
-        component (Component. (str (random-uuid))
-                              name
-                              type
-                              (volatile! mdl)
-                              rendering-method
-                              attributes
-                              (:uid container)
-                              layout-attributes
-                              callback)]
+        component {:uid (str (random-uuid))
+                   :name name
+                   :type type
+                   :model (volatile! mdl)
+                   :rendering-method rendering-method
+                   :attributes attributes
+                   :parent-ref (:uid container)
+                   :layout-attributes layout-attributes
+                   :property-change-callback callback}]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
     (state/assoc-diagram-state app-state [:components (:uid component)] component)
@@ -178,7 +190,8 @@
 
 (defn layout-attributes
   ([layout-ref layout-order layout-hints]
-   (LayoutAttributes. layout-ref layout-order layout-hints))
+   {:pre [spec/valid? ::layout-attributes {:layout-ref layout-ref :layout-order layout-order :layout-hints layout-hints}]}
+   {:layout-ref layout-ref :layout-order layout-order :layout-hints layout-hints})
   ([layout-ref layout-hints]
    (layout-attributes layout-ref 0 layout-hints))
   ([layout-ref]

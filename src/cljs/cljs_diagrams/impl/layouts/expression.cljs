@@ -1,21 +1,23 @@
 (ns cljs-diagrams.impl.layouts.expression
   (:require [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.eventbus :as b]
+            [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.entities :as e]
             [cljs-diagrams.core.layouts :as l]))
 
-(defrecord LayoutHints [position size origin])
-
+(spec/def ::hints (spec/keys :req-un [::position
+                                      ::size
+                                      ::origin]))
 (defn bound-expression [expr]
   {:type :exp :value expr})
 
 (defn size-expression [width-exp height-exp]
-  (l/LSize. {:type :exp :value width-exp}
-            {:type :exp :value height-exp}))
+  (l/size  {:type :exp :value width-exp}
+           {:type :exp :value height-exp}))
 
 (defn position-expression [left-exp top-exp]
-  (l/LPosition. {:type :exp :value left-exp}
-                {:type :exp :value top-exp}))
+  (l/position  {:type :exp :value left-exp}
+               {:type :exp :value top-exp}))
 
 (defn width-of
   ([component-name margin]
@@ -64,11 +66,11 @@
 
 (defn layout-hints
   ([position size origin]
-   (LayoutHints. position size origin))
+   {:position position :size size :origin origin})
   ([position origin]
-   (LayoutHints. position nil origin))
+   (layout-hints position nil origin))
   ([position]
-   (LayoutHints. position nil (l/weighted-origin 0 0))))
+   (layout-hints position nil (l/weighted-origin 0 0))))
 
 (defn obtain-component-bbox [entity component]
   (let [bbox (:bbox entity)

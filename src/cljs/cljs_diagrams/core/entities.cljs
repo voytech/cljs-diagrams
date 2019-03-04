@@ -92,8 +92,8 @@
 (defn import-entity [app-state entity-data]
   {:pre [spec/valid? ::entity entity-data]}
   (state/assoc-diagram-state app-state [:entities (:uid entity-data)] entity-data)
-  (bus/fire app-state "entity.imported" {:entity entity}
-  ))
+  (bus/fire app-state "entity.imported" {:entity entity}))
+
 
 (defn remove-entity [app-state entity]
   (let [entity (entity-by-id app-state (:uid entity))]

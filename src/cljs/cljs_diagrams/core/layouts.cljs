@@ -1,34 +1,64 @@
 (ns cljs-diagrams.core.layouts
   (:require [cljs-diagrams.core.components :as d]
+            [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.entities :as e]
             [cljs-diagrams.core.eventbus :as b]))
 
-(defrecord LPosition [left top])
+(spec/def ::coord-value (spec/keys :req-un [::value
+                                            ::type]))
 
-(defrecord LSize [width height])
+(spec/def ::layout-position (spec/keys :req-un [::left
+                                                ::top]))
 
-(defrecord LOrigin [orig-x orig-y])
+(spec/def ::layout-size (spec/keys :req-un [::width
+                                            ::height]))
 
-(defrecord Margins [margin-left margin-top margin-bottom margin-right])
+(spec/def ::layout-origin (spec/keys :req-un [::orig-x
+                                              ::orig-y]))
 
-(defrecord Layout [name type position size margins])
+(spec/def ::layout-margins (spec/keys :req-un [::margin-left
+                                               ::margin-top
+                                               ::margin-bottom
+                                               ::margin-right]))
 
-(defrecord LayoutEvaluationContext [entity context])
+(spec/def ::layout  (spec/keys :req-un [::name
+                                        ::type
+                                        ::position
+                                        ::size
+                                        ::margins]))
+
+(defn position [left top]
+  {:pre [spec/valid? ::coord-value left]}
+  {:pre [spec/valid? ::coord-value top]}
+  {:left left :top top})
+
+(defn size [width height]
+  {:pre [spec/valid? ::coord-value width]}
+  {:pre [spec/valid? ::coord-value height]}
+  {:width width :height height})
+
+(defn origin [orig-x orig-y]
+  {:pre [spec/valid? ::coord-value orig-x]}
+  {:pre [spec/valid? ::coord-value orig-y]}
+  {:orig-x orig-x :orig-y orig-y})
 
 (defn margins [margin-left margin-top margin-bottom margin-right]
-  (Margins. margin-left margin-top margin-bottom margin-right))
+  {:margin-left margin-left
+   :margin-top margin-top
+   :margin-bottom margin-bottom
+   :margin-right margin-right})
 
 (defn size-of-type [width height type]
-  (LSize. {:value width :type type}
-          {:value height :type type}))
+  (size {:value width :type type}
+        {:value height :type type}))
 
 (defn position-of-type [left top type]
-  (LPosition. {:value left :type type}
-              {:value top :type type}))
+  (position {:value left :type type}
+            {:value top :type type}))
 
 (defn origin-of-type [orig-x orig-y type]
-  (LOrigin. {:value orig-x :type type}
-            {:value orig-y :type type}))
+  (origin  {:value orig-x :type type}
+           {:value orig-y :type type}))
 
 (defn weighted-size [width height]
   (size-of-type width height :wei))
@@ -45,16 +75,6 @@
 (defn absolute-position [left top]
   (position-of-type left top :abs))
 
-(defn origin [orig-x orig-y]
-  (origin-of-type orig-x orig-y :abs))
-
-(defn size
-  ([width height]
-   (size-of-type width height :abs))
-  ([type-width width type-height height]
-   (LSize. {:value width :type type-width}
-           {:value height :type type-height})))
-
 (defn match-parent-size []
   (weighted-size 1 1))
 
@@ -63,22 +83,22 @@
 
 (defn layout
   ([name type position size margins]
-   (Layout. name type position size margins))
+   {:name name :type type :position position :size size :margins margins})
   ([name type position margins]
-   (Layout. name type position (match-parent-size) margins))
+   (layout name type position (match-parent-size) margins))
   ([name type position]
-   (Layout. name type position (match-parent-size) nil))
+   (layout name type position (match-parent-size) nil))
   ([name type]
-   (Layout. name type (match-parent-position) (match-parent-size) nil))
+   (layout name type (match-parent-position) (match-parent-size) nil))
   ([data]
    (let [{:keys [name type position size margins]} data]
-     (Layout. name type
-              (LPosition. (:left position) (:top position))
-              (LSize. (:width size) (:height size))
-              (Margins. (:margin-left margins)
-                        (:margin-top margins)
-                        (:margin-bottom margins)
-                        (:margin-right margins))))))
+     (layout name type
+             (position (:left position) (:top position))
+             (size (:width size) (:height size))
+             (margins (:margin-left margins)
+                      (:margin-top margins)
+                      (:margin-bottom margins)
+                      (:margin-right margins))))))
 
 (defn absolute-position-of-layout [entity layout]
   (let [bbox (:bbox entity)]

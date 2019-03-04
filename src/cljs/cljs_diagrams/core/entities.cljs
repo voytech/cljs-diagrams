@@ -2,21 +2,27 @@
   (:require [cljs-diagrams.core.eventbus :as bus]
             [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.state :as state]
+            [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.utils.general :as utils :refer [make-js-property]]))
+
+(spec/def ::entity (spec/keys :req-un [::uid
+                                       ::bbox
+                                       ::type
+                                       ::tags
+                                       ::components
+                                       ::relationships
+                                       ::layouts
+                                       ::components-properties]))
+
+(spec/def ::create-entity (spec/keys :req-un [::bbox
+                                              ::type
+                                              ::tags
+                                              ::components-properties]))
 
 (declare get-entity-component)
 
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
-
-(defrecord Entity [uid
-                   bbox
-                   type
-                   tags
-                   components
-                   relationships
-                   layouts
-                   components-properties])
 
 (defn components-of [holder]
  (vals (:components holder)))
@@ -26,15 +32,18 @@
 
 (defn entity-by-type [type])
 
+(defn is-entity [target]
+  (spec/valid? ::entity target))
+
 ;;Utility functions for getting expected data on type non-deterministic argument
 (defn- id [input fetch]
   (cond
-    (record? input) (fetch input)
+    (is-entity input) (fetch input)
     (string? input) input))
 
 (defn- record [input fetch]
   (cond
-    (record? input) input
+    (is-entity input) input
     (string? input) (fetch input)))
 
 (defn- entity-id [input]
@@ -55,9 +64,6 @@
   (let [entities (state/get-in-diagram-state app-state [:entities])]
     (record input #(get-in entities [(entity-id entity) :components %]))))
 
-(defn is-entity [target]
-  (instance? Entity target))
-
 (defn lookup [app-state component]
   (let [uid (:parent-ref component)]
     (entity-by-id app-state uid)))
@@ -69,18 +75,25 @@
    Those properties models functions of specific component."
   ([app-state type tags bbox component-properties]
    (let [uid (str (random-uuid))
-         entity (Entity. uid
-                         bbox
-                         type
-                         tags
-                         {} []
-                         {} ;layouts
-                         component-properties)]
+         entity {:uid uid
+                 :bbox bbox
+                 :type type
+                 :tags tags
+                 :components {}
+                 :relationships []
+                 :layouts {}
+                 :components-properties component-properties}]
      (state/assoc-diagram-state app-state [:entities uid] entity)
      (bus/fire app-state "entity.added" {:entity entity})
      entity))
   ([app-state type bbox]
    (create-entity app-state type [] bbox {})))
+
+(defn import-entity [app-state entity-data]
+  {:pre [spec/valid? ::entity entity-data]}
+  (state/assoc-diagram-state app-state [:entities (:uid entity-data)] entity-data)
+  (bus/fire app-state "entity.imported" {:entity entity}
+  ))
 
 (defn remove-entity [app-state entity]
   (let [entity (entity-by-id app-state (:uid entity))]
@@ -148,11 +161,25 @@
       (d/set-data component (:model args-map)))
     (get-entity-component app-state entity (:name args-map)))))
 
-(defn add-layout [app-state entity layout]
-  (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
-  (let [updated (entity-by-id app-state (:uid entity))]
-    (bus/fire app-state "entity.layout.added" {:entity updated})
-    updated))
+(defn add-layout
+  ([app-state entity layout]
+   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
+   (let [updated (entity-by-id app-state (:uid entity))]
+     (console.log (clj->js updated))
+     (bus/fire app-state "entity.layout.added" {:entity updated})
+     updated))
+  ([app-state entity name layout-func position size margins]
+   (let [layout (l/layout name layout-func position size margins)]
+     (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
+     (let [updated (entity-by-id app-state (:uid entity))]
+       (bus/fire app-state "entity.layout.added" {:entity updated})
+       updated)))
+  ([app-state entity name layout-func position margins]
+   (add-layout app-state entity name layout-func position (l/match-parent-size) margins))
+  ([app-state entity name layout-func position]
+   (add-layout app-state entity name layout-func position (l/match-parent-size) nil))
+  ([app-state entity name layout-func]
+   (add-layout app-state entity name layout-func (l/match-parent-position) (l/match-parent-size) margins)))
 
 (defn remove-layout [app-state entity layout-name]
   (state/dissoc-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))
@@ -160,18 +187,15 @@
 (defn get-layout [app-state entity layout-name]
   (state/get-in-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))
 
-(defn assert-layout [app-state entity name type position size margins]
+(defn assert-layout [app-state entity name layout-func position size margins]
   (let [layout (get-layout app-state entity name)]
     (if (nil? layout)
-      (add-layout app-state entity {:name name
-                                    :type type
-                                    :position position
-                                    :size size
-                                    :margins margins})
+      (add-layout app-state entity name layout-func position size margins)
       (let [modified (-> layout
                          (assoc :position position)
                          (assoc :size size)
-                         (assoc :margins margins))]
+                         (assoc :margins margins)
+                         (assoc :layout-func layout-func))]
         (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts name] modified)))))
 
 (defn- is-relation-present [app-state entity related-id assoc-type]

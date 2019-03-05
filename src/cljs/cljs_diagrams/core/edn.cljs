@@ -11,8 +11,7 @@
   (let [derecord (into {} component)]
     (-> derecord
         (assoc  :model (-> component :model deref))
-        (dissoc :initializer)
-        (dissoc :property-change-callback))))
+        (dissoc :initializer))))
 
 (defn export-entity [entity]
   {:uid  (:uid entity)
@@ -26,10 +25,8 @@
 
 
 (defn load-component [app-state entity-type component]
-  (console.log (clj->js (d/model-callback app-state entity-type (:name component))))
   (-> component
-      (assoc :model (volatile! (:model component)))
-      (assoc :property-change-callback (d/model-callback app-state entity-type (:name component)))))
+      (assoc :model (volatile! (:model component)))))
 
 (defn load-entity [app-state data]
   (let [{:keys [type tags bbox component-properties components layouts]} data]

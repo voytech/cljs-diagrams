@@ -1,6 +1,7 @@
 (ns cljs-diagrams.core.components
   (:require [cljs-diagrams.core.eventbus :as bus]
             [clojure.spec.alpha :as spec]
+            [cljs-diagrams.core.funcreg :refer [reg fun]]
             [cljs-diagrams.core.state :as state]))
 
 (spec/def ::component (spec/keys :req-un [::uid
@@ -28,7 +29,7 @@
 
 (defn setp [component property value]
   (vswap! (:model component) assoc property value)
-  (let [pcc (:property-change-callback component)]
+  (let [pcc (fun (:property-change-callback component))]
     (pcc component [property])))
 
 (defn silent-setp [component property value]
@@ -39,7 +40,7 @@
 
 (defn set-data [component map_]
   (vswap! (:model component) merge map_)
-  (let [pcc (:property-change-callback component)]
+  (let [pcc (fun (:property-change-callback component))]
     (pcc component (keys map_))))
 
 (defn getp [component property]
@@ -158,13 +159,6 @@
          (changed app-state component (concat properties (keys alter-mdl))))
        (changed app-state component properties))))
 
-(defn register-model-callback [app-state entity component-name callback]
-  (state/assoc-diagram-state app-state [:callbacks (:type entity) component-name :model-change] callback)
-  callback)
-
-(defn model-callback [app-state entity-type component-name]
-  (state/get-in-diagram-state app-state [:callbacks entity-type component-name :model-change]))
-
 (defn new-component
  ([app-state container arg-map]
   (let [{:keys [name
@@ -188,7 +182,7 @@
                    :attributes attributes
                    :parent-ref (:uid container)
                    :layout-attributes layout-attributes
-                   :property-change-callback (register-model-callback app-state container name callback)}]
+                   :property-change-callback (reg callback)}]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
     (state/assoc-diagram-state app-state [:components (:uid component)] component)

@@ -20,13 +20,13 @@
        prn-str))
 
 (defn save [app-state]
+  (console.log (clj->js (edn app-state)))
   (commons/save-to-storage "diagram" (edn app-state)))
 
 (defn refresh-components [app-state]
   (let [entities (vals (state/get-in-diagram-state app-state [:entities]))
         components (reduce #(concat %1 (vals (:components %2))) [] entities)
         c-map (apply merge (mapv (fn [e] {(:uid e) e}) components))]
-    (console.log (clj->js c-map))
     (state/assoc-diagram-state app-state [:components] c-map)))
 
 (defn reload-entities [app-state entities]

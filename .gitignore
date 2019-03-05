@@ -4,3 +4,5 @@
 .nrepl-history
 boot-check-report**
 forms-**
+*.iml
+.idea

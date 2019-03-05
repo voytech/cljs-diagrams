@@ -89,12 +89,6 @@
   ([app-state type bbox]
    (create-entity app-state type [] bbox {})))
 
-(defn import-entity [app-state entity-data]
-  {:pre [spec/valid? ::entity entity-data]}
-  (state/assoc-diagram-state app-state [:entities (:uid entity-data)] entity-data)
-  (bus/fire app-state "entity.imported" {:entity entity}))
-
-
 (defn remove-entity [app-state entity]
   (let [entity (entity-by-id app-state (:uid entity))]
     ;remove-relations
@@ -165,7 +159,6 @@
   ([app-state entity layout]
    (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
    (let [updated (entity-by-id app-state (:uid entity))]
-     (console.log (clj->js updated))
      (bus/fire app-state "entity.layout.added" {:entity updated})
      updated))
   ([app-state entity name layout-func position size margins]

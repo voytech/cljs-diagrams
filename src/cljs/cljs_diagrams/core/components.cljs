@@ -146,7 +146,7 @@
 (defn ordered-components [app-state]
   (sort-by #(getp % :z-index) > (components app-state)))
 
-(defn default-model-callback [app-state bbox-draw]
+(defn bbox-callback [app-state bbox-draw]
   (fn [component properties]
      (if (and (some? bbox-draw)
               (some #(or (= :left %)
@@ -157,6 +157,13 @@
          (silent-set-data component alter-mdl)
          (changed app-state component (concat properties (keys alter-mdl))))
        (changed app-state component properties))))
+
+(defn register-model-callback [app-state entity component-name callback]
+  (state/assoc-diagram-state app-state [:callbacks (:type entity) component-name :model-change] callback)
+  callback)
+
+(defn model-callback [app-state entity-type component-name]
+  (state/get-in-diagram-state app-state [:callbacks entity-type component-name :model-change]))
 
 (defn new-component
  ([app-state container arg-map]
@@ -172,7 +179,7 @@
         initializer-data (if (nil? initializer) {} (initializer container attributes))
         template-data (get-in container [:components-properties name])
         mdl (merge initializer-data template-data model)
-        callback (default-model-callback app-state bbox-draw)
+        callback (bbox-callback app-state bbox-draw)
         component {:uid (str (random-uuid))
                    :name name
                    :type type
@@ -181,7 +188,7 @@
                    :attributes attributes
                    :parent-ref (:uid container)
                    :layout-attributes layout-attributes
-                   :property-change-callback callback}]
+                   :property-change-callback (register-model-callback app-state container name callback)}]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
     (state/assoc-diagram-state app-state [:components (:uid component)] component)

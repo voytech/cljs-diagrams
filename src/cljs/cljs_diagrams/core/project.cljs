@@ -16,25 +16,28 @@
 (defn edn [app-state]
   (->> (state/get-in-diagram-state app-state [:entities])
        vals
-       (mapv edn/normalize-entity)
+       (mapv edn/export-entity)
        prn-str))
 
 (defn save [app-state]
   (commons/save-to-storage "diagram" (edn app-state)))
 
-(defn recreate-components [app-state entities]
-  (let [components (reduce #(concat %1 (vals (:components %2))) [] entities)
-        c-map (group-by :uid components)]
+(defn refresh-components [app-state]
+  (let [entities (vals (state/get-in-diagram-state app-state [:entities]))
+        components (reduce #(concat %1 (vals (:components %2))) [] entities)
+        c-map (apply merge (mapv (fn [e] {(:uid e) e}) components))]
+    (console.log (clj->js c-map))
     (state/assoc-diagram-state app-state [:components] c-map)))
 
 (defn reload-entities [app-state entities]
-  (let [denormalized (mapv #(edn/recreate-entity app-state %) entities)]
-    (state/assoc-diagram-state app-state [:entities] (group-by :uid denormalized))))
+  (let [reloaded (mapv #(edn/load-entity app-state %) entities)]
+    (state/assoc-diagram-state app-state [:entities] (apply merge (mapv (fn [e] {(:uid e) e}) reloaded)))))
 
 (defn load [app-state]
-  (let [entities (-> (commons/load-from-storage "diagram") (cljs.reader/read-string))]
-    ;(recreate-components app-state entities)
+  (let [entities (-> (commons/load-from-storage "diagram")
+                     (cljs.reader/read-string))]
     (reload-entities app-state entities)
+    (refresh-components app-state)
     (b/fire app-state "diagram.render")))
 
 (defn enable-snapshots [app-state]

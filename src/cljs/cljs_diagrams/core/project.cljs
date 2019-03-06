@@ -20,7 +20,6 @@
        prn-str))
 
 (defn save [app-state]
-  (console.log (clj->js (edn app-state)))
   (commons/save-to-storage "diagram" (edn app-state)))
 
 (defn refresh-components [app-state]

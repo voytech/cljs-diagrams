@@ -19,7 +19,7 @@
    :bbox (:bbox entity)
    :tags (:tags entity)
    :relationships (:relationships entity)
-   :component-properties (:component-properties entity)
+   :components-properties (:components-properties entity)
    :layouts (-> entity :layouts vals)
    :components (mapv export-component (-> entity :components vals))})
 

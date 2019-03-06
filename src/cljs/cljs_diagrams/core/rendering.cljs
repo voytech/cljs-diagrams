@@ -32,6 +32,7 @@
 (defn render-entity [app-state entity force-all]
   (l/do-layouts entity)
   (doseq [component (e/components-of entity)]
+    (remove-component app-state component)
     (when force-all (mark-all-for-redraw app-state component))
     (render app-state component)))
 
@@ -120,6 +121,6 @@
     (render app-state component)))
 
 (defn render-diagram [app-state]
-  (state/dissoc-renderer-state app-state [:components])
+  ;(state/dissoc-renderer-state app-state [:components])
   (doseq [entity (vals (state/get-in-diagram-state app-state [:entities]))]
     (render-entity app-state entity true)))

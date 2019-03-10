@@ -23,11 +23,18 @@
   (console.log (clj->js (edn app-state)))
   (commons/save-to-storage "diagram" (edn app-state)))
 
+(defn get-managed-entities [app-state]
+  (vals (state/get-in-diagram-state app-state [:entities])))
+
 (defn refresh-components [app-state]
-  (let [entities (vals (state/get-in-diagram-state app-state [:entities]))
+  (let [entities (get-managed-entities app-state)
         components (reduce #(concat %1 (vals (:components %2))) [] entities)
         c-map (apply merge (mapv (fn [e] {(:uid e) e}) components))]
     (state/assoc-diagram-state app-state [:components] c-map)))
+
+(defn autowire-behaviours [app-state]
+  (doseq [entity (get-managed-entities app-state)]
+    (behaviours/autowire app-state entity)))
 
 (defn reload-entities [app-state entities]
   (let [reloaded (mapv #(edn/load-entity app-state %) entities)]
@@ -38,16 +45,13 @@
                      (cljs.reader/read-string))]
     (reload-entities app-state entities)
     (refresh-components app-state)
+    (autowire-behaviours app-state)
     (b/fire app-state "diagram.render")))
-
-(defn enable-snapshots [app-state]
-  (b/on app-state ["entity.built"] -999 (fn [event] (save (-> event :context :app-state)))))
 
 (defn initialize [id app-state config]
   (dom/console-log (str "Initializing cljs-diagrams within DOM node with id [ " id " ]."))
   (console.log "Initializing event-bus ...")
   (b/initialize app-state)
-  (enable-snapshots app-state)
   (console.log "Initializing behaviours ...")
   (behaviours/initialize app-state)
   (doseq [install (:behaviours config)]

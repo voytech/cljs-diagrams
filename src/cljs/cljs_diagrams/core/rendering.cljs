@@ -36,7 +36,6 @@
     (when force-all (mark-all-for-redraw app-state component))
     (render app-state component)))
 
-
 (defn register-handlers [app-state]
   (bus/on app-state ["component.created"] -999 (fn [event]
                                                 (let [{:keys [component app-state]} (:context event)])))

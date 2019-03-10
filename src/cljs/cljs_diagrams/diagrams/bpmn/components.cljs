@@ -43,5 +43,5 @@
        :z-index 0})))
 
 (defcomponent diamond {:rendering-method :draw-poly-line
-                       :bbox-draw (diamond-bbox-draw)
+                       :model-customizers [(d/bbox-draw diamond-bbox-draw)]
                        :initializer (diamond-initializer)})

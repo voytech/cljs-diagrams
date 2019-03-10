@@ -11,7 +11,7 @@
   (let [derecord (into {} component)]
     (-> derecord
         (assoc  :model (-> component :model deref))
-        (dissoc :property-change-callback)
+        (dissoc :model-listener)
         (dissoc :initializer))))
 
 (defn export-entity [entity]
@@ -24,12 +24,11 @@
    :layouts (-> entity :layouts vals)
    :components (mapv export-component (-> entity :components vals))})
 
-
 (defn load-component [app-state entity-type component]
-  (let [bbox-callback (:property-change-callback-provider component)]
+  (let [customizers (:model-customizers component)]
     (-> component
         (assoc :model (volatile! (:model component)))
-        (assoc :property-change-callback (d/property-change-callback app-state bbox-callback)))))
+        (assoc :model-listener (d/customize-model app-state customizers)))))
 
 (defn load-entity [app-state data]
   (let [{:keys [type tags bbox component-properties components layouts]} data]

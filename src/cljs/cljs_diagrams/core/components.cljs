@@ -2,7 +2,8 @@
   (:require [cljs-diagrams.core.eventbus :as bus]
             [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.funcreg :refer [provide]]
-            [cljs-diagrams.core.state :as state]))
+            [cljs-diagrams.core.state :as state])
+  (:require-macros [cljs-diagrams.core.macros :refer [defp]]))
 
 (spec/def ::component (spec/keys :req-un [::uid
                                           ::name
@@ -11,8 +12,8 @@
                                           ::rendering-method
                                           ::attributes
                                           ::layout-attributes
-                                          ::property-change-callback
-                                          ::property-change-callback-provider
+                                          ::model-listener
+                                          ::model-customizers
                                           ::parent-ref]))
 
 (spec/def ::layout-attributes (spec/keys :req-un [::layout-ref
@@ -26,25 +27,34 @@
    (bus/fire app-state COMPONENT_CHANGED {:properties properties
                                           :component component})))
 
-(defn property-change-callback [app-state bbox-draw]
+(defp bbox-predicate []
+  (fn [properties]
+    (some #(or (= :left %)
+               (= :top %)
+               (= :width %)
+               (= :height %)) properties)))
+
+(defn bbox-draw [provider]
+  {:pred (bbox-predicate) :func (provider)})
+
+(defn customize-model [app-state customizers]
   (fn [component properties]
-    (if (and (some? bbox-draw)
-             (some #(or (= :left %)
-                     (= :top %)
-                     (= :width %)
-                     (= :height %)) properties))
-      (let [func (provide bbox-draw)
-            alter-mdl (func component)]
-        (silent-set-data component alter-mdl)
-        (changed app-state component (concat properties (keys alter-mdl))))
-      (changed app-state component properties))))
+    (let [agg-properties (volatile! properties)]
+      (doseq [customizer customizers]
+        (let [predicate (provide (:pred customizer))
+              func (provide (:func customizer))]
+          (when (predicate properties)
+            (let [model-increment (func component)]
+              (silent-set-data component model-increment)
+              (vswap! agg-properties concat (keys model-increment))))))
+      (changed app-state component @agg-properties))))
 
 (defn model [component] (-> component :model deref))
 
 (defn setp [component property value]
   (vswap! (:model component) assoc property value)
-  (let [pcc (:property-change-callback component)]
-    (pcc component [property])))
+  (let [listener (:model-listener component)]
+    (listener component [property])))
 
 (defn silent-setp [component property value]
   (vswap! (:model component) assoc property value))
@@ -54,8 +64,8 @@
 
 (defn set-data [component map_]
   (vswap! (:model component) merge map_)
-  (let [pcc (:property-change-callback component)]
-    (pcc component (keys map_))))
+  (let [listener (:model-listener component)]
+    (listener component (keys map_))))
 
 (defn getp [component property]
   (-> component :model deref property))
@@ -166,7 +176,7 @@
   (let [{:keys [name
                 type
                 model
-                bbox-draw
+                model-customizers
                 attributes
                 layout-attributes
                 rendering-method
@@ -175,7 +185,7 @@
         initializer-data (if (nil? initializer) {} (initializer container attributes))
         template-data (get-in container [:components-properties name])
         mdl (merge initializer-data template-data model)
-        callback (property-change-callback app-state bbox-draw)
+        listener (customize-model app-state model-customizers)
         component {:uid (str (random-uuid))
                    :name name
                    :type type
@@ -184,8 +194,8 @@
                    :attributes attributes
                    :parent-ref (:uid container)
                    :layout-attributes layout-attributes
-                   :property-change-callback callback
-                   :property-change-callback-provider bbox-draw}]
+                   :model-listener listener
+                   :model-customizers model-customizers}]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
     (state/assoc-diagram-state app-state [:components (:uid component)] component)

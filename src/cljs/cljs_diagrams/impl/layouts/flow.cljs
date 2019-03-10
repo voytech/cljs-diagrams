@@ -2,7 +2,7 @@
   (:require [cljs-diagrams.core.layouts :as l]
             [cljs-diagrams.core.components :as c]))
 
-(defrecord LayoutHints [padding])
+(spec/def ::hints (spec/keys :req-un [::padding]))
 
 (defn next-column [context offset]
    (assoc-in context [:coords :left] (+ (-> context :coords :left) offset)))
@@ -84,4 +84,4 @@
         (next-column (+ padding (:width cbbox))))))
 
 (defn flow-layout-attributes [name idx padding]
-  (c/layout-attributes name idx (LayoutHints. padding)))
+  (c/layout-attributes name idx {:padding padding}))

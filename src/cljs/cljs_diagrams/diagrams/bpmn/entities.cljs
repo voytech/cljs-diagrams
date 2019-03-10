@@ -2,6 +2,7 @@
  (:require [cljs-diagrams.core.entities :as e]
            [cljs-diagrams.core.components :as d :refer [layout-attributes]]
            [cljs-diagrams.impl.components :as c]
+           [cljs-diagrams.core.funcreg :refer [serialize]]
            [cljs-diagrams.diagrams.bpmn.components :as bpmnc]
            [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints
                                                                 position-of
@@ -23,7 +24,8 @@
                                                      component-template
                                                      resolve-data
                                                      defcomponent-group
-                                                     with-tags]]))
+                                                     with-tags
+                                                     defp]]))
 
 
 (defentity activity
@@ -47,7 +49,7 @@
                                                                 (weighted-origin 0.5 0.5)))})
     (component c/entity-controls)))
 
-(defn event-bbox-draw []
+(defp event-bbox-draw []
   (fn [component]
     (let [width (d/get-width component)]
       {:radius (/ width 2)
@@ -60,7 +62,7 @@
     (component c/entity-shape {
                                :name "main"
                                :rendering-method :draw-circle
-                               :bbox-draw (event-bbox-draw)
+                               :bbox-draw (serialize 'event-bbox-draw)
                                :model {:radius 20}
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
@@ -92,7 +94,7 @@
     (component c/entity-shape {
                                :name "main"
                                :rendering-method :draw-circle
-                               :bbox-draw (event-bbox-draw)
+                               :bbox-draw (serialize 'event-bbox-draw)
                                :model {:radius 20 :border-width 5}
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
@@ -125,7 +127,7 @@
     (component c/entity-shape {
                                :name "main"
                                :rendering-method :draw-poly-line
-                               :bbox-draw (bpmnc/diamond-bbox-draw)
+                               :bbox-draw (serialize 'diamond-bbox-draw)
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
                                                                        (match-parent-position)

@@ -1,7 +1,7 @@
 (ns cljs-diagrams.core.components
   (:require [cljs-diagrams.core.eventbus :as bus]
             [clojure.spec.alpha :as spec]
-            [cljs-diagrams.core.funcreg :refer [reg fun]]
+            [cljs-diagrams.core.funcreg :refer [provide]]
             [cljs-diagrams.core.state :as state]))
 
 (spec/def ::component (spec/keys :req-un [::uid
@@ -12,6 +12,7 @@
                                           ::attributes
                                           ::layout-attributes
                                           ::property-change-callback
+                                          ::property-change-callback-provider
                                           ::parent-ref]))
 
 (spec/def ::layout-attributes (spec/keys :req-un [::layout-ref
@@ -25,11 +26,24 @@
    (bus/fire app-state COMPONENT_CHANGED {:properties properties
                                           :component component})))
 
+(defn property-change-callback [app-state bbox-draw]
+  (fn [component properties]
+    (if (and (some? bbox-draw)
+             (some #(or (= :left %)
+                     (= :top %)
+                     (= :width %)
+                     (= :height %)) properties))
+      (let [func (provide bbox-draw)
+            alter-mdl (func component)]
+        (silent-set-data component alter-mdl)
+        (changed app-state component (concat properties (keys alter-mdl))))
+      (changed app-state component properties))))
+
 (defn model [component] (-> component :model deref))
 
 (defn setp [component property value]
   (vswap! (:model component) assoc property value)
-  (let [pcc (fun (:property-change-callback component))]
+  (let [pcc (:property-change-callback component)]
     (pcc component [property])))
 
 (defn silent-setp [component property value]
@@ -40,7 +54,7 @@
 
 (defn set-data [component map_]
   (vswap! (:model component) merge map_)
-  (let [pcc (fun (:property-change-callback component))]
+  (let [pcc (:property-change-callback component)]
     (pcc component (keys map_))))
 
 (defn getp [component property]
@@ -147,18 +161,6 @@
 (defn ordered-components [app-state]
   (sort-by #(getp % :z-index) > (components app-state)))
 
-(defn bbox-callback [app-state bbox-draw]
-  (fn [component properties]
-     (if (and (some? bbox-draw)
-              (some #(or (= :left %)
-                         (= :top %)
-                         (= :width %)
-                         (= :height %)) properties))
-       (let [alter-mdl (bbox-draw component)]
-         (silent-set-data component alter-mdl)
-         (changed app-state component (concat properties (keys alter-mdl))))
-       (changed app-state component properties))))
-
 (defn new-component
  ([app-state container arg-map]
   (let [{:keys [name
@@ -173,7 +175,7 @@
         initializer-data (if (nil? initializer) {} (initializer container attributes))
         template-data (get-in container [:components-properties name])
         mdl (merge initializer-data template-data model)
-        callback (bbox-callback app-state bbox-draw)
+        callback (property-change-callback app-state bbox-draw)
         component {:uid (str (random-uuid))
                    :name name
                    :type type
@@ -182,7 +184,8 @@
                    :attributes attributes
                    :parent-ref (:uid container)
                    :layout-attributes layout-attributes
-                   :property-change-callback (reg callback)}]
+                   :property-change-callback callback
+                   :property-change-callback-provider bbox-draw}]
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
     (state/assoc-diagram-state app-state [:components (:uid component)] component)

@@ -8,6 +8,9 @@
   (let [file-struct (-> a/*cljs-file* slurp read-string)]
     (name (second file-struct))))
 
+(defmacro defp [name & body]
+  `(cljs-diagrams.core.funcreg.provider '~name (fn ~@body)))
+
 (defmacro component [func & body]
   `(fn [app-state# entity#]
      (~func app-state# entity# ~@body)))

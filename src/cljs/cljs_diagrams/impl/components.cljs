@@ -1,6 +1,7 @@
 (ns cljs-diagrams.impl.components
   (:require [cljs-diagrams.core.components :as d :refer [layout-attributes]]
             [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints]]
+            [cljs-diagrams.core.funcreg :refer [serialize]]
             [cljs-diagrams.core.layouts :as l :refer [layout
                                                       weighted-position
                                                       weighted-size
@@ -8,7 +9,7 @@
                                                       match-parent-size
                                                       match-parent-position
                                                       margins]])
-  (:require-macros [cljs-diagrams.core.macros :refer [defcomponent defcomponent-group with-layouts component]]))
+  (:require-macros [cljs-diagrams.core.macros :refer [defcomponent defcomponent-group with-layouts component defp]]))
 
 (defn- control-initializer [size]
   (fn [container props]
@@ -79,7 +80,7 @@
 (defcomponent relation {:rendering-method :draw-poly-line
                         :initializer (poly-line-initializer)})
 
-(defn triangle-bbox-draw []
+(defp triangle-bbox-draw []
   (fn [component]
     (let [x (d/get-left component)
           y (d/get-top component)
@@ -91,7 +92,7 @@
                x (+ y height)]})))
 
 (defcomponent arrow {:rendering-method :draw-poly-line
-                     :bbox-draw (triangle-bbox-draw)
+                     :bbox-draw (serialize 'triangle-bbox-draw)
                      :initializer (arrow-initializer)})
 
 (defcomponent startpoint {:rendering-method :draw-rect

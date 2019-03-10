@@ -1,6 +1,7 @@
 (ns cljs-diagrams.diagrams.bpmn.components
   (:require [cljs-diagrams.core.components :as d :refer [layout-attributes]]
             [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints]]
+            [cljs-diagrams.core.funcreg :refer [serialize]]
             [cljs-diagrams.core.layouts :as l :refer [layout
                                                       weighted-position
                                                       weighted-size
@@ -8,9 +9,9 @@
                                                       match-parent-size
                                                       match-parent-position
                                                       margins]])
-  (:require-macros [cljs-diagrams.core.macros :refer [defcomponent defcomponent-group component]]))
+  (:require-macros [cljs-diagrams.core.macros :refer [defcomponent defcomponent-group component defp]]))
 
-(defn diamond-bbox-draw []
+(defp diamond-bbox-draw []
   (fn [c]
     (let [top-x    (+ (d/get-left c) (/ (d/get-width c)  2))
           top-y    (d/get-top c)
@@ -42,5 +43,5 @@
        :z-index 0})))
 
 (defcomponent diamond {:rendering-method :draw-poly-line
-                       :bbox-draw (diamond-bbox-draw)
+                       :bbox-draw (serialize 'diamond-bbox-draw)
                        :initializer (diamond-initializer)})

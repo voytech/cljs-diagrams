@@ -2,9 +2,10 @@
   (:require [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.eventbus :as b]
             [clojure.spec.alpha :as spec]
-            [cljs-diagrams.core.funcreg :refer [reg fun]]
+            [cljs-diagrams.core.funcreg :as fr :refer [serialize provide]]
             [cljs-diagrams.core.entities :as e]
-            [cljs-diagrams.core.layouts :as l]))
+            [cljs-diagrams.core.layouts :as l])
+  (:require-macros [cljs-diagrams.core.macros :refer [defp]]))
 
 (spec/def ::hints (spec/keys :req-un [::position
                                       ::size
@@ -20,48 +21,36 @@
   (l/position  {:type :exp :value left-exp}
                {:type :exp :value top-exp}))
 
-(defn width-of
-  ([component-name margin]
-   (reg (fn [entity layout]
-           (let [component (e/get-entity-component entity component-name)]
-             (+ (d/get-width component) margin)))))
-  ([component-name]
-   (width-of component-name 0)))
+(defp width-of [component-name margin]
+ (fn [entity layout]
+   (let [component (e/get-entity-component entity component-name)]
+     (+ (d/get-width component) (or margin 0)))))
 
-(defn height-of
-  ([component-name margin]
-   (reg (fn [entity layout]
-           (let [component (e/get-entity-component entity component-name)]
-             (+ (d/get-height component) margin)))))
-  ([component-name]
-   (height-of component-name 0)))
+(defp height-of [component-name margin]
+ (fn [entity layout]
+   (let [component (e/get-entity-component entity component-name)]
+     (+ (d/get-height component) (or margin 0)))))
 
-(defn left-of
-  ([component-name margin]
-   (reg (fn [entity layout]
-           (let [component (e/get-entity-component entity component-name)]
-             (- (d/get-left component) margin)))))
-  ([component-name]
-   (left-of component-name 0)))
+(defp left-of [component-name margin]
+ (fn [entity layout]
+   (let [component (e/get-entity-component entity component-name)]
+     (- (d/get-left component) (or margin 0)))))
 
-(defn top-of
-  ([component-name margin]
-   (reg (fn [entity layout]
-           (let [component (e/get-entity-component entity component-name)]
-             (- (d/get-top component) margin)))))
-  ([component-name]
-   (top-of component-name 0)))
+(defp top-of [component-name margin]
+ (fn [entity layout]
+   (let [component (e/get-entity-component entity component-name)]
+     (- (d/get-top component) (or margin 0)))))
 
 (defn size-of
   ([component-name margin-x margin-y]
-   (size-expression (width-of component-name margin-x)
-                    (height-of component-name margin-y)))
+   (size-expression (serialize 'width-of component-name margin-x)
+                    (serialize 'height-of component-name margin-y)))
   ([component-name] (size-of component-name 0 0)))
 
 (defn position-of
   ([component-name margin-x margin-y]
-   (position-expression (left-of component-name margin-x)
-                        (top-of component-name margin-y)))
+   (position-expression (serialize 'left-of component-name margin-x)
+                        (serialize 'top-of component-name margin-y)))
   ([component-name]
    (position-of component-name 0 0)))
 
@@ -87,22 +76,22 @@
             effective-width (cond
                                (= :wei (-> width :type)) (* (:width layout-size) (:value width))
                                (= :abs (-> width :type)) (:value width)
-                               (= :exp (-> width :type)) ((fun (:value width)) entity layout)
+                               (= :exp (-> width :type)) ((provide (:value width)) entity layout)
                                :else (d/get-width component))
             effective-height (cond
                                 (= :wei (-> height :type)) (* (:height layout-size) (:value height))
                                 (= :abs (-> height :type)) (:value height)
-                                (= :exp (-> height :type)) ((fun (:value height)) entity layout)
+                                (= :exp (-> height :type)) ((provide (:value height)) entity layout)
                                 :else (d/get-height component))
             origin-offset-x (cond
                                (= :wei (-> orig-x :type)) (* effective-width (:value orig-x))
                                (= :abs (-> orig-x :type)) (:value orig-x)
-                               (= :exp (-> orig-x :type)) ((fun (:value orig-x)) entity layout)
+                               (= :exp (-> orig-x :type)) ((provide (:value orig-x)) entity layout)
                                :else 0)
             origin-offset-y (cond
                                (= :wei (-> orig-y :type)) (* effective-height (:value orig-y))
                                (= :abs (-> orig-y :type)) (:value orig-y)
-                               (= :exp (-> orig-y :type)) ((fun (:value orig-y)) entity layout)
+                               (= :exp (-> orig-y :type)) ((provide (:value orig-y)) entity layout)
                                :else 0)]
           {:width effective-width
            :height effective-height
@@ -110,13 +99,13 @@
                         (= :wei (-> left :type)) (+ (:left layout-pos) (* (:width layout-size) (:value left)))
                         (= :rel (-> left :type)) (+ (:left layout-pos ) (:value left))
                         (= :abs (-> left :type)) (:value left)
-                        (= :exp (-> left :type)) ((fun (:value left)) entity layout bounds)
+                        (= :exp (-> left :type)) ((provide (:value left)) entity layout bounds)
                         :else (d/get-left component)) origin-offset-x)
            :top  (- (cond
                         (= :wei (-> top :type)) (+ (:top layout-pos) (* (:height layout-size) (:value top)))
                         (= :rel (-> top :type)) (+ (:top layout-pos ) (:value top))
                         (= :abs (-> top :type)) (:value top)
-                        (= :exp (-> top :type)) ((fun (:value top)) entity layout bounds)
+                        (= :exp (-> top :type)) ((provide (:value top)) entity layout bounds)
                         :else (d/get-left component)) origin-offset-y)}))))
 
 (defmethod l/create-context ::expression [entity layout] {})

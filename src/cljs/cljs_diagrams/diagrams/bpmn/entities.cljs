@@ -62,7 +62,7 @@
     (component c/entity-shape {
                                :name "main"
                                :rendering-method :draw-circle
-                               :bbox-draw (serialize 'event-bbox-draw)
+                               :bbox-draw (event-bbox-draw)
                                :model {:radius 20}
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
@@ -94,7 +94,7 @@
     (component c/entity-shape {
                                :name "main"
                                :rendering-method :draw-circle
-                               :bbox-draw (serialize 'event-bbox-draw)
+                               :bbox-draw (event-bbox-draw)
                                :model {:radius 20 :border-width 5}
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
@@ -127,7 +127,7 @@
     (component c/entity-shape {
                                :name "main"
                                :rendering-method :draw-poly-line
-                               :bbox-draw (serialize 'diamond-bbox-draw)
+                               :bbox-draw (bpmnc/diamond-bbox-draw)
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
                                                                        (match-parent-position)

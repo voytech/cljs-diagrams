@@ -92,7 +92,7 @@
                x (+ y height)]})))
 
 (defcomponent arrow {:rendering-method :draw-poly-line
-                     :bbox-draw (serialize 'triangle-bbox-draw)
+                     :bbox-draw (triangle-bbox-draw)
                      :initializer (arrow-initializer)})
 
 (defcomponent startpoint {:rendering-method :draw-rect

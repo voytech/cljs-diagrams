@@ -9,7 +9,10 @@
     (name (second file-struct))))
 
 (defmacro defp [name & body]
-  `(cljs-diagrams.core.funcreg.provider '~name (fn ~@body)))
+  `(do
+    (cljs-diagrams.core.funcreg.provider '~name (fn ~@body))
+    (defn ~name [& args#]
+      (apply cljs-diagrams.core.funcreg.serialize '~name args#))))
 
 (defmacro component [func & body]
   `(fn [app-state# entity#]

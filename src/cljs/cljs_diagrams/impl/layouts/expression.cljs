@@ -2,7 +2,7 @@
   (:require [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.eventbus :as b]
             [clojure.spec.alpha :as spec]
-            [cljs-diagrams.core.funcreg :as fr :refer [serialize provide]]
+            [cljs-diagrams.core.funcreg :as fr :refer [provide]]
             [cljs-diagrams.core.entities :as e]
             [cljs-diagrams.core.layouts :as l])
   (:require-macros [cljs-diagrams.core.macros :refer [defp]]))
@@ -43,14 +43,14 @@
 
 (defn size-of
   ([component-name margin-x margin-y]
-   (size-expression (serialize 'width-of component-name margin-x)
-                    (serialize 'height-of component-name margin-y)))
+   (size-expression (width-of component-name margin-x)
+                    (height-of component-name margin-y)))
   ([component-name] (size-of component-name 0 0)))
 
 (defn position-of
   ([component-name margin-x margin-y]
-   (position-expression (serialize 'left-of component-name margin-x)
-                        (serialize 'top-of component-name margin-y)))
+   (position-expression (left-of component-name margin-x)
+                        (top-of component-name margin-y)))
   ([component-name]
    (position-of component-name 0 0)))
 

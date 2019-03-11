@@ -1,5 +1,6 @@
 (ns cljs-diagrams.impl.layouts.flow
   (:require [cljs-diagrams.core.layouts :as l]
+            [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.components :as c]))
 
 (spec/def ::hints (spec/keys :req-un [::padding]))

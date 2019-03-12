@@ -18,9 +18,6 @@
                 (if (= (:name child) @active) [:b (:name child)] (:name child))]]))]
        (:view (first (filter #(= @active (:name %)) childs)))])))
 
-(defn all-snapshots []
-  )
-
 (defn Snapshots [app-state]
   [:div
     [:form

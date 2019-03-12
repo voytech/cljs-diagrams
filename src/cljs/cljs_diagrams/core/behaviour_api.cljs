@@ -6,7 +6,7 @@
             [cljs-diagrams.core.events :as ev]
             [cljs-diagrams.core.state :as state]
             [cljs-diagrams.core.behaviours :as bhv]
-            [cljs-diagrams.impl.components :as c]))
+            [cljs-diagrams.impl.std.components :as c]))
 
 (defn- center-point [cmp]
   (let [mx (+ (d/get-left cmp) (/ (d/get-width cmp) 2))

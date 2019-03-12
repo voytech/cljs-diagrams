@@ -2,8 +2,7 @@
   (:require [cljs-diagrams.core.utils.general :refer [make-js-property]]
             [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.eventbus :as b]
-            [cljs-diagrams.core.rendering :as r]
-            [cljs-diagrams.impl.components :as impld]))
+            [cljs-diagrams.core.rendering :as r]))
 
 ;Some fabric object specific options to pass.
 (def RESTRICTED_BEHAVIOUR {:hasRotatingPoint false

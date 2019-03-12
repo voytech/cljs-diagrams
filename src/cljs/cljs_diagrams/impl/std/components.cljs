@@ -1,4 +1,4 @@
-(ns cljs-diagrams.impl.components
+(ns cljs-diagrams.impl.std.components
   (:require [cljs-diagrams.core.components :as d :refer [layout-attributes]]
             [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints]]
             [cljs-diagrams.core.funcreg :refer [serialize]]

@@ -7,7 +7,7 @@
            [cljs-diagrams.core.layouts :as layouts]
            [cljs-diagrams.core.eventbus :as b]
            [cljs-diagrams.core.events :as events]
-           [cljs-diagrams.impl.extensions.resolvers.default :as resolvers]
+           [cljs-diagrams.impl.std.extensions.resolvers.default :as resolvers]
            [cljs-diagrams.core.state :as state]
            [cljs-diagrams.core.entities :as e]
            [cljs-diagrams.core.edn :as edn]

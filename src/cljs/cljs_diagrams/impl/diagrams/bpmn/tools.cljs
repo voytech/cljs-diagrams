@@ -1,7 +1,6 @@
-(ns cljs-diagrams.diagrams.bpmn.tools
+(ns cljs-diagrams.impl.diagrams.bpmn.tools
   (:require [cljs-diagrams.core.tools :as t]
-            [cljs-diagrams.impl.entities :as eimpl]
-            [cljs-diagrams.diagrams.bpmn.entities :as bpmn]))
+            [cljs-diagrams.impl.diagrams.bpmn.entities :as bpmn]))
 
 (t/create-tool "Activity"
                ""

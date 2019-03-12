@@ -1,4 +1,4 @@
-(ns cljs-diagrams.impl.behaviours.definitions
+(ns cljs-diagrams.impl.std.behaviours.definitions
   (:require [cljs-diagrams.core.behaviours :as b]
             [cljs-diagrams.core.eventbus :as bus]
             [cljs-diagrams.core.options :as o]
@@ -7,10 +7,10 @@
             [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.behaviour-api :as api]
             [cljs-diagrams.core.selection :as s]
-            [cljs-diagrams.impl.behaviours.behaviour-api :as std]
-            [cljs-diagrams.impl.behaviours.manhattan :as m]
-            [cljs-diagrams.impl.components :as c]
-            [cljs-diagrams.impl.features.default :as f])
+            [cljs-diagrams.impl.std.behaviours.behaviour-api :as std]
+            [cljs-diagrams.impl.std.behaviours.manhattan :as m]
+            [cljs-diagrams.impl.std.components :as c]
+            [cljs-diagrams.impl.std.features.default :as f])
   (:require-macros [cljs-diagrams.core.macros :refer [defbehaviour]]))
 
 (defbehaviour moving-shape-entity

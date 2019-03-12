@@ -1,7 +1,9 @@
-(ns cljs-diagrams.impl.entities
+(ns cljs-diagrams.impl.diagrams.bpmn.entities
  (:require [cljs-diagrams.core.entities :as e]
-           [cljs-diagrams.core.components :as cc :refer [layout-attributes]]
-           [cljs-diagrams.impl.components :as c]
+           [cljs-diagrams.core.components :as d :refer [layout-attributes]]
+           [cljs-diagrams.impl.std.components :as c]
+           [cljs-diagrams.core.funcreg :refer [serialize]]
+           [cljs-diagrams.impl.diagrams.bpmn.components :as bpmnc]
            [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints
                                                                 position-of
                                                                 size-of]]
@@ -13,7 +15,7 @@
                                                       match-parent-size
                                                       match-parent-position
                                                       margins]]
-           [cljs-diagrams.impl.behaviours.definitions :as bd])
+           [cljs-diagrams.impl.std.behaviours.definitions :as bd])
  (:require-macros [cljs-diagrams.core.macros :refer [defentity
                                                      with-components
                                                      with-layouts
@@ -22,127 +24,127 @@
                                                      component-template
                                                      resolve-data
                                                      defcomponent-group
-                                                     with-tags]]))
+                                                     with-tags
+                                                     defp]]))
 
-(defentity basic-rect
+
+(defentity activity
   {:width 180 :height 150}
   (with-layouts (layout "main" ::w/expression))
   (with-components context
-    (component c/entity-shape {:name "body"
-                               :model {:round-x 5 :round-y 5}
+    (component c/entity-shape {
+                               :name "main"
+                               :model {:round-x 15 :round-y 15}
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
                                                                        (match-parent-position)
                                                                        (match-parent-size)
                                                                        (weighted-origin 0 0)))})
-    (component c/title {:name  "title"
-                        :model {:text "Object with header"}
-                        :layout-attributes (layout-attributes "main"
-                                                              (layout-hints
-                                                                (weighted-position 0.5 0.1)
-                                                                (weighted-origin 0.5 0)))})
-    (component c/entity-controls)
-    (component c/shape-editing)))
-
-
-(defentity rect-with-icon
-  {:width 240 :height 150}
-  (with-layouts (layout "main" ::w/expression))
-  (with-components context
-    (component c/entity-shape {:name  "body"
-                               :model {:round-x 5 :round-y 5}
-                               :layout-attributes (layout-attributes "main"
-                                                                     (layout-hints
-                                                                       (match-parent-position)
-                                                                       (match-parent-size)
-                                                                       (weighted-origin 0 0)))})
-    (component c/title {:name "title"
-                        :model {:text "Object with a header and image"}
-                        :layout-attributes (layout-attributes "main"
-                                                              (layout-hints
-                                                                (weighted-position 0.5 0.1)
-                                                                (weighted-origin 0.5 0)))})
-    (component c/image {:name  "icon-1"
-                        :model {:height 40 :width 40 :image-url "/icons/settings.svg"}
+    (component c/title {
+                        :name "title"
+                        :model {:text "Activity"}
                         :layout-attributes (layout-attributes "main"
                                                               (layout-hints
                                                                 (weighted-position 0.5 0.5)
                                                                 (weighted-origin 0.5 0.5)))})
     (component c/entity-controls)))
 
-(defentity container
-  {:width 300 :height 350}
-  (with-tags :container)
-  (with-layouts (layout "main" ::w/expression))
-  (with-components context
-    (component c/entity-shape {:name  "body"
-                               :model {:border-style :dotted :z-index :bottom :opacity "0.4"}
-                               :layout-attributes (layout-attributes "main"
-                                                                     (layout-hints
-                                                                       (match-parent-position)
-                                                                       (match-parent-size)
-                                                                       (weighted-origin 0 0)))})
-    (component c/title {:name "title"
-                        :model {:text "Put other shapes here..."}
-                        :layout-attributes (layout-attributes "main"
-                                                              (layout-hints
-                                                                (weighted-position 0 0.1)
-                                                                (weighted-origin 0 0)))})
-    (component c/entity-controls)))
+(defp event-bbox-draw []
+  (fn [component]
+    (let [width (d/get-width component)]
+      {:radius (/ width 2)
+       :height (d/get-width component)})))
 
-(defentity association
-  {:width 180 :height 150}
-  (resolve-data {:x1 0 :y1 0 :x2 230 :y2 85})
+(defentity process-start
+  {:width 40 :height 40}
   (with-layouts (layout "main" ::w/expression))
-  (components-templates
-    (component-template "connector" {:border-width 3}))
   (with-components context
-    (component c/bounding-box {:name "bbox"
+    (component c/entity-shape {
+                               :name "main"
+                               :rendering-method :draw-circle
+                               :model-customizers [(d/bbox-draw event-bbox-draw)]
+                               :model {:radius 20}
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
                                                                        (match-parent-position)
                                                                        (match-parent-size)
                                                                        (weighted-origin 0 0)))})
-    (component c/relation {:name  "connector"
-                           :attributes
-                            {:decorators
-                              {:head ["arrow" "end"]
-                               :tail ["start"]}}})
-    (component c/startpoint {:name "start" :model {:left 0 :top 0}})
-    (component c/endpoint {:name "end" :model {:visible false}})
-    (component c/arrow {:name "arrow"})
     (component c/rectangle {:name "bg"
                             :model {:background-color "white"}
                             :layout-attributes (layout-attributes "main" 1
                                                                   (layout-hints
-                                                                    (position-of "title" 4 2)
-                                                                    (size-of "title" 8 4)
+                                                                    (position-of "title" 4 0)
+                                                                    (size-of "title" 8 0)
                                                                     (weighted-origin 0 0)))})
-    (component c/title {:name "title"
-                        :model {:text "Title."}
+    (component c/title {
+                        :name "title"
+                        :model  {:text "Start"}
                         :layout-attributes (layout-attributes "main"
                                                               (layout-hints
-                                                                (weighted-position 0.5 0.5)
-                                                                (weighted-origin 0.5 0)))})))
+                                                                (weighted-position 0.5 1)
+                                                                (weighted-origin 0.5 0)))})
+    (component c/small-controls)))
 
-(defentity link
-  {:width 180 :height 150}
-  (resolve-data {:x1 0 :y1 0 :x2 230 :y2 85})
+(defentity process-end
+  {:width 40 :height 40}
   (with-layouts (layout "main" ::w/expression))
   (components-templates
-    (component-template "connector" {:border-width 2}))
+    (component-template "main" {:border-width 5}))
   (with-components context
-    (component c/bounding-box {:name "bbox"
+    (component c/entity-shape {
+                               :name "main"
+                               :rendering-method :draw-circle
+                               :model-customizers [(d/bbox-draw event-bbox-draw)]
+                               :model {:radius 20 :border-width 5}
                                :layout-attributes (layout-attributes "main"
                                                                      (layout-hints
                                                                        (match-parent-position)
                                                                        (match-parent-size)
                                                                        (weighted-origin 0 0)))})
-    (component c/relation {:name  "connector"
-                           :model {:stroke-style :dashed}
-                           :attributes
-                            {:decorators
-                              {:head ["end"]
-                               :tail ["start"]}}})
-    (component c/startpoint {:name "start" :model {:left 0 :top 0}})
-    (component c/endpoint {:name  "end" :model {:visible true}})))
+    (component c/rectangle {:name "bg"
+                            :model {:background-color "white"}
+                            :layout-attributes (layout-attributes "main" 1
+                                                                  (layout-hints
+                                                                    (position-of "title" 4 0)
+                                                                    (size-of "title" 8 0)
+                                                                    (weighted-origin 0 0)))})
+    (component c/title {
+                        :name "title"
+                        :model  {:text "End"}
+                        :layout-attributes (layout-attributes "main"
+                                                              (layout-hints
+                                                                (weighted-position 0.5 1)
+                                                                (weighted-origin 0.5 0)))})
+    (component c/small-controls)))
+
+
+(defentity gateway
+  {:width 40 :height 40}
+  (with-layouts (layout "main" ::w/expression))
+  (components-templates
+    (component-template ::c/entity-shape {:border-width 5}))
+  (with-components context
+    (component c/entity-shape {
+                               :name "main"
+                               :rendering-method :draw-poly-line
+                               :model-customizers [(d/bbox-draw bpmnc/diamond-bbox-draw)]
+                               :layout-attributes (layout-attributes "main"
+                                                                     (layout-hints
+                                                                       (match-parent-position)
+                                                                       (match-parent-size)
+                                                                       (weighted-origin 0 0)))})
+    (component c/rectangle {:name "bg"
+                            :model {:background-color "white"}
+                            :layout-attributes (layout-attributes "main" 1
+                                                                   (layout-hints
+                                                                     (position-of "title" 4 0)
+                                                                     (size-of "title" 8 0)
+                                                                     (weighted-origin 0 0)))})
+    (component c/title {
+                        :name "title"
+                        :model {:text "Gateway"}
+                        :layout-attributes (layout-attributes "main"
+                                                              (layout-hints
+                                                                (weighted-position 0.5 1)
+                                                                (weighted-origin 0.5 0)))})
+    (component c/small-controls)))

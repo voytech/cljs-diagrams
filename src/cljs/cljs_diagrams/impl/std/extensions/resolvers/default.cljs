@@ -1,12 +1,12 @@
-(ns cljs-diagrams.impl.extensions.resolvers.default
+(ns cljs-diagrams.impl.std.extensions.resolvers.default
  (:require [cljs-diagrams.core.entities :as e]
            [cljs-diagrams.core.components :as d]
-           [cljs-diagrams.impl.components :as c]
-           [cljs-diagrams.impl.behaviours.manhattan :as m]
+           [cljs-diagrams.impl.std.components :as c]
+           [cljs-diagrams.impl.std.behaviours.manhattan :as m]
            [cljs-diagrams.impl.layouts.flow :as fl]
            [cljs-diagrams.core.behaviour-api :as api]
-           [cljs-diagrams.impl.behaviours.behaviour-api :as stdapi]
-           [cljs-diagrams.impl.features.default :as f]
+           [cljs-diagrams.impl.std.behaviours.behaviour-api :as stdapi]
+           [cljs-diagrams.impl.std.features.default :as f]
            [clojure.spec.alpha :as spec]
            [clojure.string :as str]
            [cljs-diagrams.core.eventbus :as bus]

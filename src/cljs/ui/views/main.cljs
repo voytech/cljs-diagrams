@@ -1,18 +1,10 @@
 (ns ui.views.main
   (:require [reagent.core :as reagent :refer [atom]]
             [ui.components.generic.basic :as components]
-            [cljs-diagrams.core.utils.dnd :as dnd]
             [ui.components.tools :as tv]
 
-            [cljs-diagrams.impl.tools :as toolsimpl]
-            [cljs-diagrams.diagrams.bpmn.tools :as toolbpmn]
-            [cljs-diagrams.diagrams.commons.tools :as toolcommons]
-
-            [cljs-diagrams.core.rendering :as rendering]
-            [cljs-diagrams.core.selection :as s]
-            [cljs-diagrams.core.entities :as e]
-            [cljs-diagrams.impl.extensions.resolvers.default :as resolvers]
-            [ui.components.workspace :as ws :refer [Workspace]]))
+            [cljs-diagrams.impl.diagrams.commons.tools :as commontools]
+            [cljs-diagrams.impl.diagrams.bpmn.tools :as toolbpmn]))
 
 (defn Library [class app-state feedback]
   [:div {:class (:class class)}

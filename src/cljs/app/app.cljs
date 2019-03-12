@@ -3,7 +3,7 @@
             [cljs-diagrams.core.utils.dom :as dom]
             [cljs-diagrams.core.utils.dnd :as dnd]
             [cljs-diagrams.core.project :as project]
-            [cljs-diagrams.impl.behaviours.definitions :as b]
+            [cljs-diagrams.impl.std.behaviours.definitions :as b]
             [cljs-diagrams.core.eventbus :as bus]
             [cljs-diagrams.impl.renderers.svg :as svg]
             [cljs-diagrams.core.state :as state]
@@ -38,8 +38,7 @@
                        :mouse-point-click (patterns/mouse-click-event)}}
 
 
-   :behaviours [
-                b/moving-shape-entity
+   :behaviours [b/moving-shape-entity
                 b/moving-association-entity-by
                 b/moving-primary-entity-by
                 b/moving-association-endpoints

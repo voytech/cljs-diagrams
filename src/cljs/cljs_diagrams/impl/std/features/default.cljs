@@ -1,6 +1,6 @@
-(ns cljs-diagrams.impl.features.default
+(ns cljs-diagrams.impl.std.features.default
   (:require [cljs-diagrams.core.features :as f]
-            [cljs-diagrams.impl.components :as c]))
+            [cljs-diagrams.impl.std.components :as c]))
 
 (defn has-endpoints [target]
   ((f/has-by-one-component-of-types #{::c/startpoint ::c/endpoint}) target))

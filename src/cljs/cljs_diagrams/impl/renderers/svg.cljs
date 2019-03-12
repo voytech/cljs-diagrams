@@ -6,8 +6,7 @@
             [cljs-diagrams.core.state :as state]
             [cljs-diagrams.core.utils.dom :as dom]
             [cljs-diagrams.core.utils.svg :as s]
-            [cljs-diagrams.core.eventbus :as bus]
-            [cljs-diagrams.impl.components :as impld]))
+            [cljs-diagrams.core.eventbus :as bus]))
 
 (defn- simple-set [to]
   (fn [svg val mdl]

@@ -1,11 +1,11 @@
-(ns cljs-diagrams.impl.behaviours.manhattan
+(ns cljs-diagrams.impl.std.behaviours.manhattan
   (:require [cljs-diagrams.core.entities :as e]
             [cljs-diagrams.core.layouts :as layouts]
             [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.eventbus :as b]
             [cljs-diagrams.core.behaviour-api :as api]
-            [cljs-diagrams.impl.behaviours.behaviour-api :as std]
-            [cljs-diagrams.impl.components :as c]))
+            [cljs-diagrams.impl.std.behaviours.behaviour-api :as std]
+            [cljs-diagrams.impl.std.components :as c]))
 
 
 (defn- center-point [cmp]

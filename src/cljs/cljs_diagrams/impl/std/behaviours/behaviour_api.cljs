@@ -1,4 +1,4 @@
-(ns cljs-diagrams.impl.behaviours.behaviour-api
+(ns cljs-diagrams.impl.std.behaviours.behaviour-api
   (:require [cljs-diagrams.core.entities :as e]
             [cljs-diagrams.core.layouts :as layouts]
             [cljs-diagrams.core.components :as d]
@@ -6,7 +6,7 @@
             [cljs-diagrams.core.events :as ev]
             [cljs-diagrams.core.behaviours :as bhv]
             [cljs-diagrams.core.behaviour-api :as api]
-            [cljs-diagrams.impl.components :as c]))
+            [cljs-diagrams.impl.std.components :as c]))
 
 (declare position-endpoint)
 (declare position-startpoint)

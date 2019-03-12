@@ -64,22 +64,20 @@
 (defn- to-fabric-property-map [input-map]
   (apply merge (mapv (fn [e] {(keyword (or (e fabric-property-mapping) e)) (resolve-value (e input-map))}) (keys input-map))))
 
-(defn- fabric-apply [drawable source properties]
+(defn- fabric-apply [component source properties]
   (doseq [p properties]
-    (fabric-set source (or (p fabric-property-mapping) p) (resolve-value (d/getp drawable p)))))
+    (fabric-set source (or (p fabric-property-mapping) p) (resolve-value (d/getp component p)))))
 
-(defn- synchronize-dimmensions [drawable]
-  (let [source (:data (r/get-state-of drawable))]
-    (when (or (nil? (d/get-width drawable))
-              (= :draw-text (:rendering-method drawable))) (d/set-width  drawable (.-width  source)))
-    (when (or (nil? (d/get-height drawable))
-              (= :draw-text (:rendering-method drawable))) (d/set-height drawable (.-height source)))))
+(defn- synchronize-dimmensions [source component]
+  (when (or (nil? (d/get-width component))
+            (= :draw-text (:rendering-method component))) (d/set-width  component (.-width  source)))
+  (when (or (nil? (d/get-height component))
+            (= :draw-text (:rendering-method component))) (d/set-height component (.-height source))))
 
-(defn- property-change-render [drawable rendering-context]
-  (let [source  (:data (r/get-state-of drawable))
-        redraw   (get-in rendering-context [:redraw-properties (:uid drawable)])]
-      (fabric-apply drawable source redraw)
-      (synchronize-dimmensions drawable)))
+(defn- property-change-render [rendering-state component properties]
+  (let [source   (get-in rendering-state [:components (:uid component) :handle])]
+      (fabric-apply component source properties)
+      (synchronize-dimmensions source component)))
 
 (defn- fabric-create-rendering-state [rendering-state component create]
   (let [fabric-object (create)]
@@ -87,13 +85,17 @@
      (.add (:canvas rendering-state) fabric-object)
      (.moveTo (get rendering-state :canvas) fabric-object (resolve-value (d/getp component :z-index)))
      (.renderAll (get rendering-state :canvas))
-     {:data fabric-object}))
+     fabric-object))
 
 ; in drawable-state we holds an fabric.js object.
 ; in context we have serveral properties. One of them is fabric.js canvas reference.
 (defn- fabric-destroy-rendering-state [rendering-state component]
-  (let [canvas (:canvas rendering-state)]
-    (.remove canvas (:data state))))
+  (let [canvas (:canvas rendering-state)
+        source (get-in rendering-state [:components (:uid component) :handle])]
+    (.remove canvas source)))
+
+(defmethod r/is-state-created :fabric [renderer-state component]
+  (some? (get-in renderer-state [:components (:uid component) :handle])))
 
 ;;==========================================================================================================
 ;; rendering context initialization
@@ -111,7 +113,7 @@
 ;; rect rendering
 ;;==========================================================================================================
 (defmethod r/do-render [:fabric :draw-rect] [renderer-state component properties]
-  (property-change-render component properties))
+  (property-change-render renderer-state component properties))
 
 (defmethod r/create-rendering-state [:fabric :draw-rect] [renderer-state component]
   (let [data (to-fabric-property-map (d/model component))]
@@ -121,55 +123,42 @@
   (fabric-destroy-rendering-state renderer-state component))
 
 ;;==========================================================================================================
-;; startpoint rendering
+;; circle rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric :draw-circle] [drawable context]
-  (property-change-render drawable context))
+(defmethod r/do-render [:fabric :draw-circle] [renderer-state component properties]
+  (property-change-render renderer-state component properties))
 
-(defmethod r/create-rendering-state [:fabric :draw-circle] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Circle. (clj->js data))))))
+(defmethod r/create-rendering-state [:fabric :draw-circle] [renderer-state component]
+  (let [data (to-fabric-property-map (d/model component))]
+    (fabric-create-rendering-state renderer-state component (fn [] (js/fabric.Circle. (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric :draw-circle] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
+(defmethod r/destroy-rendering-state [:fabric :draw-circle] [renderer-state component]
+  (fabric-destroy-rendering-state renderer-state component))
 
 
 ;;==========================================================================================================
 ;; line rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric :draw-line] [drawable rendering-context]
-  (property-change-render drawable rendering-context))
+(defmethod r/do-render [:fabric :draw-line] [renderer-state component properties]
+  (property-change-render renderer-state component properties))
 
-(defmethod r/create-rendering-state [:fabric :draw-line] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))))
+(defmethod r/create-rendering-state [:fabric :draw-line] [renderer-state component]
+  (let [data (to-fabric-property-map (d/model component))]
+    (fabric-create-rendering-state renderer-state component (fn [] (js/fabric.Line. (clj->js [(:x1 data) (:y1 data) (:x2 data) (:y2 data)]) (clj->js data))))))
 
-
-(defmethod r/destroy-rendering-state [:fabric :draw-line] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
-
-;;==========================================================================================================
-;; triangle rendering
-;;==========================================================================================================
-(defmethod r/do-render [:fabric :draw-triangle] [drawable context]
-  (property-change-render drawable context))
-
-(defmethod r/create-rendering-state [:fabric :draw-triangle] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-   (fabric-create-rendering-state context drawable (fn [] (js/fabric.Triangle. (clj->js data))))))
-
-(defmethod r/destroy-rendering-state [:fabric :draw-triangle] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
+(defmethod r/destroy-rendering-state [:fabric :draw-line] [renderer-state component]
+  (fabric-destroy-rendering-state renderer-state component))
 
 ;;==========================================================================================================
 ;; text rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric :draw-text] [drawable context]
-  (property-change-render drawable context))
+(defmethod r/do-render [:fabric :draw-text] [renderer-state component properties]
+  (property-change-render renderer-state component properties))
 
-(defmethod r/create-rendering-state [:fabric :draw-text] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-   (fabric-create-rendering-state context drawable (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric :draw-text] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
+(defmethod r/create-rendering-state [:fabric :draw-text] [renderer-state component]
+  (let [data (to-fabric-property-map (d/model component))]
+    (fabric-create-rendering-state renderer-state  component (fn [] (js/fabric.Text. (:text data) (clj->js data))))))
+
+(defmethod r/destroy-rendering-state [:fabric :draw-text] [renderer-state component]
+  (fabric-destroy-rendering-state renderer-state component))

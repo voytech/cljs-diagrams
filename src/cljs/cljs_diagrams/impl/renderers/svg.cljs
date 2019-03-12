@@ -176,9 +176,9 @@
 (defmethod r/destroy-rendering-state [:svg :draw-svg-path] [renderer-state component]
   (dom/remove-by-id (:uid component)))
 
-  ;;==========================================================================================================
-  ;; poly-line rendering
-  ;;==========================================================================================================
+;;==========================================================================================================
+;; poly-line rendering
+;;==========================================================================================================
 (defmethod r/do-render [:svg :draw-poly-line] [renderer-state component properties]
   (update-svg-element renderer-state component properties nil))
 

@@ -81,44 +81,44 @@
       (fabric-apply drawable source redraw)
       (synchronize-dimmensions drawable)))
 
-(defn- fabric-create-rendering-state [context drawable create]
+(defn- fabric-create-rendering-state [rendering-state component create]
   (let [fabric-object (create)]
-     (make-js-property fabric-object "refId" (:uid drawable))
-     (.add (:canvas context) fabric-object)
-     (.moveTo (get context :canvas) fabric-object (resolve-value (d/getp drawable :z-index)))
-     (.renderAll (get context :canvas))
+     (make-js-property fabric-object "refId" (:uid component))
+     (.add (:canvas rendering-state) fabric-object)
+     (.moveTo (get rendering-state :canvas) fabric-object (resolve-value (d/getp component :z-index)))
+     (.renderAll (get rendering-state :canvas))
      {:data fabric-object}))
 
 ; in drawable-state we holds an fabric.js object.
 ; in context we have serveral properties. One of them is fabric.js canvas reference.
-(defn- fabric-destroy-rendering-state [context state]
-  (let [canvas (:canvas context)]
+(defn- fabric-destroy-rendering-state [rendering-state component]
+  (let [canvas (:canvas rendering-state)]
     (.remove canvas (:data state))))
 
 ;;==========================================================================================================
 ;; rendering context initialization
 ;;==========================================================================================================
-(defmethod r/initialize :fabric [dom-id width height]
-  (let [canvas (js/fabric.StaticCanvas. dom-id)]
+(defmethod r/initialize :fabric [renderer dom-id width height]
+  (let [canvas (js/fabric.StaticCanvas. (str dom-id "-canvas"))]
      (.setWidth canvas width)
      (.setHeight canvas height)
-     canvas))
+    {:canvas canvas}))
 
-(defmethod r/all-rendered :fabric [context]
+(defmethod r/all-rendered :fabric [state context]
   (.renderAll (get context :canvas)))
 
 ;;==========================================================================================================
 ;; rect rendering
 ;;==========================================================================================================
-(defmethod r/do-render [:fabric :draw-rect] [drawable context]
-  (property-change-render drawable context))
+(defmethod r/do-render [:fabric :draw-rect] [renderer-state component properties]
+  (property-change-render component properties))
 
-(defmethod r/create-rendering-state [:fabric :draw-rect] [drawable context]
-  (let [data (to-fabric-property-map (d/model drawable))]
-    (fabric-create-rendering-state context drawable (fn [] (js/fabric.Rect. (clj->js data))))))
+(defmethod r/create-rendering-state [:fabric :draw-rect] [renderer-state component]
+  (let [data (to-fabric-property-map (d/model component))]
+    (fabric-create-rendering-state renderer-state component (fn [] (js/fabric.Rect. (clj->js data))))))
 
-(defmethod r/destroy-rendering-state [:fabric :draw-rect] [drawable context]
-  (fabric-destroy-rendering-state context (r/get-state-of drawable)))
+(defmethod r/destroy-rendering-state [:fabric :draw-rect] [renderer-state component]
+  (fabric-destroy-rendering-state renderer-state component))
 
 ;;==========================================================================================================
 ;; startpoint rendering

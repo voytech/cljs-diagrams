@@ -109,7 +109,9 @@
   (when (not (nil? component))
     (let [renderer-state (state/get-renderer-state app-state)]
       (when (not (is-state-created renderer-state component))
-         (create-rendering-state renderer-state component))
+        (state/assoc-renderer-state app-state
+                                    [:components (:uid component) :handle]
+                                    (create-rendering-state renderer-state component)))
       (->> (get-redraw-properties renderer-state component)
            (do-render renderer-state component))
       (state/dissoc-renderer-state app-state [:components (:uid component) :redraw-properties]))))

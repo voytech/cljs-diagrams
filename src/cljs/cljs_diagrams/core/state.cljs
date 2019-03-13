@@ -1,9 +1,9 @@
 (ns cljs-diagrams.core.state)
 
 (defn create-app-state [id {:keys [width height renderer events] :as config}]
-  (let [app-state (atom {:dom {:id id :width width :height height}
-                         :events (:events config)
-                         :diagram {}})]
+  (let [app-state (volatile! {:dom {:id id :width width :height height}
+                              :events (:events config)
+                              :diagram {}})]
       {:get-state      (fn [root]
                           (get-in @app-state [root]))
        :get-in-state   (fn [root relative-path]
@@ -11,11 +11,11 @@
                              (get-in @app-state absolute-path)))
        :assoc-state    (fn [root relative-path new-state]
                           (let [absolute-path (concat [root] relative-path)]
-                             (swap! app-state assoc-in absolute-path new-state)))
+                             (vswap! app-state assoc-in absolute-path new-state)))
        :dissoc-state   (fn [root relative-path]
                           (let [last-entry (last relative-path)
                                 absolute-path (concat [root] (drop-last relative-path))]
-                             (swap! app-state update-in absolute-path dissoc last-entry)))}))
+                             (vswap! app-state update-in absolute-path dissoc last-entry)))}))
 
 (defn get-state [app-state root]
   ((:get-state app-state) root))

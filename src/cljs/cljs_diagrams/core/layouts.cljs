@@ -157,6 +157,4 @@
 (defn initialize [app-state]
   (b/on app-state ["layouts.do"] -999 (fn [event]
                                         (when-let [{:keys [container app-state]} (:context event)]
-                                          (do-layouts (e/entity-by-id app-state (:uid container)))
-                                          (b/fire app-state "uncommited.render")
-                                          (b/fire app-state "rendering.finish")))))
+                                          (do-layouts (e/entity-by-id app-state (:uid container)))))))

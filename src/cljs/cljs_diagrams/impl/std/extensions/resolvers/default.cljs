@@ -9,7 +9,8 @@
            [cljs-diagrams.impl.std.features.default :as f]
            [clojure.spec.alpha :as spec]
            [clojure.string :as str]
-           [cljs-diagrams.core.eventbus :as bus]
+           [cljs-diagrams.core.rendering :as rendering]
+           [cljs-diagrams.core.layouts :as l]
            [cljs-diagrams.extensions.data-resolvers :as r])
  (:require-macros [cljs-diagrams.extensions.macros :refer [defresolver]]))
 
@@ -20,7 +21,7 @@
               (spec/keys :req-un [::title])
               (fn [app-state entity data]
                 (e/assert-component c/title app-state entity "title" {:text (:title data)})
-                (bus/fire app-state "uncommited.render")))
+                (rendering/render-changes app-state)))
 
   (r/register app-state
               ::write-notes
@@ -37,8 +38,9 @@
                                                         {:name (str "note-wd-" idx)
                                                          :model {:text word :left @left :top @top}
                                                          :layout-attributes (fl/flow-layout-attributes "notes" idx 5)})]
-                      (bus/fire app-state "uncommited.render")))
-                  (bus/fire app-state "layouts.do" {:container entity}))))
+                      (rendering/render-changes app-state)))
+                  (l/do-layouts entity)
+                  (rendering/render-entity app-state entity))))
 
   (r/register app-state
               ::make-association
@@ -58,4 +60,4 @@
                                     (stdapi/toggle-controls (:entity trg) false)
                                     (m/refresh-manhattan-layout app-state entity))
                                  (fn [src])))
-                (bus/fire app-state "uncommited.render"))))
+                (rendering/render-changes app-state))))

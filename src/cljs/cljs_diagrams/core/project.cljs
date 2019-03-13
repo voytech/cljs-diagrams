@@ -46,7 +46,7 @@
     (reload-entities app-state entities)
     (refresh-components app-state)
     (autowire-behaviours app-state)
-    (b/fire app-state "diagram.render")))
+    (r/render-diagram app-state)))
 
 (defn initialize [id app-state config]
   (dom/console-log (str "Initializing cljs-diagrams within DOM node with id [ " id " ]."))

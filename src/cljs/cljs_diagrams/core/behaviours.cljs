@@ -2,6 +2,7 @@
   (:require [cljs-diagrams.core.events :as ev]
             [cljs-diagrams.core.features :as f]
             [cljs-diagrams.core.state :as state]
+            [cljs-diagrams.core.rendering :as r]
             [cljs-diagrams.core.eventbus :as bus]))
 
 (defrecord Behaviour [name
@@ -29,9 +30,7 @@
   (reduce f/_OR_ false (mapv #(% target) (:features behaviour))))
 
 (defn- render-changes [app-state event-name]
-  (bus/after-all app-state event-name (fn [ev]
-                                        (bus/fire app-state "uncommited.render")
-                                        (bus/fire app-state "rendering.finish"))))
+  (bus/after-all app-state event-name (fn [ev] (r/render-changes app-state))))
 
 (defn- attach [app-state event-name behaviour]
   (let [attached-behaviours (or (state/get-in-behaviours-state app-state [:attached event-name]) [])

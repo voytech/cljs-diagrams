@@ -2,7 +2,8 @@
   (:require [cljs-diagrams.core.eventbus :as bus]
             [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.funcreg :refer [provide]]
-            [cljs-diagrams.core.state :as state])
+            [cljs-diagrams.core.state :as state]
+            [cljs-diagrams.core.rendering :as r])
   (:require-macros [cljs-diagrams.core.macros :refer [defp]]))
 
 (spec/def ::component (spec/keys :req-un [::uid
@@ -24,6 +25,7 @@
 
 (defn- changed
   ([app-state component properties]
+   (r/mark-for-redraw app-state component properties)
    (bus/fire app-state COMPONENT_CHANGED {:properties properties
                                           :component component})))
 
@@ -160,6 +162,7 @@
 
 (defn remove-component [app-state component]
   (state/dissoc-diagram-state app-state [:components (:uid component)])
+  (r/remove-component app-state component)
   (bus/fire app-state "component.removed" {:component component}))
 
 (defn is-component [app-state uid]
@@ -199,6 +202,7 @@
     (ensure-z-index app-state component)
     (bus/fire app-state "component.created" {:component component})
     (state/assoc-diagram-state app-state [:components (:uid component)] component)
+    (r/mark-all-for-redraw app-state component)
     (bus/fire app-state "component.added" {:component component})
     (assoc-in container [:components (:name component)] component))))
 

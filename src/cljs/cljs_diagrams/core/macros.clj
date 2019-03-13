@@ -84,8 +84,8 @@
                                  (if ~has-layouts (~layouts app-state# e#) e#)
                                  context#)
              (let [result# (cljs-diagrams.core.entities/entity-by-id app-state# (:uid e#))]
-               (cljs-diagrams.core.eventbus/fire app-state# "layouts.do" {:container result#})
-               (cljs-diagrams.core.eventbus/fire app-state# "entity.render" {:entity result#})
+               (cljs-diagrams.core.layouts/do-layouts result#)
+               (cljs-diagrams.core.rendering/render-entity app-state# result#)
                (when ~has-data
                  (cljs-diagrams.extensions.data-resolvers/apply-data app-state# result# (merge ~resolve-data context#)))
                result#)))))))

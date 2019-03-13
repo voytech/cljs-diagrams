@@ -29,25 +29,25 @@
 
 (defmethod destroy-rendering-state :default [renderer-state component])
 
-
 (defn remove-component [app-state component]
   (let [renderer-state (state/get-renderer-state app-state)]
     (destroy-rendering-state renderer-state component)
     (state/dissoc-renderer-state app-state [:components (:uid component)])))
 
+(defn get-redraw-properties [renderer-state component]
+  (get-in renderer-state [:changes (:uid component) :properties]))
+
 (defn mark-for-redraw [app-state component properties]
   (let [new-properties (concat
-                          (or (state/get-in-renderer-state app-state [:components (:uid component) :redraw-properties])
+                          (or (-> (state/get-renderer-state app-state)
+                                  (get-redraw-properties component))
                               #{})
                           properties)]
-    (state/assoc-renderer-state app-state [:components (:uid component)] {:redraw-properties new-properties :ref component})
+    (state/assoc-renderer-state app-state [:changes (:uid component)] {:properties new-properties :ref component})
     new-properties))
 
 (defn mark-all-for-redraw [app-state component]
   (mark-for-redraw app-state component (-> component :model deref keys)))
-
-(defn get-redraw-properties [renderer-state component]
-  (get-in renderer-state [:components (:uid component) :redraw-properties]))
 
 (defn render-entity [app-state entity force-all]
   (doseq [component (-> entity :components vals)]
@@ -69,11 +69,11 @@
                                     (create-rendering-state renderer-state component)))
       (->> (get-redraw-properties renderer-state component)
            (do-render renderer-state component))
-      (state/dissoc-renderer-state app-state [:components (:uid component) :redraw-properties]))))
+      (state/dissoc-renderer-state app-state [:changes (:uid component)]))))
 
 (defn render-changes [app-state]
   (let [components (-> app-state
-                       (state/get-in-renderer-state [:components])
+                       (state/get-in-renderer-state [:changes])
                        vals)]
     (doseq [component components]
       (render app-state (:ref component)))))

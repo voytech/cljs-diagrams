@@ -21,7 +21,7 @@ Key functionalities:
 - Canvas renderer engine (using fabric.js) (to refactor)
 - Pluggable architecture via event bus
 - Simple, extensible shape layouting abstraction for constraining entity look and feel.
-- Higher level, application data resolvers.  
+- Higher level, application data resolvers - for binding models into view.  
 
 ## Dependencies
 

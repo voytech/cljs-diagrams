@@ -1,6 +1,6 @@
 (ns cljs-diagrams.core.nodes
   (:require [cljs-diagrams.core.eventbus :as bus]
-            [cljs-diagrams.core.components :as d]
+            [cljs-diagrams.core.shapes :as d]
             [cljs-diagrams.core.state :as state]
             [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.utils.general :as utils :refer [make-js-property]]))

@@ -1,226 +1,226 @@
-(ns cljs-diagrams.core.entities
+(ns cljs-diagrams.core.nodes
   (:require [cljs-diagrams.core.eventbus :as bus]
             [cljs-diagrams.core.components :as d]
             [cljs-diagrams.core.state :as state]
             [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.utils.general :as utils :refer [make-js-property]]))
 
-(spec/def ::entity (spec/keys :req-un [::uid
-                                       ::bbox
-                                       ::type
-                                       ::tags
-                                       ::components
-                                       ::relationships
-                                       ::layouts
-                                       ::components-properties]))
+(spec/def ::node (spec/keys :req-un [::uid
+                                     ::bbox
+                                     ::type
+                                     ::tags
+                                     ::shapes
+                                     ::relationships
+                                     ::layouts
+                                     ::components-properties]))
 
-(spec/def ::create-entity (spec/keys :req-un [::bbox
-                                              ::type
-                                              ::tags
-                                              ::components-properties]))
+(spec/def ::create-node (spec/keys :req-un [::bbox
+                                            ::type
+                                            ::tags
+                                            ::components-properties]))
 
-(declare get-entity-component)
+(declare get-node-shape)
 
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defn components-of [holder]
+(defn shapes-of [holder]
  (vals (:components holder)))
 
-(defn entity-by-id [app-state id]
- (state/get-in-diagram-state app-state [:entities id]))
+(defn node-by-id [app-state id]
+ (state/get-in-diagram-state app-state [:nodes id]))
 
-(defn entity-by-type [type])
+(defn node-by-type [type])
 
-(defn is-entity [target]
-  (spec/valid? ::entity target))
+(defn is-node [target]
+  (spec/valid? ::node target))
 
 ;;Utility functions for getting expected data on type non-deterministic argument
 (defn- id [input fetch]
   (cond
-    (is-entity input) (fetch input)
+    (is-node input) (fetch input)
     (string? input) input))
 
 (defn- record [input fetch]
   (cond
-    (is-entity input) input
+    (is-node input) input
     (string? input) (fetch input)))
 
-(defn- entity-id [input]
+(defn- node-id [input]
   (id input :uid))
 
-(defn- entity-record [app-state input]
+(defn- node-record [app-state input]
   (record input #(entity-by-id app-state %)))
 
-(defn volatile-entity [app-state entity]
-  (->> entity
-       entity-id
-       (entity-record app-state)))
+(defn volatile-node [app-state node]
+  (->> node
+       node-id
+       (node-record app-state)))
 
-(defn- component-id [input]
+(defn- shape-id [input]
   (id input :name))
 
-(defn- component-record [app-state input entity]
-  (let [entities (state/get-in-diagram-state app-state [:entities])]
-    (record input #(get-in entities [(entity-id entity) :components %]))))
+(defn- shape-record [app-state input node]
+  (let [nodes (state/get-in-diagram-state app-state [:nodes])]
+    (record input #(get-in nodes [(node-id node) :shapes %]))))
 
 (defn lookup [app-state component]
   (let [uid (:parent-ref component)]
-    (entity-by-id app-state uid)))
+    (node-by-id app-state uid)))
 
-(defn create-entity
+(defn create-node
   "Creates editable entity. Entity is a first class functional element used within relational-designer.
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
   ([app-state type tags bbox component-properties]
    (let [uid (str (random-uuid))
-         entity {:uid uid
+         node   {:uid uid
                  :bbox bbox
                  :type type
                  :tags tags
-                 :components {}
+                 :shapes {}
                  :relationships []
                  :layouts {}
                  :components-properties component-properties}]
-     (state/assoc-diagram-state app-state [:entities uid] entity)
-     (bus/fire app-state "entity.added" {:entity entity})
-     entity))
+     (state/assoc-diagram-state app-state [:nodes uid] node)
+     (bus/fire app-state "node.added" {:node node})
+     node))
   ([app-state type bbox]
-   (create-entity app-state type [] bbox {})))
+   (create-node app-state type [] bbox {})))
 
-(defn remove-entity [app-state entity]
-  (let [entity (entity-by-id app-state (:uid entity))]
+(defn remove-node [app-state node]
+  (let [node (node-by-id app-state (:uid node))]
     ;remove-relations
-    (remove-entity-components app-state entity some?)
-    (state/dissoc-diagram-state app-state [:entities (:uid entity)])))
+    (remove-node-shapes app-state node some?)
+    (state/dissoc-diagram-state app-state [:nodes (:uid node)])))
 
-(defn set-bbox [app-state entity bbox]
-  (state/assoc-diagram-state app-state [:entities (:uid entity) :bbox] bbox)
-  (let [updated (entity-by-id app-state (:uid entity))]
-    (bus/fire app-state "entity.bbox.set" {:entity updated})
+(defn set-bbox [app-state node bbox]
+  (state/assoc-diagram-state app-state [:nodes (:uid node) :bbox] bbox)
+  (let [updated (node-by-id app-state (:uid node))]
+    (bus/fire app-state "node.bbox.set" {:node updated})
     updated))
 
-(defn add-entity-component [app-state entity args-map]
-   (let [entity (d/new-component app-state entity args-map)]
-     (state/assoc-diagram-state app-state [:entities (:uid entity)] entity)
-     (let [updated (entity-by-id app-state (:uid entity))]
-       (bus/fire app-state "entity.component.added" {:entity updated})
+(defn add-node-shape [app-state node args-map]
+   (let [node (d/new-shape app-state node args-map)]
+     (state/assoc-diagram-state app-state [:nodes (:uid node)] node)
+     (let [updated (node-by-id app-state (:uid node))]
+       (bus/fire app-state "node.shape.added" {:node updated})
        updated)))
 
-(defn remove-entity-component [app-state entity component-name]
-  (let [component (get-entity-component entity component-name)]
-    (state/dissoc-diagram-state app-state [:entities (:uid entity) :components component-name])
-    (d/remove-component app-state component)))
+(defn remove-node-shape [app-state node shape-name]
+  (let [shape (get-node-shape node shape-name)]
+    (state/dissoc-diagram-state app-state [:nodes (:uid node) :shapes shape-name])
+    (d/remove-shape app-state shape)))
 
-(defn remove-entity-components [app-state entity pred]
-  (let [all (components-of (entity-by-id app-state (:uid entity)))
+(defn remove-node-shapes [app-state node pred]
+  (let [all (shapes-of (node-by-id app-state (:uid node)))
         filtered-out (filterv pred all)]
     (doseq [rem filtered-out]
-      (remove-entity-component app-state entity (:name rem)))))
+      (remove-node-shape app-state node (:name rem)))))
 
-(defn update-component-attribute [app-state entity name attribute value]
- (state/assoc-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute] value))
+(defn update-shape-attribute [app-state node name attribute value]
+ (state/assoc-diagram-state app-state [:nodes (:uid node) :shapes name :attributes attribute] value))
 
-(defn remove-component-attribute [app-state entity name attribute]
- (state/dissoc-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute]))
+(defn remove-shape-attribute [app-state node name attribute]
+ (state/dissoc-diagram-state app-state [:nodes (:uid node) :shapes name :attributes attribute]))
 
-(defn component-attribute [app-state entity name attribute]
-  (state/get-in-diagram-state app-state [:entities (:uid entity) :components name :attributes attribute]))
+(defn shape-attribute [app-state node name attribute]
+  (state/get-in-diagram-state app-state [:nodes (:uid node) :shapes name :attributes attribute]))
 
-(defn preset-component-properties [entity name]
-  (get-in entity [:components-properties name]))
+(defn preset-shapes-properties [node name]
+  (get-in node [:shapes-properties name]))
 
-(defn get-entity-component
- ([entity name-or-type]
+(defn get-node-shape
+ ([node name-or-type]
   (if (keyword? name-or-type)
-   (filter #(= name-or-type (:type %)) (components-of entity))
-   (get-in entity [:components name-or-type])))
- ([app-state entity name-or-type]
-  (get-entity-component (entity-by-id app-state (:uid entity)) name-or-type)))
+   (filter #(= name-or-type (:type %)) (shapes-of node))
+   (get-in node [:shapes name-or-type])))
+ ([app-state node name-or-type]
+  (get-node-shape (node-by-id app-state (:uid node)) name-or-type)))
 
-(defn assert-component
- ([func app-state entity name data]
-  (let [entity (entity-by-id app-state (:uid entity))
-        component (get-entity-component entity name)]
-    (if (nil? component)
-      (func app-state entity {:name name :model data})
-      (d/set-data component data))
-    (get-entity-component app-state entity name)))
- ([func app-state entity args-map]
-  (let [entity (entity-by-id app-state (:uid entity))
-        component (get-entity-component entity (:name args-map))]
-    (if (nil? component)
-      (func app-state entity args-map)
-      (d/set-data component (:model args-map)))
-    (get-entity-component app-state entity (:name args-map)))))
+(defn assert-shape
+ ([func app-state node name data]
+  (let [node (node-by-id app-state (:uid node))
+        shape (get-node-shape node name)]
+    (if (nil? shape)
+      (func app-state node {:name name :model data})
+      (d/set-data shape data))
+    (get-node-shape app-state node name)))
+ ([func app-state node args-map]
+  (let [node (node-by-id app-state (:uid node))
+        shape (get-node-shape node (:name args-map))]
+    (if (nil? shape)
+      (func app-state node args-map)
+      (d/set-data shape (:model args-map)))
+    (get-node-shape app-state node (:name args-map)))))
 
 (defn add-layout
-  ([app-state entity layout]
-   (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
-   (let [updated (entity-by-id app-state (:uid entity))]
-     (bus/fire app-state "entity.layout.added" {:entity updated})
+  ([app-state node layout]
+   (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
+   (let [updated (node-by-id app-state (:uid node))]
+     (bus/fire app-state "node.layout.added" {:node updated})
      updated))
-  ([app-state entity name layout-func position size margins]
+  ([app-state node name layout-func position size margins]
    (let [layout (l/layout name layout-func position size margins)]
-     (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts (:name layout)] layout)
-     (let [updated (entity-by-id app-state (:uid entity))]
-       (bus/fire app-state "entity.layout.added" {:entity updated})
+     (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
+     (let [updated (node-by-id app-state (:uid node))]
+       (bus/fire app-state "node.layout.added" {:node updated})
        updated)))
-  ([app-state entity name layout-func position margins]
-   (add-layout app-state entity name layout-func position (l/match-parent-size) margins))
-  ([app-state entity name layout-func position]
-   (add-layout app-state entity name layout-func position (l/match-parent-size) nil))
-  ([app-state entity name layout-func]
-   (add-layout app-state entity name layout-func (l/match-parent-position) (l/match-parent-size) margins)))
+  ([app-state node name layout-func position margins]
+   (add-layout app-state node name layout-func position (l/match-parent-size) margins))
+  ([app-state node name layout-func position]
+   (add-layout app-state node name layout-func position (l/match-parent-size) nil))
+  ([app-state node name layout-func]
+   (add-layout app-state node name layout-func (l/match-parent-position) (l/match-parent-size) margins)))
 
-(defn remove-layout [app-state entity layout-name]
-  (state/dissoc-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))
+(defn remove-layout [app-state node layout-name]
+  (state/dissoc-diagram-state app-state [:nodes (:uid node) :layouts layout-name]))
 
-(defn get-layout [app-state entity layout-name]
-  (state/get-in-diagram-state app-state [:entities (:uid entity) :layouts layout-name]))
+(defn get-layout [app-state node layout-name]
+  (state/get-in-diagram-state app-state [:nodes (:uid node) :layouts layout-name]))
 
-(defn assert-layout [app-state entity name layout-func position size margins]
-  (let [layout (get-layout app-state entity name)]
+(defn assert-layout [app-state node name layout-func position size margins]
+  (let [layout (get-layout app-state node name)]
     (if (nil? layout)
-      (add-layout app-state entity name layout-func position size margins)
+      (add-layout app-state node name layout-func position size margins)
       (let [modified (-> layout
                          (assoc :position position)
                          (assoc :size size)
                          (assoc :margins margins)
                          (assoc :layout-func layout-func))]
-        (state/assoc-diagram-state app-state [:entities (:uid entity) :layouts name] modified)))))
+        (state/assoc-diagram-state app-state [:nodes (:uid entity) :layouts name] modified)))))
 
-(defn- is-relation-present [app-state entity related-id assoc-type]
-  (->> (entity-by-id app-state (:uid entity))
+(defn- is-relation-present [app-state node related-id assoc-type]
+  (->> (entity-by-id app-state (:uid node))
        :relationships
-       (filterv (fn [rel] (and (= related-id (:entity-id rel)) (= assoc-type (:relation-type rel)))))
+       (filterv (fn [rel] (and (= related-id (:node-id rel)) (= assoc-type (:relation-type rel)))))
        (count)
        (< 0)))
 
-(defn connect-entities [app-state src trg association-type]
+(defn connect-nods [app-state src trg association-type]
   (when (not (is-relation-present app-state src (:uid trg) association-type))
-    (let [src-rel (conj (:relationships src) {:relation-type association-type :entity-id (:uid trg) :owner (:uid src)})
-          trg-rel (conj (:relationships trg) {:relation-type association-type :entity-id (:uid src) :owner (:uid src)})]
-      (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
-      (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel))))
+    (let [src-rel (conj (:relationships src) {:relation-type association-type :node-id (:uid trg) :owner (:uid src)})
+          trg-rel (conj (:relationships trg) {:relation-type association-type :node-id (:uid src) :owner (:uid src)})]
+      (state/assoc-diagram-state app-state [:nodes (:uid src) :relationships] src-rel)
+      (state/assoc-diagram-state app-state [:nodes (:uid trg) :relationships] trg-rel))))
 
-(defn get-related-entities [app-state entity association-type]
-  (let [_entity (volatile-entity app-state entity)]
-    (->> (:relationships _entity)
+(defn get-related-nodes [app-state node association-type]
+  (let [node (volatile-node app-state node)]
+    (->> (:relationships node)
          (filter  #(= (:relation-type %) association-type))
-         (mapv #(entity-by-id app-state (:entity-id %))))))
+         (mapv #(node-by-id app-state (:node-id %))))))
 
-(defn disconnect-entities
+(defn disconnect-nodes
   ([app-state src trg]
-   (let [src-rel (filter #(not= (:uid trg) (:entity-id %)) (:relationships src))
-         trg-rel (filter #(not= (:uid src) (:entity-id %)) (:relationships trg))]
-     (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
-     (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel)))
+   (let [src-rel (filter #(not= (:uid trg) (:node-id %)) (:relationships src))
+         trg-rel (filter #(not= (:uid src) (:node-id %)) (:relationships trg))]
+     (state/assoc-diagram-state app-state [:nodes (:uid src) :relationships] src-rel)
+     (state/assoc-diagram-state app-state [:nodes (:uid trg) :relationships] trg-rel)))
   ([app-state src trg association-type]
    (let [src-rel (filter #(and (not= (:relation-type %) association-type)
-                               (not= (:uid trg) (:entity-id %))) (:relationships src))
+                               (not= (:uid trg) (:node-id %))) (:relationships src))
          trg-rel (filter #(and (not= (:relation-type %) association-type)
-                               (not= (:uid src) (:entity-id %))) (:relationships trg))]
-     (state/assoc-diagram-state app-state [:entities (:uid src) :relationships] src-rel)
-     (state/assoc-diagram-state app-state [:entities (:uid trg) :relationships] trg-rel))))
+                               (not= (:uid src) (:node-id %))) (:relationships trg))]
+     (state/assoc-diagram-state app-state [:nodes (:uid src) :relationships] src-rel)
+     (state/assoc-diagram-state app-state [:nodes (:uid trg) :relationships] trg-rel))))

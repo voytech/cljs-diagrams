@@ -1,7 +1,7 @@
 (ns cljs-diagrams.impl.layouts.flow
   (:require [cljs-diagrams.core.layouts :as l]
             [clojure.spec.alpha :as spec]
-            [cljs-diagrams.core.components :as c]))
+            [cljs-diagrams.core.shapes :as c]))
 
 (spec/def ::hints (spec/keys :req-un [::padding]))
 
@@ -45,17 +45,17 @@
 (defn absolute-left [context]
   (+ (layout-left-edge context) (-> context :coords :left)))
 
-(defn move [component context]
+(defn move [shapes context]
   (let [left (absolute-left context)
         top  (absolute-top context)]
-    (c/set-data component {:left left :top top})
+    (c/set-data shapes {:left left :top top})
     context))
 
-(defn exceeds-container-width? [context component]
-  (> (+ (absolute-left context) (c/get-width component)) (layout-right-edge context)))
+(defn exceeds-container-width? [context shapes]
+  (> (+ (absolute-left context) (c/get-width shapes)) (layout-right-edge context)))
 
-(defn exceeds-container-height? [context component]
-  (> (+ (absolute-top context) (c/get-height component)) (layout-bottom-edge context)))
+(defn exceeds-container-height? [context shapes]
+  (> (+ (absolute-top context) (c/get-height shapes)) (layout-bottom-edge context)))
 
 (defn- recalc-line-height [context cbbox]
   (let [coords (:coords context)]
@@ -64,24 +64,24 @@
            (:height coords))
          (assoc-in context [:coords :height]))))
 
-(defn- is-new-row? [context component]
-  (and (exceeds-container-width? context component)
+(defn- is-new-row? [context shapes]
+  (and (exceeds-container-width? context shapes)
        (> (-> context :coords :left) 0)))
 
-(defmethod l/create-context ::flow [entity layout]
-  {:orig-pos  (l/absolute-position-of-layout entity layout)
-   :orig-size (l/absolute-size-of-layout entity layout)
+(defmethod l/create-context ::flow [node layout]
+  {:orig-pos  (l/absolute-position-of-layout node layout)
+   :orig-size (l/absolute-size-of-layout node layout)
    :coords {:top 0
             :left 0
             :height 0}})
 
-(defmethod l/layout-function ::flow [entity component context]
-  (let [cbbox (c/get-bbox component)
-        padding (-> component :layout-attributes :layout-hints :padding)
+(defmethod l/layout-function ::flow [node shape context]
+  (let [cbbox (c/get-bbox shape)
+        padding (-> shape :layout-attributes :layout-hints :padding)
         context  (recalc-line-height context cbbox)
-        new-row? (is-new-row? context component)
+        new-row? (is-new-row? context shape)
         context  (if new-row? (next-row context) context)]
-    (-> (move component context)
+    (-> (move shape context)
         (next-column (+ padding (:width cbbox))))))
 
 (defn flow-layout-attributes [name idx padding]

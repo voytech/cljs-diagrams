@@ -1,9 +1,9 @@
 (ns cljs-diagrams.impl.layouts.expression
-  (:require [cljs-diagrams.core.components :as d]
+  (:require [cljs-diagrams.core.shapes :as d]
             [cljs-diagrams.core.eventbus :as b]
             [clojure.spec.alpha :as spec]
             [cljs-diagrams.core.funcreg :as fr :refer [provide]]
-            [cljs-diagrams.core.entities :as e]
+            [cljs-diagrams.core.nodes :as e]
             [cljs-diagrams.core.layouts :as l])
   (:require-macros [cljs-diagrams.core.macros :refer [defp]]))
 
@@ -21,38 +21,38 @@
   (l/position  {:type :exp :value left-exp}
                {:type :exp :value top-exp}))
 
-(defp width-of [component-name margin]
- (fn [entity layout]
-   (let [component (e/get-entity-component entity component-name)]
-     (+ (d/get-width component) (or margin 0)))))
+(defp width-of [shape-name margin]
+ (fn [node layout]
+   (let [shape (e/get-node-shape node shape-name)]
+     (+ (d/get-width shape) (or margin 0)))))
 
-(defp height-of [component-name margin]
- (fn [entity layout]
-   (let [component (e/get-entity-component entity component-name)]
-     (+ (d/get-height component) (or margin 0)))))
+(defp height-of [shape-name margin]
+ (fn [node layout]
+   (let [shape (e/get-node-shape node shape-name)]
+     (+ (d/get-height shape) (or margin 0)))))
 
-(defp left-of [component-name margin]
- (fn [entity layout]
-   (let [component (e/get-entity-component entity component-name)]
-     (- (d/get-left component) (or margin 0)))))
+(defp left-of [shape-name margin]
+ (fn [node layout]
+   (let [shape (e/get-node-shape node shape-name)]
+     (- (d/get-left shape) (or margin 0)))))
 
-(defp top-of [component-name margin]
- (fn [entity layout]
-   (let [component (e/get-entity-component entity component-name)]
-     (- (d/get-top component) (or margin 0)))))
+(defp top-of [shape-name margin]
+ (fn [node layout]
+   (let [shape (e/get-node-shape node shape-name)]
+     (- (d/get-top shape) (or margin 0)))))
 
 (defn size-of
-  ([component-name margin-x margin-y]
-   (size-expression (width-of component-name margin-x)
-                    (height-of component-name margin-y)))
-  ([component-name] (size-of component-name 0 0)))
+  ([shape-name margin-x margin-y]
+   (size-expression (width-of shape-name margin-x)
+                    (height-of shape-name margin-y)))
+  ([shape-name] (size-of shape-name 0 0)))
 
 (defn position-of
-  ([component-name margin-x margin-y]
-   (position-expression (left-of component-name margin-x)
-                        (top-of component-name margin-y)))
-  ([component-name]
-   (position-of component-name 0 0)))
+  ([shape-name margin-x margin-y]
+   (position-expression (left-of shape-name margin-x)
+                        (top-of shape-name margin-y)))
+  ([shape-name]
+   (position-of shape-name 0 0)))
 
 (defn layout-hints
   ([position size origin]
@@ -62,36 +62,36 @@
   ([position]
    (layout-hints position nil (l/weighted-origin 0 0))))
 
-(defn obtain-component-bbox [entity component]
-  (let [bbox (:bbox entity)
-        hints (-> component :layout-attributes :layout-hints)
-        layout-ref (-> component :layout-attributes :layout-ref)
+(defn obtain-shape-bbox [node shape]
+  (let [bbox (:bbox node)
+        hints (-> shape :layout-attributes :layout-hints)
+        layout-ref (-> shape :layout-attributes :layout-ref)
         {:keys [position size origin]} hints
         {:keys [left top]} position
         {:keys [width height]} size
         {:keys [orig-x orig-y]} origin]
-    (if-let [layout (get-in entity [:layouts layout-ref])]
-      (let [layout-pos  (l/absolute-position-of-layout entity layout)
-            layout-size (l/absolute-size-of-layout entity layout)
+    (if-let [layout (get-in node [:layouts layout-ref])]
+      (let [layout-pos  (l/absolute-position-of-layout node layout)
+            layout-size (l/absolute-size-of-layout node layout)
             effective-width (cond
                                (= :wei (-> width :type)) (* (:width layout-size) (:value width))
                                (= :abs (-> width :type)) (:value width)
-                               (= :exp (-> width :type)) ((provide (:value width)) entity layout)
-                               :else (d/get-width component))
+                               (= :exp (-> width :type)) ((provide (:value width)) node layout)
+                               :else (d/get-width shape))
             effective-height (cond
                                 (= :wei (-> height :type)) (* (:height layout-size) (:value height))
                                 (= :abs (-> height :type)) (:value height)
-                                (= :exp (-> height :type)) ((provide (:value height)) entity layout)
-                                :else (d/get-height component))
+                                (= :exp (-> height :type)) ((provide (:value height)) node layout)
+                                :else (d/get-height shape))
             origin-offset-x (cond
                                (= :wei (-> orig-x :type)) (* effective-width (:value orig-x))
                                (= :abs (-> orig-x :type)) (:value orig-x)
-                               (= :exp (-> orig-x :type)) ((provide (:value orig-x)) entity layout)
+                               (= :exp (-> orig-x :type)) ((provide (:value orig-x)) node layout)
                                :else 0)
             origin-offset-y (cond
                                (= :wei (-> orig-y :type)) (* effective-height (:value orig-y))
                                (= :abs (-> orig-y :type)) (:value orig-y)
-                               (= :exp (-> orig-y :type)) ((provide (:value orig-y)) entity layout)
+                               (= :exp (-> orig-y :type)) ((provide (:value orig-y)) node layout)
                                :else 0)]
           {:width effective-width
            :height effective-height
@@ -99,18 +99,18 @@
                         (= :wei (-> left :type)) (+ (:left layout-pos) (* (:width layout-size) (:value left)))
                         (= :rel (-> left :type)) (+ (:left layout-pos ) (:value left))
                         (= :abs (-> left :type)) (:value left)
-                        (= :exp (-> left :type)) ((provide (:value left)) entity layout bounds)
-                        :else (d/get-left component)) origin-offset-x)
+                        (= :exp (-> left :type)) ((provide (:value left)) node layout bounds)
+                        :else (d/get-left shape)) origin-offset-x)
            :top  (- (cond
                         (= :wei (-> top :type)) (+ (:top layout-pos) (* (:height layout-size) (:value top)))
                         (= :rel (-> top :type)) (+ (:top layout-pos ) (:value top))
                         (= :abs (-> top :type)) (:value top)
-                        (= :exp (-> top :type)) ((provide (:value top)) entity layout bounds)
-                        :else (d/get-left component)) origin-offset-y)}))))
+                        (= :exp (-> top :type)) ((provide (:value top)) node layout bounds)
+                        :else (d/get-left shape)) origin-offset-y)}))))
 
-(defmethod l/create-context ::expression [entity layout] {})
+(defmethod l/create-context ::expression [node layout] {})
 
-(defmethod l/layout-function ::expression [entity component context]
-  (when-let [bbox (obtain-component-bbox entity component)]
-    (d/set-data component bbox))
+(defmethod l/layout-function ::expression [node shape context]
+  (when-let [bbox (obtain-shape-bbox node shape)]
+    (d/set-data shape bbox))
   context)

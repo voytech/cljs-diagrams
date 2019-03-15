@@ -1,7 +1,7 @@
 (ns cljs-diagrams.core.events
   (:require [cljs-diagrams.core.eventbus :as b]
-            [cljs-diagrams.core.entities :as e]
-            [cljs-diagrams.core.components :as d]
+            [cljs-diagrams.core.nodes :as e]
+            [cljs-diagrams.core.shapes :as d]
             [cljs-diagrams.core.state :as state]
             [cljs.core.async :as async :refer [>! <! put! chan alts!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -82,25 +82,25 @@
 (defn- ns-qualified-element-name [type]
   (str (namespace type) "." (name type)))
 
-(defn event-name [entity-type component-type event-type]
+(defn event-name [node-type shape-type event-type]
   (let [event-descriptor (clojure.string/join "" (cond-> []
-                                                   (not (nil? entity-type))    (conj "e")
-                                                   (not (nil? component-type)) (conj "c")))]
+                                                   (not (nil? node-type))  (conj "e")
+                                                   (not (nil? shape-type)) (conj "c")))]
     (clojure.string/join ":" (cond-> [event-descriptor]
-                               (not (nil? entity-type))    (conj (ns-qualified-element-name entity-type))
-                               (not (nil? component-type)) (conj (ns-qualified-element-name component-type))
-                               (not (nil? event-type))     (conj (name event-type))))))
+                               (not (nil? node-type))  (conj (ns-qualified-element-name node-type))
+                               (not (nil? shape-type)) (conj (ns-qualified-element-name shape-type))
+                               (not (nil? event-type)) (conj (name event-type))))))
 
-(defn- resolve-targets [components x y]
-  (->> components
+(defn- resolve-targets [shapes x y]
+  (->> shapes
        vals
        (filter #(d/contains-point? % x y))
        (sort-by #(d/resolve-z-index (d/getp % :z-index)) >)))
 
-(defn enrich [event component]
-  (when (d/is-component (-> event :app-state) (:uid component))
-    (let [entity (e/lookup (-> event :app-state) component)]
-      {:entity entity :component component})))
+(defn enrich [event shape]
+  (when (d/is-shape (-> event :app-state) (:uid shape))
+    (let [node (e/lookup (-> event :app-state) shape)]
+      {:node node :shape shape})))
 
 (defn- normalise-event [state app-state e obj]
   (let [rect (.getBoundingClientRect obj)
@@ -120,8 +120,8 @@
 (defn trigger-bus-event
   ([e]
    (let [_e (assoc e :type (convert-to-application-event (:app-state e) (:type e)))
-         event-name (event-name (-> _e :entity :type)
-                                (-> _e :component :type)
+         event-name (event-name (-> _e :node :type)
+                                (-> _e :shape :type)
                                 (-> _e :type))]
      (b/fire (:app-state e) event-name _e)))
   ([e overrides]
@@ -170,9 +170,9 @@
   (let [output (chan)]
     (go (loop []
           (let [event (<! source-chan)
-                components (state/get-in-diagram-state (:app-state event) [:components])]
+                shapes (state/get-in-diagram-state (:app-state event) [:shapes])]
             (put! output (->> (enrich event (or (:component @state)
-                                                (first (resolve-targets components (:left event) (:top event)))))
+                                                (first (resolve-targets shapes (:left event) (:top event)))))
                               (merge event)))
             (recur))))
     output))

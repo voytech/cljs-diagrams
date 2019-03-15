@@ -1,7 +1,7 @@
 (ns cljs-diagrams.core.layouts
-  (:require [cljs-diagrams.core.components :as d]
+  (:require [cljs-diagrams.core.shapes :as d]
             [clojure.spec.alpha :as spec]
-            [cljs-diagrams.core.entities :as e]
+            [cljs-diagrams.core.nodes :as e]
             [cljs-diagrams.core.eventbus :as b]))
 
 (spec/def ::coord-value (spec/keys :req-un [::value
@@ -100,8 +100,8 @@
                       (:margin-bottom margins)
                       (:margin-right margins))))))
 
-(defn absolute-position-of-layout [entity layout]
-  (let [bbox (:bbox entity)]
+(defn absolute-position-of-layout [node layout]
+  (let [bbox (:bbox node)]
     (let [pos (:position layout)
           left (-> pos :left :value)
           top  (-> pos :top :value)]
@@ -114,8 +114,8 @@
                 (= :rel (-> pos :top :type)) (+ (:top bbox) top)
                 :else top)})))
 
-(defn absolute-size-of-layout [entity layout]
-  (let [bbox (:bbox entity)]
+(defn absolute-size-of-layout [node layout]
+  (let [bbox (:bbox node)]
     (let [size (:size layout)
           width (-> size :width :value)
           height (-> size :height :value)]
@@ -126,35 +126,35 @@
                  (= :wei (-> size :height :type)) (* (:height bbox) height)
                  :else height)})))
 
-(defn move-entity-to [app-state entity new-pos]
-  (let [old-bbox (:bbox entity)
+(defn move-node-to [app-state node new-pos]
+  (let [old-bbox (:bbox node)
         new-bbox (merge old-bbox new-pos)]
-     (do-layouts entity)))
+     (do-layouts node)))
 
-(defn move-entity-by [app-state entity offset])
+(defn move-node-by [app-state node offset])
 
 (defmulti create-context (fn [entity layout] (:type layout)))
 
-(defmulti layout-function (fn [entity component context] (:layout-type context)))
+(defmulti layout-function (fn [entity shape context] (:layout-type context)))
 
-(defn create-evaluation-context [entity]
+(defn create-evaluation-context [node]
    (->> (mapv (fn [layout]
-                 {(:name layout) (assoc (create-context entity layout) :layout-type (:type layout))})
-              (-> entity :layouts vals))
+                 {(:name layout) (assoc (create-context node layout) :layout-type (:type layout))})
+              (-> node :layouts vals))
         (apply merge)))
 
-(defn do-layouts [entity]
-  (let [context (volatile! (create-evaluation-context entity))]
-    (doseq [component (->> (e/components-of entity)
-                           (filterv #(some? (-> % :layout-attributes :layout-ref)))
-                           (sort-by #(-> % :layout-attributes :layout-order)))]
-      (when-let [layout (get-in entity [:layouts (-> component :layout-attributes :layout-ref)])]
+(defn do-layouts [node]
+  (let [context (volatile! (create-evaluation-context node))]
+    (doseq [shape (->> (e/shapes-of node)
+                       (filterv #(some? (-> % :layout-attributes :layout-ref)))
+                       (sort-by #(-> % :layout-attributes :layout-order)))]
+      (when-let [layout (get-in node [:layouts (-> shape :layout-attributes :layout-ref)])]
         (vswap! context assoc (:name layout)
-          (layout-function entity
-                           component
+          (layout-function node
+                           shape
                            (get @context (:name layout))))))))
 
 (defn initialize [app-state]
   (b/on app-state ["layouts.do"] -999 (fn [event]
                                         (when-let [{:keys [container app-state]} (:context event)]
-                                          (do-layouts (e/entity-by-id app-state (:uid container)))))))
+                                          (do-layouts (e/shape-by-id app-state (:uid container)))))))

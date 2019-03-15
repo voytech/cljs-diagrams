@@ -14,35 +14,35 @@
     (defn ~name [& args#]
       (apply cljs-diagrams.core.funcreg.serialize '~name args#))))
 
-(defmacro component [func & body]
-  `(fn [app-state# entity#]
-     (~func app-state# entity# ~@body)))
+(defmacro shape [func & body]
+  `(fn [app-state# node#]
+     (~func app-state# node# ~@body)))
 
-(defmacro component-template [type property-map]
+(defmacro shape-template [type property-map]
   `{~type ~property-map})
 
-(defmacro components-templates [ & body]
+(defmacro shapes-templates [ & body]
   `(merge ~@body))
 
 (defmacro with-layouts [ & layouts]
-  `(fn [app-state# entity#]
+  `(fn [app-state# node#]
      (reduce (fn [agg# layout#]
                (cljs-diagrams.core.entities/add-layout app-state# agg# layout#))
-             entity#
+             node#
              (vector ~@layouts))))
 
 (defmacro resolve-data [data]
   `~data)
 
-(defmacro with-components [context & components]
-  `(fn [app-state# entity# ~context]
+(defmacro with-shapes [context & shapes]
+  `(fn [app-state# node# ~context]
      (let [left# (or (:left ~context) 0)
            top#  (or (:top  ~context) 0)]
-       (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components)))))
+       (reduce (fn [agg# func#] (func# app-state# agg#)) node# (vector ~@shapes)))))
 
-(defmacro defcomponent-group [group-name & components]
-  `(defn ~group-name [app-state# entity#]
-     (reduce (fn [agg# func#] (func# app-state# agg#)) entity# (vector ~@components))))
+(defmacro defshapes-group [group-name & shapes]
+  `(defn ~group-name [app-state# node#]
+     (reduce (fn [agg# func#] (func# app-state# agg#)) node# (vector ~@shapes))))
 
 (defmacro defbehaviour [name display-name type features event-name-provider handler]
   (let [nsname (resolve-namespace-name)]
@@ -58,43 +58,43 @@
 (defmacro with-tags [ & body]
   `(vector ~@body))
 
-(defmacro defentity [name size & body]
+(defmacro defnode [name size & body]
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
-          components  (:with-components transformed)
+          shapes  (:with-shapes transformed)
           layouts     (:with-layouts transformed)
           tags        (:with-tags transformed)
-          components-props (:components-templates transformed)
+          shapes-props (:shapes-templates transformed)
           resolve-data  (:resolve-data transformed)
           has-layouts   (contains? transformed :with-layouts)
           has-data      (contains? transformed :resolve-data)
-          has-templates (contains? transformed :components-templates)]
-      (when (nil? components)
+          has-templates (contains? transformed :shapes-templates)]
+      (when (nil? shapes)
         (throw (Error. "Provide components definition within entitity definition!")))
      `(do
         (defn ~name [app-state# context#]
-           (let [e# (cljs-diagrams.core.entities/create-entity app-state#
+           (let [e# (cljs-diagrams.core.nodes/create-node app-state#
                                                  (keyword ~nsname (name '~name))
                                                  (or ~tags [])
                                                  (merge ~size {:left (:left context#)
                                                                :top (:top context#)})
-                                                 (if ~has-templates ~components-props {}))
-                 component-factory# ~components]
+                                                 (if ~has-templates ~shapes-props {}))
+                 shape-factory# ~shapes]
              (component-factory# app-state#
                                  (if ~has-layouts (~layouts app-state# e#) e#)
                                  context#)
-             (let [result# (cljs-diagrams.core.entities/entity-by-id app-state# (:uid e#))]
+             (let [result# (cljs-diagrams.core.nodes/node-by-id app-state# (:uid e#))]
                (cljs-diagrams.core.layouts/do-layouts result#)
-               (cljs-diagrams.core.rendering/render-entity app-state# result#)
+               (cljs-diagrams.core.rendering/render-node app-state# result#)
                (when ~has-data
                  (cljs-diagrams.extensions.data-resolvers/apply-data app-state# result# (merge ~resolve-data context#)))
                result#)))))))
 
-(defmacro defcomponent [type {:keys [rendering-method attributes initializer] :as args}]
+(defmacro defshape [type {:keys [rendering-method attributes initializer] :as args}]
   (let [nsname (resolve-namespace-name)]
-   `(defn ~type [app-state# entity# args-map#]
-      (cljs-diagrams.core.entities/add-entity-component app-state#
-                                          entity#
+   `(defn ~type [app-state# node# args-map#]
+      (cljs-diagrams.core.nodes/add-node-shape app-state#
+                                          node#
                                           (merge ~args
                                                  {:type (keyword ~nsname (name '~type))}
                                                  args-map#

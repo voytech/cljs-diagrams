@@ -27,7 +27,7 @@
   ([app-state shape properties]
    (r/mark-for-redraw app-state shape properties)
    (bus/fire app-state SHAPE_CHANGED {:properties properties
-                                      :component component})))
+                                      :shape shape})))
 
 (defp bbox-predicate []
   (fn [properties]
@@ -149,8 +149,8 @@
 
 (defn- next-z-index [app-state]
   (or
-    (let [components (or (state/get-in-diagram-state app-state [:shapes]) {})
-          vs (filterv #(number? (getp % :z-index)) (vals components))]
+    (let [shapes (or (state/get-in-diagram-state app-state [:shapes]) {})
+          vs (filterv #(number? (getp % :z-index)) (vals shapes))]
       (when (and (not (nil? vs)) (< 0 (count vs)));
          (when-let [e (apply max-key #(getp % :z-index) vs)]
             (inc (getp e :z-index)))))
@@ -160,12 +160,12 @@
   (when (nil? (getp shape :z-index))
     (setp shape :z-index (next-z-index app-state))))
 
-(defn remove-component [app-state shape]
+(defn remove-shape [app-state shape]
   (state/dissoc-diagram-state app-state [:shapes (:uid shape)])
-  (r/remove-component app-state shape)
+  (r/remove-shape app-state shape)
   (bus/fire app-state "component.removed" {:shape shape}))
 
-(defn is-component [app-state uid]
+(defn is-shape [app-state uid]
   (not (nil? (state/get-in-diagram-state app-state [:shapes uid]))))
 
 (defn shapes [app-state]
@@ -186,7 +186,7 @@
                 initializer]}
         arg-map
         initializer-data (if (nil? initializer) {} (initializer container attributes))
-        template-data (get-in container [:components-properties name])
+        template-data (get-in container [:shapes-properties name])
         mdl (merge initializer-data template-data model)
         listener (customize-model app-state model-customizers)
         shape {:uid (str (random-uuid))
@@ -203,7 +203,7 @@
     (bus/fire app-state "component.created" {:shape shape})
     (state/assoc-diagram-state app-state [:shapes (:uid shape)] shape)
     (r/mark-all-for-redraw app-state shape)
-    (bus/fire app-state "component.added" {:component shape})
+    (bus/fire app-state "component.added" {:shape shape})
     (assoc-in container [:shapes (:name shape)] shape))))
 
 (defn layout-attributes

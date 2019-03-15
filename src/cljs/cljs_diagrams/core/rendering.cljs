@@ -7,8 +7,8 @@
 (declare destroy-rendering-state)
 (declare render-diagram)
 
-(defn dispatch-vector [renderer-state component & rest]
-  [(:name renderer-state) (or (:rendering-method component) (:type component))])
+(defn dispatch-vector [renderer-state shape & rest]
+  [(:name renderer-state) (or (:rendering-method shape) (:type shape))])
 
 (defn dispatch-scalar [renderer-state & rest]
   (:name renderer-state))
@@ -23,66 +23,66 @@
 
 (defmulti create-rendering-state dispatch-vector)
 
-(defmethod create-rendering-state :default [renderer-state component])
+(defmethod create-rendering-state :default [renderer-state shape])
 
 (defmulti destroy-rendering-state dispatch-vector)
 
-(defmethod destroy-rendering-state :default [renderer-state component])
+(defmethod destroy-rendering-state :default [renderer-state shape])
 
-(defn remove-component [app-state component]
+(defn remove-shape [app-state shape]
   (let [renderer-state (state/get-renderer-state app-state)]
-    (destroy-rendering-state renderer-state component)
-    (state/dissoc-renderer-state app-state [:components (:uid component)])))
+    (destroy-rendering-state renderer-state shape)
+    (state/dissoc-renderer-state app-state [:shapes (:uid shape)])))
 
-(defn get-redraw-properties [renderer-state component]
-  (get-in renderer-state [:changes (:uid component) :properties]))
+(defn get-redraw-properties [renderer-state shape]
+  (get-in renderer-state [:changes (:uid shape) :properties]))
 
-(defn mark-for-redraw [app-state component properties]
+(defn mark-for-redraw [app-state shape properties]
   (let [new-properties (concat
                           (or (-> (state/get-renderer-state app-state)
-                                  (get-redraw-properties component))
+                                  (get-redraw-properties shape))
                               #{})
                           properties)]
-    (state/assoc-renderer-state app-state [:changes (:uid component)] {:properties new-properties :ref component})
+    (state/assoc-renderer-state app-state [:changes (:uid shape)] {:properties new-properties :ref shape})
     new-properties))
 
-(defn mark-all-for-redraw [app-state component]
-  (mark-for-redraw app-state component (-> component :model deref keys)))
+(defn mark-all-for-redraw [app-state shape]
+  (mark-for-redraw app-state shape (-> shape :model deref keys)))
 
-(defn render-entity [app-state entity force-all]
-  (doseq [component (-> entity :components vals)]
-    (remove-component app-state component)
-    (when force-all (mark-all-for-redraw app-state component))
-    (render app-state component)))
+(defn render-node [app-state node force-all]
+  (doseq [shape (-> node :shapes vals)]
+    (remove-shape app-state shape)
+    (when force-all (mark-all-for-redraw app-state shape))
+    (render app-state shape)))
 
 (defn create-renderer [app-state dom-id width height renderer]
-  (let [state (merge {:name renderer :components {}}
+  (let [state (merge {:name renderer :shapes {}}
                      (initialize renderer dom-id width height))]
     (state/assoc-renderer-state app-state [] state)))
 
-(defn render [app-state component]
-  (when (not (nil? component))
+(defn render [app-state shape]
+  (when (not (nil? shape))
     (let [renderer-state (state/get-renderer-state app-state)]
-      (when (not (is-state-created renderer-state component))
+      (when (not (is-state-created renderer-state shape))
         (state/assoc-renderer-state app-state
-                                    [:components (:uid component) :handle]
-                                    (create-rendering-state renderer-state component)))
-      (->> (get-redraw-properties renderer-state component)
-           (do-render renderer-state component))
-      (state/dissoc-renderer-state app-state [:changes (:uid component)]))))
+                                    [:shapes (:uid shape) :handle]
+                                    (create-rendering-state renderer-state shape)))
+      (->> (get-redraw-properties renderer-state shape)
+           (do-render renderer-state shape))
+      (state/dissoc-renderer-state app-state [:changes (:uid shape)]))))
 
 (defn render-changes [app-state]
-  (let [components (-> app-state
+  (let [shapes (-> app-state
                        (state/get-in-renderer-state [:changes])
                        vals)]
-    (doseq [component components]
-      (render app-state (:ref component)))))
+    (doseq [shape shapes]
+      (render app-state (:ref shape)))))
 
-(defn render-all-properties [app-state component]
-  (when (not (nil? component))
-    (mark-all-for-redraw app-state component)
-    (render app-state component)))
+(defn render-all-properties [app-state shape]
+  (when (not (nil? shape))
+    (mark-all-for-redraw app-state shape)
+    (render app-state shape)))
 
 (defn render-diagram [app-state]
-  (doseq [entity (vals (state/get-in-diagram-state app-state [:entities]))]
-    (render-entity app-state entity true)))
+  (doseq [node (vals (state/get-in-diagram-state app-state [:nodes]))]
+    (render-entity app-state node true)))

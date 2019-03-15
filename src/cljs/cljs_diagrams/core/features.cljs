@@ -1,8 +1,8 @@
 (ns cljs-diagrams.core.features)
 
-(defn- all-components-to [target what]
+(defn- all-shapes-to [target what]
   (->> target
-       :components
+       :shapes
        (vals)
        (map what)
        (set)))
@@ -10,11 +10,11 @@
 (defn _OR_ [arg1 arg2] (or arg1 arg2))
 (defn _AND_ [arg1 arg2] (and arg1 arg2))
 
-(defn- all-components-to-names [target]
-  (all-components-to target :name))
+(defn- all-shapes-to-names [target]
+  (all-shapes-to target :name))
 
-(defn- all-components-to-types [target]
-  (all-components-to target :type))
+(defn- all-shapes-to-types [target]
+  (all-shapes-to target :type))
 
 ;; feature API:
 
@@ -24,26 +24,26 @@
 (defn any-of-features [features target]
   (reduce _OR_ false (mapv #(% target) features)))
 
-(defn has-components-of-types [component-types]
+(defn has-shapes-of-types [shapes-types]
   (fn [target]
-    (= component-types (clojure.set/intersection component-types (all-components-to-types target)))))
+    (= shapes-types (clojure.set/intersection shapes-types (all-shapes-to-types target)))))
 
-(defn has-by-one-component-of-types [component-types]
+(defn has-by-one-shape-of-types [shapes-types]
   (fn [target]
-    (let [freqs (frequencies (all-components-to target :type))]
-        (->> (mapv #(get freqs %) component-types)
+    (let [freqs (frequencies (all-shapes-to target :type))]
+        (->> (mapv #(get freqs %) shapes-types)
              (reduce +)
-             (== (count component-types))))))
+             (== (count shapes-types))))))
 
-(defn has-only-components-of-types [component-types]
+(defn has-only-shapes-of-types [shapes-types]
   (fn [target]
-    (= component-types (all-components-to-types target))))
+    (= shapes-types (all-shapes-to-types target))))
 
 
-(defn has-components-with-names [component-names])
+(defn has-shapes-with-names [component-names])
 
-(defn has-only-components-with-names [component-names])
+(defn has-only-shapes-with-names [component-names])
 
-(defn has-number-of-components [target component-type expected-count])
+(defn has-number-of-shapes [target component-type expected-count])
 
-(defn has-component-with-properties [target component-type properties])
+(defn has-shape-with-properties [target component-type properties])

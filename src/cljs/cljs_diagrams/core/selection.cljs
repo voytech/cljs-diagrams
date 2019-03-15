@@ -2,9 +2,9 @@
   (:require [cljs-diagrams.core.entities :as e]
             [cljs-diagrams.core.state :as state]))
 
-(defn select [app-state entity]
-  (state/assoc-diagram-state app-state [:selection] (:uid entity)))
+(defn select [app-state node]
+  (state/assoc-diagram-state app-state [:selection] (:uid node)))
 
-(defn get-selected-entity [app-state]
+(defn get-selected-node [app-state]
   (let [uid (state/get-in-diagram-state app-state [:selection])]
-    (e/entity-by-id app-state uid)))
+    (e/node-by-id app-state uid)))

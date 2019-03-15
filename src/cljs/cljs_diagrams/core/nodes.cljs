@@ -12,12 +12,12 @@
                                      ::shapes
                                      ::relationships
                                      ::layouts
-                                     ::components-properties]))
+                                     ::shapes-properties]))
 
 (spec/def ::create-node (spec/keys :req-un [::bbox
                                             ::type
                                             ::tags
-                                            ::components-properties]))
+                                            ::shapes-properties]))
 
 (declare get-node-shape)
 
@@ -25,7 +25,7 @@
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
 (defn shapes-of [holder]
- (vals (:components holder)))
+ (vals (:shapes holder)))
 
 (defn node-by-id [app-state id]
  (state/get-in-diagram-state app-state [:nodes id]))
@@ -50,7 +50,7 @@
   (id input :uid))
 
 (defn- node-record [app-state input]
-  (record input #(entity-by-id app-state %)))
+  (record input #(node-by-id app-state %)))
 
 (defn volatile-node [app-state node]
   (->> node
@@ -64,8 +64,8 @@
   (let [nodes (state/get-in-diagram-state app-state [:nodes])]
     (record input #(get-in nodes [(node-id node) :shapes %]))))
 
-(defn lookup [app-state component]
-  (let [uid (:parent-ref component)]
+(defn lookup [app-state shape]
+  (let [uid (:parent-ref shape)]
     (node-by-id app-state uid)))
 
 (defn create-node
@@ -73,7 +73,7 @@
    Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
    each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
    Those properties models functions of specific component."
-  ([app-state type tags bbox component-properties]
+  ([app-state type tags bbox shapes-properties]
    (let [uid (str (random-uuid))
          node   {:uid uid
                  :bbox bbox
@@ -82,7 +82,7 @@
                  :shapes {}
                  :relationships []
                  :layouts {}
-                 :components-properties component-properties}]
+                 :shapes-properties shapes-properties}]
      (state/assoc-diagram-state app-state [:nodes uid] node)
      (bus/fire app-state "node.added" {:node node})
      node))
@@ -198,7 +198,7 @@
        (count)
        (< 0)))
 
-(defn connect-nods [app-state src trg association-type]
+(defn connect-nodes [app-state src trg association-type]
   (when (not (is-relation-present app-state src (:uid trg) association-type))
     (let [src-rel (conj (:relationships src) {:relation-type association-type :node-id (:uid trg) :owner (:uid src)})
           trg-rel (conj (:relationships trg) {:relation-type association-type :node-id (:uid src) :owner (:uid src)})]

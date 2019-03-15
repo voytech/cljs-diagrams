@@ -9,41 +9,41 @@
            [cljs-diagrams.core.events :as events]
            [cljs-diagrams.impl.std.extensions.resolvers.default :as resolvers]
            [cljs-diagrams.core.state :as state]
-           [cljs-diagrams.core.entities :as e]
+           [cljs-diagrams.core.nodes :as e]
            [cljs-diagrams.core.edn :as edn]
            [cljs-diagrams.core.rendering :as r]))
 
 (defn edn [app-state]
-  (->> (state/get-in-diagram-state app-state [:entities])
+  (->> (state/get-in-diagram-state app-state [:nodes])
        vals
-       (mapv edn/export-entity)
+       (mapv edn/export-node)
        prn-str))
 
 (defn save [app-state]
   (console.log (clj->js (edn app-state)))
   (commons/save-to-storage "diagram" (edn app-state)))
 
-(defn get-managed-entities [app-state]
-  (vals (state/get-in-diagram-state app-state [:entities])))
+(defn get-managed-nodes [app-state]
+  (vals (state/get-in-diagram-state app-state [:nodes])))
 
 (defn refresh-components [app-state]
-  (let [entities (get-managed-entities app-state)
-        components (reduce #(concat %1 (vals (:components %2))) [] entities)
-        c-map (apply merge (mapv (fn [e] {(:uid e) e}) components))]
-    (state/assoc-diagram-state app-state [:components] c-map)))
+  (let [nodes (get-managed-nodes app-state)
+        shapes (reduce #(concat %1 (vals (:shapes %2))) [] nodes)
+        c-map (apply merge (mapv (fn [e] {(:uid e) e}) shapes))]
+    (state/assoc-diagram-state app-state [:shapes] c-map)))
 
 (defn autowire-behaviours [app-state]
-  (doseq [entity (get-managed-entities app-state)]
-    (behaviours/autowire app-state entity)))
+  (doseq [node (get-managed-nodes app-state)]
+    (behaviours/autowire app-state node)))
 
-(defn reload-entities [app-state entities]
-  (let [reloaded (mapv #(edn/load-entity app-state %) entities)]
-    (state/assoc-diagram-state app-state [:entities] (apply merge (mapv (fn [e] {(:uid e) e}) reloaded)))))
+(defn reload-entities [app-state nodes]
+  (let [reloaded (mapv #(edn/load-node app-state %) nodes)]
+    (state/assoc-diagram-state app-state [:nodes] (apply merge (mapv (fn [e] {(:uid e) e}) reloaded)))))
 
 (defn load [app-state]
-  (let [entities (-> (commons/load-from-storage "diagram")
-                     (cljs.reader/read-string))]
-    (reload-entities app-state entities)
+  (let [nodes (-> (commons/load-from-storage "diagram")
+                  (cljs.reader/read-string))]
+    (reload-entities app-state nodes)
     (refresh-components app-state)
     (autowire-behaviours app-state)
     (r/render-diagram app-state)))

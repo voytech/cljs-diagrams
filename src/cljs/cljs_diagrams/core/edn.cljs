@@ -1,37 +1,37 @@
 (ns cljs-diagrams.core.edn
   (:require [cljs-diagrams.core.eventbus :as bus]
             [clojure.string :as str]
-            [cljs-diagrams.core.components :as d]
-            [cljs-diagrams.core.entities :as e]
+            [cljs-diagrams.core.shapes :as d]
+            [cljs-diagrams.core.nodes :as e]
             [cljs-diagrams.core.layouts :as l]
             [cljs-diagrams.core.state :as state]))
 
 
-(defn export-component [component]
-  (let [derecord (into {} component)]
+(defn export-shape [shape]
+  (let [derecord (into {} shape)]
     (-> derecord
-        (assoc  :model (-> component :model deref))
+        (assoc  :model (-> shape :model deref))
         (dissoc :model-listener)
         (dissoc :initializer))))
 
-(defn export-entity [entity]
-  {:uid  (:uid entity)
-   :type (:type entity)
-   :bbox (:bbox entity)
-   :tags (:tags entity)
-   :relationships (:relationships entity)
-   :components-properties (:components-properties entity)
-   :layouts (-> entity :layouts vals)
-   :components (mapv export-component (-> entity :components vals))})
+(defn export-entity [node]
+  {:uid  (:uid node)
+   :type (:type node)
+   :bbox (:bbox node)
+   :tags (:tags node)
+   :relationships (:relationships node)
+   :shapes-properties (:shapes-properties node)
+   :layouts (-> node :layouts vals)
+   :shapes (mapv export-shape (-> node :shapes vals))})
 
-(defn load-component [app-state entity-type component]
-  (let [customizers (:model-customizers component)]
-    (-> component
-        (assoc :model (volatile! (:model component)))
+(defn load-shape [app-state node-type shape]
+  (let [customizers (:model-customizers shape)]
+    (-> shape
+        (assoc :model (volatile! (:model shape)))
         (assoc :model-listener (d/customize-model app-state customizers)))))
 
-(defn load-entity [app-state data]
-  (let [{:keys [type tags bbox component-properties components layouts]} data]
+(defn load-node [app-state data]
+  (let [{:keys [type tags bbox shapes-properties shapes layouts]} data]
     (-> data
         (assoc :layouts (apply merge (mapv (fn [l] {(:name l) l}) layouts)))
-        (assoc :components (apply merge (mapv (fn [c] {(:name c) (load-component app-state type c)}) components))))))
+        (assoc :shapes (apply merge (mapv (fn [c] {(:name c) (load-shape app-state type c)}) shapes))))))

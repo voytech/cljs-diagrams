@@ -10,10 +10,10 @@
                         (conj (Resolver. name feature spec resolver)))]
       (state/assoc-extensions-state app-state [:data-resolvers] resolvers))))
 
-(defn apply-data [app-state entity data]
+(defn apply-data [app-state node data]
   (let [resolvers (state/get-in-extensions-state app-state [:data-resolvers])
         valid-resolvers (filterv #(and (spec/valid? (:spec %) data)
-                                       ((:feature %) entity))
+                                       ((:feature %) node))
                                  resolvers)]
     (doseq [resolver valid-resolvers]
-      ((:resolver resolver) app-state entity data))))
+      ((:resolver resolver) app-state node data))))

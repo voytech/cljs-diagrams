@@ -1,6 +1,6 @@
 (ns cljs-diagrams.impl.diagrams.commons.tools
   (:require [cljs-diagrams.core.tools :as t]
-            [cljs-diagrams.impl.diagrams.commons.entities :as commons]))
+            [cljs-diagrams.impl.diagrams.commons.nodes :as commons]))
 
 (t/create-tool "Basic Rectangle"
                ""

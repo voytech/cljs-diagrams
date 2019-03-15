@@ -1,18 +1,18 @@
 (ns cljs-diagrams.impl.std.features.default
   (:require [cljs-diagrams.core.features :as f]
-            [cljs-diagrams.impl.std.components :as c]))
+            [cljs-diagrams.impl.std.shapes :as c]))
 
 (defn has-endpoints [target]
-  ((f/has-by-one-component-of-types #{::c/startpoint ::c/endpoint}) target))
+  ((f/has-by-one-shape-of-types #{::c/startpoint ::c/endpoint}) target))
 
 (defn has-relation [target]
-  ((f/has-components-of-types #{::c/relation}) target))
+  ((f/has-shapes-of-types #{::c/relation}) target))
 
 (defn has-controls [target]
-  ((f/has-components-of-types #{::c/control}) target))
+  ((f/has-shapes-of-types #{::c/control}) target))
 
 (defn is-shape-entity [target]
-  ((f/has-components-of-types #{::c/entity-shape}) target))
+  ((f/has-shapes-of-types #{::c/entity-shape}) target))
 
 (defn is-associative-entity [target]
   (f/any-of-features [
@@ -21,7 +21,7 @@
    target))
 
 (defn is-interactive-entity [target]
-  ((f/has-components-of-types #{::c/control}) target))
+  ((f/has-shapes-of-types #{::c/control}) target))
 
 (defn is-primary-entity [target]
   (f/check-features [

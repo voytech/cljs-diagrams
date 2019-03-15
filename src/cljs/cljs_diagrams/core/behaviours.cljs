@@ -60,8 +60,8 @@
   (bus/fire app-state (ev/event-name (:type entity) (:type component) event-suffix) data))
 
 (defn initialize [app-state]
-  (bus/on app-state ["entity.component.added"] -999 (fn [event]
+  (bus/on app-state ["node.shape.added"] -999 (fn [event]
                                                       (let [context (:context event)
-                                                            entity  (:entity context)
+                                                            node  (:node context)
                                                             app-state (:app-state context)]
-                                                        (autowire app-state entity)))))
+                                                        (autowire app-state node)))))

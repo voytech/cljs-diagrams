@@ -1,6 +1,6 @@
 (ns cljs-diagrams.impl.synthetic-events
   (:require [cljs-diagrams.core.events :as events]
-            [cljs-diagrams.core.components :as d]))
+            [cljs-diagrams.core.shapes :as d]))
 
 (defn mouse-dragging-move-event []
   (events/pattern :mouse-dragging-move
@@ -9,7 +9,7 @@
                    (fn [event process-state]
                      (= (:type event) "mouse-move"))]
                   (fn [event process-state]
-                    (events/enrich event (:component event)))))
+                    (events/enrich event (:shape event)))))
 
 (defn mouse-move-event []
   (events/pattern :mouse-move
@@ -20,7 +20,7 @@
                     (events/clear-state process-state))))
 
 (defn is-component [app-state component]
-  (when (and (not (nil? component)) (d/is-component app-state (:uid component)))
+  (when (and (not (nil? component)) (d/is-shape app-state (:uid component)))
     component))
 
 (defn mouse-in-event []
@@ -31,18 +31,18 @@
                                        (=    (:type event)  "mouse-move"))]
                          (and
                            (not= (is-component (:app-state event) (events/get-context process-state :in-out))
-                                 (:component event))
+                                 (:shape event))
                            (= true result)
-                           (not (nil? (:component event))))))]
+                           (not (nil? (:shape event))))))]
                   (fn [event process-state]
                     (events/schedule process-state #(events/clear-state process-state) :start)
-                    (when-let [previous-component (is-component (:app-state event) (events/get-context process-state :in-out))]
+                    (when-let [previous-component (is-shape (:app-state event) (events/get-context process-state :in-out))]
                       (events/schedule process-state
                                        (fn []
                                          (events/trigger-bus-event
                                            event (merge (events/enrich event previous-component) {:type "mouse-out"})))
                                        :completed))
-                    (events/set-context process-state :in-out (:component event)))))
+                    (events/set-context process-state :in-out (:shape event)))))
 
 (defn mouse-out-event []
   (events/pattern :mouse-out
@@ -50,16 +50,16 @@
                      (let [result (and (not= (:state event) "mouse-dragging-move")
                                        (not= (:state event) "mouse-out")
                                        (=    (:type event)  "mouse-move"))
-                           previous-component (is-component (:app-state event) (events/get-context process-state :in-out))]
+                           previous-component (is-shape (:app-state event) (events/get-context process-state :in-out))]
                         (and (= true result)
                              (not (nil? previous-component))
-                             (not= previous-component (:component event)))))]
+                             (not= previous-component (:shape event)))))]
                   (fn [event process-state]
                     (events/schedule process-state #(events/clear-state process-state) :start)
-                    (let [previous-component (is-component (:app-state event) (events/get-context process-state :in-out))]
-                      (if-not (nil? (:component event))
+                    (let [previous-component (is-shape (:app-state event) (events/get-context process-state :in-out))]
+                      (if-not (nil? (:shape event))
                         (do
-                          (events/set-context process-state :in-out (:component event))
+                          (events/set-context process-state :in-out (:shape event))
                           (events/schedule process-state
                             (fn [] (events/trigger-bus-event event {:type "mouse-in"}))
                             :completed))

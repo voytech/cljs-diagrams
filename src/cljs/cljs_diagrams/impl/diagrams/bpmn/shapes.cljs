@@ -1,4 +1,4 @@
-(ns cljs-diagrams.impl.diagrams.bpmn.components
+(ns cljs-diagrams.impl.diagrams.bpmn.shapes
   (:require [cljs-diagrams.core.shapes :as d :refer [layout-attributes]]
             [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints]]
             [cljs-diagrams.core.funcreg :refer [serialize]]

@@ -66,7 +66,7 @@
     (dnd/dispatch-drop-event event state)))
 
 (defn register-selection-feedback [app-state feedback]
-  (bus/on app-state ["entity.selected"] -999
+  (bus/on app-state ["node.selected"] -999
     (fn [event]
       (swap! feedback assoc :selection (-> event :context :selection)
                             :show-popup true)

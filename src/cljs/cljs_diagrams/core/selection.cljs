@@ -1,5 +1,5 @@
 (ns cljs-diagrams.core.selection
-  (:require [cljs-diagrams.core.entities :as e]
+  (:require [cljs-diagrams.core.nodes :as e]
             [cljs-diagrams.core.state :as state]))
 
 (defn select [app-state node]

@@ -14,7 +14,7 @@
         (dissoc :model-listener)
         (dissoc :initializer))))
 
-(defn export-entity [node]
+(defn export-node [node]
   {:uid  (:uid node)
    :type (:type node)
    :bbox (:bbox node)

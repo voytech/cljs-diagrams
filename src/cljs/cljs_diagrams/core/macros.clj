@@ -27,7 +27,7 @@
 (defmacro with-layouts [ & layouts]
   `(fn [app-state# node#]
      (reduce (fn [agg# layout#]
-               (cljs-diagrams.core.entities/add-layout app-state# agg# layout#))
+               (cljs-diagrams.core.nodes/add-layout app-state# agg# layout#))
              node#
              (vector ~@layouts))))
 
@@ -61,7 +61,7 @@
 (defmacro defnode [name size & body]
   (let [transformed   (transform-body body)]
     (let [nsname      (resolve-namespace-name)
-          shapes  (:with-shapes transformed)
+          shapes      (:with-shapes transformed)
           layouts     (:with-layouts transformed)
           tags        (:with-tags transformed)
           shapes-props (:shapes-templates transformed)
@@ -80,9 +80,9 @@
                                                                :top (:top context#)})
                                                  (if ~has-templates ~shapes-props {}))
                  shape-factory# ~shapes]
-             (component-factory# app-state#
-                                 (if ~has-layouts (~layouts app-state# e#) e#)
-                                 context#)
+             (shape-factory# app-state#
+                             (if ~has-layouts (~layouts app-state# e#) e#)
+                             context#)
              (let [result# (cljs-diagrams.core.nodes/node-by-id app-state# (:uid e#))]
                (cljs-diagrams.core.layouts/do-layouts result#)
                (cljs-diagrams.core.rendering/render-node app-state# result#)

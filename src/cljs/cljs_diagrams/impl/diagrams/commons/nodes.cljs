@@ -1,4 +1,4 @@
-(ns cljs-diagrams.impl.diagrams.commons.entities
+(ns cljs-diagrams.impl.diagrams.commons.nodes
  (:require [cljs-diagrams.core.nodes :as e]
            [cljs-diagrams.core.shapes :as d :refer [layout-attributes]]
            [cljs-diagrams.impl.std.shapes :as c]

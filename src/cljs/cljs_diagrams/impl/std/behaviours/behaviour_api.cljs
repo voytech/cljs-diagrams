@@ -6,7 +6,7 @@
             [cljs-diagrams.core.events :as ev]
             [cljs-diagrams.core.behaviours :as bhv]
             [cljs-diagrams.core.behaviour-api :as api]
-            [cljs-diagrams.impl.std.components :as c]))
+            [cljs-diagrams.impl.std.shapes :as c]))
 
 (declare position-endpoint)
 (declare position-startpoint)

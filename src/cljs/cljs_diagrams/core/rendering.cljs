@@ -85,4 +85,4 @@
 
 (defn render-diagram [app-state]
   (doseq [node (vals (state/get-in-diagram-state app-state [:nodes]))]
-    (render-entity app-state node true)))
+    (render-node app-state node true)))

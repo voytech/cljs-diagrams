@@ -85,7 +85,7 @@
         (layouts/do-layouts))))
 
 (defn move-related-node [app-state node related-node relation left top]
-  (let [event-data {:entity related-node
+  (let [event-data {:node related-node
                     :relation relation
                     :app-state app-state
                     :movement-x left

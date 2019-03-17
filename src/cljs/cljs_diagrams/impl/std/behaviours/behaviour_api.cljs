@@ -59,7 +59,7 @@
       {:x (first end) :y (last end)})))
 
 (defn get-decorators [node type]
-  (let [relation (first (e/get-node-shape entity ::c/relation))
+  (let [relation (first (e/get-node-shape node ::c/relation))
         names (get-in relation [:attributes :decorators type])]
    (mapv #(e/get-node-shape node %) names)))
 

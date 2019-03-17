@@ -192,7 +192,7 @@
         (state/assoc-diagram-state app-state [:nodes (:uid entity) :layouts name] modified)))))
 
 (defn- is-relation-present [app-state node related-id assoc-type]
-  (->> (entity-by-id app-state (:uid node))
+  (->> (node-by-id app-state (:uid node))
        :relationships
        (filterv (fn [rel] (and (= related-id (:node-id rel)) (= assoc-type (:relation-type rel)))))
        (count)

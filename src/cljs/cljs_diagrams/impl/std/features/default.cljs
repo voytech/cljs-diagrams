@@ -56,5 +56,5 @@
 (defn is-text-attribute [target]
   (f/check-features [
                      is-single-attribute
-                     (f/has-components-of-types #{::c/text})]
+                     (f/has-shapes-of-types #{::c/text})]
    target))

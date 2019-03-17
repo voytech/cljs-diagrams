@@ -2,14 +2,14 @@
   (:require [cljs-diagrams.core.behaviours :as b]
             [cljs-diagrams.core.eventbus :as bus]
             [cljs-diagrams.core.options :as o]
-            [cljs-diagrams.core.entities :as e]
+            [cljs-diagrams.core.nodes :as e]
             [cljs-diagrams.core.events :as ev]
-            [cljs-diagrams.core.components :as d]
+            [cljs-diagrams.core.shapes :as d]
             [cljs-diagrams.core.behaviour-api :as api]
             [cljs-diagrams.core.selection :as s]
             [cljs-diagrams.impl.std.behaviours.behaviour-api :as std]
             [cljs-diagrams.impl.std.behaviours.manhattan :as m]
-            [cljs-diagrams.impl.std.components :as c]
+            [cljs-diagrams.impl.std.shapes :as c]
             [cljs-diagrams.impl.std.features.default :as f])
   (:require-macros [cljs-diagrams.core.macros :refer [defbehaviour]]))
 
@@ -19,8 +19,8 @@
               [f/is-primary-entity]
               (b/build-event-name [::c/entity-shape] "move")
               (fn [e]
-                 (let [{:keys [app-state component entity movement-x movement-y]} (:context e)]
-                   (api/move-entity app-state entity movement-x movement-y)
+                 (let [{:keys [app-state shape node movement-x movement-y]} (:context e)]
+                   (api/move-node app-state node movement-x movement-y)
                    nil)))
 
 (defbehaviour moving-association-entity-by
@@ -30,9 +30,9 @@
               (b/build-event-name "moveby")
               (fn [e]
                 (let [event (:context e)
-                      entity (:entity event)
+                      node (:node event)
                       app-state (-> event :app-state)]
-                  (m/refresh-manhattan-layout app-state entity)
+                  (m/refresh-manhattan-layout app-state node)
                   nil)))
 
 (defbehaviour moving-primary-entity-by
@@ -41,8 +41,8 @@
               [f/is-primary-entity]
               (b/build-event-name "moveby")
               (fn [e]
-                 (let [{:keys [app-state entity movement-x movement-y]} (:context e)]
-                   (api/move-entity app-state entity movement-x movement-y)
+                 (let [{:keys [app-state node movement-x movement-y]} (:context e)]
+                   (api/move-node app-state node movement-x movement-y)
                    nil)))
 
 (defbehaviour select-shape-entity
@@ -51,9 +51,9 @@
               [f/is-primary-entity]
               (b/build-event-name [::c/edit] "activate")
               (fn [e]
-                 (let [{:keys [app-state entity]} (:context e)]
-                    (s/select app-state entity)
-                    (bus/fire app-state "entity.selected" {:selection entity})
+                 (let [{:keys [app-state node]} (:context e)]
+                    (s/select app-state node)
+                    (bus/fire app-state "node.selected" {:selection node})
                     nil)))
 
 (defbehaviour remove-entity
@@ -62,8 +62,8 @@
               [f/is-primary-entity]
               (b/build-event-name [::c/remove] "activate")
               (fn [e]
-                 (let [{:keys [app-state entity]} (:context e)]
-                    (e/remove-entity app-state entity)
+                 (let [{:keys [app-state node]} (:context e)]
+                    (e/remove-node app-state node)
                     nil)))
 
 (defbehaviour moving-association-endpoints
@@ -73,13 +73,13 @@
               (b/build-event-name [::c/startpoint ::c/endpoint ] "move")
               (fn [e]
                 (let [event (:context e)
-                      {:keys [app-state entity component movement-x movement-y]} event
-                      end-type (if (= ::c/startpoint (:type component)) :start :end)]
-                  (m/endpoint-move app-state entity end-type movement-x movement-y)
+                      {:keys [app-state node shape movement-x movement-y]} event
+                      end-type (if (= ::c/startpoint (:type shape)) :start :end)]
+                  (m/endpoint-move app-state node end-type movement-x movement-y)
                   (api/collides? app-state
-                                 component
+                                 shape
                                  f/has-controls
-                                 (fn [src trg] (std/toggle-controls (:entity trg) true))
+                                 (fn [src trg] (std/toggle-controls (:node trg) true))
                                  (fn [src]))
                   nil)))
 
@@ -89,23 +89,23 @@
               [f/is-association-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ] "mouse-up")
               (fn [e]
-                (let [{:keys [app-state component entity] :as event} (:context e)
-                      ctype (:type component)
+                (let [{:keys [app-state shape node] :as event} (:context e)
+                      ctype (:type shape)
                       end-type (cond
                                  (= ::c/endpoint ctype) :end
                                  (= ::c/startpoint ctype) :start)]
-                  (api/collision-based-relations-validate app-state entity)
+                  (api/collision-based-relations-validate app-state node)
                   (api/collides? app-state
-                                 component
+                                 shape
                                  f/is-shape-entity
                                  (fn [src trg]
-                                   (let [ctype (:type component)
+                                   (let [ctype (:type shape)
                                          end-type (cond
                                                     (= ::c/endpoint ctype) "end"
                                                     (= ::c/startpoint ctype) "start")]
-                                    (e/connect-entities app-state (:entity trg) (:entity src) (keyword end-type))
-                                    (std/toggle-controls (:entity trg) false)
-                                    (m/refresh-manhattan-layout app-state entity)))
+                                    (e/connect-nodes app-state (:node trg) (:node src) (keyword end-type))
+                                    (std/toggle-controls (:node trg) false)
+                                    (m/refresh-manhattan-layout app-state node)))
                                  (fn [src]))
                   nil)))
 
@@ -115,13 +115,13 @@
               [f/is-primary-entity]
               (b/build-event-name [::c/entity-shape] "mouse-up")
               (fn [e]
-                (let [{:keys [app-state component entity] :as event} (:context e)]
-                  (api/collision-based-relations-validate app-state entity)
+                (let [{:keys [app-state shape node] :as event} (:context e)]
+                  (api/collision-based-relations-validate app-state node)
                   (api/collides? app-state
-                                 component
+                                 shape
                                  f/is-container
                                  (fn [src trg]
-                                    (e/connect-entities app-state (:entity trg) (:entity src) :inclusion))
+                                    (e/connect-nodes app-state (:node trg) (:node src) :inclusion))
                                  (fn [src]))
                   nil)))
 
@@ -131,8 +131,8 @@
               [f/is-association-entity f/is-primary-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "focus")
               (fn [e]
-                (let [{:keys [component entity]} (:context e)]
-                  (api/component-hover entity component true o/DEFAULT_HIGHLIGHT_OPTIONS)
+                (let [{:keys [shape node]} (:context e)]
+                  (api/shape-hover node shape true o/DEFAULT_HIGHLIGHT_OPTIONS)
                   nil)))
 
 (defbehaviour leaving-entity
@@ -141,8 +141,8 @@
               [f/is-association-entity f/is-primary-entity]
               (b/build-event-name [::c/startpoint ::c/endpoint ::c/entity-shape] "blur")
               (fn [e]
-                (let [{:keys [component entity]} (:context e)]
-                  (api/component-hover entity component false o/DEFAULT_HIGHLIGHT_OPTIONS)
+                (let [{:keys [shape node]} (:context e)]
+                  (api/shape-hover node shape false o/DEFAULT_HIGHLIGHT_OPTIONS)
                   nil)))
 
 (defbehaviour show-all-entity-controls
@@ -152,7 +152,7 @@
               (b/build-event-name [::c/entity-shape] "focus")
               (fn [e]
                 (let [event (:context e)]
-                  (std/toggle-controls (:entity event) true)
+                  (std/toggle-controls (:node event) true)
                   nil)))
 
 (defbehaviour hide-all-entity-controls
@@ -162,7 +162,7 @@
               (b/build-event-name [::c/entity-shape] "blur")
               (fn [e]
                 (let [event (:context e)]
-                  (std/toggle-controls (:entity event) false)
+                  (std/toggle-controls (:node event) false)
                   nil)))
 
 (defbehaviour show-entity-control
@@ -172,7 +172,7 @@
               (b/build-event-name [::c/control] "focus")
               (fn [e]
                 (let [event (:context e)]
-                  (std/toggle-control  (-> event :component) true)
+                  (std/toggle-control  (-> event :shape) true)
                   nil)))
 
 (defbehaviour hide-entity-control
@@ -182,7 +182,7 @@
               (b/build-event-name [::c/control] "blur")
               (fn [e]
                 (let [event (:context e)]
-                  (std/toggle-control (-> event :component) false)
+                  (std/toggle-control (-> event :shape) false)
                   nil)))
 
 (defbehaviour show-bbox
@@ -192,8 +192,7 @@
               (b/build-event-name [::c/bounding-box] "focus")
               (fn [e]
                 (let [event (:context e)]
-                  (console.log "bbox")
-                  (std/toggle-bbox  (-> event :component) true)
+                  (std/toggle-bbox  (-> event :shape) true)
                   nil)))
 
 (defbehaviour hide-bbox
@@ -203,7 +202,7 @@
               (b/build-event-name [::c/bounding-box] "blur")
               (fn [e]
                 (let [event (:context e)]
-                  (std/toggle-bbox (-> event :component) false)
+                  (std/toggle-bbox (-> event :shape) false)
                   nil)))
 
 (defbehaviour resize-entity
@@ -214,8 +213,8 @@
               (fn [e]
                 (let [event (:context e)]
                   (std/resize-with-control (:app-state event)
-                                           (:entity event)
-                                           (:component event)
+                                           (:node event)
+                                           (:shape event)
                                            (:movement-x event)
                                            (:movement-y event))
                   nil)))

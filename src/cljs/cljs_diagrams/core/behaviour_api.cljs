@@ -21,8 +21,8 @@
     (d/set-data shape {x (+ (d/get-left target) (/ (d/get-width target) 2))
                        y (+ (d/get-top target) (/ (d/get-height target) 2))})))
 
-(defn shape-hover [entity shape bln options]
-  (let [original-model (e/preset-shape-properties entity (:name shape))
+(defn shape-hover [node shape bln options]
+  (let [original-model (e/preset-shape-properties node (:name shape))
         normal-color (or (:border-color original-model) (:normal-color options))
         normal-width (or (:border-width original-model) (:normal-width options))]
     (d/set-data shape {:border-color (if bln (:hover-color options)

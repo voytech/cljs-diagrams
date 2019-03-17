@@ -56,8 +56,8 @@
               event-names (event-name-provider target)]
             (reg app-state event-names behaviour)))))
 
-(defn trigger-behaviour [app-state entity avalue component event-suffix data]
-  (bus/fire app-state (ev/event-name (:type entity) (:type component) event-suffix) data))
+(defn trigger-behaviour [app-state node avalue shape event-suffix data]
+  (bus/fire app-state (ev/event-name (:type node) (:type shape) event-suffix) data))
 
 (defn initialize [app-state]
   (bus/on app-state ["node.shape.added"] -999 (fn [event]

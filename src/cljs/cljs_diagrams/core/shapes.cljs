@@ -200,10 +200,10 @@
                :model-listener listener
                :model-customizers model-customizers}]
     (ensure-z-index app-state shape)
-    (bus/fire app-state "component.created" {:shape shape})
+    (bus/fire app-state "shape.created" {:shape shape})
     (state/assoc-diagram-state app-state [:shapes (:uid shape)] shape)
     (r/mark-all-for-redraw app-state shape)
-    (bus/fire app-state "component.added" {:shape shape})
+    (bus/fire app-state "shape.added" {:shape shape})
     (assoc-in container [:shapes (:name shape)] shape))))
 
 (defn layout-attributes

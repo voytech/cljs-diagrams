@@ -1,6 +1,6 @@
 (ns cljs-diagrams.impl.renderers.default
   (:require [cljs-diagrams.core.utils.general :refer [make-js-property]]
-            [cljs-diagrams.core.components :as d]
+            [cljs-diagrams.core.shapes :as d]
             [cljs-diagrams.core.eventbus :as b]
             [cljs-diagrams.core.rendering :as r]))
 

@@ -102,7 +102,7 @@
   (filterv #(is-relation-owner node %) (:relationships node)))
 
 (defn move-node [app-state node movement-x movement-y]
-  (let [shape (first (e/get-node-shape node ::c/entity-shape))
+  (let [shape (first (e/get-node-shape node ::c/node-shape))
         node (e/node-by-id app-state (:uid node))]
     (default-position-node app-state
                            node

@@ -32,22 +32,20 @@
   {:width 180 :height 150}
   (with-layouts (layout "main" ::w/expression))
   (with-shapes context
-    (shape c/entity-shape {
-                           :name "main"
-                           :model {:round-x 15 :round-y 15}
-                           :layout-attributes (layout-attributes "main"
-                                                                 (layout-hints
-                                                                   (match-parent-position)
-                                                                   (match-parent-size)
-                                                                   (weighted-origin 0 0)))})
-    (shape c/title {
-                    :name "title"
+    (shape c/node-shape {:name "main"
+                         :model {:round-x 15 :round-y 15}
+                         :layout-attributes (layout-attributes "main"
+                                                               (layout-hints
+                                                                 (match-parent-position)
+                                                                 (match-parent-size)
+                                                                 (weighted-origin 0 0)))})
+    (shape c/title {:name "title"
                     :model {:text "Activity"}
                     :layout-attributes (layout-attributes "main"
                                                           (layout-hints
                                                             (weighted-position 0.5 0.5)
                                                             (weighted-origin 0.5 0.5)))})
-    (shape c/entity-controls)))
+    (shape c/node-controls)))
 
 (defp event-bbox-draw []
   (fn [component]
@@ -59,15 +57,15 @@
   {:width 40 :height 40}
   (with-layouts (layout "main" ::w/expression))
   (with-shapes context
-    (shape c/entity-shape {:name "main"
-                           :rendering-method :draw-circle
-                           :model-customizers [(d/bbox-draw event-bbox-draw)]
-                           :model {:radius 20}
-                           :layout-attributes (layout-attributes "main"
-                                                                 (layout-hints
-                                                                   (match-parent-position)
-                                                                   (match-parent-size)
-                                                                   (weighted-origin 0 0)))})
+    (shape c/node-shape {:name "main"
+                         :rendering-method :draw-circle
+                         :model-customizers [(d/bbox-draw event-bbox-draw)]
+                         :model {:radius 20}
+                         :layout-attributes (layout-attributes "main"
+                                                               (layout-hints
+                                                                 (match-parent-position)
+                                                                 (match-parent-size)
+                                                                 (weighted-origin 0 0)))})
     (shape c/rectangle {:name "bg"
                         :model {:background-color "white"}
                         :layout-attributes (layout-attributes "main" 1
@@ -89,15 +87,15 @@
   (shapes-templates
     (shape-template "main" {:border-width 5}))
   (with-shapes context
-    (shape c/entity-shape {:name "main"
-                           :rendering-method :draw-circle
-                           :model-customizers [(d/bbox-draw event-bbox-draw)]
-                           :model {:radius 20 :border-width 5}
-                           :layout-attributes (layout-attributes "main"
-                                                                 (layout-hints
-                                                                   (match-parent-position)
-                                                                   (match-parent-size)
-                                                                   (weighted-origin 0 0)))})
+    (shape c/node-shape {:name "main"
+                         :rendering-method :draw-circle
+                         :model-customizers [(d/bbox-draw event-bbox-draw)]
+                         :model {:radius 20 :border-width 5}
+                         :layout-attributes (layout-attributes "main"
+                                                               (layout-hints
+                                                                 (match-parent-position)
+                                                                 (match-parent-size)
+                                                                 (weighted-origin 0 0)))})
     (shape c/rectangle {:name "bg"
                         :model {:background-color "white"}
                         :layout-attributes (layout-attributes "main" 1
@@ -120,14 +118,14 @@
   (shapes-templates
     (shape-template ::c/entity-shape {:border-width 5}))
   (with-shapes context
-    (shape c/entity-shape {:name "main"
-                           :rendering-method :draw-poly-line
-                           :model-customizers [(d/bbox-draw bpmnc/diamond-bbox-draw)]
-                           :layout-attributes (layout-attributes "main"
-                                                                 (layout-hints
-                                                                   (match-parent-position)
-                                                                   (match-parent-size)
-                                                                   (weighted-origin 0 0)))})
+    (shape c/node-shape {:name "main"
+                         :rendering-method :draw-poly-line
+                         :model-customizers [(d/bbox-draw bpmnc/diamond-bbox-draw)]
+                         :layout-attributes (layout-attributes "main"
+                                                               (layout-hints
+                                                                 (match-parent-position)
+                                                                 (match-parent-size)
+                                                                 (weighted-origin 0 0)))})
     (shape c/rectangle {:name "bg"
                         :model {:background-color "white"}
                         :layout-attributes (layout-attributes "main" 1

@@ -17,7 +17,7 @@
 (defn initialize [app-state]
   (r/register app-state
               ::set-title
-              f/is-shape-entity
+              f/has-node-shape
               (spec/keys :req-un [::title])
               (fn [app-state node data]
                 (e/assert-shape c/title app-state node "title" {:text (:title data)})
@@ -25,7 +25,7 @@
 
   (r/register app-state
               ::write-notes
-              f/is-shape-entity
+              f/has-node-shape
               (spec/keys :req-un [::notes])
               (fn [app-state node data]
                 (let [bbox (:bbox node)
@@ -44,7 +44,7 @@
 
   (r/register app-state
               ::make-association
-              f/is-association-entity
+              f/is-association-node
               (spec/keys :req-un [::x1 ::y1 ::x2 ::y2])
               (fn [app-state node data]
                 (m/set-relation-endpoints app-state node {:x (+ (:x1 data) (:left data))
@@ -54,7 +54,7 @@
                 (let [startpoint (first (e/get-node-shape node ::c/startpoint))]
                   (api/collides? app-state
                                  startpoint
-                                 f/is-shape-entity
+                                 f/has-node-shape
                                  (fn [src trg]
                                     (e/connect-nodes app-state (:node trg) (:node src) :start)
                                     (stdapi/toggle-controls (:node trg) false)

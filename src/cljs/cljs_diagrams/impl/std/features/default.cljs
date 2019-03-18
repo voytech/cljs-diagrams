@@ -11,22 +11,22 @@
 (defn has-controls [target]
   ((f/has-shapes-of-types #{::c/control}) target))
 
-(defn is-shape-entity [target]
-  ((f/has-shapes-of-types #{::c/entity-shape}) target))
+(defn has-node-shape [target]
+  ((f/has-shapes-of-types #{::c/node-shape}) target))
 
-(defn is-associative-entity [target]
+(defn is-associative-node [target]
   (f/any-of-features [
                       has-endpoints
                       has-controls]
    target))
 
-(defn is-interactive-entity [target]
+(defn is-interactive-node [target]
   ((f/has-shapes-of-types #{::c/control}) target))
 
-(defn is-primary-entity [target]
+(defn is-primary-node [target]
   (f/check-features [
-                     is-associative-entity
-                     is-shape-entity]
+                     is-associative-node
+                     has-node-shape]
    target))
 
 (defn is-container [target]
@@ -36,12 +36,12 @@
                             (filterv #(= % :container))
                             count
                             (= 1)))
-                     is-shape-entity]
+                     has-node-shape]
    target))
 
-(defn is-association-entity [target]
+(defn is-association-node [target]
   (f/check-features [
-                     is-associative-entity
+                     is-associative-node
                      has-relation]
    target))
 

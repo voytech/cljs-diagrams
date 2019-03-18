@@ -59,7 +59,7 @@
      :background-color "none"
      :height 20}))
 
-(defn- entity-shape-initializer []
+(defn- node-shape-initializer []
   (fn [container props]
     {:border-color "black"
      :border-style :solid
@@ -107,8 +107,8 @@
 (defshape control {:rendering-method :draw-rect
                    :initializer (control-initializer 16)})
 
-(defshape entity-shape {:rendering-method :draw-rect
-                        :initializer (entity-shape-initializer)})
+(defshape node-shape {:rendering-method :draw-rect
+                      :initializer (node-shape-initializer)})
 
 ;; ===================================
 ;; layout managed components.
@@ -165,7 +165,7 @@
 (defshape edit {:rendering-method :draw-image
                 :initializer (image-initializer 20 20 "/icons/edit.svg")})
 
-(defshapes-group shape-editing
+(defshapes-group node-editing
   (with-layouts (layout "edit-buttons" ::w/expression))
   (shape edit   {:name  "edit"
                  :model {:width 20 :height 20 :background-color "red"}
@@ -174,7 +174,7 @@
                  :model {:width 20 :height 20}
                  :layout-attributes (layout-attributes "edit-buttons"  (layout-hints (weighted-position 1 0) (weighted-origin 1 1.2)))}))
 
-(defshapes-group entity-controls
+(defshapes-group node-controls
   (with-layouts (layout "controls" ::w/expression))
   (shape control {:name  "connector-left"
                   :attributes {:side :left}

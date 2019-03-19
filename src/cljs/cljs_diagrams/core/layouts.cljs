@@ -129,7 +129,7 @@
 (defn move-node-to [app-state node new-pos]
   (let [old-bbox (:bbox node)
         new-bbox (merge old-bbox new-pos)]
-     (do-layouts node)))
+     (do-layouts app-state node)))
 
 (defn move-node-by [app-state node offset])
 
@@ -137,14 +137,17 @@
 
 (defmulti layout-function (fn [entity shape context] (:layout-type context)))
 
-(defn create-evaluation-context [node]
+(defn create-evaluation-context [node app-state custom-data]
    (->> (mapv (fn [layout]
-                 {(:name layout) (assoc (create-context node layout) :layout-type (:type layout))})
+                 {(:name layout) (-> (create-context node layout)
+                                     (assoc :layout-type (:type layout))
+                                     (assoc :app-state app-state)
+                                     (assoc :data (get custom-data (:name layout))))})
               (-> node :layouts vals))
         (apply merge)))
 
-(defn do-layouts [node]
-  (let [context (volatile! (create-evaluation-context node))]
+(defn do-layouts [app-state node custom-data]
+  (let [context (volatile! (create-evaluation-context node app-state custom-data))]
     (doseq [shape (->> (e/shapes-of node)
                        (filterv #(some? (-> % :layout-attributes :layout-ref)))
                        (sort-by #(-> % :layout-attributes :layout-order)))]
@@ -157,4 +160,4 @@
 (defn initialize [app-state]
   (b/on app-state ["layouts.do"] -999 (fn [event]
                                         (when-let [{:keys [container app-state]} (:context event)]
-                                          (do-layouts (e/shape-by-id app-state (:uid container)))))))
+                                          (do-layouts app-state (e/shape-by-id app-state (:uid container)))))))

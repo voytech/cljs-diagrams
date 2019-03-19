@@ -39,7 +39,7 @@
                                                          :model {:text word :left @left :top @top}
                                                          :layout-attributes (fl/flow-layout-attributes "notes" idx 5)})]
                       (rendering/render-changes app-state)))
-                  (l/do-layouts node)
+                  (l/do-layouts app-state node)
                   (rendering/render-node app-state node))))
 
   (r/register app-state

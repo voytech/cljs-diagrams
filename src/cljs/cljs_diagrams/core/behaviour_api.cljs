@@ -81,8 +81,8 @@
         (if (= ref-shape-name (:name shape))
           (default-position-node-shape app-state node (:name shape) mx my :offset)
           (default-position-node-shape app-state node (:name shape) effective-left effective-top :absolute))))
-    (-> (e/set-bbox app-state node (merge bbox {:left (+ left mx) :top (+ top my)}))
-        (layouts/do-layouts))))
+    (->> (e/set-bbox app-state node (merge bbox {:left (+ left mx) :top (+ top my)}))
+         (layouts/do-layouts app-state))))
 
 (defn move-related-node [app-state node related-node relation left top]
   (let [event-data {:node related-node
@@ -131,13 +131,13 @@
             rightmost  (apply max-key (concat [#(+ (d/get-left %) (d/get-width %))] shapes))
             topmost    (apply min-key (concat [#(d/get-top %)] shapes))
             bottommost (apply max-key (concat [#(+ (d/get-top %) (d/get-height %))] shapes))]
-        (-> (e/set-bbox app-state
-                        node
-                     {:left   (d/get-left leftmost)
-                      :top    (d/get-top topmost)
-                      :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
-                      :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})
-            (layouts/do-layouts))))))
+        (->> (e/set-bbox app-state
+                         node
+                        {:left   (d/get-left leftmost)
+                         :top    (d/get-top topmost)
+                         :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
+                         :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})
+             (layouts/do-layouts app-state))))))
 
 (defn collides?
   ([app-state shape feature hit-callback miss-callback]

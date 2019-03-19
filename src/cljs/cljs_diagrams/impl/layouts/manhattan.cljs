@@ -151,8 +151,11 @@
       (layout-tail-decorator app-state node shape context))
     context))
 
-(defn decorates-head [name]
-  (d/layout-attributes name 999 {:decorates-head true}))
+(defn manhattan-head-decorator [name]
+  (d/layout-attributes name 1 {:decorates-head true}))
 
-(defn decorates-tail [name]
-  (d/layout-attributes name 999 {:decorates-tail true}))
+(defn manhattan-tail-decorator [name]
+  (d/layout-attributes name 1 {:decorates-tail true}))
+
+(defn manhattan-relation [name]
+  (d/layout-attributes name 0 {:relation true}))

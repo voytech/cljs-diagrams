@@ -75,6 +75,7 @@
                 (let [event (:context e)
                       {:keys [app-state node shape movement-x movement-y]} event
                       end-type (if (= ::c/startpoint (:type shape)) :start :end)]
+                  ;(l/do-layouts app-state node {:manhattan {end-type {:x movememnt-x :y movememnt-y}})
                   (m/endpoint-move app-state node end-type movement-x movement-y)
                   (api/collides? app-state
                                  shape

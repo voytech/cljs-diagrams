@@ -1,5 +1,6 @@
 (ns cljs-diagrams.impl.std.behaviours.definitions
   (:require [cljs-diagrams.core.behaviours :as b]
+            [cljs-diagrams.core.layouts :as l]
             [cljs-diagrams.core.eventbus :as bus]
             [cljs-diagrams.core.options :as o]
             [cljs-diagrams.core.nodes :as e]
@@ -9,6 +10,7 @@
             [cljs-diagrams.core.selection :as s]
             [cljs-diagrams.impl.std.behaviours.behaviour-api :as std]
             [cljs-diagrams.impl.std.behaviours.manhattan :as m]
+            [cljs-diagrams.impl.layouts.manhattan :as lm]
             [cljs-diagrams.impl.std.shapes :as c]
             [cljs-diagrams.impl.std.features.default :as f])
   (:require-macros [cljs-diagrams.core.macros :refer [defbehaviour]]))
@@ -32,7 +34,7 @@
                 (let [event (:context e)
                       node (:node event)
                       app-state (-> event :app-state)]
-                  (m/refresh-manhattan-layout app-state node)
+                  (l/do-layouts app-state node)
                   nil)))
 
 (defbehaviour moving-primary-entity-by
@@ -66,6 +68,10 @@
                     (e/remove-node app-state node)
                     nil)))
 
+(defn disconnect [app-state node relation-type]
+  (doseq [related (e/get-related-nodes app-state node relation-type)]
+    (e/disconnect-nodes app-state node related relation-type)))
+
 (defbehaviour moving-association-endpoints
               "Association's endpoints moving [Manhattan]"
               :association-endpoint-moving
@@ -73,10 +79,15 @@
               (b/build-event-name [::c/startpoint ::c/endpoint ] "move")
               (fn [e]
                 (let [event (:context e)
-                      {:keys [app-state node shape movement-x movement-y]} event
-                      end-type (if (= ::c/startpoint (:type shape)) :start :end)]
-                  ;(l/do-layouts app-state node {:manhattan {end-type {:x movememnt-x :y movememnt-y}})
-                  (m/endpoint-move app-state node end-type movement-x movement-y)
+                      {:keys [app-state node shape movement-x movement-y]} event]
+                  (cond
+                    (= ::c/endpoint (:type shape))
+                    (do (disconnect app-state node :end)
+                        (lm/set-head-position app-state node movement-x movement-y))
+                    (= ::c/startpoint (:type shape))
+                    (do (disconnect app-state node :start)
+                        (lm/set-tail-position app-state node movement-x movement-y)))
+                  (l/do-layouts app-state node)
                   (api/collides? app-state
                                  shape
                                  f/has-controls
@@ -95,7 +106,7 @@
                       end-type (cond
                                  (= ::c/endpoint ctype) :end
                                  (= ::c/startpoint ctype) :start)]
-                  (api/collision-based-relations-validate app-state node)
+                  ;(api/collision-based-relations-validate app-state node)
                   (api/collides? app-state
                                  shape
                                  f/has-node-shape
@@ -106,7 +117,7 @@
                                                     (= ::c/startpoint ctype) "start")]
                                     (e/connect-nodes app-state (:node trg) (:node src) (keyword end-type))
                                     (std/toggle-controls (:node trg) false)
-                                    (m/refresh-manhattan-layout app-state node)))
+                                    (l/do-layouts app-state node)))
                                  (fn [src]))
                   nil)))
 

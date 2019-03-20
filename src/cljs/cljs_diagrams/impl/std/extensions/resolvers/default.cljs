@@ -2,7 +2,7 @@
  (:require [cljs-diagrams.core.nodes :as e]
            [cljs-diagrams.core.shapes :as d]
            [cljs-diagrams.impl.std.shapes :as c]
-           [cljs-diagrams.impl.std.behaviours.manhattan :as m]
+           [cljs-diagrams.impl.layouts.manhattan :as m]
            [cljs-diagrams.impl.layouts.flow :as fl]
            [cljs-diagrams.core.behaviour-api :as api]
            [cljs-diagrams.impl.std.behaviours.behaviour-api :as stdapi]
@@ -47,10 +47,10 @@
               f/is-association-node
               (spec/keys :req-un [::x1 ::y1 ::x2 ::y2])
               (fn [app-state node data]
-                (m/set-relation-endpoints app-state node {:x (+ (:x1 data) (:left data))
-                                                          :y (+ (:y1 data) (:top data))}
-                                                         {:x (+ (:left data) (:x2 data))
-                                                          :y (+ (:top data) (:y2 data))})
+                (m/set-tail-position app-state node {:x (+ (:x1 data) (:left data))
+                                                     :y (+ (:y1 data) (:top data))})
+                (m/set-head-position app-state node {:x (+ (:x2 data) (:left data))
+                                                     :y (+ (:y2 data) (:top data))})
                 (let [startpoint (first (e/get-node-shape node ::c/startpoint))]
                   (api/collides? app-state
                                  startpoint
@@ -60,4 +60,5 @@
                                     (stdapi/toggle-controls (:node trg) false)
                                     (m/refresh-manhattan-layout app-state node))
                                  (fn [src])))
+                (l/do-layouts app-state node)
                 (rendering/render-changes app-state))))

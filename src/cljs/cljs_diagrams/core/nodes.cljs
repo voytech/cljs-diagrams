@@ -30,6 +30,9 @@
 (defn node-by-id [app-state id]
  (state/get-in-diagram-state app-state [:nodes id]))
 
+(defn reload [app-state node]
+  (node-by-id app-state (:uid node)))
+
 (defn node-by-type [type])
 
 (defn is-node [target]
@@ -130,6 +133,23 @@
 
 (defn preset-shapes-properties [node name]
   (get-in node [:shapes-properties name]))
+
+(defn set-shape-layout-hint [app-state shape hint value]
+  (state/assoc-diagram-state app-state [:nodes (:parent-ref shape)
+                                        :shapes (:name shape)
+                                        :layout-attributes
+                                        :layout-hints
+                                        hint] value))
+
+(defn set-shape-layout-attributes [app-state shape layout-attributes]
+  (state/assoc-diagram-state app-state [:nodes (:parent-ref shape)
+                                        :shapes (:name shape)
+                                        :layout-attributes] layout-attributes))
+
+(defn shape-layout-attributes [app-state shape]
+  (state/get-in-diagram-state app-state [:nodes (:parent-ref shape)
+                                         :shapes (:name shape)
+                                         :layout-attributes]))
 
 (defn get-node-shape
  ([node name-or-type]

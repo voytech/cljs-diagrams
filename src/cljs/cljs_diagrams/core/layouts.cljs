@@ -147,7 +147,8 @@
         (apply merge)))
 
 (defn do-layouts [app-state node custom-data]
-  (let [context (volatile! (create-evaluation-context node app-state custom-data))]
+  (let [node (e/reload app-state node)
+        context (volatile! (create-evaluation-context node app-state custom-data))]
     (doseq [shape (->> (e/shapes-of node)
                        (filterv #(some? (-> % :layout-attributes :layout-ref)))
                        (sort-by #(-> % :layout-attributes :layout-order)))]

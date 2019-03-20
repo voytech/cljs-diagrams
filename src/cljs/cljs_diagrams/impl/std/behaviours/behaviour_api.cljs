@@ -146,8 +146,8 @@
                (= side :bottom) (e/set-bbox app-state node (merge bbox {:height (+ (:height bbox) movement-y)})))
              (layouts/do-layouts app-state))))))
 
-(defn calc-association-bbox [app-state node]
-  (let [node     (e/node-by-id app-state (:uid node))
+(defn calc-association-bbox [app-state node invalidate-layout?]
+  (let [node       (e/reload app-state node)
         startpoint (first (e/get-node-shape node ::c/startpoint))
         endpoint   (first (e/get-node-shape node ::c/endpoint))
         shapes [startpoint endpoint]]
@@ -155,14 +155,14 @@
       (let [leftmost   (apply min-key (concat [#(d/get-left %)] shapes))
             rightmost  (apply max-key (concat [#(+ (d/get-left %) (d/get-width %))] shapes))
             topmost    (apply min-key (concat [#(d/get-top %)] shapes))
-            bottommost (apply max-key (concat [#(+ (d/get-top %) (d/get-height %))] shapes))]
-        (->> (e/set-bbox app-state
-                         node
-                         {:left   (d/get-left leftmost)
-                          :top    (d/get-top topmost)
-                          :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
-                          :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})
-             (layouts/do-layouts app-state))))))
+            bottommost (apply max-key (concat [#(+ (d/get-top %) (d/get-height %))] shapes))
+            updated (e/set-bbox app-state
+                                node
+                                {:left   (d/get-left leftmost)
+                                 :top    (d/get-top topmost)
+                                 :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
+                                 :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})]
+        (when invalidate-layout? (layouts/do-layouts app-state updated))))))
 
 (defn moving-endpoint []
    (fn [e]

@@ -84,10 +84,11 @@
                              (if ~has-layouts (~layouts app-state# e#) e#)
                              context#)
              (let [result# (cljs-diagrams.core.nodes/node-by-id app-state# (:uid e#))]
-               (cljs-diagrams.core.layouts/do-layouts app-state# result#)
-               (cljs-diagrams.core.rendering/render-node app-state# result#)
-               (when ~has-data
-                 (cljs-diagrams.extensions.data-resolvers/apply-data app-state# result# (merge ~resolve-data context#)))
+               (if ~has-data
+                 (cljs-diagrams.extensions.data-resolvers/apply-data app-state# result# (merge ~resolve-data context#))
+                 (do
+                   (cljs-diagrams.core.layouts/do-layouts app-state# result#)
+                   (cljs-diagrams.core.rendering/render-node app-state# result#)))
                result#)))))))
 
 (defmacro defshape [type {:keys [rendering-method attributes initializer] :as args}]

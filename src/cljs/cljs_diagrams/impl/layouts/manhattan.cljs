@@ -1,6 +1,6 @@
 (ns cljs-diagrams.impl.layouts.manhattan
   (:require [cljs-diagrams.core.nodes :as e]
-            [cljs-diagrams.core.layouts :as layouts]
+            [cljs-diagrams.core.layouts :as l]
             [cljs-diagrams.core.shapes :as d]
             [cljs-diagrams.core.eventbus :as b]
             [cljs-diagrams.core.behaviour-api :as api]
@@ -67,11 +67,21 @@
   (let [normals  (eval-vectors tail-pos head-pos)]
     {:tail tail-pos :head head-pos :vectors normals}))
 
-(defn head-position-hints [shape]
-  (-> shape :layout-attributes :layout-hints :head-position))
+(defn head-position-hints
+  ([shape]
+   (-> shape :layout-attributes :layout-hints :head-position))
+  ([app-state shape]
+   (-> (e/shape-layout-attributes app-state shape)
+       :layout-hints
+       :head-position)))
 
-(defn tail-position-hints [shape]
-  (-> shape :layout-attributes :layout-hints :tail-position))
+(defn tail-position-hints
+  ([shape]
+   (-> shape :layout-attributes :layout-hints :tail-position))
+  ([app-state shape]
+   (-> (e/shape-layout-attributes app-state shape)
+       :layout-hints
+       :tail-position)))
 
 (defn is-relation-shape [shape]
   (and (= (:rendering-method shape) :draw-poly-line)
@@ -115,14 +125,14 @@
   (let [end-pos   (std/get-relation-end node)
         relation  (first (e/get-node-shape node ::c/relation))]
     (d/set-data shape {:left (- (:x end-pos) (/ (d/get-width shape) 2))
-                      :top (- (:y end-pos) (/ (d/get-height shape) 2))})
+                       :top (- (:y end-pos) (/ (d/get-height shape) 2))})
     (std/refresh-decorator-angle (std/head-vector relation) shape)))
 
 (defn layout-tail-decorator [app-state node shape context]
   (let [start-pos (std/get-relation-start node)
         relation  (first (e/get-node-shape node ::c/relation))]
-    (d/set-data tail {:left (- (:x start-pos) (/ (d/get-width shape) 2))
-                      :top (- (:y start-pos) (/ (d/get-height shape) 2))})
+    (d/set-data shape {:left (- (:x start-pos) (/ (d/get-width shape) 2))
+                       :top (- (:y start-pos) (/ (d/get-height shape) 2))})
     (std/refresh-decorator-angle (std/tail-vector relation) shape)))
 
 (defmethod l/create-context ::manhattan [node layout]
@@ -131,7 +141,7 @@
 
 (defmethod l/layout-function ::manhattan [node shape context]
   (let [app-state (:app-state context)
-        cbbox (c/get-bbox shape)]
+        cbbox (d/get-bbox shape)]
     (cond
       (is-relation-shape shape)
       (layout-relation app-state node shape context)
@@ -139,6 +149,7 @@
       (layout-head-decorator app-state node shape context)
       (is-tail-decorator-shape shape)
       (layout-tail-decorator app-state node shape context))
+    (std/calc-association-bbox app-state node)
     context))
 
 (defn manhattan-head-decorator-attributes [name]
@@ -151,9 +162,23 @@
   (d/layout-attributes name 0 {:relation true}))
 
 (defn set-head-position
-  ([shape position])
-  ([shape movement-x movement-y]))
+  ([app-state node position]
+   (let [relation (first (e/get-node-shape app-state node ::c/relation))]
+     (e/set-shape-layout-hint app-state relation :head-position position)))
+  ([app-state node movement-x movement-y]
+   (let [relation (first (e/get-node-shape app-state node ::c/relation))
+         pos (head-position-hints app-state relation)
+         new-pos {:x (+ (:x pos) movement-x)
+                  :y (+ (:y pos) movement-y)}]
+     (set-head-position app-state node new-pos))))
 
 (defn set-tail-position
-  ([shape position])
-  ([shape movement-x movement-y]))
+  ([app-state node position]
+   (let [relation (first (e/get-node-shape app-state node ::c/relation))]
+     (e/set-shape-layout-hint app-state relation :tail-position position)))
+  ([app-state node movement-x movement-y]
+   (let [relation (first (e/get-node-shape app-state node ::c/relation))
+         pos (tail-position-hints app-state relation)
+         new-pos {:x (+ (:x pos) movement-x)
+                  :y (+ (:y pos) movement-y)}]
+     (set-tail-position app-state node new-pos))))

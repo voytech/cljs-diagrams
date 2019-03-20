@@ -4,6 +4,7 @@
            [cljs-diagrams.impl.std.shapes :as c]
            [cljs-diagrams.impl.diagrams.bpmn.shapes :as bpmnc]
            [cljs-diagrams.impl.layouts.flow :as f]
+           [cljs-diagrams.impl.layouts.manhattan :as m]
            [cljs-diagrams.impl.layouts.expression :as w :refer [layout-hints
                                                                 position-of
                                                                 size-of]]
@@ -94,7 +95,8 @@
 (defnode association
   {:width 180 :height 150}
   (resolve-data {:x1 0 :y1 0 :x2 230 :y2 85})
-  (with-layouts (layout "main" ::w/expression))
+  (with-layouts (layout "main" ::w/expression)
+                (layout "manhattan" ::m/manhattan))
   (shapes-templates
    (shape-template "connector" {:border-width 3}))
   (with-shapes context
@@ -105,13 +107,13 @@
                                                                    (match-parent-size)
                                                                    (weighted-origin 0 0)))})
      (shape c/relation {:name  "connector"
-                        :attributes
-                        {:decorators
-                         {:head ["arrow" "end"]
-                          :tail ["start"]}}})
-     (shape c/startpoint {:name "start" :model {:left 0 :top 0}})
-     (shape c/endpoint {:name "end" :model {:visible false}})
-     (shape c/arrow {:name "arrow"})
+                        :layout-attributes (m/manhattan-relation-attributes "manhattan")})
+     (shape c/startpoint {:name "start" :model {:left 0 :top 0}
+                          :layout-attributes (m/manhattan-tail-decorator-attributes "manhattan")})
+     (shape c/endpoint {:name "end" :model {:visible false}
+                        :layout-attributes (m/manhattan-head-decorator-attributes "manhattan")})
+     (shape c/arrow {:name "arrow"
+                     :layout-attributes (m/manhattan-head-decorator-attributes "manhattan")})
      (shape c/rectangle {:name "bg"
                          :model {:background-color "white"}
                          :layout-attributes (layout-attributes "main" 1

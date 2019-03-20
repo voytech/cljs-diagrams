@@ -131,7 +131,8 @@
 (defnode link
   {:width 180 :height 150}
   (resolve-data {:x1 0 :y1 0 :x2 230 :y2 85})
-  (with-layouts (layout "main" ::w/expression))
+  (with-layouts (layout "main" ::w/expression)
+                (layout "manhattan" ::m/manhattan))
   (shapes-templates
    (shape-template "connector" {:border-width 2}))
   (with-shapes context
@@ -143,12 +144,12 @@
                                                                    (weighted-origin 0 0)))})
      (shape c/relation {:name  "connector"
                         :model {:stroke-style :dashed}
-                        :attributes
-                        {:decorators
-                         {:head ["end"]
-                          :tail ["start"]}}})
-     (shape c/startpoint {:name "start" :model {:left 0 :top 0}})
-     (shape c/endpoint {:name  "end" :model {:visible true}})))
+                        :layout-attributes (m/manhattan-relation-attributes "manhattan")})
+     (shape c/startpoint {:name "start"
+                          :layout-attributes (m/manhattan-tail-decorator-attributes "manhattan")})
+     (shape c/endpoint {:name  "end"
+                        :model {:visible true}
+                        :layout-attributes (m/manhattan-head-decorator-attributes "manhattan")})))
 
 (defnode note
   {:width 180 :height 150}

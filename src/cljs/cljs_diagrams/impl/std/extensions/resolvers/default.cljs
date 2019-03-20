@@ -60,5 +60,6 @@
                                     (stdapi/toggle-controls (:node trg) false)
                                     (m/refresh-manhattan-layout app-state node))
                                  (fn [src])))
+                (m/manhattan-bbox-apply app-state node)
                 (l/do-layouts app-state node)
                 (rendering/render-changes app-state))))

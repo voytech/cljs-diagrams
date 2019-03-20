@@ -7,6 +7,22 @@
             [cljs-diagrams.impl.std.behaviours.behaviour-api :as std]
             [cljs-diagrams.impl.std.shapes :as c]))
 
+(declare head-position-hints)
+(declare tail-position-hints)
+
+(defn manhattan-bbox-apply [app-state node]
+  (let [node       (e/reload app-state node)
+        relation   (first (e/get-node-shape app-state node ::c/relation))
+        startpoint (tail-position-hints app-state relation)
+        endpoint   (head-position-hints app-state relation)]
+    (when (and (some? startpoint) (some? endpoint))
+      (e/set-bbox app-state
+                  node
+                  {:left   (if (< (:x startpoint) (:x endpoint)) (:x startpoint) (:x endpoint))
+                   :top    (if (< (:y startpoint) (:y endpoint)) (:y startpoint) (:y endpoint))
+                   :width  (js/Math.abs (- (:x endpoint) (:x startpoint)))
+                   :height (js/Math.abs (- (:y endpoint) (:y startpoint)))}))))
+
 (defn- center-point [cmp]
   (let [mx (+ (d/get-left cmp) (/ (d/get-width cmp) 2))
         my (+ (d/get-top cmp) (/ (d/get-height cmp) 2))]
@@ -119,7 +135,10 @@
                    {:tail (center-point src) :head (center-point trg) :vectors vectors})
                  :else
                  (manhattan-coords relation-tail relation-head))]
-    (update-manhattan-layout app-state node (:tail update) (:head update) (:vectors update))))
+    (update-manhattan-layout app-state node (:tail update) (:head update) (:vectors update))
+    (set-tail-position app-state node (:tail update))
+    (set-head-position app-state node (:head update))
+    (manhattan-bbox-apply app-state node)))
 
 (defn layout-head-decorator [app-state node shape context]
   (let [end-pos   (std/get-relation-end node)
@@ -149,7 +168,6 @@
       (layout-head-decorator app-state node shape context)
       (is-tail-decorator-shape shape)
       (layout-tail-decorator app-state node shape context))
-    (std/calc-association-bbox app-state node)
     context))
 
 (defn manhattan-head-decorator-attributes [name]

@@ -67,23 +67,11 @@
   (let [normals  (eval-vectors tail-pos head-pos)]
     {:tail tail-pos :head head-pos :vectors normals}))
 
-(defn free-form-manhattan-coords [app-state node context]
-  (let [node  (e/node-by-id app-state (:uid node))
-        custom-data (:data context)
-        is-move-head (some? (:move-head custom-data))
-        is-move-tail (some? (:move-tail custom-data))
-        head-x (-> custom-data :move-head :x)
-        head-y (-> custom-data :move-head :y)
-        tail-x (-> custom-data :move-tail :x)
-        tail-y (-> custom-data :move-tail :y)
-        tail-pos (if is-move-tail
-                   (move-point (std/get-relation-start node) tail-x tail-y)
-                   (std/get-relation-start node))
-        head-pos (if is-move-head
-                   (move-point (std/get-relation-end node) head-x head-y)
-                   (std/get-relation-end node))
-        vectors (eval-vectors tail-pos head-pos)]
-    {:tail tail-pos :head head-pos :vectors vectors}))
+(defn head-position-hints [shape]
+  (-> shape :layout-attributes :layout-hints :head-position))
+
+(defn tail-position-hints [shape]
+  (-> shape :layout-attributes :layout-hints :tail-position))
 
 (defn is-relation-shape [shape]
   (and (= (:rendering-method shape) :draw-poly-line)
@@ -97,28 +85,30 @@
   (let [hints (-> shape :layout-attributes :layout-hints)]
     (true? (:decorates-tail hints))))
 
-(defn is-free-form-move [context]
-  (or (some? (:move-head context))
-      (some? (:move-tails context))))
+(defn has-position-hints? [shape]
+  (and (some? (-> shape :layout-attributes :layout-hints :head-position))
+       (some? (-> shape :layout-attributes :layout-hints :tail-position))))
 
 (defn layout-relation [app-state node shape context]
   (let [source-node (first (e/get-related-nodes app-state node :start))
         target-node (first (e/get-related-nodes app-state node :end))
+        relation-head (head-position-hints shape)
+        relation-tail (tail-position-hints shape)
         update (cond
-                 (is-free-form-move context)
-                 (free-form-manhattan-coords app-state node context)
                  (and (some? source-node) (nil? target-node))
-                 (manhattan-coords (-> (nearest-control source-node (std/get-relation-end node))
+                 (manhattan-coords (-> (nearest-control source-node relation-head)
                                        (center-point))
-                                   (std/get-relation-end node))
+                                   relation-head)
                  (and (some? target-node) (nil? source-node))
-                 (manhattan-coords (std/get-relation-start node)
-                                   (-> (nearest-control target-node (std/get-relation-start node))
+                 (manhattan-coords relation-tail
+                                   (-> (nearest-control target-node relation-tail)
                                        (center-point)))
                  (and (some? source-node) (some? target-node))
                  (let [{:keys [src trg]} (nearest-controls-between app-state source-node target-node)
                        vectors (calculate-vectors app-state source-node src target-node trg)]
-                   {:tail (center-point src) :head (center-point trg) :vectors vectors}))]
+                   {:tail (center-point src) :head (center-point trg) :vectors vectors})
+                 :else
+                 (manhattan-coords relation-tail relation-head))]
     (update-manhattan-layout app-state node (:tail update) (:head update) (:vectors update))))
 
 (defn layout-head-decorator [app-state node shape context]
@@ -151,11 +141,19 @@
       (layout-tail-decorator app-state node shape context))
     context))
 
-(defn manhattan-head-decorator [name]
+(defn manhattan-head-decorator-attributes [name]
   (d/layout-attributes name 1 {:decorates-head true}))
 
-(defn manhattan-tail-decorator [name]
+(defn manhattan-tail-decorator-attributes [name]
   (d/layout-attributes name 1 {:decorates-tail true}))
 
-(defn manhattan-relation [name]
+(defn manhattan-relation-attributes [name]
   (d/layout-attributes name 0 {:relation true}))
+
+(defn set-head-position
+  ([shape position])
+  ([shape movement-x movement-y]))
+
+(defn set-tail-position
+  ([shape position])
+  ([shape movement-x movement-y]))

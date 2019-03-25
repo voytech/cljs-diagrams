@@ -45,12 +45,6 @@
 (defn absolute-left [context]
   (+ (layout-left-edge context) (-> context :coords :left)))
 
-(defn move [shapes context]
-  (let [left (absolute-left context)
-        top  (absolute-top context)]
-    (c/set-data shapes {:left left :top top})
-    context))
-
 (defn exceeds-container-width? [context shapes]
   (> (+ (absolute-left context) (c/get-width shapes)) (layout-right-edge context)))
 
@@ -68,7 +62,7 @@
   (and (exceeds-container-width? context shapes)
        (> (-> context :coords :left) 0)))
 
-(defmethod l/create-context ::flow [node layout]
+(defmethod l/create-context ::flow [app-state node layout]
   {:orig-pos  (l/absolute-position-of-layout node layout)
    :orig-size (l/absolute-size-of-layout node layout)
    :coords {:top 0
@@ -81,8 +75,10 @@
         context  (recalc-line-height context cbbox)
         new-row? (is-new-row? context shape)
         context  (if new-row? (next-row context) context)]
-    (-> (move shape context)
-        (next-column (+ padding (:width cbbox))))))
+    {:to-set {
+         :left (absolute-left context)
+         :top (absolute-top context)}
+     :processing-context (next-column context (+ padding (:width cbbox)))}))
 
 (defn flow-layout-attributes [name idx padding]
   (c/layout-attributes name idx {:padding padding}))

@@ -62,7 +62,7 @@
   ([position]
    (layout-hints position nil (l/weighted-origin 0 0))))
 
-(defn obtain-shape-bbox [node shape]
+(defn obtain-shape-bbox [node shape context]
   (let [bbox (:bbox node)
         hints (-> shape :layout-attributes :layout-hints)
         layout-ref (-> shape :layout-attributes :layout-ref)
@@ -93,24 +93,24 @@
                                (= :abs (-> orig-y :type)) (:value orig-y)
                                (= :exp (-> orig-y :type)) ((provide (:value orig-y)) node layout)
                                :else 0)]
-          {:width effective-width
-           :height effective-height
-           :left  (- (cond
-                        (= :wei (-> left :type)) (+ (:left layout-pos) (* (:width layout-size) (:value left)))
-                        (= :rel (-> left :type)) (+ (:left layout-pos ) (:value left))
-                        (= :abs (-> left :type)) (:value left)
-                        (= :exp (-> left :type)) ((provide (:value left)) node layout bounds)
-                        :else (d/get-left shape)) origin-offset-x)
-           :top  (- (cond
-                        (= :wei (-> top :type)) (+ (:top layout-pos) (* (:height layout-size) (:value top)))
-                        (= :rel (-> top :type)) (+ (:top layout-pos ) (:value top))
-                        (= :abs (-> top :type)) (:value top)
-                        (= :exp (-> top :type)) ((provide (:value top)) node layout bounds)
-                        :else (d/get-left shape)) origin-offset-y)}))))
+          {:processing-context context
+           :to-set
+              {:width effective-width
+               :height effective-height
+               :left  (- (cond
+                            (= :wei (-> left :type)) (+ (:left layout-pos) (* (:width layout-size) (:value left)))
+                            (= :rel (-> left :type)) (+ (:left layout-pos ) (:value left))
+                            (= :abs (-> left :type)) (:value left)
+                            (= :exp (-> left :type)) ((provide (:value left)) node layout bounds)
+                            :else (d/get-left shape)) origin-offset-x)
+               :top  (- (cond
+                            (= :wei (-> top :type)) (+ (:top layout-pos) (* (:height layout-size) (:value top)))
+                            (= :rel (-> top :type)) (+ (:top layout-pos ) (:value top))
+                            (= :abs (-> top :type)) (:value top)
+                            (= :exp (-> top :type)) ((provide (:value top)) node layout bounds)
+                            :else (d/get-left shape)) origin-offset-y)}}))))
 
-(defmethod l/create-context ::expression [node layout] {})
+(defmethod l/create-context ::expression [app-state node layout] {})
 
 (defmethod l/layout-function ::expression [node shape context]
-  (when-let [bbox (obtain-shape-bbox node shape)]
-    (d/set-data shape bbox))
-  context)
+  (obtain-shape-bbox node shape context))

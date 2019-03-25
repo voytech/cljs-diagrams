@@ -9,12 +9,11 @@
 
 (declare head-position-hints)
 (declare tail-position-hints)
+(declare set-head-position)
+(declare set-tail-position)
 
-(defn manhattan-bbox-apply [app-state node]
-  (let [node       (e/reload app-state node)
-        relation   (first (e/get-node-shape app-state node ::c/relation))
-        startpoint (tail-position-hints app-state relation)
-        endpoint   (head-position-hints app-state relation)]
+(defn manhattan-bbox-apply [app-state node startpoint endpoint]
+(let [node  (e/reload app-state node)]
     (when (and (some? startpoint) (some? endpoint))
       (e/set-bbox app-state
                   node
@@ -49,12 +48,6 @@
 (defn to-polyline-points [start end points]
   (->  (mapv (fn [entry] [(:x entry) (:y entry)]) (flatten [start points end]))
        (flatten)))
-
-(defn update-manhattan-layout [app-state node start end normals]
-  (let [points (find-path start end (normals 0) (normals 1))
-        polyline-points (to-polyline-points start end points)
-        polyline (first (e/get-node-shape node ::c/relation))]
-    (d/setp polyline :points polyline-points)))
 
 (defn- calculate-vectors [app-state
                           source-node source-control
@@ -115,48 +108,63 @@
   (and (some? (-> shape :layout-attributes :layout-hints :head-position))
        (some? (-> shape :layout-attributes :layout-hints :tail-position))))
 
-(defn layout-relation [app-state node shape context]
+(defn create-manhattan-layout-context [app-state node]
   (let [source-node (first (e/get-related-nodes app-state node :start))
         target-node (first (e/get-related-nodes app-state node :end))
+        shape       (first (e/get-node-shape app-state node ::c/relation))
         relation-head (head-position-hints shape)
-        relation-tail (tail-position-hints shape)
-        update (cond
-                 (and (some? source-node) (nil? target-node))
-                 (manhattan-coords (-> (nearest-control source-node relation-head)
-                                       (center-point))
-                                   relation-head)
-                 (and (some? target-node) (nil? source-node))
-                 (manhattan-coords relation-tail
-                                   (-> (nearest-control target-node relation-tail)
-                                       (center-point)))
-                 (and (some? source-node) (some? target-node))
-                 (let [{:keys [src trg]} (nearest-controls-between app-state source-node target-node)
-                       vectors (calculate-vectors app-state source-node src target-node trg)]
-                   {:tail (center-point src) :head (center-point trg) :vectors vectors})
-                 :else
-                 (manhattan-coords relation-tail relation-head))]
-    (update-manhattan-layout app-state node (:tail update) (:head update) (:vectors update))
-    (set-tail-position app-state node (:tail update))
-    (set-head-position app-state node (:head update))
-    (manhattan-bbox-apply app-state node)))
+        relation-tail (tail-position-hints shape)]
+      (cond
+         (and (some? source-node) (nil? target-node))
+         (manhattan-coords (-> (nearest-control source-node relation-head)
+                               (center-point))
+                           relation-head)
+         (and (some? target-node) (nil? source-node))
+         (manhattan-coords relation-tail
+                           (-> (nearest-control target-node relation-tail)
+                               (center-point)))
+         (and (some? source-node) (some? target-node))
+         (let [{:keys [src trg]} (nearest-controls-between app-state source-node target-node)
+               vectors (calculate-vectors app-state source-node src target-node trg)]
+           {:tail (center-point src) :head (center-point trg) :vectors vectors})
+         :else
+         (manhattan-coords relation-tail relation-head))))
+
+(defn layout-relation [app-state node shape context]
+  (let [{:keys [tail head vectors]} (:layout-coords context)]
+    (let [points (find-path tail head (vectors 0) (vectors 1))
+          polyline-points (to-polyline-points tail head points)]
+      {:processing-context context
+       :to-set {
+           :points polyline-points
+           }})))
 
 (defn layout-head-decorator [app-state node shape context]
   (let [end-pos   (std/get-relation-end node)
-        relation  (first (e/get-node-shape node ::c/relation))]
-    (d/set-data shape {:left (- (:x end-pos) (/ (d/get-width shape) 2))
-                       :top (- (:y end-pos) (/ (d/get-height shape) 2))})
-    (std/refresh-decorator-angle (std/head-vector relation) shape)))
+        relation  (first (e/get-node-shape node ::c/relation))
+        {:keys [x1 y1 x2 y2]} (std/head-vector relation)]
+    {:processing-context context
+     :to-set {
+         :left (- (:x end-pos) (/ (d/get-width shape) 2))
+         :top (- (:y end-pos) (/ (d/get-height shape) 2))
+         :angle (std/calculate-angle x1 y1 x2 y2)
+         }}))
 
 (defn layout-tail-decorator [app-state node shape context]
   (let [start-pos (std/get-relation-start node)
-        relation  (first (e/get-node-shape node ::c/relation))]
-    (d/set-data shape {:left (- (:x start-pos) (/ (d/get-width shape) 2))
-                       :top (- (:y start-pos) (/ (d/get-height shape) 2))})
-    (std/refresh-decorator-angle (std/tail-vector relation) shape)))
+        relation  (first (e/get-node-shape node ::c/relation))
+        {:keys [x1 y1 x2 y2]} (std/tail-vector relation)]
+    {:processing-context context
+     :to-set {
+         :left (- (:x start-pos) (/ (d/get-width shape) 2))
+         :top (- (:y start-pos) (/ (d/get-height shape) 2))
+         :angle (std/calculate-angle x1 y1 x2 y2)
+         }}))
 
-(defmethod l/create-context ::manhattan [node layout]
-  {:orig-pos  (l/absolute-position-of-layout node layout)
-   :orig-size (l/absolute-size-of-layout node layout)})
+(defmethod l/create-context ::manhattan [app-state node layout]
+  (let [context (create-manhattan-layout-context app-state node)]
+    (manhattan-bbox-apply app-state node (:tail context) (:head context))
+    {:layout-coords context}))
 
 (defmethod l/layout-function ::manhattan [node shape context]
   (let [app-state (:app-state context)
@@ -167,8 +175,7 @@
       (is-head-decorator-shape shape)
       (layout-head-decorator app-state node shape context)
       (is-tail-decorator-shape shape)
-      (layout-tail-decorator app-state node shape context))
-    context))
+      (layout-tail-decorator app-state node shape context))))
 
 (defn manhattan-head-decorator-attributes [name]
   (d/layout-attributes name 1 {:decorates-head true}))

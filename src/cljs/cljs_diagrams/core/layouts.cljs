@@ -133,13 +133,13 @@
 
 (defn move-node-by [app-state node offset])
 
-(defmulti create-context (fn [entity layout] (:type layout)))
+(defmulti create-context (fn [app-state node layout] (:type layout)))
 
-(defmulti layout-function (fn [entity shape context] (:layout-type context)))
+(defmulti layout-function (fn [node shape context] (:layout-type context)))
 
 (defn create-evaluation-context [node app-state custom-data]
    (->> (mapv (fn [layout]
-                 {(:name layout) (-> (create-context node layout)
+                 {(:name layout) (-> (create-context app-state node layout)
                                      (assoc :layout-type (:type layout))
                                      (assoc :app-state app-state)
                                      (assoc :data (get custom-data (:name layout))))})
@@ -153,10 +153,9 @@
                        (filterv #(some? (-> % :layout-attributes :layout-ref)))
                        (sort-by #(-> % :layout-attributes :layout-order)))]
       (when-let [layout (get-in node [:layouts (-> shape :layout-attributes :layout-ref)])]
-        (vswap! context assoc (:name layout)
-          (layout-function node
-                           shape
-                           (get @context (:name layout))))))))
+        (let [{:keys [processing-context to-set]} (layout-function node shape (get @context (:name layout)))]
+          (vswap! context assoc (:name layout) processing-context)
+          (d/set-data shape to-set))))))
 
 (defn initialize [app-state]
   (b/on app-state ["layouts.do"] -999 (fn [event]

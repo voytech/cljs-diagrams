@@ -153,7 +153,7 @@
                        (filterv #(some? (-> % :layout-attributes :layout-ref)))
                        (sort-by #(-> % :layout-attributes :layout-order)))]
       (when-let [layout (get-in node [:layouts (-> shape :layout-attributes :layout-ref)])]
-        (let [{:keys [processing-context to-set]} (layout-function node shape (get @context (:name layout)))]
+        (let [{:keys [processing-context to-set]} (layout-function (e/reload app-state node) shape (get @context (:name layout)))]
           (vswap! context assoc (:name layout) processing-context)
           (d/set-data shape to-set))))))
 

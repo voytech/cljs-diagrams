@@ -8,11 +8,6 @@
             [cljs-diagrams.core.behaviour-api :as api]
             [cljs-diagrams.impl.std.shapes :as c]))
 
-(declare position-endpoint)
-(declare position-startpoint)
-(declare position-breakpoint)
-(declare dissoc-breakpoint)
-
 (defn calculate-angle [x1 y1 x2 y2]
    (let [PI 3.14
          x (- x2 x1)
@@ -34,10 +29,6 @@
                           (js/Math.atan (/ y x))))))]
        (/ (* angle 180) PI)))
 
-(defn refresh-decorator-angle [{:keys [x1 y1 x2 y2] :as heading-vector} decorator]
-  (when (not (nil? heading-vector))
-    (d/setp decorator :angle (calculate-angle x1 y1 x2 y2))))
-
 (defn tail-vector [relation]
   (let [rel-points (d/getp relation :points)
         v (take 4 rel-points)]
@@ -58,42 +49,6 @@
     (let [end (take 2 (d/getp relation :points))]
       {:x (first end) :y (last end)})))
 
-(defn get-decorators [node type]
-  (let [relation (first (e/get-node-shape node ::c/relation))
-        names (get-in relation [:attributes :decorators type])]
-   (mapv #(e/get-node-shape node %) names)))
-
-(defn align-decorators [node]
-  (let [head-decs (get-decorators node :head)
-        tail-decs (get-decorators node :tail)
-        start-pos (get-relation-start node)
-        end-pos   (get-relation-end node)
-        relation  (first (e/get-node-shape node ::c/relation))]
-    (doseq [head head-decs]
-      (d/set-data head {:left (- (:x end-pos) (/ (d/get-width head) 2))
-                        :top (- (:y end-pos) (/ (d/get-height head) 2))})
-      (refresh-decorator-angle (head-vector relation) head))
-    (doseq [tail tail-decs]
-      (d/set-data tail {:left (- (:x start-pos) (/ (d/get-width tail) 2))
-                        :top (- (:y start-pos) (/ (d/get-height tail) 2))})
-      (refresh-decorator-angle (tail-vector relation) tail))))
-
-(defn position-startpoint
-  ([app-state node left top coord-mode skip?]
-   (let [startpoint-component (e/get-node-shape node "start")
-         position (effective-position startpoint-component left top coord-mode)
-         effective-left (:x position)
-         effective-top  (:y position)
-         starts-relation-component (e/get-node-shape node (:start (:attributes startpoint-component)))
-         arrow-component (e/get-node-shape node "arrow")]
-     (d/set-data startpoint-component {:left effective-left :top  effective-top})
-     (when (= false skip?)
-      (api/to-the-center-of starts-relation-component :x1 :y1 startpoint-component)
-      (when (= true (:penultimate (:attributes startpoint-component)))
-        (refresh-decorator-angle starts-relation-component arrow-component)))))
-  ([app-state node left top]
-   (position-startpoint app-state node left top :absolute false)))
-
 (defn nearest-control [app-state shape trg-node]
  (let [trg-connectors (e/get-node-shape trg-node ::c/control)]
      (->> (for [trg trg-connectors]
@@ -105,23 +60,6 @@
          trg-center (api/center-point trg)]
      (d/set-data shape {:left (- (:x trg-center) (/ (d/get-width shape) 2))
                         :top  (- (:y trg-center) (/ (d/get-height shape) 2))})))
-
-(defn position-endpoint
-  ([app-state node left top coord-mode skip?]
-   (let [endpoint-component  (e/get-node-shape node "end")
-         position (effective-position endpoint-component left top coord-mode)
-         effective-left (:x position)
-         effective-top  (:y position)
-         ends-relation-component  (e/get-node-shape node (:end (:attributes endpoint-component)))
-
-         arrow-component      (e/get-node-shape node "arrow")]
-    (d/set-data endpoint-component {:left effective-left  :top  effective-top})
-    (api/to-the-center-of arrow-component :left :top endpoint-component)
-    (when (= false skip?)
-     (api/to-the-center-of ends-relation-component :x2 :y2 endpoint-component)
-     (refresh-decorator-angle ends-relation-component arrow-component))))
- ([app-state node left top]
-  (position-endpoint app-state node left top :absolute false)))
 
 (defn toggle-bbox [bbox toggle]
   (when (= ::c/bounding-box (:type bbox))
@@ -145,31 +83,3 @@
                (= side :right)  (e/set-bbox app-state node (merge bbox {:width (+ (:width bbox) movement-x)}))
                (= side :bottom) (e/set-bbox app-state node (merge bbox {:height (+ (:height bbox) movement-y)})))
              (layouts/do-layouts app-state))))))
-
-(defn calc-association-bbox [app-state node invalidate-layout?]
-  (let [node       (e/reload app-state node)
-        startpoint (first (e/get-node-shape node ::c/startpoint))
-        endpoint   (first (e/get-node-shape node ::c/endpoint))
-        shapes [startpoint endpoint]]
-    (when (and (some? startpoint) (some? endpoint))
-      (let [leftmost   (apply min-key (concat [#(d/get-left %)] shapes))
-            rightmost  (apply max-key (concat [#(+ (d/get-left %) (d/get-width %))] shapes))
-            topmost    (apply min-key (concat [#(d/get-top %)] shapes))
-            bottommost (apply max-key (concat [#(+ (d/get-top %) (d/get-height %))] shapes))
-            updated (e/set-bbox app-state
-                                node
-                                {:left   (d/get-left leftmost)
-                                 :top    (d/get-top topmost)
-                                 :width  (- (+ (d/get-left rightmost) (d/get-width rightmost)) (d/get-left leftmost))
-                                 :height (- (+ (d/get-top bottommost) (d/get-height bottommost)) (d/get-top topmost))})]
-        (when invalidate-layout? (layouts/do-layouts app-state updated))))))
-
-(defn moving-endpoint []
-   (fn [e]
-      (let [endpoint (:shape e)
-            node   (:node e)
-            app-state (-> e :app-state)]
-         (cond
-           (= ::c/breakpoint (:type endpoint)) (position-breakpoint app-state node (:name endpoint) (:movement-x e) (:movement-y e) :offset)
-           (= ::c/startpoint (:type endpoint)) (position-startpoint app-state node (:movement-x e) (:movement-y e) :offset false)
-           (= ::c/endpoint   (:type endpoint)) (position-endpoint   app-state node (:movement-x e) (:movement-y e) :offset false)))))

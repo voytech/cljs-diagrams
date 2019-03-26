@@ -9,7 +9,6 @@
             [cljs-diagrams.core.behaviour-api :as api]
             [cljs-diagrams.core.selection :as s]
             [cljs-diagrams.impl.std.behaviours.behaviour-api :as std]
-            [cljs-diagrams.impl.std.behaviours.manhattan :as m]
             [cljs-diagrams.impl.layouts.manhattan :as lm]
             [cljs-diagrams.impl.std.shapes :as c]
             [cljs-diagrams.impl.std.features.default :as f])

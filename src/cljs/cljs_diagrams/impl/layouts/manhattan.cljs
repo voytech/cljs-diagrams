@@ -13,14 +13,13 @@
 (declare set-tail-position)
 
 (defn manhattan-bbox-apply [app-state node startpoint endpoint]
-(let [node  (e/reload app-state node)]
-    (when (and (some? startpoint) (some? endpoint))
-      (e/set-bbox app-state
-                  node
-                  {:left   (if (< (:x startpoint) (:x endpoint)) (:x startpoint) (:x endpoint))
-                   :top    (if (< (:y startpoint) (:y endpoint)) (:y startpoint) (:y endpoint))
-                   :width  (js/Math.abs (- (:x endpoint) (:x startpoint)))
-                   :height (js/Math.abs (- (:y endpoint) (:y startpoint)))}))))
+  (when (and (some? startpoint) (some? endpoint))
+    (e/set-bbox app-state
+                node
+                {:left   (if (< (:x startpoint) (:x endpoint)) (:x startpoint) (:x endpoint))
+                 :top    (if (< (:y startpoint) (:y endpoint)) (:y startpoint) (:y endpoint))
+                 :width  (js/Math.abs (- (:x endpoint) (:x startpoint)))
+                 :height (js/Math.abs (- (:y endpoint) (:y startpoint)))})))
 
 (defn- center-point [cmp]
   (let [mx (+ (d/get-left cmp) (/ (d/get-width cmp) 2))

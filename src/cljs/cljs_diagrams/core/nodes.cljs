@@ -33,8 +33,6 @@
 (defn reload [app-state node]
   (node-by-id app-state (:uid node)))
 
-(defn node-by-type [type])
-
 (defn is-node [target]
   (spec/valid? ::node target))
 
@@ -85,42 +83,39 @@
                  :shapes {}
                  :relationships []
                  :layouts {}
-                 :shapes-properties shapes-properties}]
-     (state/assoc-diagram-state app-state [:nodes uid] node)
-     (bus/fire app-state "node.added" {:node node})
-     node))
+                 :shapes-properties shapes-properties}
+         new-state (state/assoc-diagram-state app-state [:nodes uid] node)]
+     {:new-state (bus/fire new-state "node.added" {:node node})
+      :node node}))
   ([app-state type bbox]
    (create-node app-state type [] bbox {})))
 
 (defn remove-node [app-state node]
   (let [node (node-by-id app-state (:uid node))]
-    ;remove-relations
-    (remove-node-shapes app-state node some?)
     (state/dissoc-diagram-state app-state [:nodes (:uid node)])))
 
 (defn set-bbox [app-state node bbox]
-  (state/assoc-diagram-state app-state [:nodes (:uid node) :bbox] bbox)
-  (let [updated (node-by-id app-state (:uid node))]
-    (bus/fire app-state "node.bbox.set" {:node updated})
-    updated))
+  (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :bbox] bbox)]
+    {:new-state new-state
+     :node (node-by-id new-state (:uid node))}))
 
 (defn add-node-shape [app-state node args-map]
-   (let [node (d/new-shape app-state node args-map)]
-     (state/assoc-diagram-state app-state [:nodes (:uid node)] node)
-     (let [updated (node-by-id app-state (:uid node))]
-       (bus/fire app-state "node.shape.added" {:node updated})
-       updated)))
+   (let [{:keys [new-state node]} (d/new-shape app-state node args-map)]
+     (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node)] node)
+           updated (node-by-id new-state (:uid node))]
+       {:new-state (bus/fire new-state "node.shape.added" {:node updated})
+        :node updated})))
 
 (defn remove-node-shape [app-state node shape-name]
   (let [shape (get-node-shape node shape-name)]
-    (state/dissoc-diagram-state app-state [:nodes (:uid node) :shapes shape-name])
-    (d/remove-shape app-state shape)))
+    (state/dissoc-diagram-state app-state [:nodes (:uid node) :shapes shape-name])))
 
 (defn remove-node-shapes [app-state node pred]
   (let [all (shapes-of (node-by-id app-state (:uid node)))
         filtered-out (filterv pred all)]
-    (doseq [rem filtered-out]
-      (remove-node-shape app-state node (:name rem)))))
+    (reduce (fn [imm-app-state shape] (remove-node-shape imm-app-state node (:name shape)))
+            app-state
+            filtered-out)))
 
 (defn update-shape-attribute [app-state node name attribute value]
  (state/assoc-diagram-state app-state [:nodes (:uid node) :shapes name :attributes attribute] value))
@@ -162,31 +157,33 @@
 (defn assert-shape
  ([func app-state node name data]
   (let [node (node-by-id app-state (:uid node))
-        shape (get-node-shape node name)]
-    (if (nil? shape)
-      (func app-state node {:name name :model data})
-      (d/set-data shape data))
-    (get-node-shape app-state node name)))
+        shape (get-node-shape node name)
+        new-state (if (nil? shape)
+                    (func app-state node {:name name :model data})
+                    (d/set-data shape data))]
+    {:shape (get-node-shape new-state node name)
+     :new-state new-state}))
  ([func app-state node args-map]
   (let [node (node-by-id app-state (:uid node))
-        shape (get-node-shape node (:name args-map))]
-    (if (nil? shape)
-      (func app-state node args-map)
-      (d/set-data shape (:model args-map)))
-    (get-node-shape app-state node (:name args-map)))))
+        shape (get-node-shape node (:name args-map))
+        new-state (if (nil? shape)
+                    (func app-state node args-map)
+                    (d/set-data shape (:model args-map)))]
+    {:shape (get-node-shape new-state node (:name args-map))
+     :new-state new-state})))
 
 (defn add-layout
   ([app-state node layout]
-   (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
-   (let [updated (node-by-id app-state (:uid node))]
-     (bus/fire app-state "node.layout.added" {:node updated})
-     updated))
+   (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
+         updated (node-by-id new-state (:uid node))]
+     {:new-state (bus/fire new-state "node.layout.added" {:node updated})
+      :node updated}))
   ([app-state node name layout-func position size margins]
-   (let [layout (l/layout name layout-func position size margins)]
-     (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
-     (let [updated (node-by-id app-state (:uid node))]
-       (bus/fire app-state "node.layout.added" {:node updated})
-       updated)))
+   (let [layout (l/layout name layout-func position size margins)
+         new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
+         updated (node-by-id new-state (:uid node))]
+     {:new-state (bus/fire new-state "node.layout.added" {:node updated})
+      :node updated}))
   ([app-state node name layout-func position margins]
    (add-layout app-state node name layout-func position (l/match-parent-size) margins))
   ([app-state node name layout-func position]
@@ -209,7 +206,7 @@
                          (assoc :size size)
                          (assoc :margins margins)
                          (assoc :layout-func layout-func))]
-        (state/assoc-diagram-state app-state [:nodes (:uid entity) :layouts name] modified)))))
+        (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts name] modified)))))
 
 (defn- is-relation-present [app-state node related-id assoc-type]
   (->> (node-by-id app-state (:uid node))
@@ -222,8 +219,9 @@
   (when (not (is-relation-present app-state src (:uid trg) association-type))
     (let [src-rel (conj (:relationships src) {:relation-type association-type :node-id (:uid trg) :owner (:uid src)})
           trg-rel (conj (:relationships trg) {:relation-type association-type :node-id (:uid src) :owner (:uid src)})]
-      (state/assoc-diagram-state app-state [:nodes (:uid src) :relationships] src-rel)
-      (state/assoc-diagram-state app-state [:nodes (:uid trg) :relationships] trg-rel))))
+      (-> app-state
+          (state/assoc-diagram-state [:nodes (:uid src) :relationships] src-rel)
+          (state/assoc-diagram-state [:nodes (:uid trg) :relationships] trg-rel)))))
 
 (defn get-related-nodes [app-state node association-type]
   (let [node (volatile-node app-state node)]
@@ -235,12 +233,14 @@
   ([app-state src trg]
    (let [src-rel (filter #(not= (:uid trg) (:node-id %)) (:relationships src))
          trg-rel (filter #(not= (:uid src) (:node-id %)) (:relationships trg))]
-     (state/assoc-diagram-state app-state [:nodes (:uid src) :relationships] src-rel)
-     (state/assoc-diagram-state app-state [:nodes (:uid trg) :relationships] trg-rel)))
+     (-> app-state
+         (state/assoc-diagram-state [:nodes (:uid src) :relationships] src-rel)
+         (state/assoc-diagram-state [:nodes (:uid trg) :relationships] trg-rel))))
   ([app-state src trg association-type]
    (let [src-rel (filter #(and (not= (:relation-type %) association-type)
                                (not= (:uid trg) (:node-id %))) (:relationships src))
          trg-rel (filter #(and (not= (:relation-type %) association-type)
                                (not= (:uid src) (:node-id %))) (:relationships trg))]
-     (state/assoc-diagram-state app-state [:nodes (:uid src) :relationships] src-rel)
-     (state/assoc-diagram-state app-state [:nodes (:uid trg) :relationships] trg-rel))))
+     (-> app-state
+         (state/assoc-diagram-state [:nodes (:uid src) :relationships] src-rel)
+         (state/assoc-diagram-state [:nodes (:uid trg) :relationships] trg-rel)))))

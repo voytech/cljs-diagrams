@@ -1,33 +1,25 @@
 (ns cljs-diagrams.core.state)
 
 (defn create-app-state [id {:keys [width height renderer events] :as config}]
-  (let [app-state (volatile! {:dom {:id id :width width :height height}
-                              :events (:events config)
-                              :diagram {}})]
-      {:get-state      (fn [root]
-                          (get-in @app-state [root]))
-       :get-in-state   (fn [root relative-path]
-                          (let [absolute-path (concat [root] relative-path)]
-                             (get-in @app-state absolute-path)))
-       :assoc-state    (fn [root relative-path new-state]
-                          (let [absolute-path (concat [root] relative-path)]
-                             (vswap! app-state assoc-in absolute-path new-state)))
-       :dissoc-state   (fn [root relative-path]
-                          (let [last-entry (last relative-path)
-                                absolute-path (concat [root] (drop-last relative-path))]
-                             (vswap! app-state update-in absolute-path dissoc last-entry)))}))
+  (volatile! {:dom {:id id :width width :height height}
+              :events (:events config)
+              :diagram {}}))
 
 (defn get-state [app-state root]
-  ((:get-state app-state) root))
+  (get-in app-state [root]))
 
 (defn get-in-state [app-state root relative-path]
-  ((:get-in-state app-state) root relative-path))
+  (let [absolute-path (concat [root] relative-path)]
+    (get-in app-state absolute-path)))
 
 (defn assoc-state [app-state root relative-path new-state]
-  ((:assoc-state app-state) root relative-path new-state))
+  (let [absolute-path (concat [root] relative-path)]
+    (assoc-in app-state absolute-path new-state)))
 
 (defn dissoc-state [app-state root relative-path]
-  ((:dissoc-state app-state) root relative-path))
+  (let [last-entry (last relative-path)
+        absolute-path (concat [root] (drop-last relative-path))]
+    (update-in app-state absolute-path dissoc last-entry)))
 
 (defn get-diagram-state [app-state]
   (get-state app-state :diagram))
@@ -110,9 +102,5 @@
 (defn behaviours-state [app-state]
   (-> app-state deref :behaviours))
 
-(defn update-state [app-state path new-state]
-  (swap! app-state assoc-in path new-state))
-
-(defn with-sub-state [app-state path handler]
-  (let [section-state (get-in @app-state path)]
-    (handler section-state (fn [new-state] (update-state app-state path new-state)))))
+(defn update-state [app-state new-state]
+  (vreset! app-state new-state))

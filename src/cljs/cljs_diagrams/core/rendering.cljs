@@ -43,17 +43,16 @@
                                   (get-redraw-properties shape))
                               #{})
                           properties)]
-    (state/assoc-renderer-state app-state [:changes (:uid shape)] {:properties new-properties :ref shape})
-    new-properties))
+    (state/assoc-renderer-state app-state [:changes (:uid shape)] {:properties new-properties :ref shape})))
 
 (defn mark-all-for-redraw [app-state shape]
   (mark-for-redraw app-state shape (-> shape :model deref keys)))
 
 (defn render-node [app-state node force-all]
-  (doseq [shape (-> node :shapes vals)]
-    (remove-shape app-state shape)
-    (when force-all (mark-all-for-redraw app-state shape))
-    (render app-state shape)))
+  (doseq [shape (-> node :shapes vals)
+          app-state (remove-shape app-state shape)]
+    (-> (if force-all (mark-all-for-redraw app-state shape) app-state)
+        (render shape))))
 
 (defn create-renderer [app-state dom-id width height renderer]
   (let [state (merge {:name renderer :shapes {}}

@@ -86,7 +86,7 @@
                  :shapes-properties shapes-properties}
          new-state (state/assoc-diagram-state app-state [:nodes uid] node)]
      {:new-state (bus/fire new-state "node.added" {:node node})
-      :node node}))
+      :target node}))
   ([app-state type bbox]
    (create-node app-state type [] bbox {})))
 
@@ -97,14 +97,14 @@
 (defn set-bbox [app-state node bbox]
   (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :bbox] bbox)]
     {:new-state new-state
-     :node (node-by-id new-state (:uid node))}))
+     :target (node-by-id new-state (:uid node))}))
 
 (defn add-node-shape [app-state node args-map]
    (let [{:keys [new-state node]} (d/new-shape app-state node args-map)]
      (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node)] node)
            updated (node-by-id new-state (:uid node))]
        {:new-state (bus/fire new-state "node.shape.added" {:node updated})
-        :node updated})))
+        :target updated})))
 
 (defn remove-node-shape [app-state node shape-name]
   (let [shape (get-node-shape node shape-name)]
@@ -161,7 +161,7 @@
         new-state (if (nil? shape)
                     (func app-state node {:name name :model data})
                     (d/set-data shape data))]
-    {:shape (get-node-shape new-state node name)
+    {:target (get-node-shape new-state node name)
      :new-state new-state}))
  ([func app-state node args-map]
   (let [node (node-by-id app-state (:uid node))
@@ -169,7 +169,7 @@
         new-state (if (nil? shape)
                     (func app-state node args-map)
                     (d/set-data shape (:model args-map)))]
-    {:shape (get-node-shape new-state node (:name args-map))
+    {:target (get-node-shape new-state node (:name args-map))
      :new-state new-state})))
 
 (defn add-layout
@@ -177,13 +177,13 @@
    (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
          updated (node-by-id new-state (:uid node))]
      {:new-state (bus/fire new-state "node.layout.added" {:node updated})
-      :node updated}))
+      :target updated}))
   ([app-state node name layout-func position size margins]
    (let [layout (l/layout name layout-func position size margins)
          new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
          updated (node-by-id new-state (:uid node))]
      {:new-state (bus/fire new-state "node.layout.added" {:node updated})
-      :node updated}))
+      :target updated}))
   ([app-state node name layout-func position margins]
    (add-layout app-state node name layout-func position (l/match-parent-size) margins))
   ([app-state node name layout-func position]

@@ -52,10 +52,13 @@
               (vswap! agg-properties concat (keys target))))))
       (changed @intermediate-state shape @agg-properties))))
 
-(defn model [shape] (-> shape :model deref))
+(defn model [shape] (:model shape))
 
 (defn silent-setp [app-state shape property value]
-  (state/assoc-diagram-state app-state [:nodes (:parent-ref shape) :shapes (:name shape) :model property] value))
+  (state/assoc-diagram-state app-state [:nodes (:parent-ref shape)
+                                        :shapes (:name shape)
+                                        :model property]
+                                       value))
 
 (defn setp [app-state shape property value]
   (let [new-app-state (silent-setp app-state shape property value)
@@ -150,23 +153,30 @@
     :bottom 0
     val))
 
+(defn get-all-shapes [app-state]
+  (->> (or (state/get-in-diagram-state app-state [:shapes]) {})
+       vals
+       (mapv #(state/get-in-diagram-state app-state [:nodes (:parent-ref %) :shapes (:name %)]))))
+
 (defn- next-z-index [app-state]
   (or
-    (let [shapes (or (state/get-in-diagram-state app-state [:shapes]) {})
-          vs (filterv #(number? (getp app-state % :z-index)) (vals shapes))]
+    (let [shapes (get-all-shapes app-state)
+          vs (filterv #(number? (getp app-state % :z-index)) shapes)]
       (when (and (not (nil? vs)) (< 0 (count vs)));
          (when-let [e (apply max-key #(getp app-state % :z-index) vs)]
             (inc (getp app-state e :z-index)))))
     1))
 
 (defn- ensure-z-index [app-state shape]
-  (when (nil? (getp app-state shape :z-index))
-    (setp app-state shape :z-index (next-z-index app-state))))
+  (if (nil? (getp app-state shape :z-index))
+    (setp app-state shape :z-index (next-z-index app-state))
+     app-state))
 
 (defn remove-shape [app-state shape]
-  (state/dissoc-diagram-state app-state [:shapes (:uid shape)])
-  (r/remove-shape app-state shape)
-  (bus/fire app-state "component.removed" {:shape shape}))
+  (-> app-state
+      (state/dissoc-diagram-state [:shapes (:uid shape)])
+      (r/remove-shape-rendering-state shape)
+      (bus/fire "component.removed" {:shape shape})))
 
 (defn is-shape [app-state uid]
   (not (nil? (state/get-in-diagram-state app-state [:shapes uid]))))
@@ -194,7 +204,7 @@
         shape {:uid (str (random-uuid))
                :name name
                :type type
-               :model (volatile! mdl)
+               :model mdl
                :rendering-method rendering-method
                :attributes attributes
                :parent-ref (:uid container)
@@ -204,7 +214,7 @@
     {:target shape
      :new-state (-> app-state
                     (state/assoc-diagram-state [:nodes (:parent-ref shape) :shapes name] shape)
-                    ;; (state/assoc-diagram-state [:shapes (:uid shape)] shape)
+                    (state/assoc-diagram-state [:shapes (:uid shape)] (select-keys [:parent-ref :name]))
                     (ensure-z-index shape)
                     (bus/fire "shape.created" {:shape shape})
                     (r/mark-all-for-redraw shape)

@@ -29,7 +29,7 @@
 
 (defmethod destroy-rendering-state :default [renderer-state shape])
 
-(defn remove-shape [app-state shape]
+(defn remove-shape-rendering-state [app-state shape]
   (let [renderer-state (state/get-renderer-state app-state)]
     (destroy-rendering-state renderer-state shape)
     (state/dissoc-renderer-state app-state [:shapes (:uid shape)])))
@@ -39,20 +39,33 @@
 
 (defn mark-for-redraw [app-state shape properties]
   (let [new-properties (concat
-                          (or (-> (state/get-renderer-state app-state)
-                                  (get-redraw-properties shape))
-                              #{})
-                          properties)]
+                        (or (-> (state/get-renderer-state app-state)
+                                (get-redraw-properties shape))
+                            #{})
+                        properties)]
     (state/assoc-renderer-state app-state [:changes (:uid shape)] {:properties new-properties :ref shape})))
 
 (defn mark-all-for-redraw [app-state shape]
-  (mark-for-redraw app-state shape (-> shape :model deref keys)))
+  (mark-for-redraw app-state shape (-> shape :model keys)))
+
+(defn rerender-shape [app-state shape]
+  (-> app-state
+      (remove-shape-rendering-state shape)
+      (render shape)))
+
+(defn rerender-all-properties [app-state shape]
+  (-> app-state
+      (remove-shape-rendering-state shape)
+      (mark-all-for-redraw shape)
+      (render shape)))
 
 (defn render-node [app-state node force-all]
-  (doseq [shape (-> node :shapes vals)
-          app-state (remove-shape app-state shape)]
-    (-> (if force-all (mark-all-for-redraw app-state shape) app-state)
-        (render shape))))
+  (reduce #(if force-all
+            (rerender-all-properties %1 %2)
+            (rerender-shape %1 %2))
+          app-state
+          (-> (state/get-in-diagram-state app-state [:nodes (:uid node) :shapes])
+              vals)))
 
 (defn create-renderer [app-state dom-id width height renderer]
   (let [state (merge {:name renderer :shapes {}}
@@ -61,26 +74,27 @@
 
 (defn render [app-state shape]
   (when (not (nil? shape))
-    (let [renderer-state (state/get-renderer-state app-state)]
-      (when (not (is-state-created renderer-state shape))
-        (state/assoc-renderer-state app-state
-                                    [:shapes (:uid shape) :handle]
-                                    (create-rendering-state renderer-state shape)))
+    (let [renderer-state (state/get-renderer-state app-state)
+          new-state (if (not (is-state-created renderer-state shape))
+                      (state/assoc-renderer-state app-state
+                                                  [:shapes (:uid shape) :handle]
+                                                  (create-rendering-state renderer-state shape))
+                      app-state)]
       (->> (get-redraw-properties renderer-state shape)
            (do-render renderer-state shape))
-      (state/dissoc-renderer-state app-state [:changes (:uid shape)]))))
+      (state/dissoc-renderer-state new-state [:changes (:uid shape)]))))
 
 (defn render-changes [app-state]
   (let [shapes (-> app-state
-                       (state/get-in-renderer-state [:changes])
-                       vals)]
-    (doseq [shape shapes]
-      (render app-state (:ref shape)))))
+                   (state/get-in-renderer-state [:changes])
+                   vals)]
+    (reduce #(render %1 (:ref %2)) app-state shapes)))
 
 (defn render-all-properties [app-state shape]
   (when (not (nil? shape))
-    (mark-all-for-redraw app-state shape)
-    (render app-state shape)))
+    (-> app-state
+        (mark-all-for-redraw shape)
+        (render shape))))
 
 (defn render-diagram [app-state]
   (doseq [node (vals (state/get-in-diagram-state app-state [:nodes]))]

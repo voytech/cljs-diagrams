@@ -24,8 +24,8 @@
 (defn- assert-keyword [tokeyword]
   (if (keyword? tokeyword) tokeyword (keyword tokeyword)))
 
-(defn shapes-of [holder]
- (vals (:shapes holder)))
+(defn shapes-of [node]
+ (vals (:shapes node)))
 
 (defn node-by-id [app-state id]
  (state/get-in-diagram-state app-state [:nodes id]))
@@ -70,10 +70,9 @@
     (node-by-id app-state uid)))
 
 (defn create-node
-  "Creates editable entity. Entity is a first class functional element used within relational-designer.
-   Entity consists of components which are building blocks for entities. Components defines drawable elements which can interact with
-   each other within entity and across other entities. Component adds properties (or hints) wich holds state and allow to implement different behaviours.
-   Those properties models functions of specific component."
+  "Creates editable node. Node is a first class entity.
+   Node consists of shapes which are its building blocks. Shapes defines drawable properties which can interact with
+   each other within node. Shape adds properties (or hints) wich holds state and allow to implement different behaviours."
   ([app-state type tags bbox shapes-properties]
    (let [uid (str (random-uuid))
          node   {:uid uid
@@ -91,24 +90,21 @@
    (create-node app-state type [] bbox {})))
 
 (defn remove-node [app-state node]
-  (let [node (node-by-id app-state (:uid node))]
-    (state/dissoc-diagram-state app-state [:nodes (:uid node)])))
+  (state/dissoc-diagram-state app-state [:nodes (:uid node)]))
 
 (defn set-bbox [app-state node bbox]
   (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :bbox] bbox)]
     {:new-state new-state
      :target (node-by-id new-state (:uid node))}))
 
-(defn add-node-shape [app-state node args-map]
-   (let [{:keys [new-state node]} (d/new-shape app-state node args-map)]
-     (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node)] node)
-           updated (node-by-id new-state (:uid node))]
-       {:new-state (bus/fire new-state "node.shape.added" {:node updated})
-        :target updated})))
+(defn add-node-shape [app-state node shape-data]
+   (let [{:keys [new-state target]} (d/new-shape app-state node shape-data)]
+     (let [new-state (bus/fire new-state "node.shape.added" {:node (node-by-id new-state (:uid node))})]
+       {:new-state new-state
+        :target (node-by-id new-state (:uid node))})))
 
 (defn remove-node-shape [app-state node shape-name]
-  (let [shape (get-node-shape node shape-name)]
-    (state/dissoc-diagram-state app-state [:nodes (:uid node) :shapes shape-name])))
+  (state/dissoc-diagram-state app-state [:nodes (:uid node) :shapes shape-name]))
 
 (defn remove-node-shapes [app-state node pred]
   (let [all (shapes-of (node-by-id app-state (:uid node)))
@@ -160,7 +156,7 @@
         shape (get-node-shape node name)
         new-state (if (nil? shape)
                     (func app-state node {:name name :model data})
-                    (d/set-data shape data))]
+                    (d/set-data app-state shape data))]
     {:target (get-node-shape new-state node name)
      :new-state new-state}))
  ([func app-state node args-map]
@@ -168,14 +164,15 @@
         shape (get-node-shape node (:name args-map))
         new-state (if (nil? shape)
                     (func app-state node args-map)
-                    (d/set-data shape (:model args-map)))]
+                    (d/set-data app-state shape (:model args-map)))]
     {:target (get-node-shape new-state node (:name args-map))
      :new-state new-state})))
 
 (defn add-layout
   ([app-state node layout]
-   (let [new-state (state/assoc-diagram-state app-state [:nodes (:uid node) :layouts (:name layout)] layout)
-         updated (node-by-id new-state (:uid node))]
+   (let [uid (:uid node)
+         new-state (state/assoc-diagram-state app-state [:nodes uid :layouts (:name layout)] layout)
+         updated (node-by-id new-state uid)]
      {:new-state (bus/fire new-state "node.layout.added" {:node updated})
       :target updated}))
   ([app-state node name layout-func position size margins]
